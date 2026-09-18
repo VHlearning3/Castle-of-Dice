@@ -17,16 +17,16 @@ namespace CastleOfTheD20.Combat
 
         [Header("Enemy Attack Profile")]
         [Tooltip("Base damage dealt on a normal hit.")]
-        [SerializeField] private int attackDamage = 4;
+        [SerializeField] protected int attackDamage = 4;
 
         [Tooltip("Attack bonus added to D20 roll (+1 to +5).")]
-        [SerializeField] private int attackBonus = 2;
+        [SerializeField] protected int attackBonus = 2;
 
         [Tooltip("Maximum attack reach in grid tiles (1 for melee, 2+ for ranged).")]
-        [SerializeField] private int attackRange = 1;
+        [SerializeField] protected int attackRange = 1;
 
         [Tooltip("Optional AbilitySO defining advanced attacks or boss skills.")]
-        [SerializeField] private AbilitySO specialAbility;
+        [SerializeField] protected AbilitySO specialAbility;
 
         #endregion
 
