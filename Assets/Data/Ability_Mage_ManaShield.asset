@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 572b656da3536bf41b5acdac8e62357b, type: 3}
+  m_Name: Ability_Mage_ManaShield
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
+  abilityID: mage_mana_shield
+  abilityName: Mana Shield
+  description: Conjure a protective barrier of pure arcane energy that absorbs incoming
+    attacks.
+  abilityIcon: {fileID: 0}
+  targetType: 2
+  range: 0
+  areaOfEffectRadius: 0
+  baseValue: 0
+  requiresCheck: 0
+  appliedEffect: 4
+  effectDurationTurns: 2
+  animationTriggerName: Buff

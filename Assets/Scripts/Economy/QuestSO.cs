@@ -74,5 +74,32 @@ namespace CastleOfTheD20.Economy
         public ItemSO RewardItem => rewardItem;
 
         #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Initializes the quest parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(
+            string id,
+            string title,
+            string desc,
+            QuestState state,
+            int reqAmount,
+            int gold,
+            int bonusGold,
+            ItemSO reward)
+        {
+            questID = id;
+            questTitle = title;
+            description = desc;
+            defaultState = state;
+            requiredAmount = reqAmount;
+            rewardGold = gold;
+            bonusRewardGold = bonusGold;
+            rewardItem = reward;
+        }
+
+        #endregion
     }
 }

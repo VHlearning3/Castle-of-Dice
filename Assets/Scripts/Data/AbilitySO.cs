@@ -100,6 +100,41 @@ namespace CastleOfTheD20.Data
 
         #endregion
 
+        #region Public Methods
+
+        /// <summary>
+        /// Initializes the ability parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(
+            string id,
+            string name,
+            string desc,
+            AbilityTargetType target,
+            int abilityRange,
+            int aoeRadius,
+            int value,
+            bool checkRequired,
+            StatusEffectType effect,
+            int duration,
+            string animTrigger,
+            Sprite icon = null)
+        {
+            abilityID = id;
+            abilityName = name;
+            description = desc;
+            targetType = target;
+            range = abilityRange;
+            areaOfEffectRadius = aoeRadius;
+            baseValue = value;
+            requiresCheck = checkRequired;
+            appliedEffect = effect;
+            effectDurationTurns = duration;
+            animationTriggerName = animTrigger;
+            abilityIcon = icon;
+        }
+
+        #endregion
+
         #region Editor Validation
 
         private void OnValidate()

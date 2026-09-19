@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc45501685e3d542a881c6d78bc9a1f, type: 3}
+  m_Name: Character_Warrior_SirRoland
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.CharacterClassSO
+  classType: 0
+  characterName: Sir Roland
+  backgroundLore: Veteran of the royal guard who donned his ancestral plate armor
+    to purge his fallen castle of undead abominations.
+  baseMaxHealth: 35
+  baseArmorClass: 15
+  baseMovementRange: 3
+  primaryAttributeBonus: 3
+  startingAbilities:
+  - {fileID: 11400000, guid: e8dbbecd07e4f6649ad292f01b3e192d, type: 2}
+  - {fileID: 11400000, guid: fea2f537112683842b592f71d7f757aa, type: 2}
+  - {fileID: 11400000, guid: de5ab8cfa329d874fbae6e88408e3744, type: 2}
+  - {fileID: 11400000, guid: 3cd80c5fa0311d84f9a436a8633c1f12, type: 2}
+  characterPortrait: {fileID: 0}
+  characterPrefab: {fileID: 0}

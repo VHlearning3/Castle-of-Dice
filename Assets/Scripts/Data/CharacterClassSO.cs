@@ -88,6 +88,37 @@ namespace CastleOfTheD20.Data
 
         #endregion
 
+        #region Public Methods
+
+        /// <summary>
+        /// Initializes the character class parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(
+            CharacterClassType type,
+            string name,
+            string lore,
+            int maxHp,
+            int ac,
+            int move,
+            int bonus,
+            List<AbilitySO> abilities,
+            Sprite portrait = null,
+            GameObject prefab = null)
+        {
+            classType = type;
+            characterName = name;
+            backgroundLore = lore;
+            baseMaxHealth = maxHp;
+            baseArmorClass = ac;
+            baseMovementRange = move;
+            primaryAttributeBonus = bonus;
+            startingAbilities = abilities ?? new List<AbilitySO>();
+            characterPortrait = portrait;
+            characterPrefab = prefab;
+        }
+
+        #endregion
+
         #region Validation & Integrity
 
         private void OnValidate()

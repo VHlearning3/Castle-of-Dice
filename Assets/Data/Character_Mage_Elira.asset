@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc45501685e3d542a881c6d78bc9a1f, type: 3}
+  m_Name: Character_Mage_Elira
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.CharacterClassSO
+  classType: 1
+  characterName: Scholar Elira
+  backgroundLore: Academy arcanist seeking to unravel the ancient curses and retrieve
+    lost grimoires hidden in the castle's depths.
+  baseMaxHealth: 20
+  baseArmorClass: 11
+  baseMovementRange: 3
+  primaryAttributeBonus: 4
+  startingAbilities:
+  - {fileID: 11400000, guid: b48c3f60f40c1c04f98c175f2436d00d, type: 2}
+  - {fileID: 11400000, guid: def4359233e01b740b655f50b59fbcfd, type: 2}
+  - {fileID: 11400000, guid: 6ef9c4d9373b70245acec353dfb2aa39, type: 2}
+  - {fileID: 11400000, guid: 9da57b8b8347dc74aa4356f2ded89b64, type: 2}
+  characterPortrait: {fileID: 0}
+  characterPrefab: {fileID: 0}

@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cfc45501685e3d542a881c6d78bc9a1f, type: 3}
+  m_Name: Character_Rogue_Corvo
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.CharacterClassSO
+  classType: 2
+  characterName: Shadow-Corvo
+  backgroundLore: Tavern-bred opportunist and lockpick specialist who knows the castle's
+    secret passageways better than anyone.
+  baseMaxHealth: 25
+  baseArmorClass: 13
+  baseMovementRange: 4
+  primaryAttributeBonus: 4
+  startingAbilities:
+  - {fileID: 11400000, guid: aa5ca85fff9dd2b4bbb47c49494dad9d, type: 2}
+  - {fileID: 11400000, guid: 092c135d746643c408b18283b5c633e7, type: 2}
+  - {fileID: 11400000, guid: 300d28da2e23a81498609e076a25df3c, type: 2}
+  - {fileID: 11400000, guid: 4cce6a6038a1be74383fca55614478ee, type: 2}
+  characterPortrait: {fileID: 0}
+  characterPrefab: {fileID: 0}

@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 572b656da3536bf41b5acdac8e62357b, type: 3}
+  m_Name: Ability_Rogue_Backstab
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
+  abilityID: rogue_backstab
+  abilityName: Backstab
+  description: Strike from the shadows for devastating critical puncture damage.
+  abilityIcon: {fileID: 0}
+  targetType: 0
+  range: 1
+  areaOfEffectRadius: 0
+  baseValue: 8
+  requiresCheck: 1
+  appliedEffect: 0
+  effectDurationTurns: 0
+  animationTriggerName: Attack

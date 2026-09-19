@@ -80,6 +80,35 @@ namespace CastleOfTheD20.Data
 
         #endregion
 
+        #region Public Methods
+
+        /// <summary>
+        /// Initializes the item parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(
+            string id,
+            string name,
+            string desc,
+            ItemType type,
+            int buyPrice,
+            int sellPrice,
+            int statBonus,
+            bool consumable,
+            Sprite icon = null)
+        {
+            itemID = id;
+            itemName = name;
+            description = desc;
+            itemType = type;
+            buyPriceGold = buyPrice;
+            sellPriceGold = sellPrice;
+            statBonusValue = statBonus;
+            isConsumable = consumable;
+            itemIcon = icon;
+        }
+
+        #endregion
+
         #region Validation
 
         private void OnValidate()
