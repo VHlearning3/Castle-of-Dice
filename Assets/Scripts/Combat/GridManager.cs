@@ -103,6 +103,16 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Generates the grid layout directly in the Scene view while in Editor mode.
+        /// Right-click GridManager component in Inspector and select 'Generate Grid In Editor'.
+        /// </summary>
+        [ContextMenu("Generate Grid In Editor")]
+        public void GenerateGridInEditor()
+        {
+            GenerateGrid(width, height, tilePrefab);
+        }
+
+        /// <summary>
         /// Programmatically creates a grid of tiles using the specified dimensions and prefab.
         /// </summary>
         public void GenerateGrid(int gridWidth, int gridHeight, GameObject customPrefab = null)
@@ -113,6 +123,7 @@ namespace CastleOfTheD20.Combat
             height = gridHeight;
             GameObject prefabToUse = customPrefab != null ? customPrefab : tilePrefab;
 
+            EnsureTilesParentExists();
             Transform parent = tilesParent != null ? tilesParent : transform;
 
             for (int x = 0; x < width; x++)
@@ -125,7 +136,20 @@ namespace CastleOfTheD20.Combat
                     GameObject tileObj;
                     if (prefabToUse != null)
                     {
+#if UNITY_EDITOR
+                        if (!Application.isPlaying && UnityEditor.PrefabUtility.IsPartOfPrefabAsset(prefabToUse))
+                        {
+                            tileObj = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefabToUse, parent);
+                            tileObj.transform.position = worldPos;
+                            tileObj.transform.rotation = Quaternion.identity;
+                        }
+                        else
+                        {
+                            tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                        }
+#else
                         tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+#endif
                     }
                     else
                     {
@@ -135,6 +159,8 @@ namespace CastleOfTheD20.Combat
                         tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
                         tileObj.transform.SetParent(parent);
                     }
+
+                    tileObj.name = $"Tile_{x}_{y}";
 
                     GridTile gridTile = tileObj.GetComponent<GridTile>();
                     if (gridTile == null)
@@ -146,21 +172,106 @@ namespace CastleOfTheD20.Combat
                     RegisterTile(gridTile);
                 }
             }
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (tilesParent != null)
+                {
+                    UnityEditor.EditorUtility.SetDirty(tilesParent.gameObject);
+                }
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+#endif
+        }
+
+        private void EnsureTilesParentExists()
+        {
+            if (tilesParent == null)
+            {
+                Transform existing = transform.Find("Tiles");
+                if (existing != null)
+                {
+                    tilesParent = existing;
+                }
+                else
+                {
+                    GameObject tilesObj = new GameObject("Tiles");
+                    tilesObj.transform.SetParent(transform, false);
+                    tilesParent = tilesObj.transform;
+                }
+            }
         }
 
         /// <summary>
         /// Clears all existing registered tiles and destroys their GameObjects.
+        /// Can be called in Play mode or in Edit mode via Inspector context menu.
         /// </summary>
+        [ContextMenu("Clear Grid")]
         public void ClearGrid()
         {
+            List<GameObject> toDestroy = new List<GameObject>();
+
             foreach (var kvp in tiles)
             {
                 if (kvp.Value != null)
                 {
-                    Destroy(kvp.Value.gameObject);
+                    toDestroy.Add(kvp.Value.gameObject);
                 }
             }
+
+            Transform parent = tilesParent != null ? tilesParent : transform.Find("Tiles");
+            if (parent != null)
+            {
+                GridTile[] childTiles = parent.GetComponentsInChildren<GridTile>(true);
+                foreach (GridTile ct in childTiles)
+                {
+                    if (ct != null && !toDestroy.Contains(ct.gameObject))
+                    {
+                        toDestroy.Add(ct.gameObject);
+                    }
+                }
+            }
+
+            foreach (GameObject obj in toDestroy)
+            {
+                if (obj != null)
+                {
+#if UNITY_EDITOR
+                    if (!Application.isPlaying)
+                    {
+                        DestroyImmediate(obj);
+                    }
+                    else
+                    {
+                        Destroy(obj);
+                    }
+#else
+                    Destroy(obj);
+#endif
+                }
+            }
+
             tiles.Clear();
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (tilesParent != null)
+                {
+                    UnityEditor.EditorUtility.SetDirty(tilesParent.gameObject);
+                }
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+#endif
         }
 
         #endregion
