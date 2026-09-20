@@ -65,6 +65,8 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            AutoLocateComponents();
+
             if (diceModalPanel != null)
             {
                 diceModalPanel.SetActive(false);
@@ -73,6 +75,118 @@ namespace CastleOfTheD20.UI
             if (dismissButton != null)
             {
                 dismissButton.onClick.AddListener(Dismiss);
+            }
+        }
+
+        /// <summary>
+        /// Automatically locates required UI components in children if not manually assigned in the Inspector.
+        /// </summary>
+        private void AutoLocateComponents()
+        {
+            // 1. Auto-locate modal panel
+            if (diceModalPanel == null)
+            {
+                Transform panelTransform = transform.Find("DiceModalPanel")
+                    ?? transform.Find("ModalPanel")
+                    ?? transform.Find("Panel")
+                    ?? transform.Find("DiceModal");
+
+                if (panelTransform == null)
+                {
+                    foreach (Transform child in transform)
+                    {
+                        string lower = child.name.ToLowerInvariant();
+                        if (lower.Contains("panel") || lower.Contains("modal") || lower.Contains("dice"))
+                        {
+                            panelTransform = child;
+                            break;
+                        }
+                    }
+                }
+
+                if (panelTransform == null && transform.childCount > 0)
+                {
+                    panelTransform = transform.GetChild(0);
+                }
+
+                diceModalPanel = panelTransform != null ? panelTransform.gameObject : gameObject;
+            }
+
+            // 2. Auto-locate TMP_Text components
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text txt in texts)
+            {
+                string lower = txt.name.ToLowerInvariant();
+                if (headerText == null && (lower.Contains("header") || lower.Contains("title")))
+                {
+                    headerText = txt;
+                }
+                else if (rollValueText == null && (lower.Contains("roll") || lower.Contains("value") || lower.Contains("result") || lower.Contains("number")))
+                {
+                    rollValueText = txt;
+                }
+                else if (formulaText == null && (lower.Contains("formula") || lower.Contains("breakdown") || lower.Contains("calc") || lower.Contains("detail")))
+                {
+                    formulaText = txt;
+                }
+                else if (outcomeText == null && (lower.Contains("outcome") || lower.Contains("verdict") || lower.Contains("status")))
+                {
+                    outcomeText = txt;
+                }
+            }
+
+            // Fallback for remaining unassigned texts by discovery order
+            if (texts.Length > 0)
+            {
+                System.Collections.Generic.List<TMP_Text> unassigned = new System.Collections.Generic.List<TMP_Text>();
+                foreach (TMP_Text txt in texts)
+                {
+                    if (txt != headerText && txt != rollValueText && txt != formulaText && txt != outcomeText)
+                    {
+                        unassigned.Add(txt);
+                    }
+                }
+
+                int idx = 0;
+                if (headerText == null && idx < unassigned.Count) headerText = unassigned[idx++];
+                if (rollValueText == null && idx < unassigned.Count) rollValueText = unassigned[idx++];
+                if (formulaText == null && idx < unassigned.Count) formulaText = unassigned[idx++];
+                if (outcomeText == null && idx < unassigned.Count) outcomeText = unassigned[idx++];
+            }
+
+            // 3. Auto-locate glow border image
+            if (glowBorderImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                foreach (Image img in images)
+                {
+                    string lower = img.name.ToLowerInvariant();
+                    if (lower.Contains("glow") || lower.Contains("border") || lower.Contains("frame") || lower.Contains("outline"))
+                    {
+                        glowBorderImage = img;
+                        break;
+                    }
+                }
+            }
+
+            // 4. Auto-locate dismiss button
+            if (dismissButton == null)
+            {
+                Button[] buttons = GetComponentsInChildren<Button>(true);
+                foreach (Button btn in buttons)
+                {
+                    string lower = btn.name.ToLowerInvariant();
+                    if (lower.Contains("dismiss") || lower.Contains("close") || lower.Contains("ok") || lower.Contains("continue"))
+                    {
+                        dismissButton = btn;
+                        break;
+                    }
+                }
+
+                if (dismissButton == null && buttons.Length > 0)
+                {
+                    dismissButton = buttons[0];
+                }
             }
         }
 

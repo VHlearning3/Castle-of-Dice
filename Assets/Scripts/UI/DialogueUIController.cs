@@ -59,6 +59,8 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            AutoLocateComponents();
+
             if (dialoguePanel != null)
             {
                 dialoguePanel.SetActive(false);
@@ -67,6 +69,151 @@ namespace CastleOfTheD20.UI
             if (continueButton != null)
             {
                 continueButton.onClick.AddListener(OnContinueClicked);
+            }
+        }
+
+        /// <summary>
+        /// Automatically locates required UI components in children if not manually assigned in the Inspector.
+        /// </summary>
+        private void AutoLocateComponents()
+        {
+            // 1. Auto-locate dialogue panel
+            if (dialoguePanel == null)
+            {
+                Transform panelTransform = transform.Find("DialoguePanel")
+                    ?? transform.Find("Panel")
+                    ?? transform.Find("DialogueWindow")
+                    ?? transform.Find("Window");
+
+                if (panelTransform == null)
+                {
+                    foreach (Transform child in transform)
+                    {
+                        string lower = child.name.ToLowerInvariant();
+                        if (lower.Contains("panel") || lower.Contains("dialogue") || lower.Contains("window"))
+                        {
+                            panelTransform = child;
+                            break;
+                        }
+                    }
+                }
+
+                if (panelTransform == null && transform.childCount > 0)
+                {
+                    panelTransform = transform.GetChild(0);
+                }
+
+                dialoguePanel = panelTransform != null ? panelTransform.gameObject : gameObject;
+            }
+
+            // 2. Auto-locate TMP_Text components
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            foreach (TMP_Text txt in texts)
+            {
+                string lower = txt.name.ToLowerInvariant();
+                if (speakerNameText == null && (lower.Contains("name") || lower.Contains("speaker") || lower.Contains("title")))
+                {
+                    speakerNameText = txt;
+                }
+                else if (dialogueBodyText == null && (lower.Contains("body") || lower.Contains("text") || lower.Contains("dialogue") || lower.Contains("content") || lower.Contains("message") || lower.Contains("speech")))
+                {
+                    dialogueBodyText = txt;
+                }
+            }
+
+            // Fallback for remaining unassigned texts
+            if (texts.Length > 0)
+            {
+                List<TMP_Text> unassigned = new List<TMP_Text>();
+                foreach (TMP_Text txt in texts)
+                {
+                    if (txt != speakerNameText && txt != dialogueBodyText)
+                    {
+                        unassigned.Add(txt);
+                    }
+                }
+
+                int idx = 0;
+                if (speakerNameText == null && idx < unassigned.Count) speakerNameText = unassigned[idx++];
+                if (dialogueBodyText == null && idx < unassigned.Count) dialogueBodyText = unassigned[idx++];
+            }
+
+            // 3. Auto-locate speaker portrait image
+            if (speakerPortraitImage == null)
+            {
+                Image[] images = GetComponentsInChildren<Image>(true);
+                foreach (Image img in images)
+                {
+                    string lower = img.name.ToLowerInvariant();
+                    if (lower.Contains("portrait") || lower.Contains("speaker") || lower.Contains("avatar") || lower.Contains("face") || lower.Contains("character"))
+                    {
+                        speakerPortraitImage = img;
+                        break;
+                    }
+                }
+            }
+
+            // 4. Auto-locate options container
+            if (optionsContainer == null)
+            {
+                Transform[] transforms = GetComponentsInChildren<Transform>(true);
+                foreach (Transform t in transforms)
+                {
+                    if (t == transform) continue;
+                    string lower = t.name.ToLowerInvariant();
+                    if (lower.Contains("options") || lower.Contains("choices") || lower.Contains("buttons") || lower.Contains("optioncontainer") || lower.Contains("choicecontainer"))
+                    {
+                        optionsContainer = t;
+                        break;
+                    }
+                }
+            }
+
+            // 5. Auto-locate continue button
+            if (continueButton == null)
+            {
+                Button[] buttons = GetComponentsInChildren<Button>(true);
+                foreach (Button btn in buttons)
+                {
+                    string lower = btn.name.ToLowerInvariant();
+                    if (lower.Contains("continue") || lower.Contains("next") || lower.Contains("close") || lower.Contains("proceed"))
+                    {
+                        continueButton = btn;
+                        break;
+                    }
+                }
+
+                if (continueButton == null && buttons.Length > 0)
+                {
+                    foreach (Button btn in buttons)
+                    {
+                        if (optionsContainer == null || !btn.transform.IsChildOf(optionsContainer))
+                        {
+                            continueButton = btn;
+                            break;
+                        }
+                    }
+
+                    if (continueButton == null)
+                    {
+                        continueButton = buttons[0];
+                    }
+                }
+            }
+
+            // 6. Auto-locate option button prefab / template if not assigned
+            if (optionButtonPrefab == null && optionsContainer != null)
+            {
+                foreach (Transform child in optionsContainer)
+                {
+                    string lower = child.name.ToLowerInvariant();
+                    if (lower.Contains("option") || lower.Contains("button") || lower.Contains("prefab") || lower.Contains("template"))
+                    {
+                        optionButtonPrefab = child.gameObject;
+                        child.gameObject.SetActive(false);
+                        break;
+                    }
+                }
             }
         }
 
