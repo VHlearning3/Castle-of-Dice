@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
+  m_Name: Baldur_Rumor
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
+  speakerName: Baldur the Smith
+  speakerPortrait: {fileID: 0}
+  dialogueText: The Cursed Commander wears ancient plate and wields a heavy shield.
+    But centuries in the damp courtyard have rusted the armor joints at his knees.
+    Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced
+    by 2 for first 2 rounds)
+  options:
+  - optionText: '[Shop] Good to know. Let me see your wares.'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 0}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: '[ACTION_OPEN_SHOP]'
+  - optionText: '[Leave] Thank you for the advice. Farewell.'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 0}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: 
+  isExitNode: 0

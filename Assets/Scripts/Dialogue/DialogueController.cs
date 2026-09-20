@@ -57,6 +57,9 @@ namespace CastleOfTheD20.Dialogue
         /// <summary>Fired when a D20 skill check is rolled during dialogue: (result, isSuccess).</summary>
         public static event Action<DiceResult, bool> OnSkillCheckRolled;
 
+        /// <summary>Fired when an interactive dialogue choice is selected by the player.</summary>
+        public static event Action<DialogueOption> OnOptionSelected;
+
         #endregion
 
         #region Unity Lifecycle
@@ -117,6 +120,8 @@ namespace CastleOfTheD20.Dialogue
         public void SelectOption(DialogueOption option)
         {
             if (!isInDialogue || option == null) return;
+
+            OnOptionSelected?.Invoke(option);
 
             if (option.RequiresCheck)
             {
@@ -201,6 +206,7 @@ namespace CastleOfTheD20.Dialogue
         public void RegisterCombatDebuff(string tag)
         {
             if (string.IsNullOrWhiteSpace(tag)) return;
+            if (tag.StartsWith("[ACTION_", StringComparison.OrdinalIgnoreCase)) return;
 
             registeredCombatDebuffs.Add(tag);
             Debug.Log($"[DialogueController] Combat debuff unlocked: '{tag}'.");

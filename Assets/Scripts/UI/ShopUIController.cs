@@ -57,10 +57,24 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Singleton
+
+        public static ShopUIController Instance { get; private set; }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             if (shopPanel != null)
             {
                 shopPanel.SetActive(false);
@@ -106,6 +120,14 @@ namespace CastleOfTheD20.UI
             InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
             ShopManager.OnScrapConverted -= HandleScrapConverted;
             ShopManager.OnItemPurchased -= HandleItemPurchased;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         #endregion

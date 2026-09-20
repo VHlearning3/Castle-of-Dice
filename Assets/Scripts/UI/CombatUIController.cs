@@ -18,6 +18,10 @@ namespace CastleOfTheD20.UI
     {
         #region Serialized Fields
 
+        [Header("Root & Containers")]
+        [Tooltip("Root GameObject containing the combat action bar and turn controls (e.g. CombatActionBar).")]
+        [SerializeField] private GameObject combatActionBar;
+
         [Header("Ability Action Bar (4 Slots)")]
         [Tooltip("Button components corresponding to the 4 class abilities.")]
         [SerializeField] private List<Button> abilityButtons = new List<Button>(4);
@@ -62,6 +66,25 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (combatActionBar == null)
+            {
+                Transform barTransform = transform.Find("CombatActionBar")
+                    ?? transform.Find("ActionBar")
+                    ?? transform.Find("CombatPanel");
+
+                if (barTransform != null)
+                {
+                    combatActionBar = barTransform.gameObject;
+                }
+                else if (abilityButtons.Count > 0 && abilityButtons[0] != null)
+                {
+                    combatActionBar = abilityButtons[0].transform.parent?.gameObject;
+                }
+            }
+
+            // Hide action bar by default until combat is active
+            SetCombatBarVisible(false);
+
             if (endTurnButton != null)
             {
                 endTurnButton.onClick.AddListener(OnEndTurnClicked);
@@ -77,6 +100,7 @@ namespace CastleOfTheD20.UI
 
         private void OnEnable()
         {
+            GameManager.OnPlayModeChanged += HandlePlayModeChanged;
             TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted += HandleUnitTurnStarted;
             TurnManager.OnCombatEnded += HandleCombatEnded;
@@ -86,6 +110,7 @@ namespace CastleOfTheD20.UI
 
         private void OnDisable()
         {
+            GameManager.OnPlayModeChanged -= HandlePlayModeChanged;
             TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted -= HandleUnitTurnStarted;
             TurnManager.OnCombatEnded -= HandleCombatEnded;
@@ -97,6 +122,12 @@ namespace CastleOfTheD20.UI
         {
             LocatePlayer();
             RefreshAbilityBar();
+
+            // Ensure action bar reflects initial game mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+            {
+                SetCombatBarVisible(false);
+            }
         }
 
         #endregion
@@ -223,8 +254,24 @@ namespace CastleOfTheD20.UI
 
         #region Turn & State Listeners
 
+        private void HandlePlayModeChanged(GamePlayMode mode)
+        {
+            if (mode == GamePlayMode.Combat)
+            {
+                bool isPlayerTurn = TurnManager.Instance != null && TurnManager.Instance.IsCombatActive && TurnManager.Instance.CurrentState == TurnState.PlayerTurn;
+                SetCombatBarVisible(isPlayerTurn);
+            }
+            else
+            {
+                SetCombatBarVisible(false);
+            }
+        }
+
         private void HandleTurnStateChanged(TurnState newState)
         {
+            bool showBar = (newState == TurnState.PlayerTurn) && (TurnManager.Instance != null && TurnManager.Instance.IsCombatActive);
+            SetCombatBarVisible(showBar);
+
             if (turnBannerText != null)
             {
                 turnBannerText.text = newState switch
@@ -258,6 +305,8 @@ namespace CastleOfTheD20.UI
                 LogCombatMessage($"--- Turn: {unit.UnitName} ---");
             }
 
+            bool isPlayer = unit is PlayerUnit;
+            SetCombatBarVisible(isPlayer);
             RefreshAbilityBar();
         }
 
@@ -269,9 +318,27 @@ namespace CastleOfTheD20.UI
 
         private void HandleCombatEnded(bool isVictory)
         {
+            SetCombatBarVisible(false);
             string outcome = isVictory ? "VICTORY! All foes vanquished." : "DEFEAT! Party defeated.";
             LogCombatMessage(outcome);
             RefreshAbilityBar();
+        }
+
+        /// <summary>
+        /// Controls visibility of the combat action bar and associated turn controls.
+        /// </summary>
+        public void SetCombatBarVisible(bool visible)
+        {
+            if (combatActionBar != null)
+            {
+                combatActionBar.SetActive(visible);
+            }
+
+            if (!visible)
+            {
+                selectedAbilitySlot = -1;
+                GridManager.Instance?.ClearAllHighlights();
+            }
         }
 
         #endregion

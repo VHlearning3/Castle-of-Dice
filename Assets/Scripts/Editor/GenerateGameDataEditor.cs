@@ -6,6 +6,7 @@ using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Economy;
+using CastleOfTheD20.Dialogue;
 
 namespace CastleOfTheD20.Editor
 {
@@ -378,6 +379,9 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(swampHerbs);
             assetCount++;
 
+            // 5. Generate Village Dialogues and Quests
+            GenerateVillageDialoguesAndQuestsInternal(potionHealth, ref assetCount);
+
             // Save and refresh asset database
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
@@ -389,24 +393,194 @@ namespace CastleOfTheD20.Editor
                 "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
                 "- 12 Abilities (4 per class)\n" +
                 "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
-                "- 3 Quests (Cellar Rats, Lost Signet Ring, Swamp Herbs)",
+                "- 4 Quests (Cellar Pests, Cellar Rats, Lost Signet Ring, Swamp Herbs)\n" +
+                "- 7 Village Dialogue Nodes (Baldur and Barnaby trees with Persuasion checks)",
                 "OK"
             );
         }
 
-        private static void EnsureDataFolderExists()
+        [MenuItem("CastleOfDice/Generate Village Dialogues and Quests", false, 2)]
+        public static void GenerateVillageDialoguesAndQuests()
         {
-            if (!AssetDatabase.IsValidFolder(DataFolderPath))
+            EnsureFolderExists("Assets/Data");
+            EnsureFolderExists("Assets/Data/Quests");
+            EnsureFolderExists("Assets/Data/Dialogues");
+
+            ItemSO potionHealth = AssetDatabase.LoadAssetAtPath<ItemSO>($"{DataFolderPath}/Item_Potion_Health.asset");
+            int count = 0;
+            GenerateVillageDialoguesAndQuestsInternal(potionHealth, ref count);
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log($"[GenerateGameDataEditor] Generated {count} village dialogue and quest assets in Assets/Data/!");
+            EditorUtility.DisplayDialog(
+                "Castle of the D20",
+                $"Successfully generated {count} village dialogue and quest assets!\n\n" +
+                "- Quest_CellarPests.asset in Assets/Data/Quests/\n" +
+                "- Baldur_Intro, Baldur_Rumor in Assets/Data/Dialogues/\n" +
+                "- Barnaby_Intro, Barnaby_Negotiation_Success/Fail, Barnaby_Accepted, Barnaby_Declined in Assets/Data/Dialogues/",
+                "OK"
+            );
+        }
+
+        private static void GenerateVillageDialoguesAndQuestsInternal(ItemSO potionHealth, ref int assetCount)
+        {
+            EnsureFolderExists("Assets/Data");
+            EnsureFolderExists("Assets/Data/Quests");
+            EnsureFolderExists("Assets/Data/Dialogues");
+
+            string questFolder = "Assets/Data/Quests";
+            string dialogueFolder = "Assets/Data/Dialogues";
+
+            // 1. Quest: Cellar Pests
+            QuestSO cellarPests = GetOrCreateAsset<QuestSO>($"{questFolder}/Quest_CellarPests.asset");
+            cellarPests.Initialize(
+                id: "quest_cellar_pests",
+                title: "Cellar Pests",
+                desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's cellar casks.",
+                state: QuestState.NotStarted,
+                reqAmount: 3,
+                gold: 30,
+                bonusGold: 15,
+                reward: potionHealth
+            );
+            EditorUtility.SetDirty(cellarPests);
+            assetCount++;
+
+            // 2. Blacksmith Baldur Dialogue Tree
+            DialogueNodeSO baldurRumor = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Rumor.asset");
+            baldurRumor.Initialize(
+                speaker: "Baldur the Smith",
+                text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for first 2 rounds)",
+                portrait: null,
+                isExit: false
+            );
+            baldurRumor.SetOptions(new List<DialogueOption>
             {
-                if (!AssetDatabase.IsValidFolder("Assets"))
+                new DialogueOption("[Shop] Good to know. Let me see your wares.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
+                new DialogueOption("[Leave] Thank you for the advice. Farewell.", null, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(baldurRumor);
+            assetCount++;
+
+            DialogueNodeSO baldurIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Intro.asset");
+            baldurIntro.Initialize(
+                speaker: "Baldur the Smith",
+                text: "Greetings, traveler. You'd be a fool to face the castle's terrors with dull iron. Bring me salvage scrap from the ruins, and I'll temper steel that cuts bone. What do you need?",
+                portrait: null,
+                isExit: false
+            );
+            baldurIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Shop] Let me see your wares.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
+                new DialogueOption("[Rumor] What can you tell me of the courtyard guard?", baldurRumor, false, 10, "", null, "CommanderArmorWeakened"),
+                new DialogueOption("[Leave] Just passing through.", null, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(baldurIntro);
+            assetCount++;
+
+            // 3. Innkeeper Barnaby Dialogue Tree
+            DialogueNodeSO barnabyAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Accepted.asset");
+            barnabyAccepted.Initialize(
+                speaker: "Innkeeper Barnaby",
+                text: "Bless you! The cellar hatch is right behind the counter. Watch your step, mind the teeth, and don't break the wine bottles!",
+                portrait: null,
+                isExit: false
+            );
+            barnabyAccepted.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Leave] I'll get right on it.", null, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(barnabyAccepted);
+            assetCount++;
+
+            DialogueNodeSO barnabyDeclined = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Declined.asset");
+            barnabyDeclined.Initialize(
+                speaker: "Innkeeper Barnaby",
+                text: "Rats beneath you? Well, if my cellar collapses under rat tunnels, don't expect a warm hearth or cheap ale next time you visit!",
+                portrait: null,
+                isExit: true
+            );
+            barnabyDeclined.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(barnabyDeclined);
+            assetCount++;
+
+            DialogueNodeSO barnabyNegotiationSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Negotiation_Success.asset");
+            barnabyNegotiationSuccess.Initialize(
+                speaker: "Innkeeper Barnaby",
+                text: "Fine, fine! If it saves my vintage reserve, I'll pay 45 gold instead of 30! Just get down there and crush those vermin!",
+                portrait: null,
+                isExit: false
+            );
+            barnabyNegotiationSuccess.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Deal. I'll clear the cellar now.", barnabyAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_cellar_pests:bonus]"),
+                new DialogueOption("On second thought, I have other business.", barnabyDeclined, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(barnabyNegotiationSuccess);
+            assetCount++;
+
+            DialogueNodeSO barnabyNegotiationFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Negotiation_Fail.asset");
+            barnabyNegotiationFail.Initialize(
+                speaker: "Innkeeper Barnaby",
+                text: "You drive a hard bargain, stranger, but thirty gold and two healing draughts is every copper I can spare. Take it or leave my cellar to the rats!",
+                portrait: null,
+                isExit: false
+            );
+            barnabyNegotiationFail.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Very well, I'll accept thirty gold.", barnabyAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_cellar_pests]"),
+                new DialogueOption("Then find yourself another exterminator.", barnabyDeclined, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(barnabyNegotiationFail);
+            assetCount++;
+
+            DialogueNodeSO barnabyIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Intro.asset");
+            barnabyIntro.Initialize(
+                speaker: "Innkeeper Barnaby",
+                text: "Thank the gods, an adventurer! Dreadful screeching echoes from my cellar—giant rats are ruining my finest wine casks! Will you clear them out before the whole village dies of thirst?",
+                portrait: null,
+                isExit: false
+            );
+            barnabyIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("I'll purge your cellar right away.", barnabyAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_cellar_pests]"),
+                new DialogueOption(
+                    "[Persuasion DC 13] Fine wine isn't cheap. Danger like this deserves better compensation.",
+                    barnabyNegotiationSuccess,
+                    true,
+                    13,
+                    "Persuasion Check (Charisma/Agility)",
+                    barnabyNegotiationFail,
+                    ""
+                ),
+                new DialogueOption("Rats are beneath me. Find someone else.", barnabyDeclined, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(barnabyIntro);
+            assetCount++;
+        }
+
+        private static void EnsureFolderExists(string folderPath)
+        {
+            if (!AssetDatabase.IsValidFolder(folderPath))
+            {
+                string parent = Path.GetDirectoryName(folderPath).Replace('\\', '/');
+                string folderName = Path.GetFileName(folderPath);
+
+                if (!AssetDatabase.IsValidFolder(parent))
                 {
-                    Directory.CreateDirectory(Application.dataPath);
-                    AssetDatabase.Refresh();
+                    EnsureFolderExists(parent);
                 }
 
-                AssetDatabase.CreateFolder("Assets", "Data");
+                AssetDatabase.CreateFolder(parent, folderName);
                 AssetDatabase.Refresh();
             }
+        }
+
+        private static void EnsureDataFolderExists()
+        {
+            EnsureFolderExists(DataFolderPath);
         }
 
         private static T GetOrCreateAsset<T>(string assetPath) where T : ScriptableObject

@@ -57,6 +57,26 @@ namespace CastleOfTheD20.Dialogue
         #region Editor Validation & Helpers
 
         /// <summary>
+        /// Initializes the dialogue node parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(string speaker, string text, Sprite portrait = null, bool isExit = false)
+        {
+            speakerName = speaker;
+            dialogueText = text;
+            speakerPortrait = portrait;
+            isExitNode = isExit;
+            options = new List<DialogueOption>();
+        }
+
+        /// <summary>
+        /// Replaces the option list for this node.
+        /// </summary>
+        public void SetOptions(List<DialogueOption> newOptions)
+        {
+            options = newOptions ?? new List<DialogueOption>();
+        }
+
+        /// <summary>
         /// Programmatic helper to add an option.
         /// </summary>
         public void AddOption(DialogueOption option)

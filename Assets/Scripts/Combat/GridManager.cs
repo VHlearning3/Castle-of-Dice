@@ -105,7 +105,7 @@ namespace CastleOfTheD20.Combat
         /// <summary>
         /// Generates the grid layout directly in the Scene view while in Editor mode.
         /// Right-click GridManager component in Inspector and select 'Generate Grid In Editor'.
-        /// </summary>
+        /// </summary>                              
         [ContextMenu("Generate Grid In Editor")]
         public void GenerateGridInEditor()
         {
@@ -126,6 +126,9 @@ namespace CastleOfTheD20.Combat
             EnsureTilesParentExists();
             Transform parent = tilesParent != null ? tilesParent : transform;
 
+            // Unityn Quad vaatii 90 asteen X-kierron maatasoon asettumista varten
+            Quaternion tileRotation = Quaternion.Euler(90f, 0f, 0f);
+
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -141,21 +144,21 @@ namespace CastleOfTheD20.Combat
                         {
                             tileObj = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefabToUse, parent);
                             tileObj.transform.position = worldPos;
-                            tileObj.transform.rotation = Quaternion.identity;
+                            tileObj.transform.rotation = tileRotation;
                         }
                         else
                         {
-                            tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                            tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
                         }
 #else
-                        tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                        tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
 #endif
                     }
                     else
                     {
                         tileObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
                         tileObj.transform.position = worldPos;
-                        tileObj.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                        tileObj.transform.rotation = tileRotation;
                         tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
                         tileObj.transform.SetParent(parent);
                     }

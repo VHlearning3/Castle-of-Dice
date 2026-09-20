@@ -1600,6 +1600,16 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Generates the grid layout directly in the Scene view while in Editor mode.
+        /// Right-click GridManager component in Inspector and select 'Generate Grid In Editor'.
+        /// </summary>
+        [ContextMenu("Generate Grid In Editor")]
+        public void GenerateGridInEditor()
+        {
+            GenerateGrid(width, height, tilePrefab);
+        }
+
+        /// <summary>
         /// Programmatically creates a grid of tiles using the specified dimensions and prefab.
         /// </summary>
         public void GenerateGrid(int gridWidth, int gridHeight, GameObject customPrefab = null)
@@ -1610,6 +1620,7 @@ namespace CastleOfTheD20.Combat
             height = gridHeight;
             GameObject prefabToUse = customPrefab != null ? customPrefab : tilePrefab;
 
+            EnsureTilesParentExists();
             Transform parent = tilesParent != null ? tilesParent : transform;
 
             for (int x = 0; x < width; x++)
@@ -1622,7 +1633,20 @@ namespace CastleOfTheD20.Combat
                     GameObject tileObj;
                     if (prefabToUse != null)
                     {
+#if UNITY_EDITOR
+                        if (!Application.isPlaying && UnityEditor.PrefabUtility.IsPartOfPrefabAsset(prefabToUse))
+                        {
+                            tileObj = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefabToUse, parent);
+                            tileObj.transform.position = worldPos;
+                            tileObj.transform.rotation = Quaternion.identity;
+                        }
+                        else
+                        {
+                            tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                        }
+#else
                         tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+#endif
                     }
                     else
                     {
@@ -1632,6 +1656,8 @@ namespace CastleOfTheD20.Combat
                         tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
                         tileObj.transform.SetParent(parent);
                     }
+
+                    tileObj.name = $"Tile_{x}_{y}";
 
                     GridTile gridTile = tileObj.GetComponent<GridTile>();
                     if (gridTile == null)
@@ -1643,21 +1669,106 @@ namespace CastleOfTheD20.Combat
                     RegisterTile(gridTile);
                 }
             }
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (tilesParent != null)
+                {
+                    UnityEditor.EditorUtility.SetDirty(tilesParent.gameObject);
+                }
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+#endif
+        }
+
+        private void EnsureTilesParentExists()
+        {
+            if (tilesParent == null)
+            {
+                Transform existing = transform.Find("Tiles");
+                if (existing != null)
+                {
+                    tilesParent = existing;
+                }
+                else
+                {
+                    GameObject tilesObj = new GameObject("Tiles");
+                    tilesObj.transform.SetParent(transform, false);
+                    tilesParent = tilesObj.transform;
+                }
+            }
         }
 
         /// <summary>
         /// Clears all existing registered tiles and destroys their GameObjects.
+        /// Can be called in Play mode or in Edit mode via Inspector context menu.
         /// </summary>
+        [ContextMenu("Clear Grid")]
         public void ClearGrid()
         {
+            List<GameObject> toDestroy = new List<GameObject>();
+
             foreach (var kvp in tiles)
             {
                 if (kvp.Value != null)
                 {
-                    Destroy(kvp.Value.gameObject);
+                    toDestroy.Add(kvp.Value.gameObject);
                 }
             }
+
+            Transform parent = tilesParent != null ? tilesParent : transform.Find("Tiles");
+            if (parent != null)
+            {
+                GridTile[] childTiles = parent.GetComponentsInChildren<GridTile>(true);
+                foreach (GridTile ct in childTiles)
+                {
+                    if (ct != null && !toDestroy.Contains(ct.gameObject))
+                    {
+                        toDestroy.Add(ct.gameObject);
+                    }
+                }
+            }
+
+            foreach (GameObject obj in toDestroy)
+            {
+                if (obj != null)
+                {
+#if UNITY_EDITOR
+                    if (!Application.isPlaying)
+                    {
+                        DestroyImmediate(obj);
+                    }
+                    else
+                    {
+                        Destroy(obj);
+                    }
+#else
+                    Destroy(obj);
+#endif
+                }
+            }
+
             tiles.Clear();
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                UnityEditor.EditorUtility.SetDirty(this);
+                if (tilesParent != null)
+                {
+                    UnityEditor.EditorUtility.SetDirty(tilesParent.gameObject);
+                }
+                if (gameObject.scene.IsValid())
+                {
+                    UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+                }
+            }
+#endif
         }
 
         #endregion
@@ -7102,6 +7213,207 @@ namespace CastleOfTheD20.UI
 
 
 // ==========================================
+// File: CameraFollow.cs
+// Path: Assets/Scripts/World/CameraFollow.cs
+// ==========================================
+
+using UnityEngine;
+using CastleOfTheD20.Combat;
+
+namespace CastleOfTheD20.World
+{
+    /// <summary>
+    /// Smooth isometric camera follow controller for Castle of the D20.
+    /// Tracks a target Transform (the player hero) using smooth damping in LateUpdate,
+    /// maintaining an isometric perspective offset and optional pitch angle.
+    /// </summary>
+    public class CameraFollow : MonoBehaviour
+    {
+        #region Serialized Fields
+
+        [Header("Target Tracking")]
+        [Tooltip("The target Transform to follow (typically the player hero).")]
+        [SerializeField] private Transform target;
+
+        [Tooltip("If true, automatically searches for a PlayerUnit or GameObject tagged 'Player' if target is unassigned.")]
+        [SerializeField] private bool autoFindPlayer = true;
+
+        [Header("Offset & Positioning")]
+        [Tooltip("Isometric world-space offset from the target (e.g. (0, 10, -8)).")]
+        [SerializeField] private Vector3 offset = new Vector3(0f, 10f, -8f);
+
+        [Header("Smoothing & Damping")]
+        [Tooltip("Approximate time in seconds to reach the target position (lower is snappier, higher is smoother).")]
+        [Range(0.01f, 1.0f)]
+        [SerializeField] private float smoothTime = 0.2f;
+
+        [Tooltip("Maximum movement speed for the camera in units per second.")]
+        [SerializeField] private float maxSpeed = 50f;
+
+        [Header("Rotation & Orientation")]
+        [Tooltip("If true, automatically aligns camera rotation to look at the target position + lookOffset.")]
+        [SerializeField] private bool lookAtTarget = true;
+
+        [Tooltip("Height offset added to the target position when looking at the target.")]
+        [SerializeField] private float lookAtHeightOffset = 1.0f;
+
+        [Tooltip("Fixed isometric rotation applied if Look At Target is disabled.")]
+        [SerializeField] private Vector3 fixedRotationEuler = new Vector3(50f, 0f, 0f);
+
+        #endregion
+
+        #region Private State
+
+        private Vector3 currentVelocity = Vector3.zero;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Current target Transform being followed.</summary>
+        public Transform Target => target;
+
+        /// <summary>Isometric offset vector relative to the target.</summary>
+        public Vector3 Offset
+        {
+            get => offset;
+            set => offset = value;
+        }
+
+        /// <summary>Smooth damping time in seconds.</summary>
+        public float SmoothTime
+        {
+            get => smoothTime;
+            set => smoothTime = Mathf.Max(0.001f, value);
+        }
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            if (target == null && autoFindPlayer)
+            {
+                FindPlayerTarget();
+            }
+        }
+
+        private void Start()
+        {
+            if (target != null)
+            {
+                SnapToTarget();
+            }
+        }
+
+        private void LateUpdate()
+        {
+            if (target == null)
+            {
+                if (autoFindPlayer)
+                {
+                    FindPlayerTarget();
+                }
+
+                if (target == null) return;
+            }
+
+            Vector3 targetPosition = target.position + offset;
+
+            // Smoothly interpolate position using SmoothDamp to avoid frame-rate jitter
+            transform.position = Vector3.SmoothDamp(
+                transform.position,
+                targetPosition,
+                ref currentVelocity,
+                smoothTime,
+                maxSpeed,
+                Time.deltaTime
+            );
+
+            // Handle camera orientation
+            if (lookAtTarget)
+            {
+                Vector3 lookTarget = target.position + Vector3.up * lookAtHeightOffset;
+                transform.LookAt(lookTarget);
+            }
+            else
+            {
+                transform.rotation = Quaternion.Euler(fixedRotationEuler);
+            }
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Sets a new target to follow, with an option to immediately snap to it.
+        /// </summary>
+        /// <param name="newTarget">Target Transform to track.</param>
+        /// <param name="snapImmediately">If true, skips interpolation and places the camera at target + offset immediately.</param>
+        public void SetTarget(Transform newTarget, bool snapImmediately = false)
+        {
+            target = newTarget;
+            currentVelocity = Vector3.zero;
+
+            if (snapImmediately && target != null)
+            {
+                SnapToTarget();
+            }
+        }
+
+        /// <summary>
+        /// Instantly teleports the camera to the target position plus offset without smoothing.
+        /// Useful during level transitions, respawns, or teleport abilities (e.g. Blink).
+        /// </summary>
+        public void SnapToTarget()
+        {
+            if (target == null) return;
+
+            currentVelocity = Vector3.zero;
+            transform.position = target.position + offset;
+
+            if (lookAtTarget)
+            {
+                Vector3 lookTarget = target.position + Vector3.up * lookAtHeightOffset;
+                transform.LookAt(lookTarget);
+            }
+            else
+            {
+                transform.rotation = Quaternion.Euler(fixedRotationEuler);
+            }
+        }
+
+        #endregion
+
+        #region Target Discovery
+
+        /// <summary>
+        /// Searches the scene for a PlayerUnit or GameObject tagged 'Player'.
+        /// </summary>
+        private void FindPlayerTarget()
+        {
+            PlayerUnit playerUnit = FindAnyObjectByType<PlayerUnit>();
+            if (playerUnit != null)
+            {
+                target = playerUnit.transform;
+                return;
+            }
+
+            GameObject playerObj = GameObject.FindWithTag("Player");
+            if (playerObj != null)
+            {
+                target = playerObj.transform;
+            }
+        }
+
+        #endregion
+    }
+}
+
+
+// ==========================================
 // File: DungeonRoomController.cs
 // Path: Assets/Scripts/World/DungeonRoomController.cs
 // ==========================================
@@ -7622,6 +7934,95 @@ namespace CastleOfTheD20.World
                 player.TakeDamage(trapDamage);
                 OnTrapSprung?.Invoke(trapDamage);
             }
+        }
+
+        #endregion
+    }
+}
+
+
+// ==========================================
+// File: VillageNPC.cs
+// Path: Assets/Scripts/World/VillageNPC.cs
+// ==========================================
+
+using UnityEngine;
+using CastleOfTheD20.Combat;
+using CastleOfTheD20.Dialogue;
+
+namespace CastleOfTheD20.World
+{
+    /// <summary>
+    /// Interactive village non-player character (e.g. Barnaby the Innkeeper, Elder Othelia, Mirabel the Herbalist).
+    /// Inherits from Interactable and initiates conversation with DialogueController upon player interaction.
+    /// </summary>
+    public class VillageNPC : Interactable
+    {
+        #region Serialized Fields
+
+        [Header("NPC Identity")]
+        [Tooltip("Display name of the village NPC (e.g., 'Barnaby', 'Elder Othelia', 'Mirabel').")]
+        [SerializeField] private string npcName = "Village NPC";
+
+        [Header("Dialogue")]
+        [Tooltip("Starting dialogue node triggered when the player interacts with this NPC.")]
+        [SerializeField] private DialogueNodeSO startingDialogueNode;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Display name of this NPC.</summary>
+        public string NpcName => npcName;
+
+        /// <summary>Starting conversation node.</summary>
+        public DialogueNodeSO StartingDialogueNode
+        {
+            get => startingDialogueNode;
+            set => startingDialogueNode = value;
+        }
+
+        #endregion
+
+        #region Unity Lifecycle & Validation
+
+        private void Reset()
+        {
+            interactionRadius = 3.0f;
+            promptMessage = $"Talk to {npcName}";
+        }
+
+        private void OnValidate()
+        {
+            if (string.IsNullOrEmpty(promptMessage) || promptMessage == "Interact")
+            {
+                promptMessage = $"Talk to {npcName}";
+            }
+        }
+
+        #endregion
+
+        #region Interaction
+
+        /// <summary>
+        /// Initiates dialogue with this NPC via DialogueController.
+        /// </summary>
+        /// <param name="player">The player initiating the conversation.</param>
+        public override void Interact(PlayerUnit player)
+        {
+            if (DialogueController.Instance == null)
+            {
+                Debug.LogError($"[VillageNPC] Cannot start dialogue with '{npcName}': DialogueController.Instance is null in the scene.");
+                return;
+            }
+
+            if (startingDialogueNode == null)
+            {
+                Debug.LogWarning($"[VillageNPC] No starting DialogueNodeSO assigned to '{npcName}'.");
+                return;
+            }
+
+            DialogueController.Instance.StartDialogue(startingDialogueNode);
         }
 
         #endregion

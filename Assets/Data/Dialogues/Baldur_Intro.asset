@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
+  m_Name: Baldur_Intro
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
+  speakerName: Baldur the Smith
+  speakerPortrait: {fileID: 0}
+  dialogueText: Greetings, traveler. You'd be a fool to face the castle's terrors
+    with dull iron. Bring me salvage scrap from the ruins, and I'll temper steel
+    that cuts bone. What do you need?
+  options:
+  - optionText: '[Shop] Let me see your wares.'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 0}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: '[ACTION_OPEN_SHOP]'
+  - optionText: '[Rumor] What can you tell me of the courtyard guard?'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: b1a2c3d4e5f60718293a4b5c6d7e8f03, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: CommanderArmorWeakened
+  - optionText: '[Leave] Just passing through.'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 0}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: 
+  isExitNode: 0

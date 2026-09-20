@@ -104,17 +104,31 @@ namespace CastleOfTheD20.Combat
         #region Combat Initialization
 
         /// <summary>
-        /// Automatically discovers all living PlayerUnit and EnemyUnit components in the scene and begins combat.
+        /// Automatically discovers all living PlayerUnit and EnemyUnit components in the scene.
+        /// Starts combat only if both living players and enemies exist; otherwise keeps exploration mode active.
         /// </summary>
         public void AutoEnrollSceneUnits()
         {
-            List<CombatUnit> units = new List<CombatUnit>();
-            units.AddRange(FindObjectsByType<PlayerUnit>(FindObjectsSortMode.None));
-            units.AddRange(FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None));
+            List<PlayerUnit> players = new List<PlayerUnit>(FindObjectsByType<PlayerUnit>(FindObjectsSortMode.None));
+            List<EnemyUnit> enemies = new List<EnemyUnit>(FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None));
 
-            if (units.Count > 0)
+            // Prune dead or uninitialized units
+            players.RemoveAll(p => p == null || !p.IsAlive);
+            enemies.RemoveAll(e => e == null || !e.IsAlive);
+
+            if (players.Count > 0 && enemies.Count > 0)
             {
-                StartCombat(units);
+                List<CombatUnit> allUnits = new List<CombatUnit>();
+                allUnits.AddRange(players);
+                allUnits.AddRange(enemies);
+                StartCombat(allUnits);
+            }
+            else
+            {
+                isCombatActive = false;
+                GridManager.Instance?.ClearAllHighlights();
+                GameManager.Instance?.SetMode(GamePlayMode.Exploration);
+                Debug.Log("[TurnManager] Safe area detected (no living enemies found in scene). Safe exploration mode active.");
             }
         }
 
