@@ -448,37 +448,87 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(cellarPests);
             assetCount++;
 
-            // 2. Blacksmith Baldur Dialogue Tree
-            DialogueNodeSO baldurRumor = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Rumor.asset");
-            baldurRumor.Initialize(
+            // 2. Quest: Scrap for the Forge
+            ItemSO sharpenedBlade = AssetDatabase.LoadAssetAtPath<ItemSO>($"{DataFolderPath}/Item_SharpenedBlade.asset");
+            QuestSO scrapQuest = GetOrCreateAsset<QuestSO>($"{questFolder}/Quest_ScrapMetal.asset");
+            scrapQuest.Initialize(
+                id: "quest_scrap_metal",
+                title: "Scrap for the Forge",
+                desc: "Collect 5 pieces of scrap metal from the castle ruins for Blacksmith Baldur.",
+                state: QuestState.NotStarted,
+                reqAmount: 5,
+                gold: 50,
+                bonusGold: 25,
+                reward: sharpenedBlade
+            );
+            EditorUtility.SetDirty(scrapQuest);
+            assetCount++;
+
+            // 3. Blacksmith Baldur Dialogue Tree (StartNode, LoreNode, QuestsNode)
+            DialogueNodeSO baldurStart = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_StartNode.asset");
+            DialogueNodeSO baldurLore = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_LoreNode.asset");
+            DialogueNodeSO baldurQuests = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_QuestsNode.asset");
+
+            // Lore Node
+            baldurLore.Initialize(
                 speaker: "Baldur the Smith",
                 text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for first 2 rounds)",
                 portrait: null,
                 isExit: false
             );
-            baldurRumor.SetOptions(new List<DialogueOption>
+            baldurLore.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("[Shop] Good to know. Let me see your wares.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
-                new DialogueOption("[Leave] Thank you for the advice. Farewell.", null, false, 10, "", null, "")
+                new DialogueOption("[Blacksmith] Good to know. Let me see what you have for sale.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
+                new DialogueOption("[Back] Let me ask about something else.", baldurStart, false, 10, "", null, ""),
+                new DialogueOption("[Exit] Thank you for the advice. Farewell.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
-            EditorUtility.SetDirty(baldurRumor);
+            EditorUtility.SetDirty(baldurLore);
             assetCount++;
 
-            DialogueNodeSO baldurIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Intro.asset");
-            baldurIntro.Initialize(
+            // Quests Node
+            baldurQuests.Initialize(
+                speaker: "Baldur the Smith",
+                text: "The forge fires are starving for quality ore. The old watchtowers and courtyard are full of scrap metal from fallen sentries. Gather 5 pieces of Scrap Metal and bring them to me, and I'll pay you in gold and tempered steel!",
+                portrait: null,
+                isExit: false
+            );
+            baldurQuests.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Accept] I'll gather scrap metal from the castle ruins.", null, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_scrap_metal]"),
+                new DialogueOption("[Blacksmith] I already have scrap metal to sell.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
+                new DialogueOption("[Back] Let's speak of other matters.", baldurStart, false, 10, "", null, ""),
+                new DialogueOption("[Exit] I have business elsewhere.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(baldurQuests);
+            assetCount++;
+
+            // Start Node (Initial Greeting with 4 distinct options)
+            baldurStart.Initialize(
                 speaker: "Baldur the Smith",
                 text: "Greetings, traveler. You'd be a fool to face the castle's terrors with dull iron. Bring me salvage scrap from the ruins, and I'll temper steel that cuts bone. What do you need?",
                 portrait: null,
                 isExit: false
             );
-            baldurIntro.SetOptions(new List<DialogueOption>
+            baldurStart.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("[Shop] Let me see your wares.", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
-                new DialogueOption("[Rumor] What can you tell me of the courtyard guard?", baldurRumor, false, 10, "", null, "CommanderArmorWeakened"),
-                new DialogueOption("[Leave] Just passing through.", null, false, 10, "", null, "")
+                new DialogueOption("[Blacksmith] Show me your wares and forge (Open Shop).", null, false, 10, "", null, "[ACTION_OPEN_SHOP]"),
+                new DialogueOption("[Lore] What do you know about the castle defences?", baldurLore, false, 10, "", null, "CommanderArmorWeakened"),
+                new DialogueOption("[Quests] Do you have any extra work for me?", baldurQuests, false, 10, "", null, ""),
+                new DialogueOption("[Exit] I'll keep my own weapons for now.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
-            EditorUtility.SetDirty(baldurIntro);
+            EditorUtility.SetDirty(baldurStart);
             assetCount++;
+
+            // Backward compatibility aliases
+            DialogueNodeSO baldurIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Intro.asset");
+            baldurIntro.Initialize(baldurStart.SpeakerName, baldurStart.DialogueText, baldurStart.SpeakerPortrait, baldurStart.IsExitNode);
+            baldurIntro.SetOptions(new List<DialogueOption>(baldurStart.Options));
+            EditorUtility.SetDirty(baldurIntro);
+
+            DialogueNodeSO baldurRumor = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Rumor.asset");
+            baldurRumor.Initialize(baldurLore.SpeakerName, baldurLore.DialogueText, baldurLore.SpeakerPortrait, baldurLore.IsExitNode);
+            baldurRumor.SetOptions(new List<DialogueOption>(baldurLore.Options));
+            EditorUtility.SetDirty(baldurRumor);
 
             // 3. Innkeeper Barnaby Dialogue Tree
             DialogueNodeSO barnabyAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Accepted.asset");

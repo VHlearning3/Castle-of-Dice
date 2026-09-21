@@ -153,6 +153,12 @@ namespace CastleOfTheD20.Economy
                 return false;
             }
 
+            // Auto-locate PlayerUnit if targetPlayer not explicitly provided
+            if (targetPlayer == null)
+            {
+                targetPlayer = FindAnyObjectByType<PlayerUnit>();
+            }
+
             // If purchasing a permanent equipment upgrade and a player unit is targeted, apply immediately
             if (targetPlayer != null && !item.IsConsumable)
             {

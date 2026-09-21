@@ -19,18 +19,25 @@ MonoBehaviour:
     Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced
     by 2 for first 2 rounds)
   options:
-  - optionText: '[Shop] Good to know. Let me see your wares.'
+  - optionText: '[Shop] Good to know. Let me see what you have for sale.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 0}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_OPEN_SHOP]'
-  - optionText: '[Leave] Thank you for the advice. Farewell.'
+  - optionText: '[Back] Let me ask about something else.'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: a4cbe31336e969a41a2ec5a3ee08ee64, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: 
+  - optionText: '[Exit] Thank you for the advice. Farewell.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 0}
     nextNodeFailure: {fileID: 0}
-    combatDebuffTag: 
+    combatDebuffTag: '[ACTION_CLOSE_DIALOGUE]'
   isExitNode: 0

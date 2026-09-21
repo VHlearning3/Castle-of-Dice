@@ -47,6 +47,12 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Singleton
+
+        public static DialogueUIController Instance { get; private set; }
+
+        #endregion
+
         #region Private State
 
         private Coroutine activeTypewriterCoroutine;
@@ -59,6 +65,13 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            Instance = this;
+
             AutoLocateComponents();
 
             if (dialoguePanel != null)
@@ -69,6 +82,14 @@ namespace CastleOfTheD20.UI
             if (continueButton != null)
             {
                 continueButton.onClick.AddListener(OnContinueClicked);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
             }
         }
 
@@ -235,9 +256,14 @@ namespace CastleOfTheD20.UI
 
         #region Dialogue Rendering
 
-        private void DisplayDialogueNode(DialogueNodeSO node)
+        /// <summary>
+        /// Displays the dialogue node text, speaker info, portrait, and choice buttons.
+        /// </summary>
+        public void DisplayDialogueNode(DialogueNodeSO node)
         {
             if (node == null) return;
+
+            AutoLocateComponents();
 
             if (dialoguePanel != null)
             {
@@ -313,20 +339,26 @@ namespace CastleOfTheD20.UI
                         if (optionsContainer != null) btnObj.transform.SetParent(optionsContainer, false);
                     }
 
+                    btnObj.SetActive(true);
                     spawnedButtons.Add(btnObj);
 
                     Button btn = btnObj.GetComponent<Button>();
-                    TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>();
+                    TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>(true);
+
+                    string formattedText = option.RequiresCheck
+                        ? $"[D20 DC {option.TargetDC} - {option.SkillCheckDescription}] {option.OptionText}"
+                        : option.OptionText;
 
                     if (btnText != null)
                     {
-                        if (option.RequiresCheck)
+                        btnText.text = formattedText;
+                    }
+                    else
+                    {
+                        Text legacyText = btnObj.GetComponentInChildren<Text>(true);
+                        if (legacyText != null)
                         {
-                            btnText.text = $"[D20 DC {option.TargetDC} - {option.SkillCheckDescription}] {option.OptionText}";
-                        }
-                        else
-                        {
-                            btnText.text = option.OptionText;
+                            legacyText.text = formattedText;
                         }
                     }
 
@@ -354,6 +386,18 @@ namespace CastleOfTheD20.UI
                 if (btn != null) Destroy(btn);
             }
             spawnedButtons.Clear();
+
+            // Deactivate any template children in optionsContainer so dummy buttons aren't visible
+            if (optionsContainer != null)
+            {
+                foreach (Transform child in optionsContainer)
+                {
+                    if (optionButtonPrefab != null && child.gameObject == optionButtonPrefab)
+                    {
+                        child.gameObject.SetActive(false);
+                    }
+                }
+            }
         }
 
         #endregion
@@ -377,7 +421,10 @@ namespace CastleOfTheD20.UI
             DialogueController.Instance?.EndDialogue();
         }
 
-        private void HideDialogue()
+        /// <summary>
+        /// Hides the dialogue interface and cleans up active typing coroutine and option buttons.
+        /// </summary>
+        public void HideDialogue()
         {
             if (activeTypewriterCoroutine != null)
             {

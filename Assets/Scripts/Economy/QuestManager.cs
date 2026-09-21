@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Economy
 {
@@ -81,6 +82,16 @@ namespace CastleOfTheD20.Economy
             InitializeQuests();
         }
 
+        private void OnEnable()
+        {
+            InventoryManager.OnScrapMetalChanged += HandleScrapMetalChanged;
+        }
+
+        private void OnDisable()
+        {
+            InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
+        }
+
         private void OnDestroy()
         {
             if (instance == this)
@@ -143,10 +154,32 @@ namespace CastleOfTheD20.Economy
             QuestSO quest = registeredQuests[questID];
             Debug.Log($"[QuestManager] Quest accepted: {quest.QuestTitle} ({questID})");
 
+            // If it's a scrap collection quest, initialize with existing scrap count in inventory
+            if (questID.IndexOf("scrap", StringComparison.OrdinalIgnoreCase) >= 0 && InventoryManager.Instance != null)
+            {
+                questProgress[questID] = Mathf.Min(quest.RequiredAmount, InventoryManager.Instance.ScrapMetalCount);
+            }
+
             OnQuestStateUpdated?.Invoke(questID, QuestState.InProgress);
-            OnQuestProgressUpdated?.Invoke(questID, 0, quest.RequiredAmount);
+            OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
 
             return true;
+        }
+
+        /// <summary>
+        /// Sets exact progress for an active quest and notifies HUD.
+        /// </summary>
+        public void SetQuestProgress(string questID, int amount)
+        {
+            if (string.IsNullOrEmpty(questID) || !registeredQuests.TryGetValue(questID, out QuestSO quest)) return;
+            if (GetQuestState(questID) != QuestState.InProgress) return;
+
+            questProgress[questID] = Mathf.Clamp(amount, 0, quest.RequiredAmount);
+            Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' progress updated: {questProgress[questID]}/{quest.RequiredAmount}");
+
+            OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
         /// <summary>
@@ -172,6 +205,7 @@ namespace CastleOfTheD20.Economy
             Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' progress: {questProgress[questID]}/{quest.RequiredAmount}");
 
             OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
         /// <summary>
@@ -214,13 +248,51 @@ namespace CastleOfTheD20.Economy
 
             OnQuestStateUpdated?.Invoke(questID, QuestState.Completed);
             OnQuestCompleted?.Invoke(quest, totalGold);
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
 
             return true;
+        }
+
+        private void HandleScrapMetalChanged(int newScrap)
+        {
+            // Automatically update any active scrap metal quests
+            foreach (var kvp in registeredQuests)
+            {
+                string qid = kvp.Key;
+                if (qid.IndexOf("scrap", StringComparison.OrdinalIgnoreCase) >= 0 && GetQuestState(qid) == QuestState.InProgress)
+                {
+                    SetQuestProgress(qid, newScrap);
+                }
+            }
         }
 
         #endregion
 
         #region Queries
+
+        /// <summary>
+        /// Returns the QuestSO definition for a given quest ID.
+        /// </summary>
+        public QuestSO GetQuest(string questID)
+        {
+            if (string.IsNullOrEmpty(questID)) return null;
+            return registeredQuests.TryGetValue(questID, out QuestSO quest) ? quest : null;
+        }
+
+        /// <summary>
+        /// Returns the first currently active (InProgress) quest.
+        /// </summary>
+        public QuestSO GetActiveQuest()
+        {
+            foreach (var kvp in questStates)
+            {
+                if (kvp.Value == QuestState.InProgress && registeredQuests.TryGetValue(kvp.Key, out QuestSO q))
+                {
+                    return q;
+                }
+            }
+            return null;
+        }
 
         /// <summary>
         /// Returns the current QuestState (NotStarted, InProgress, Completed).

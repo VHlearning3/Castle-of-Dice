@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -15,6 +16,12 @@ namespace CastleOfTheD20.UI
     /// </summary>
     public class PlayerHUD : MonoBehaviour
     {
+        #region Singleton
+
+        public static PlayerHUD Instance { get; private set; }
+
+        #endregion
+
         #region Serialized Fields
 
         [Header("Health Bar")]
@@ -54,6 +61,16 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
+            AutoLocateComponents();
+
             if (quickPotionButton != null)
             {
                 quickPotionButton.onClick.AddListener(OnQuickPotionClicked);
@@ -87,9 +104,73 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+
+            if (quickPotionButton != null)
+            {
+                quickPotionButton.onClick.RemoveListener(OnQuickPotionClicked);
+            }
+        }
+
         private void Start()
         {
             RefreshAllHUD();
+        }
+
+        #endregion
+
+        #region Auto-Locate Setup
+
+        private void AutoLocateComponents()
+        {
+            // Auto-locate slider
+            if (healthSlider == null)
+            {
+                healthSlider = GetComponentInChildren<Slider>(true);
+            }
+
+            // Auto-locate texts
+            TMP_Text[] texts = GetComponentsInChildren<TMP_Text>(true);
+            foreach (var txt in texts)
+            {
+                string lower = txt.name.ToLowerInvariant();
+                if (healthText == null && (lower.Contains("hp") || lower.Contains("health")))
+                {
+                    healthText = txt;
+                }
+                else if (goldCounterText == null && (lower.Contains("gold") || lower.Contains("money") || lower.Contains("coin")))
+                {
+                    goldCounterText = txt;
+                }
+                else if (potionCountText == null && (lower.Contains("potioncount") || lower.Contains("count") || lower.Contains("qty")))
+                {
+                    potionCountText = txt;
+                }
+                else if (activeQuestSummaryText == null && (lower.Contains("quest") || lower.Contains("objective") || lower.Contains("tracker") || lower.Contains("summary")))
+                {
+                    activeQuestSummaryText = txt;
+                }
+            }
+
+            // Auto-locate button
+            if (quickPotionButton == null)
+            {
+                Button[] buttons = GetComponentsInChildren<Button>(true);
+                foreach (var btn in buttons)
+                {
+                    string lower = btn.name.ToLowerInvariant();
+                    if (lower.Contains("potion") || lower.Contains("heal") || lower.Contains("hotbar"))
+                    {
+                        quickPotionButton = btn;
+                        break;
+                    }
+                }
+            }
         }
 
         #endregion
@@ -125,12 +206,15 @@ namespace CastleOfTheD20.UI
                 UpdateHealthDisplay(trackedPlayer.CurrentHP, trackedPlayer.MaxHP);
             }
 
-            // 2. Gold Counter
+            // 2. Gold Counter & Potions
             if (InventoryManager.Instance != null)
             {
                 UpdateGoldDisplay(InventoryManager.Instance.CurrentGold);
                 UpdatePotionDisplay();
             }
+
+            // 3. Quest Summary
+            UpdateQuestSummaryText();
         }
 
         private void UpdateHealthDisplay(int currentHP, int maxHP)
@@ -173,6 +257,36 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        /// <summary>
+        /// Synchronizes the active quest summary text tracker on the HUD.
+        /// Can be called directly or supplied with a custom status message.
+        /// </summary>
+        public void UpdateQuestSummaryText(string customText = null)
+        {
+            if (activeQuestSummaryText == null) return;
+
+            if (!string.IsNullOrEmpty(customText))
+            {
+                activeQuestSummaryText.text = customText;
+                return;
+            }
+
+            // Query QuestManager for active quest
+            QuestManager qm = QuestManager.Instance;
+            if (qm != null)
+            {
+                QuestSO activeQuest = qm.GetActiveQuest();
+                if (activeQuest != null)
+                {
+                    int current = qm.GetQuestProgress(activeQuest.QuestID);
+                    activeQuestSummaryText.text = $"{activeQuest.QuestTitle}: {current} / {activeQuest.RequiredAmount}";
+                    return;
+                }
+            }
+
+            activeQuestSummaryText.text = "No Active Quests";
+        }
+
         #endregion
 
         #region Hotbar Actions
@@ -211,24 +325,32 @@ namespace CastleOfTheD20.UI
 
         private void HandleQuestProgressUpdated(string questID, int current, int required)
         {
-            if (activeQuestSummaryText != null)
-            {
-                activeQuestSummaryText.text = $"{questID}: {current} / {required}";
-            }
+            QuestManager qm = QuestManager.Instance;
+            QuestSO quest = qm != null ? qm.GetQuest(questID) : null;
+            string title = quest != null ? quest.QuestTitle : questID;
+
+            UpdateQuestSummaryText($"{title}: {current} / {required}");
         }
 
         private void HandleQuestStateUpdated(string questID, QuestState state)
         {
-            if (activeQuestSummaryText != null)
+            QuestManager qm = QuestManager.Instance;
+            QuestSO quest = qm != null ? qm.GetQuest(questID) : null;
+            string title = quest != null ? quest.QuestTitle : questID;
+
+            if (state == QuestState.Completed)
             {
-                if (state == QuestState.Completed)
-                {
-                    activeQuestSummaryText.text = $"{questID}: Completed!";
-                }
-                else if (state == QuestState.InProgress)
-                {
-                    activeQuestSummaryText.text = $"{questID}: Active";
-                }
+                UpdateQuestSummaryText($"{title}: Completed!");
+            }
+            else if (state == QuestState.InProgress)
+            {
+                int current = qm != null ? qm.GetQuestProgress(questID) : 0;
+                int req = quest != null ? quest.RequiredAmount : 1;
+                UpdateQuestSummaryText($"{title}: {current} / {req}");
+            }
+            else
+            {
+                UpdateQuestSummaryText();
             }
         }
 

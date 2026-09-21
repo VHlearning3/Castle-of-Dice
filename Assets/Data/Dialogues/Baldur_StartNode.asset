@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
-  m_Name: Baldur_Intro
+  m_Name: Baldur_StartNode
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Baldur the Smith
   speakerPortrait: {fileID: 0}

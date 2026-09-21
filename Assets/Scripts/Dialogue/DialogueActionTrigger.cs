@@ -32,7 +32,7 @@ namespace CastleOfTheD20.Dialogue
             {
                 if (instance == null)
                 {
-                    instance = FindAnyObjectByType<DialogueActionTrigger>();
+                    instance = FindAnyObjectByType<DialogueActionTrigger>(FindObjectsInactive.Include);
                     if (instance == null)
                     {
                         GameObject go = new GameObject("DialogueActionTrigger");
@@ -92,8 +92,16 @@ namespace CastleOfTheD20.Dialogue
             string tag = option.CombatDebuffTag ?? string.Empty;
             string text = option.OptionText ?? string.Empty;
 
-            // 1. Check for Shop Opening
-            if (ContainsAction(tag, text, TAG_OPEN_SHOP) || ContainsAction(tag, text, "ACTION_OPEN_SHOP") || text.StartsWith("[Shop]", StringComparison.OrdinalIgnoreCase))
+            // 1. Check for Shop / Blacksmith Opening
+            if (ContainsAction(tag, text, TAG_OPEN_SHOP) 
+                || ContainsAction(tag, text, "ACTION_OPEN_SHOP") 
+                || ContainsAction(tag, text, "[ACTION_OPEN_BLACKSMITH]")
+                || ContainsAction(tag, text, "ACTION_OPEN_BLACKSMITH")
+                || text.IndexOf("[Blacksmith]", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("[Shop]", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("Show me what you have for sale", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("Show me your weapons", StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf("forge", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 ExecuteOpenShop();
                 return;
@@ -111,8 +119,8 @@ namespace CastleOfTheD20.Dialogue
                 ExecuteCompleteQuest(tag, text);
             }
 
-            // 4. Check for Explicit Close
-            if (ContainsAction(tag, text, TAG_CLOSE_DIALOGUE) || ContainsAction(tag, text, "ACTION_CLOSE_DIALOGUE"))
+            // 4. Check for Explicit Dialogue Close
+            if (ContainsAction(tag, text, TAG_CLOSE_DIALOGUE) || ContainsAction(tag, text, "ACTION_CLOSE_DIALOGUE") || text.StartsWith("[Exit]", StringComparison.OrdinalIgnoreCase))
             {
                 DialogueController.Instance?.EndDialogue();
             }
@@ -128,21 +136,22 @@ namespace CastleOfTheD20.Dialogue
 
         #region Action Implementations
 
-        private void ExecuteOpenShop()
+        public void ExecuteOpenShop()
         {
-            Debug.Log("[DialogueActionTrigger] Intercepted Shop Action: Closing dialogue and opening Blacksmith Baldur's shop.");
+            Debug.Log("[DialogueActionTrigger] Intercepted Shop/Blacksmith Action: Closing dialogue and opening Blacksmith Baldur's shop.");
 
-            // Conclude dialogue session
+            // Conclude dialogue session cleanly
             DialogueController.Instance?.EndDialogue();
 
             // Open Shop UI
-            if (ShopUIController.Instance != null)
+            ShopUIController shopUI = ShopUIController.Instance;
+            if (shopUI != null)
             {
-                ShopUIController.Instance.OpenShop();
+                shopUI.OpenShop();
             }
             else
             {
-                ShopUIController fallback = FindAnyObjectByType<ShopUIController>();
+                ShopUIController fallback = FindAnyObjectByType<ShopUIController>(FindObjectsInactive.Include);
                 if (fallback != null)
                 {
                     fallback.OpenShop();
@@ -172,8 +181,15 @@ namespace CastleOfTheD20.Dialogue
                 bool started = QuestManager.Instance.StartQuest(questId);
                 if (!started)
                 {
-                    // If not registered under 'quest_cellar_pests', try 'CellarRats'
-                    QuestManager.Instance.StartQuest("CellarRats");
+                    // Fallback to alias IDs if registered differently
+                    if (questId.Equals("quest_cellar_pests", StringComparison.OrdinalIgnoreCase))
+                    {
+                        QuestManager.Instance.StartQuest("CellarRats");
+                    }
+                    else if (questId.Equals("quest_scrap_collection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        QuestManager.Instance.StartQuest("quest_scrap_metal");
+                    }
                 }
                 Debug.Log($"[DialogueActionTrigger] Started Quest: '{questId}' (Bonus Negotiated: {hasBonus}).");
             }
@@ -181,6 +197,8 @@ namespace CastleOfTheD20.Dialogue
             {
                 Debug.LogWarning($"[DialogueActionTrigger] QuestManager.Instance is null. Quest '{questId}' could not be accepted.");
             }
+
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
         private void ExecuteCompleteQuest(string tag, string text)
@@ -190,16 +208,33 @@ namespace CastleOfTheD20.Dialogue
 
             if (QuestManager.Instance != null)
             {
-                QuestManager.Instance.CompleteQuest(questId, grantedBonus: bonus);
+                bool completed = QuestManager.Instance.CompleteQuest(questId, grantedBonus: bonus);
+                if (!completed)
+                {
+                    if (questId.Equals("quest_cellar_pests", StringComparison.OrdinalIgnoreCase))
+                    {
+                        QuestManager.Instance.CompleteQuest("CellarRats", grantedBonus: bonus);
+                    }
+                    else if (questId.Equals("quest_scrap_collection", StringComparison.OrdinalIgnoreCase))
+                    {
+                        QuestManager.Instance.CompleteQuest("quest_scrap_metal", grantedBonus: bonus);
+                    }
+                }
                 Debug.Log($"[DialogueActionTrigger] Completed Quest: '{questId}' with bonus = {bonus}.");
             }
+
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
         private string ExtractQuestId(string tag, string text, string fallback)
         {
-            // Expected format: "[ACTION_ACCEPT_QUEST:quest_id]" or "[ACTION_ACCEPT_QUEST:quest_id:bonus]"
-            string source = tag.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 ? tag : text;
+            // Expected format: "[ACTION_ACCEPT_QUEST:quest_id]" or "[ACTION_COMPLETE_QUEST:quest_id]"
+            string source = tag.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 || tag.IndexOf(TAG_COMPLETE_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 ? tag : text;
             int startIndex = source.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase);
+            if (startIndex < 0)
+            {
+                startIndex = source.IndexOf(TAG_COMPLETE_QUEST, StringComparison.OrdinalIgnoreCase);
+            }
 
             if (startIndex >= 0)
             {

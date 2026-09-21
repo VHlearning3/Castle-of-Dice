@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Dialogue
 {
@@ -130,6 +131,18 @@ namespace CastleOfTheD20.Dialogue
             GameManager.Instance?.SetMode(GamePlayMode.Dialogue);
 
             Debug.Log($"[DialogueController] Started dialogue with {currentNode.SpeakerName}: \"{currentNode.DialogueText}\"");
+
+            // Guarantee Dialogue UI is active and displaying even if panel GameObject starts inactive in scene
+            DialogueUIController ui = DialogueUIController.Instance ?? FindAnyObjectByType<DialogueUIController>(FindObjectsInactive.Include);
+            if (ui != null)
+            {
+                if (!ui.gameObject.activeSelf)
+                {
+                    ui.gameObject.SetActive(true);
+                }
+                ui.DisplayDialogueNode(currentNode);
+            }
+
             OnDialogueStarted?.Invoke(currentNode);
 
             if (currentNode.IsExitNode)
@@ -203,6 +216,17 @@ namespace CastleOfTheD20.Dialogue
 
             currentNode = nextNode;
             Debug.Log($"[DialogueController] Advanced to: {currentNode.SpeakerName} - \"{currentNode.DialogueText}\"");
+
+            DialogueUIController ui = DialogueUIController.Instance ?? FindAnyObjectByType<DialogueUIController>(FindObjectsInactive.Include);
+            if (ui != null)
+            {
+                if (!ui.gameObject.activeSelf)
+                {
+                    ui.gameObject.SetActive(true);
+                }
+                ui.DisplayDialogueNode(currentNode);
+            }
+
             OnDialogueUpdated?.Invoke(currentNode);
         }
 
@@ -218,6 +242,13 @@ namespace CastleOfTheD20.Dialogue
             activePlayer = null;
 
             Debug.Log("[DialogueController] Dialogue session ended.");
+
+            DialogueUIController ui = DialogueUIController.Instance ?? FindAnyObjectByType<DialogueUIController>(FindObjectsInactive.Include);
+            if (ui != null)
+            {
+                ui.HideDialogue();
+            }
+
             OnDialogueEnded?.Invoke();
 
             // Restore exploration mode if currently in dialogue mode

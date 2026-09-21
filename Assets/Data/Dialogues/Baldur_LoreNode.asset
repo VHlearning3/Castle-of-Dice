@@ -10,36 +10,30 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
-  m_Name: Baldur_Intro
+  m_Name: Baldur_LoreNode
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Baldur the Smith
   speakerPortrait: {fileID: 0}
-  dialogueText: Greetings, traveler. You'd be a fool to face the castle's terrors
-    with dull iron. Bring me salvage scrap from the ruins, and I'll temper steel
-    that cuts bone. What do you need?
+  dialogueText: The Cursed Commander wears ancient plate and wields a heavy shield.
+    But centuries in the damp courtyard have rusted the armor joints at his knees.
+    Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced
+    by 2 for first 2 rounds)
   options:
-  - optionText: '[Blacksmith] Show me your wares and forge (Open Shop).'
+  - optionText: '[Shop] Good to know. Let me see what you have for sale.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 0}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_OPEN_SHOP]'
-  - optionText: '[Lore] What do you know about the castle defences?'
+  - optionText: '[Back] Let me ask about something else.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
-    nextNodeSuccess: {fileID: 11400000, guid: d780af8ef17e0e44f94a7829e374aef8, type: 2}
-    nextNodeFailure: {fileID: 0}
-    combatDebuffTag: CommanderArmorWeakened
-  - optionText: '[Quests] Do you have any extra work for me?'
-    requiresCheck: 0
-    targetDC: 10
-    skillCheckDescription: 
-    nextNodeSuccess: {fileID: 11400000, guid: 30bf65aa165b6fe4b90a806d75f8007f, type: 2}
+    nextNodeSuccess: {fileID: 11400000, guid: a4cbe31336e969a41a2ec5a3ee08ee64, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: 
-  - optionText: '[Exit] I''ll keep my own weapons for now.'
+  - optionText: '[Exit] Thank you for the advice. Farewell.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

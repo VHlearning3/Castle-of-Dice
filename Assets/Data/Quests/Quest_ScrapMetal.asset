@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1a466de88da5501418816a6a167895dd, type: 3}
+  m_Name: Quest_ScrapMetal
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
+  questID: quest_scrap_metal
+  questTitle: Scrap for the Forge
+  description: Collect 5 pieces of scrap metal from the castle ruins for Blacksmith
+    Baldur.
+  defaultState: 0
+  requiredAmount: 5
+  rewardGold: 50
+  bonusRewardGold: 25
+  rewardItem: {fileID: 11400000, guid: d077db9c6874e4a48a9a2be4e9557e8f, type: 2}
