@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Combat;
@@ -37,6 +38,10 @@ namespace CastleOfTheD20.World
         [Tooltip("Automatically snap to the nearest tactical GridTile when entering Combat mode.")]
         [SerializeField] private bool autoSnapOnCombat = true;
 
+        [Header("Diagnostics")]
+        [Tooltip("Enables verbose runtime diagnostic logging for input and component states.")]
+        [SerializeField] private bool debugLogging = true;
+
         #endregion
 
         #region Private State
@@ -44,6 +49,8 @@ namespace CastleOfTheD20.World
         private CharacterController characterController;
         private PlayerUnit playerUnit;
         private float verticalVelocity = 0f;
+        private bool hasLoggedMissingCamera = false;
+        private float lastBlockedInputLogTime = -10f;
 
         #endregion
 
@@ -66,11 +73,49 @@ namespace CastleOfTheD20.World
         private void Awake()
         {
             characterController = GetComponent<CharacterController>();
-            playerUnit = GetComponent<PlayerUnit>();
-
-            if (explorationCamera == null)
+            if (characterController == null)
             {
-                explorationCamera = Camera.main;
+                characterController = gameObject.AddComponent<CharacterController>();
+                Debug.LogWarning($"[PlayerExplorationMovement] CharacterController missing on {name}; automatically attached.");
+            }
+
+            // Ensure CharacterController is enabled and configured with valid dimensions
+            if (!characterController.enabled)
+            {
+                characterController.enabled = true;
+                Debug.Log($"[PlayerExplorationMovement] Explicitly enabled CharacterController on {name}.");
+            }
+
+            if (characterController.height < 0.2f)
+            {
+                characterController.height = 2.0f;
+                characterController.center = new Vector3(0, 1.0f, 0);
+            }
+
+            playerUnit = GetComponent<PlayerUnit>();
+            EnsureCameraReference();
+
+            if (debugLogging)
+            {
+                string camName = explorationCamera != null ? explorationCamera.name : "None";
+                Debug.Log($"[PlayerExplorationMovement] Awake on '{name}'. CC Enabled: {characterController.enabled}, Camera: '{camName}', MoveSpeed: {moveSpeed}.");
+            }
+        }
+
+        private void Start()
+        {
+            EnsureCameraReference();
+
+            if (!characterController.enabled)
+            {
+                characterController.enabled = true;
+                Debug.LogWarning($"[PlayerExplorationMovement] CharacterController was disabled at Start on {name}; re-enabled.");
+            }
+
+            if (debugLogging)
+            {
+                GamePlayMode currentMode = GameManager.Instance != null ? GameManager.Instance.CurrentMode : GamePlayMode.Exploration;
+                Debug.Log($"[PlayerExplorationMovement] Start: Active GamePlayMode is '{currentMode}'. Ready for WASD movement.");
             }
         }
 
@@ -88,10 +133,33 @@ namespace CastleOfTheD20.World
 
         private void Update()
         {
-            // Guard: Only allow exploration movement when in Exploration mode
+            // Verify CharacterController remains enabled
+            if (characterController != null && !characterController.enabled)
+            {
+                // Only re-enable if we are not actively in turn-based combat
+                if (GameManager.Instance == null || GameManager.Instance.CurrentMode == GamePlayMode.Exploration)
+                {
+                    characterController.enabled = true;
+                }
+            }
+
+            // Mode Guard: Movement is only active in Exploration mode
             if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
             {
-                IsMoving = false;
+                // If the player attempts to move during Combat or Dialogue, log diagnostic warning
+                Vector3 attemptedInput = PollRawInput();
+                if (attemptedInput.sqrMagnitude > 0.001f && (Time.time - lastBlockedInputLogTime > 2.0f))
+                {
+                    lastBlockedInputLogTime = Time.time;
+                    Debug.LogWarning($"[PlayerExplorationMovement] WASD input ignored: CurrentMode is '{GameManager.Instance.CurrentMode}' (Exploration required).");
+                }
+
+                if (IsMoving)
+                {
+                    IsMoving = false;
+                    if (debugLogging) Debug.Log("[PlayerExplorationMovement] Locomotion halted due to mode transition.");
+                }
+
                 ApplyGravityOnly();
                 return;
             }
@@ -101,27 +169,56 @@ namespace CastleOfTheD20.World
 
         #endregion
 
-        #region Locomotion & Steering
+        #region Camera Management
 
-        private void HandleLocomotion()
+        private Camera EnsureCameraReference()
         {
-            float horizontal = Input.GetAxisRaw("Horizontal");
-            float vertical = Input.GetAxisRaw("Vertical");
-
-            Vector3 inputDirection = new Vector3(horizontal, 0f, vertical);
-
             if (explorationCamera == null)
             {
                 explorationCamera = Camera.main;
+
+                if (explorationCamera == null)
+                {
+                    explorationCamera = FindAnyObjectByType<Camera>();
+                }
+
+                if (explorationCamera == null && !hasLoggedMissingCamera)
+                {
+                    hasLoggedMissingCamera = true;
+                    Debug.LogError("[PlayerExplorationMovement] No Camera found in scene! Movement direction will default to world coordinates.");
+                }
             }
 
+            return explorationCamera;
+        }
+
+        #endregion
+
+        #region Locomotion & Steering
+
+        /// <summary>
+        /// Reads player input through cross-compatible GameInput bridge
+        /// (supporting both New Input System and Legacy Input Manager).
+        /// </summary>
+        private Vector3 PollRawInput()
+        {
+            Vector2 move2D = GameInput.GetMovementVector();
+            return new Vector3(move2D.x, 0f, move2D.y);
+        }
+
+        private void HandleLocomotion()
+        {
+            Vector3 inputDirection = PollRawInput();
+            Camera cam = EnsureCameraReference();
             Vector3 moveDirection = Vector3.zero;
+
+            bool wasMoving = IsMoving;
 
             if (inputDirection.sqrMagnitude > 0.001f)
             {
-                // Project camera forward and right onto horizontal XZ plane
-                Vector3 camForward = explorationCamera != null ? explorationCamera.transform.forward : Vector3.forward;
-                Vector3 camRight = explorationCamera != null ? explorationCamera.transform.right : Vector3.right;
+                // Project camera orientation onto horizontal XZ plane
+                Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
+                Vector3 camRight = cam != null ? cam.transform.right : Vector3.right;
 
                 camForward.y = 0f;
                 camRight.y = 0f;
@@ -130,7 +227,7 @@ namespace CastleOfTheD20.World
 
                 moveDirection = (camForward * inputDirection.z + camRight * inputDirection.x).normalized;
 
-                // Smooth steering towards movement direction
+                // Smooth rotational steering towards movement vector
                 if (moveDirection.sqrMagnitude > 0.001f)
                 {
                     Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
@@ -138,27 +235,40 @@ namespace CastleOfTheD20.World
                 }
 
                 IsMoving = true;
-            }
-            else
-            {
-                IsMoving = false;
-            }
 
-            // Gravity & Vertical Velocity Handling
-            if (characterController.isGrounded)
-            {
-                if (verticalVelocity < 0f)
+                if (!wasMoving && debugLogging)
                 {
-                    verticalVelocity = groundedStickForce;
+                    Debug.Log($"[PlayerExplorationMovement] Locomotion started (Input: {inputDirection}).");
                 }
             }
             else
             {
-                verticalVelocity += gravity * Time.deltaTime;
+                IsMoving = false;
+
+                if (wasMoving && debugLogging)
+                {
+                    Debug.Log("[PlayerExplorationMovement] Locomotion stopped.");
+                }
             }
 
-            Vector3 motion = moveDirection * moveSpeed + Vector3.up * verticalVelocity;
-            characterController.Move(motion * Time.deltaTime);
+            // Gravity & Vertical Ground Sticking
+            if (characterController != null && characterController.enabled)
+            {
+                if (characterController.isGrounded)
+                {
+                    if (verticalVelocity < 0f)
+                    {
+                        verticalVelocity = groundedStickForce;
+                    }
+                }
+                else
+                {
+                    verticalVelocity += gravity * Time.deltaTime;
+                }
+
+                Vector3 motion = moveDirection * moveSpeed + Vector3.up * verticalVelocity;
+                characterController.Move(motion * Time.deltaTime);
+            }
         }
 
         private void ApplyGravityOnly()
@@ -212,28 +322,38 @@ namespace CastleOfTheD20.World
 
             if (targetTile != null)
             {
-                // Temporarily disable CharacterController so Unity allows manual transform repositioning
-                bool wasEnabled = characterController.enabled;
-                characterController.enabled = false;
+                // Safely disable CharacterController during coordinate repositioning
+                bool wasEnabled = characterController != null && characterController.enabled;
+                if (characterController != null) characterController.enabled = false;
 
-                if (playerUnit != null)
+                try
                 {
-                    playerUnit.MoveToTile(targetTile);
+                    if (playerUnit != null)
+                    {
+                        playerUnit.MoveToTile(targetTile);
+                    }
+                    else
+                    {
+                        transform.position = GridManager.Instance.GetWorldPosition(gridCoord);
+                    }
                 }
-                else
+                finally
                 {
-                    transform.position = GridManager.Instance.GetWorldPosition(gridCoord);
+                    if (characterController != null) characterController.enabled = wasEnabled;
                 }
 
-                characterController.enabled = wasEnabled;
                 verticalVelocity = 0f;
-
                 Debug.Log($"[PlayerExplorationMovement] Combat transition: Snapped {name} to GridTile ({gridCoord.x}, {gridCoord.y}).");
             }
         }
 
         private void HandlePlayModeChanged(GamePlayMode mode)
         {
+            if (debugLogging)
+            {
+                Debug.Log($"[PlayerExplorationMovement] GamePlayMode changed to: {mode}.");
+            }
+
             if (mode == GamePlayMode.Combat && autoSnapOnCombat)
             {
                 SnapToNearestGridTile();

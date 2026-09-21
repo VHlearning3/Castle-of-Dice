@@ -15,7 +15,26 @@ namespace CastleOfTheD20.Dialogue
     {
         #region Singleton
 
-        public static DialogueController Instance { get; private set; }
+        private static DialogueController instance;
+
+        public static DialogueController Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<DialogueController>();
+                    if (instance == null)
+                    {
+                        GameObject go = new GameObject("DialogueController");
+                        instance = go.AddComponent<DialogueController>();
+                        Debug.Log("[DialogueController] Auto-created DialogueController GameObject in scene.");
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         #endregion
 
@@ -66,20 +85,23 @@ namespace CastleOfTheD20.Dialogue
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            instance = this;
+
+            // Pre-warm DialogueActionTrigger listener for dialogue action tags
+            _ = DialogueActionTrigger.Instance;
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
             }
         }
 
@@ -103,6 +125,9 @@ namespace CastleOfTheD20.Dialogue
             activePlayer = player != null ? player : FindAnyObjectByType<PlayerUnit>();
             currentNode = startingNode;
             isInDialogue = true;
+
+            // Transition game mode to dialogue to halt exploration movement
+            GameManager.Instance?.SetMode(GamePlayMode.Dialogue);
 
             Debug.Log($"[DialogueController] Started dialogue with {currentNode.SpeakerName}: \"{currentNode.DialogueText}\"");
             OnDialogueStarted?.Invoke(currentNode);
@@ -194,6 +219,12 @@ namespace CastleOfTheD20.Dialogue
 
             Debug.Log("[DialogueController] Dialogue session ended.");
             OnDialogueEnded?.Invoke();
+
+            // Restore exploration mode if currently in dialogue mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode == GamePlayMode.Dialogue)
+            {
+                GameManager.Instance.SetMode(GamePlayMode.Exploration);
+            }
         }
 
         #endregion

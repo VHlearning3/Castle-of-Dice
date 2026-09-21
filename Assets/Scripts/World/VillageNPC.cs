@@ -62,19 +62,26 @@ namespace CastleOfTheD20.World
         /// <param name="player">The player initiating the conversation.</param>
         public override void Interact(PlayerUnit player)
         {
-            if (DialogueController.Instance == null)
+            DialogueController controller = DialogueController.Instance;
+            if (controller == null)
             {
-                Debug.LogError($"[VillageNPC] Cannot start dialogue with '{npcName}': DialogueController.Instance is null in the scene.");
+                Debug.LogError($"[VillageNPC] Cannot start dialogue with '{npcName}': DialogueController could not be located or instantiated.");
                 return;
             }
 
             if (startingDialogueNode == null)
             {
-                Debug.LogWarning($"[VillageNPC] No starting DialogueNodeSO assigned to '{npcName}'.");
-                return;
+                Debug.LogWarning($"[VillageNPC] No starting DialogueNodeSO assigned to '{npcName}'. Creating fallback greeting dialogue.");
+                startingDialogueNode = ScriptableObject.CreateInstance<DialogueNodeSO>();
+                startingDialogueNode.Initialize(
+                    speaker: string.IsNullOrWhiteSpace(npcName) ? "Villager" : npcName,
+                    text: $"Greetings, traveler! Welcome to the village of Oakhaven. Speak to Innkeeper Barnaby or Blacksmith Baldur for quests and equipment.",
+                    portrait: null,
+                    isExit: false
+                );
             }
 
-            DialogueController.Instance.StartDialogue(startingDialogueNode);
+            controller.StartDialogue(startingDialogueNode, player);
         }
 
         #endregion

@@ -24,7 +24,26 @@ namespace CastleOfTheD20.Dialogue
 
         #region Singleton / Static State
 
-        public static DialogueActionTrigger Instance { get; private set; }
+        private static DialogueActionTrigger instance;
+
+        public static DialogueActionTrigger Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<DialogueActionTrigger>();
+                    if (instance == null)
+                    {
+                        GameObject go = new GameObject("DialogueActionTrigger");
+                        instance = go.AddComponent<DialogueActionTrigger>();
+                        Debug.Log("[DialogueActionTrigger] Auto-created DialogueActionTrigger GameObject in scene.");
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         // Tracks quests where the player negotiated a bonus reward
         private static readonly HashSet<string> questsWithNegotiatedBonus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -35,13 +54,13 @@ namespace CastleOfTheD20.Dialogue
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            instance = this;
         }
 
         private void OnEnable()
@@ -56,9 +75,9 @@ namespace CastleOfTheD20.Dialogue
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
             }
         }
 

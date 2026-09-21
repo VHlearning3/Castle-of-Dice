@@ -193,14 +193,25 @@ namespace CastleOfTheD20.Combat
             currentTile.IsOccupied = true;
             gridPosition = tile.GridPosition;
 
-            // Update physical transform
-            if (GridManager.Instance != null)
+            // Update physical transform safely if CharacterController is present
+            CharacterController cc = GetComponent<CharacterController>();
+            bool ccWasEnabled = cc != null && cc.enabled;
+            if (ccWasEnabled) cc.enabled = false;
+
+            try
             {
-                transform.position = GridManager.Instance.GetWorldPosition(gridPosition);
+                if (GridManager.Instance != null)
+                {
+                    transform.position = GridManager.Instance.GetWorldPosition(gridPosition);
+                }
+                else
+                {
+                    transform.position = tile.transform.position;
+                }
             }
-            else
+            finally
             {
-                transform.position = tile.transform.position;
+                if (ccWasEnabled) cc.enabled = true;
             }
         }
 

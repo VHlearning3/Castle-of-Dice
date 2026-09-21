@@ -14,7 +14,26 @@ namespace CastleOfTheD20.Economy
     {
         #region Singleton
 
-        public static QuestManager Instance { get; private set; }
+        private static QuestManager instance;
+
+        public static QuestManager Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<QuestManager>();
+                    if (instance == null)
+                    {
+                        GameObject go = new GameObject("QuestManager");
+                        instance = go.AddComponent<QuestManager>();
+                        Debug.Log("[QuestManager] Auto-created QuestManager GameObject in scene.");
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         #endregion
 
@@ -51,22 +70,22 @@ namespace CastleOfTheD20.Economy
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            instance = this;
 
             InitializeQuests();
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
             }
         }
 

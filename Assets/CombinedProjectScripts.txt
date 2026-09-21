@@ -1602,7 +1602,7 @@ namespace CastleOfTheD20.Combat
         /// <summary>
         /// Generates the grid layout directly in the Scene view while in Editor mode.
         /// Right-click GridManager component in Inspector and select 'Generate Grid In Editor'.
-        /// </summary>
+        /// </summary>                              
         [ContextMenu("Generate Grid In Editor")]
         public void GenerateGridInEditor()
         {
@@ -1623,6 +1623,9 @@ namespace CastleOfTheD20.Combat
             EnsureTilesParentExists();
             Transform parent = tilesParent != null ? tilesParent : transform;
 
+            // Unityn Quad vaatii 90 asteen X-kierron maatasoon asettumista varten
+            Quaternion tileRotation = Quaternion.Euler(90f, 0f, 0f);
+
             for (int x = 0; x < width; x++)
             {
                 for (int y = 0; y < height; y++)
@@ -1638,21 +1641,21 @@ namespace CastleOfTheD20.Combat
                         {
                             tileObj = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefabToUse, parent);
                             tileObj.transform.position = worldPos;
-                            tileObj.transform.rotation = Quaternion.identity;
+                            tileObj.transform.rotation = tileRotation;
                         }
                         else
                         {
-                            tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                            tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
                         }
 #else
-                        tileObj = Instantiate(prefabToUse, worldPos, Quaternion.identity, parent);
+                        tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
 #endif
                     }
                     else
                     {
                         tileObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
                         tileObj.transform.position = worldPos;
-                        tileObj.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
+                        tileObj.transform.rotation = tileRotation;
                         tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
                         tileObj.transform.SetParent(parent);
                     }
@@ -2029,7 +2032,6 @@ namespace CastleOfTheD20.Combat
         #endregion
     }
 }
-
 
 // ==========================================
 // File: GridTile.cs
@@ -2808,17 +2810,31 @@ namespace CastleOfTheD20.Combat
         #region Combat Initialization
 
         /// <summary>
-        /// Automatically discovers all living PlayerUnit and EnemyUnit components in the scene and begins combat.
+        /// Automatically discovers all living PlayerUnit and EnemyUnit components in the scene.
+        /// Starts combat only if both living players and enemies exist; otherwise keeps exploration mode active.
         /// </summary>
         public void AutoEnrollSceneUnits()
         {
-            List<CombatUnit> units = new List<CombatUnit>();
-            units.AddRange(FindObjectsByType<PlayerUnit>(FindObjectsSortMode.None));
-            units.AddRange(FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None));
+            List<PlayerUnit> players = new List<PlayerUnit>(FindObjectsByType<PlayerUnit>(FindObjectsSortMode.None));
+            List<EnemyUnit> enemies = new List<EnemyUnit>(FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None));
 
-            if (units.Count > 0)
+            // Prune dead or uninitialized units
+            players.RemoveAll(p => p == null || !p.IsAlive);
+            enemies.RemoveAll(e => e == null || !e.IsAlive);
+
+            if (players.Count > 0 && enemies.Count > 0)
             {
-                StartCombat(units);
+                List<CombatUnit> allUnits = new List<CombatUnit>();
+                allUnits.AddRange(players);
+                allUnits.AddRange(enemies);
+                StartCombat(allUnits);
+            }
+            else
+            {
+                isCombatActive = false;
+                GridManager.Instance?.ClearAllHighlights();
+                GameManager.Instance?.SetMode(GamePlayMode.Exploration);
+                Debug.Log("[TurnManager] Safe area detected (no living enemies found in scene). Safe exploration mode active.");
             }
         }
 
@@ -4381,6 +4397,249 @@ namespace CastleOfTheD20.Data
 
 
 // ==========================================
+// File: DialogueActionTrigger.cs
+// Path: Assets/Scripts/Dialogue/DialogueActionTrigger.cs
+// ==========================================
+
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+using CastleOfTheD20.UI;
+using CastleOfTheD20.Economy;
+
+namespace CastleOfTheD20.Dialogue
+{
+    /// <summary>
+    /// Decoupled bridge component that connects DialogueOption selection events to external game systems.
+    /// Intercepts action tags in CombatDebuffTag or OptionText (such as '[ACTION_OPEN_SHOP]' or '[ACTION_ACCEPT_QUEST]')
+    /// and invokes the corresponding UI controllers, quest activations, or economy managers.
+    /// </summary>
+    public class DialogueActionTrigger : MonoBehaviour
+    {
+        #region Constants & Action Tags
+
+        public const string TAG_OPEN_SHOP = "[ACTION_OPEN_SHOP]";
+        public const string TAG_ACCEPT_QUEST = "[ACTION_ACCEPT_QUEST]";
+        public const string TAG_COMPLETE_QUEST = "[ACTION_COMPLETE_QUEST]";
+        public const string TAG_CLOSE_DIALOGUE = "[ACTION_CLOSE_DIALOGUE]";
+
+        #endregion
+
+        #region Singleton / Static State
+
+        public static DialogueActionTrigger Instance { get; private set; }
+
+        // Tracks quests where the player negotiated a bonus reward
+        private static readonly HashSet<string> questsWithNegotiatedBonus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+        }
+
+        private void OnEnable()
+        {
+            DialogueController.OnOptionSelected += HandleOptionSelected;
+        }
+
+        private void OnDisable()
+        {
+            DialogueController.OnOptionSelected -= HandleOptionSelected;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
+        }
+
+        #endregion
+
+        #region Option Handling
+
+        private void HandleOptionSelected(DialogueOption option)
+        {
+            if (option == null) return;
+
+            string tag = option.CombatDebuffTag ?? string.Empty;
+            string text = option.OptionText ?? string.Empty;
+
+            // 1. Check for Shop Opening
+            if (ContainsAction(tag, text, TAG_OPEN_SHOP) || ContainsAction(tag, text, "ACTION_OPEN_SHOP") || text.StartsWith("[Shop]", StringComparison.OrdinalIgnoreCase))
+            {
+                ExecuteOpenShop();
+                return;
+            }
+
+            // 2. Check for Quest Acceptance
+            if (ContainsAction(tag, text, TAG_ACCEPT_QUEST) || ContainsAction(tag, text, "ACTION_ACCEPT_QUEST"))
+            {
+                ExecuteAcceptQuest(tag, text);
+            }
+
+            // 3. Check for Quest Completion
+            if (ContainsAction(tag, text, TAG_COMPLETE_QUEST) || ContainsAction(tag, text, "ACTION_COMPLETE_QUEST"))
+            {
+                ExecuteCompleteQuest(tag, text);
+            }
+
+            // 4. Check for Explicit Close
+            if (ContainsAction(tag, text, TAG_CLOSE_DIALOGUE) || ContainsAction(tag, text, "ACTION_CLOSE_DIALOGUE"))
+            {
+                DialogueController.Instance?.EndDialogue();
+            }
+        }
+
+        private static bool ContainsAction(string tag, string text, string actionKey)
+        {
+            return tag.IndexOf(actionKey, StringComparison.OrdinalIgnoreCase) >= 0
+                || text.IndexOf(actionKey, StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        #endregion
+
+        #region Action Implementations
+
+        private void ExecuteOpenShop()
+        {
+            Debug.Log("[DialogueActionTrigger] Intercepted Shop Action: Closing dialogue and opening Blacksmith Baldur's shop.");
+
+            // Conclude dialogue session
+            DialogueController.Instance?.EndDialogue();
+
+            // Open Shop UI
+            if (ShopUIController.Instance != null)
+            {
+                ShopUIController.Instance.OpenShop();
+            }
+            else
+            {
+                ShopUIController fallback = FindAnyObjectByType<ShopUIController>();
+                if (fallback != null)
+                {
+                    fallback.OpenShop();
+                }
+                else
+                {
+                    Debug.LogError("[DialogueActionTrigger] Cannot open shop: ShopUIController instance not found in scene!");
+                }
+            }
+        }
+
+        private void ExecuteAcceptQuest(string tag, string text)
+        {
+            string questId = ExtractQuestId(tag, text, fallback: "quest_cellar_pests");
+            bool hasBonus = tag.IndexOf(":bonus", StringComparison.OrdinalIgnoreCase) >= 0
+                         || text.IndexOf(":bonus", StringComparison.OrdinalIgnoreCase) >= 0
+                         || tag.IndexOf("BarnabyNegotiationBonus", StringComparison.OrdinalIgnoreCase) >= 0;
+
+            if (hasBonus)
+            {
+                SetQuestBonusNegotiated(questId, true);
+                Debug.Log($"[DialogueActionTrigger] Bonus reward recorded for quest: '{questId}'.");
+            }
+
+            if (QuestManager.Instance != null)
+            {
+                bool started = QuestManager.Instance.StartQuest(questId);
+                if (!started)
+                {
+                    // If not registered under 'quest_cellar_pests', try 'CellarRats'
+                    QuestManager.Instance.StartQuest("CellarRats");
+                }
+                Debug.Log($"[DialogueActionTrigger] Started Quest: '{questId}' (Bonus Negotiated: {hasBonus}).");
+            }
+            else
+            {
+                Debug.LogWarning($"[DialogueActionTrigger] QuestManager.Instance is null. Quest '{questId}' could not be accepted.");
+            }
+        }
+
+        private void ExecuteCompleteQuest(string tag, string text)
+        {
+            string questId = ExtractQuestId(tag, text, fallback: "quest_cellar_pests");
+            bool bonus = HasQuestBonusNegotiated(questId);
+
+            if (QuestManager.Instance != null)
+            {
+                QuestManager.Instance.CompleteQuest(questId, grantedBonus: bonus);
+                Debug.Log($"[DialogueActionTrigger] Completed Quest: '{questId}' with bonus = {bonus}.");
+            }
+        }
+
+        private string ExtractQuestId(string tag, string text, string fallback)
+        {
+            // Expected format: "[ACTION_ACCEPT_QUEST:quest_id]" or "[ACTION_ACCEPT_QUEST:quest_id:bonus]"
+            string source = tag.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 ? tag : text;
+            int startIndex = source.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase);
+
+            if (startIndex >= 0)
+            {
+                int colonIndex = source.IndexOf(':', startIndex);
+                if (colonIndex >= 0)
+                {
+                    int endIndex = source.IndexOfAny(new[] { ':', ']', ' ' }, colonIndex + 1);
+                    if (endIndex > colonIndex)
+                    {
+                        return source.Substring(colonIndex + 1, endIndex - colonIndex - 1).Trim();
+                    }
+                    else
+                    {
+                        return source.Substring(colonIndex + 1).Trim();
+                    }
+                }
+            }
+
+            return fallback;
+        }
+
+        #endregion
+
+        #region Bonus Tracking API
+
+        /// <summary>
+        /// Marks whether a quest has a negotiated bonus reward unlocked via dialogue checks.
+        /// </summary>
+        public static void SetQuestBonusNegotiated(string questId, bool bonus)
+        {
+            if (string.IsNullOrEmpty(questId)) return;
+
+            if (bonus)
+            {
+                questsWithNegotiatedBonus.Add(questId);
+            }
+            else
+            {
+                questsWithNegotiatedBonus.Remove(questId);
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the player passed a negotiation check for this quest.
+        /// </summary>
+        public static bool HasQuestBonusNegotiated(string questId)
+        {
+            return !string.IsNullOrEmpty(questId) && questsWithNegotiatedBonus.Contains(questId);
+        }
+
+        #endregion
+    }
+}
+
+
+// ==========================================
 // File: DialogueController.cs
 // Path: Assets/Scripts/Dialogue/DialogueController.cs
 // ==========================================
@@ -4444,6 +4703,9 @@ namespace CastleOfTheD20.Dialogue
         /// <summary>Fired when a D20 skill check is rolled during dialogue: (result, isSuccess).</summary>
         public static event Action<DiceResult, bool> OnSkillCheckRolled;
 
+        /// <summary>Fired when an interactive dialogue choice is selected by the player.</summary>
+        public static event Action<DialogueOption> OnOptionSelected;
+
         #endregion
 
         #region Unity Lifecycle
@@ -4504,6 +4766,8 @@ namespace CastleOfTheD20.Dialogue
         public void SelectOption(DialogueOption option)
         {
             if (!isInDialogue || option == null) return;
+
+            OnOptionSelected?.Invoke(option);
 
             if (option.RequiresCheck)
             {
@@ -4588,6 +4852,7 @@ namespace CastleOfTheD20.Dialogue
         public void RegisterCombatDebuff(string tag)
         {
             if (string.IsNullOrWhiteSpace(tag)) return;
+            if (tag.StartsWith("[ACTION_", StringComparison.OrdinalIgnoreCase)) return;
 
             registeredCombatDebuffs.Add(tag);
             Debug.Log($"[DialogueController] Combat debuff unlocked: '{tag}'.");
@@ -4690,6 +4955,26 @@ namespace CastleOfTheD20.Dialogue
         #endregion
 
         #region Editor Validation & Helpers
+
+        /// <summary>
+        /// Initializes the dialogue node parameters programmatically (used by editor generators or unit tests).
+        /// </summary>
+        public void Initialize(string speaker, string text, Sprite portrait = null, bool isExit = false)
+        {
+            speakerName = speaker;
+            dialogueText = text;
+            speakerPortrait = portrait;
+            isExitNode = isExit;
+            options = new List<DialogueOption>();
+        }
+
+        /// <summary>
+        /// Replaces the option list for this node.
+        /// </summary>
+        public void SetOptions(List<DialogueOption> newOptions)
+        {
+            options = newOptions ?? new List<DialogueOption>();
+        }
 
         /// <summary>
         /// Programmatic helper to add an option.
@@ -5704,6 +5989,10 @@ namespace CastleOfTheD20.UI
     {
         #region Serialized Fields
 
+        [Header("Root & Containers")]
+        [Tooltip("Root GameObject containing the combat action bar and turn controls (e.g. CombatActionBar).")]
+        [SerializeField] private GameObject combatActionBar;
+
         [Header("Ability Action Bar (4 Slots)")]
         [Tooltip("Button components corresponding to the 4 class abilities.")]
         [SerializeField] private List<Button> abilityButtons = new List<Button>(4);
@@ -5748,6 +6037,25 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (combatActionBar == null)
+            {
+                Transform barTransform = transform.Find("CombatActionBar")
+                    ?? transform.Find("ActionBar")
+                    ?? transform.Find("CombatPanel");
+
+                if (barTransform != null)
+                {
+                    combatActionBar = barTransform.gameObject;
+                }
+                else if (abilityButtons.Count > 0 && abilityButtons[0] != null)
+                {
+                    combatActionBar = abilityButtons[0].transform.parent?.gameObject;
+                }
+            }
+
+            // Hide action bar by default until combat is active
+            SetCombatBarVisible(false);
+
             if (endTurnButton != null)
             {
                 endTurnButton.onClick.AddListener(OnEndTurnClicked);
@@ -5763,6 +6071,7 @@ namespace CastleOfTheD20.UI
 
         private void OnEnable()
         {
+            GameManager.OnPlayModeChanged += HandlePlayModeChanged;
             TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted += HandleUnitTurnStarted;
             TurnManager.OnCombatEnded += HandleCombatEnded;
@@ -5772,6 +6081,7 @@ namespace CastleOfTheD20.UI
 
         private void OnDisable()
         {
+            GameManager.OnPlayModeChanged -= HandlePlayModeChanged;
             TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted -= HandleUnitTurnStarted;
             TurnManager.OnCombatEnded -= HandleCombatEnded;
@@ -5783,6 +6093,12 @@ namespace CastleOfTheD20.UI
         {
             LocatePlayer();
             RefreshAbilityBar();
+
+            // Ensure action bar reflects initial game mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+            {
+                SetCombatBarVisible(false);
+            }
         }
 
         #endregion
@@ -5909,8 +6225,24 @@ namespace CastleOfTheD20.UI
 
         #region Turn & State Listeners
 
+        private void HandlePlayModeChanged(GamePlayMode mode)
+        {
+            if (mode == GamePlayMode.Combat)
+            {
+                bool isPlayerTurn = TurnManager.Instance != null && TurnManager.Instance.IsCombatActive && TurnManager.Instance.CurrentState == TurnState.PlayerTurn;
+                SetCombatBarVisible(isPlayerTurn);
+            }
+            else
+            {
+                SetCombatBarVisible(false);
+            }
+        }
+
         private void HandleTurnStateChanged(TurnState newState)
         {
+            bool showBar = (newState == TurnState.PlayerTurn) && (TurnManager.Instance != null && TurnManager.Instance.IsCombatActive);
+            SetCombatBarVisible(showBar);
+
             if (turnBannerText != null)
             {
                 turnBannerText.text = newState switch
@@ -5944,6 +6276,8 @@ namespace CastleOfTheD20.UI
                 LogCombatMessage($"--- Turn: {unit.UnitName} ---");
             }
 
+            bool isPlayer = unit is PlayerUnit;
+            SetCombatBarVisible(isPlayer);
             RefreshAbilityBar();
         }
 
@@ -5955,9 +6289,27 @@ namespace CastleOfTheD20.UI
 
         private void HandleCombatEnded(bool isVictory)
         {
+            SetCombatBarVisible(false);
             string outcome = isVictory ? "VICTORY! All foes vanquished." : "DEFEAT! Party defeated.";
             LogCombatMessage(outcome);
             RefreshAbilityBar();
+        }
+
+        /// <summary>
+        /// Controls visibility of the combat action bar and associated turn controls.
+        /// </summary>
+        public void SetCombatBarVisible(bool visible)
+        {
+            if (combatActionBar != null)
+            {
+                combatActionBar.SetActive(visible);
+            }
+
+            if (!visible)
+            {
+                selectedAbilitySlot = -1;
+                GridManager.Instance?.ClearAllHighlights();
+            }
         }
 
         #endregion
@@ -7043,10 +7395,24 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Singleton
+
+        public static ShopUIController Instance { get; private set; }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
         {
+            if (Instance != null && Instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
+            Instance = this;
+
             if (shopPanel != null)
             {
                 shopPanel.SetActive(false);
@@ -7092,6 +7458,14 @@ namespace CastleOfTheD20.UI
             InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
             ShopManager.OnScrapConverted -= HandleScrapConverted;
             ShopManager.OnItemPurchased -= HandleItemPurchased;
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         #endregion
@@ -7933,6 +8307,384 @@ namespace CastleOfTheD20.World
                 Debug.LogWarning($"[LockpickInteraction] TRAP TRIGGERED! Dart trap deals {trapDamage} damage to {player.UnitName}!");
                 player.TakeDamage(trapDamage);
                 OnTrapSprung?.Invoke(trapDamage);
+            }
+        }
+
+        #endregion
+    }
+}
+
+
+// ==========================================
+// File: PlayerExplorationMovement.cs
+// Path: Assets/Scripts/World/PlayerExplorationMovement.cs
+// ==========================================
+
+using UnityEngine;
+using CastleOfTheD20.Core;
+using CastleOfTheD20.Combat;
+
+namespace CastleOfTheD20.World
+{
+    /// <summary>
+    /// Real-time 3D exploration character controller for Castle of the D20.
+    /// Handles WASD / arrow key locomotion oriented relative to the main camera,
+    /// smooth rotational steering, gravity and slope grounding via CharacterController.
+    /// Yields control and automatically snaps to the nearest grid tile when transitioning into turn-based combat.
+    /// </summary>
+    [RequireComponent(typeof(CharacterController))]
+    public class PlayerExplorationMovement : MonoBehaviour
+    {
+        #region Serialized Fields
+
+        [Header("Movement Settings")]
+        [Tooltip("Forward and lateral movement speed during free exploration in units per second.")]
+        [SerializeField] private float moveSpeed = 5.5f;
+
+        [Tooltip("Turning and orientation smoothing speed in degrees/radians per second.")]
+        [SerializeField] private float rotationSpeed = 14.0f;
+
+        [Header("Gravity & Physics")]
+        [Tooltip("Downward gravitational acceleration applied when not grounded.")]
+        [SerializeField] private float gravity = -20.0f;
+
+        [Tooltip("Slight downward velocity applied while grounded to stick firmly to terrain slopes.")]
+        [SerializeField] private float groundedStickForce = -2.0f;
+
+        [Header("Camera Alignment")]
+        [Tooltip("Camera used to calculate horizontal movement vectors. Defaults to Camera.main.")]
+        [SerializeField] private Camera explorationCamera;
+
+        [Header("Combat Transition")]
+        [Tooltip("Automatically snap to the nearest tactical GridTile when entering Combat mode.")]
+        [SerializeField] private bool autoSnapOnCombat = true;
+
+        #endregion
+
+        #region Private State
+
+        private CharacterController characterController;
+        private PlayerUnit playerUnit;
+        private float verticalVelocity = 0f;
+
+        #endregion
+
+        #region Public Properties
+
+        /// <summary>Whether the player is currently actively moving via input.</summary>
+        public bool IsMoving { get; private set; }
+
+        /// <summary>Current movement speed setting.</summary>
+        public float MoveSpeed
+        {
+            get => moveSpeed;
+            set => moveSpeed = Mathf.Max(0f, value);
+        }
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            characterController = GetComponent<CharacterController>();
+            playerUnit = GetComponent<PlayerUnit>();
+
+            if (explorationCamera == null)
+            {
+                explorationCamera = Camera.main;
+            }
+        }
+
+        private void OnEnable()
+        {
+            GameManager.OnPlayModeChanged += HandlePlayModeChanged;
+            TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
+        }
+
+        private void OnDisable()
+        {
+            GameManager.OnPlayModeChanged -= HandlePlayModeChanged;
+            TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
+        }
+
+        private void Update()
+        {
+            // Guard: Only allow exploration movement when in Exploration mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
+            {
+                IsMoving = false;
+                ApplyGravityOnly();
+                return;
+            }
+
+            HandleLocomotion();
+        }
+
+        #endregion
+
+        #region Locomotion & Steering
+
+        private void HandleLocomotion()
+        {
+            float horizontal = Input.GetAxisRaw("Horizontal");
+            float vertical = Input.GetAxisRaw("Vertical");
+
+            Vector3 inputDirection = new Vector3(horizontal, 0f, vertical);
+
+            if (explorationCamera == null)
+            {
+                explorationCamera = Camera.main;
+            }
+
+            Vector3 moveDirection = Vector3.zero;
+
+            if (inputDirection.sqrMagnitude > 0.001f)
+            {
+                // Project camera forward and right onto horizontal XZ plane
+                Vector3 camForward = explorationCamera != null ? explorationCamera.transform.forward : Vector3.forward;
+                Vector3 camRight = explorationCamera != null ? explorationCamera.transform.right : Vector3.right;
+
+                camForward.y = 0f;
+                camRight.y = 0f;
+                camForward.Normalize();
+                camRight.Normalize();
+
+                moveDirection = (camForward * inputDirection.z + camRight * inputDirection.x).normalized;
+
+                // Smooth steering towards movement direction
+                if (moveDirection.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                }
+
+                IsMoving = true;
+            }
+            else
+            {
+                IsMoving = false;
+            }
+
+            // Gravity & Vertical Velocity Handling
+            if (characterController.isGrounded)
+            {
+                if (verticalVelocity < 0f)
+                {
+                    verticalVelocity = groundedStickForce;
+                }
+            }
+            else
+            {
+                verticalVelocity += gravity * Time.deltaTime;
+            }
+
+            Vector3 motion = moveDirection * moveSpeed + Vector3.up * verticalVelocity;
+            characterController.Move(motion * Time.deltaTime);
+        }
+
+        private void ApplyGravityOnly()
+        {
+            if (characterController == null || !characterController.enabled) return;
+
+            if (characterController.isGrounded)
+            {
+                verticalVelocity = groundedStickForce;
+            }
+            else
+            {
+                verticalVelocity += gravity * Time.deltaTime;
+            }
+
+            characterController.Move(Vector3.up * (verticalVelocity * Time.deltaTime));
+        }
+
+        #endregion
+
+        #region Grid Snapping on Combat Transition
+
+        /// <summary>
+        /// Snaps the player smoothly to the nearest GridTile coordinate and updates PlayerUnit spatial registration.
+        /// </summary>
+        public void SnapToNearestGridTile()
+        {
+            if (GridManager.Instance == null) return;
+
+            Vector2Int gridCoord = GridManager.Instance.GetGridPosition(transform.position);
+            GridTile targetTile = GridManager.Instance.GetTileAt(gridCoord);
+
+            if (targetTile == null)
+            {
+                // Search nearby valid tiles if outside exact boundary
+                float closestDist = float.MaxValue;
+                foreach (var kvp in GridManager.Instance.Tiles)
+                {
+                    if (kvp.Value != null && kvp.Value.IsWalkable && !kvp.Value.IsOccupied)
+                    {
+                        float d = Vector3.Distance(transform.position, kvp.Value.transform.position);
+                        if (d < closestDist)
+                        {
+                            closestDist = d;
+                            targetTile = kvp.Value;
+                            gridCoord = kvp.Key;
+                        }
+                    }
+                }
+            }
+
+            if (targetTile != null)
+            {
+                // Temporarily disable CharacterController so Unity allows manual transform repositioning
+                bool wasEnabled = characterController.enabled;
+                characterController.enabled = false;
+
+                if (playerUnit != null)
+                {
+                    playerUnit.MoveToTile(targetTile);
+                }
+                else
+                {
+                    transform.position = GridManager.Instance.GetWorldPosition(gridCoord);
+                }
+
+                characterController.enabled = wasEnabled;
+                verticalVelocity = 0f;
+
+                Debug.Log($"[PlayerExplorationMovement] Combat transition: Snapped {name} to GridTile ({gridCoord.x}, {gridCoord.y}).");
+            }
+        }
+
+        private void HandlePlayModeChanged(GamePlayMode mode)
+        {
+            if (mode == GamePlayMode.Combat && autoSnapOnCombat)
+            {
+                SnapToNearestGridTile();
+            }
+        }
+
+        private void HandleTurnStateChanged(TurnState state)
+        {
+            if ((state == TurnState.PlayerTurn || state == TurnState.EnemyTurn) && autoSnapOnCombat)
+            {
+                if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+                {
+                    GameManager.Instance.SetMode(GamePlayMode.Combat);
+                }
+                SnapToNearestGridTile();
+            }
+        }
+
+        #endregion
+    }
+}
+
+
+// ==========================================
+// File: PlayerInteractionRaycaster.cs
+// Path: Assets/Scripts/World/PlayerInteractionRaycaster.cs
+// ==========================================
+
+using UnityEngine;
+using UnityEngine.EventSystems;
+using CastleOfTheD20.Core;
+using CastleOfTheD20.Combat;
+
+namespace CastleOfTheD20.World
+{
+    /// <summary>
+    /// Player mouse interaction controller for 3D isometric exploration.
+    /// Raycasts from the main camera on mouse click to detect Interactable objects (NPCs, chests, doors)
+    /// and invokes TriggerInteraction when within valid interaction radius.
+    /// </summary>
+    public class PlayerInteractionRaycaster : MonoBehaviour
+    {
+        #region Serialized Fields
+
+        [Header("Targeting & Camera")]
+        [Tooltip("Camera used for mouse screen-to-world raycasting (defaults to Camera.main).")]
+        [SerializeField] private Camera targetCamera;
+
+        [Tooltip("The player character instance performing interactions.")]
+        [SerializeField] private PlayerUnit player;
+
+        [Header("Raycast Settings")]
+        [Tooltip("Maximum raycast distance from the camera into the world.")]
+        [SerializeField] private float maxRaycastDistance = 100f;
+
+        [Tooltip("Layers checked for interactable colliders.")]
+        [SerializeField] private LayerMask interactableLayers = ~0;
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            if (targetCamera == null)
+            {
+                targetCamera = Camera.main;
+            }
+
+            if (player == null)
+            {
+                player = FindAnyObjectByType<PlayerUnit>();
+            }
+        }
+
+        private void Update()
+        {
+            // Only perform exploration raycasting while in free exploration mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
+            {
+                return;
+            }
+
+            HandleMouseInteraction();
+        }
+
+        #endregion
+
+        #region Interaction Handling
+
+        private void HandleMouseInteraction()
+        {
+            // Primary mouse button (Left click)
+            if (!Input.GetMouseButtonDown(0)) return;
+
+            // Prevent interaction through open UI panels or canvas elements
+            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+            {
+                return;
+            }
+
+            if (targetCamera == null)
+            {
+                targetCamera = Camera.main;
+                if (targetCamera == null) return;
+            }
+
+            if (player == null)
+            {
+                player = FindAnyObjectByType<PlayerUnit>();
+                if (player == null) return;
+            }
+
+            Ray ray = targetCamera.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit, maxRaycastDistance, interactableLayers))
+            {
+                Interactable interactable = hit.collider.GetComponentInParent<Interactable>();
+                if (interactable != null && interactable.IsInteractable)
+                {
+                    if (interactable.CanInteract(player))
+                    {
+                        interactable.TriggerInteraction(player);
+                    }
+                    else
+                    {
+                        float dist = Vector3.Distance(player.transform.position, interactable.transform.position);
+                        Debug.Log($"[PlayerInteractionRaycaster] Cannot interact with '{interactable.PromptMessage}': Too far away ({dist:F1}m > {interactable.InteractionRadius:F1}m).");
+                    }
+                }
             }
         }
 

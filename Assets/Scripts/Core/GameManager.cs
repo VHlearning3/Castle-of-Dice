@@ -124,6 +124,9 @@ namespace CastleOfTheD20.Core
 
             Instance = this;
 
+            // Ensure game always starts in clean exploration mode
+            currentMode = GamePlayMode.Exploration;
+
             if (persistAcrossScenes)
             {
                 DontDestroyOnLoad(gameObject);
@@ -133,6 +136,10 @@ namespace CastleOfTheD20.Core
         private void Start()
         {
             TurnManager.OnCombatEnded += HandleCombatEnded;
+
+            // Broadcast initial state to ensure all UI and controllers are synchronized
+            Debug.Log($"[GameManager] Initialized. Location: {currentLocation}, GameplayMode: {currentMode}");
+            OnPlayModeChanged?.Invoke(currentMode);
         }
 
         private void OnDestroy()
@@ -168,8 +175,9 @@ namespace CastleOfTheD20.Core
         {
             if (currentMode == newMode) return;
 
+            GamePlayMode oldMode = currentMode;
             currentMode = newMode;
-            Debug.Log($"[GameManager] Switched gameplay mode to: {currentMode}");
+            Debug.Log($"[GameManager] Switched gameplay mode: {oldMode} -> {currentMode}");
             OnPlayModeChanged?.Invoke(currentMode);
         }
 

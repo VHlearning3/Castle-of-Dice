@@ -48,6 +48,24 @@ namespace CastleOfTheD20.World
 
         #endregion
 
+        #region Unity Lifecycle
+
+        protected virtual void Awake()
+        {
+            Collider col = GetComponent<Collider>();
+            if (col == null && GetComponentInChildren<Collider>() == null)
+            {
+                // Ensure there is at least a trigger/solid collider for raycast detection
+                CapsuleCollider capsule = gameObject.AddComponent<CapsuleCollider>();
+                capsule.center = new Vector3(0, 1.0f, 0);
+                capsule.radius = 0.6f;
+                capsule.height = 2.0f;
+                Debug.Log($"[Interactable] Auto-created CapsuleCollider on '{name}' to ensure raycast detectability.");
+            }
+        }
+
+        #endregion
+
         #region Mouse Interaction
 
         protected virtual void OnMouseDown()
@@ -68,7 +86,7 @@ namespace CastleOfTheD20.World
             else
             {
                 float distance = Vector3.Distance(transform.position, player.transform.position);
-                Debug.Log($"[Interactable] Too far away to interact ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
+                Debug.LogWarning($"[Interactable] Too far away to interact with '{promptMessage}' ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
             }
         }
 
@@ -91,7 +109,12 @@ namespace CastleOfTheD20.World
         /// </summary>
         public void TriggerInteraction(PlayerUnit player)
         {
-            if (!CanInteract(player)) return;
+            if (!CanInteract(player))
+            {
+                float dist = player != null ? Vector3.Distance(transform.position, player.transform.position) : -1f;
+                Debug.LogWarning($"[Interactable] Cannot interact with '{promptMessage}': Out of range ({dist:F1}m > {interactionRadius:F1}m) or inactive.");
+                return;
+            }
 
             Debug.Log($"[Interactable] Triggered: '{promptMessage}' with {player.UnitName}");
             Interact(player);

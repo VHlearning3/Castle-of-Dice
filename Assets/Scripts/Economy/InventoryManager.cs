@@ -15,7 +15,26 @@ namespace CastleOfTheD20.Economy
     {
         #region Singleton
 
-        public static InventoryManager Instance { get; private set; }
+        private static InventoryManager instance;
+
+        public static InventoryManager Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<InventoryManager>();
+                    if (instance == null)
+                    {
+                        GameObject go = new GameObject("InventoryManager");
+                        instance = go.AddComponent<InventoryManager>();
+                        Debug.Log("[InventoryManager] Auto-created InventoryManager GameObject in scene.");
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         #endregion
 
@@ -70,13 +89,13 @@ namespace CastleOfTheD20.Economy
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            instance = this;
 
             if (persistAcrossScenes)
             {
@@ -86,9 +105,9 @@ namespace CastleOfTheD20.Economy
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
             }
         }
 

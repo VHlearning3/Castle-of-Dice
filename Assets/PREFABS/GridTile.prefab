@@ -128,7 +128,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Combat.GridTile
   gridPosition: {x: 0, y: 0}
   isWalkable: 1
-  tileRenderer: {fileID: 0}
+  tileRenderer: {fileID: 9066801497320358011}
   normalColor: {r: 1, g: 1, b: 1, a: 0.15}
   hoveredColor: {r: 1, g: 0.92, b: 0.016, a: 0.7}
   reachableColor: {r: 0.2, g: 0.6, b: 1, a: 0.6}
