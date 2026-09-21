@@ -59,6 +59,9 @@ namespace CastleOfTheD20.World
         /// <summary>Whether the player is currently actively moving via input.</summary>
         public bool IsMoving { get; private set; }
 
+        /// <summary>Current normalized world-space horizontal movement direction.</summary>
+        public Vector3 CurrentMoveDirection { get; private set; } = Vector3.zero;
+
         /// <summary>Current movement speed setting.</summary>
         public float MoveSpeed
         {
@@ -157,6 +160,7 @@ namespace CastleOfTheD20.World
                 if (IsMoving)
                 {
                     IsMoving = false;
+                    CurrentMoveDirection = Vector3.zero;
                     if (debugLogging) Debug.Log("[PlayerExplorationMovement] Locomotion halted due to mode transition.");
                 }
 
@@ -226,6 +230,7 @@ namespace CastleOfTheD20.World
                 camRight.Normalize();
 
                 moveDirection = (camForward * inputDirection.z + camRight * inputDirection.x).normalized;
+                CurrentMoveDirection = moveDirection;
 
                 // Smooth rotational steering towards movement vector
                 if (moveDirection.sqrMagnitude > 0.001f)
@@ -244,6 +249,7 @@ namespace CastleOfTheD20.World
             else
             {
                 IsMoving = false;
+                CurrentMoveDirection = Vector3.zero;
 
                 if (wasMoving && debugLogging)
                 {
