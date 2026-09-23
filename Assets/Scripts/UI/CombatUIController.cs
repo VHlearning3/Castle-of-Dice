@@ -267,6 +267,128 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        private GridTile lastHoveredTile;
+        private Camera combatCamera;
+        private readonly List<UnityEngine.EventSystems.RaycastResult> uiRaycastList = new List<UnityEngine.EventSystems.RaycastResult>();
+
+        private void Update()
+        {
+            if (GameManager.Instance == null || GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+            {
+                ClearHoveredTile();
+                return;
+            }
+
+            if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != TurnState.PlayerTurn)
+            {
+                ClearHoveredTile();
+                return;
+            }
+
+            HandleCombatTileRaycast();
+        }
+
+        private void ClearHoveredTile()
+        {
+            if (lastHoveredTile != null)
+            {
+                lastHoveredTile.TriggerUnhover();
+                lastHoveredTile = null;
+            }
+        }
+
+        private void HandleCombatTileRaycast()
+        {
+            // Do not raycast through interactive UI elements (buttons, dialogs, action bar)
+            if (IsPointerOverUI())
+            {
+                ClearHoveredTile();
+                return;
+            }
+
+            if (combatCamera == null)
+            {
+                combatCamera = Camera.main ?? FindAnyObjectByType<Camera>();
+                if (combatCamera == null) return;
+            }
+
+            Ray ray = combatCamera.ScreenPointToRay(GameInput.GetMousePosition());
+            GridTile targetTile = null;
+
+            if (Physics.Raycast(ray, out RaycastHit hit, 250f))
+            {
+                // First check if a tile was directly hit
+                targetTile = hit.collider.GetComponentInParent<GridTile>();
+
+                // If hit a combat unit, target the tile occupied by that unit
+                if (targetTile == null)
+                {
+                    CombatUnit hitUnit = hit.collider.GetComponentInParent<CombatUnit>();
+                    if (hitUnit != null)
+                    {
+                        targetTile = hitUnit.CurrentTile ?? (GridManager.Instance != null ? GridManager.Instance.GetTileAt(hitUnit.GridPosition) : null);
+                    }
+                }
+            }
+
+            // Update hover state
+            if (targetTile != lastHoveredTile)
+            {
+                if (lastHoveredTile != null)
+                {
+                    lastHoveredTile.TriggerUnhover();
+                }
+
+                if (targetTile != null)
+                {
+                    targetTile.TriggerHover();
+                }
+
+                lastHoveredTile = targetTile;
+            }
+
+            // Detect left click on tile
+            if (targetTile != null && GameInput.GetLeftMouseButtonDown())
+            {
+                HandleTileClicked(targetTile);
+            }
+        }
+
+        private bool IsPointerOverUI()
+        {
+            if (UnityEngine.EventSystems.EventSystem.current == null) return false;
+            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return false;
+
+            var pointerData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current)
+            {
+                position = GameInput.GetMousePosition()
+            };
+
+            uiRaycastList.Clear();
+            UnityEngine.EventSystems.EventSystem.current.RaycastAll(pointerData, uiRaycastList);
+
+            for (int i = 0; i < uiRaycastList.Count; i++)
+            {
+                GameObject obj = uiRaycastList[i].gameObject;
+                if (obj == null) continue;
+
+                if (obj.GetComponentInParent<Selectable>() != null ||
+                    obj.GetComponentInParent<Button>() != null ||
+                    obj.GetComponentInParent<TMP_InputField>() != null)
+                {
+                    return true;
+                }
+
+                string n = obj.name.ToLowerInvariant();
+                if (n.Contains("dialogue") || n.Contains("shop") || n.Contains("modal") || n.Contains("popup") || n.Contains("button"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         #endregion
 
         #region Player & Ability Bar Setup
@@ -335,6 +457,20 @@ namespace CastleOfTheD20.UI
             LocatePlayer();
             if (activePlayer == null || activePlayer.HasActedThisTurn) return;
 
+            // Clicking the same slot toggles it off
+            if (selectedAbilitySlot == slotIndex)
+            {
+                selectedAbilitySlot = -1;
+                GridManager.Instance?.ClearAllHighlights();
+                if (!activePlayer.HasMovedThisTurn && GridManager.Instance != null)
+                {
+                    var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
+                    GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+                }
+                RefreshAbilityBar();
+                return;
+            }
+
             AbilitySO ability = activePlayer.GetAbility(slotIndex);
             if (ability == null) return;
 
@@ -366,17 +502,56 @@ namespace CastleOfTheD20.UI
 
         private void HandleTileClicked(GridTile tile)
         {
-            if (tile == null || selectedAbilitySlot < 0) return;
+            if (tile == null) return;
             LocatePlayer();
-            if (activePlayer == null || activePlayer.HasActedThisTurn) return;
+            if (activePlayer == null) return;
 
-            // Execute selected ability on clicked tile
-            bool success = activePlayer.UseAbility(selectedAbilitySlot, tile.GridPosition, AbilityExecutor.Instance);
-            if (success)
+            // 1. If an ability is actively selected, execute it on target tile
+            if (selectedAbilitySlot >= 0)
             {
-                selectedAbilitySlot = -1;
-                GridManager.Instance?.ClearAllHighlights();
-                RefreshAbilityBar();
+                if (activePlayer.HasActedThisTurn) return;
+
+                bool success = activePlayer.UseAbility(selectedAbilitySlot, tile.GridPosition, AbilityExecutor.Instance);
+                if (success)
+                {
+                    selectedAbilitySlot = -1;
+                    GridManager.Instance?.ClearAllHighlights();
+                    RefreshAbilityBar();
+
+                    // Restore reachable tiles highlight if player still has movement
+                    if (!activePlayer.HasMovedThisTurn && GridManager.Instance != null)
+                    {
+                        var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
+                        GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+                    }
+                }
+                return;
+            }
+
+            // 2. If no ability is selected, handle tactical movement
+            if (!activePlayer.HasMovedThisTurn && tile.IsWalkable && !tile.IsOccupied && GridManager.Instance != null)
+            {
+                // Ensure activePlayer's current tile is known
+                if (activePlayer.CurrentTile == null)
+                {
+                    Vector2Int pPos = GridManager.Instance.GetGridPosition(activePlayer.transform.position);
+                    GridTile pTile = GridManager.Instance.GetTileAt(pPos);
+                    if (pTile != null)
+                    {
+                        activePlayer.MoveToTile(pTile);
+                        activePlayer.ResetTurnFlags();
+                    }
+                }
+
+                var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
+                if (reachable.Contains(tile))
+                {
+                    activePlayer.MoveToTile(tile);
+                    activePlayer.HasMovedThisTurn = true;
+                    GridManager.Instance.ClearAllHighlights();
+                    RefreshAbilityBar();
+                    LogCombatMessage($"{activePlayer.UnitName} moved to tile ({tile.GridPosition.x}, {tile.GridPosition.y}).");
+                }
             }
         }
 

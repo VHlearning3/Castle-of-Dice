@@ -15,9 +15,9 @@ MonoBehaviour:
   itemID: potion_health_small
   itemName: Small Health Potion
   description: Restores 15 hit points when consumed during exploration or combat.
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: c30dc9e1ac22d704b815ed7f40fa03e5, type: 3}
   itemType: 0
-  buyPriceGold: 25
+  buyPriceGold: 15
   sellPriceGold: 10
   statBonusValue: 15
   isConsumable: 1

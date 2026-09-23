@@ -182,6 +182,11 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// Alias for SetMode for compatibility with state-based calls.
+        /// </summary>
+        public void SetState(GamePlayMode state) => SetMode(state);
+
+        /// <summary>
         /// Marks a room or castle wing as cleared of enemies.
         /// </summary>
         public void NotifyRoomCleared(GameLocation location)

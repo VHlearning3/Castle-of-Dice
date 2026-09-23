@@ -63,6 +63,16 @@ namespace CastleOfTheD20.World
         [Tooltip("Optional lateral (left/right) camera offset relative to the heading angle.")]
         [SerializeField] private float lateralOffset = 0f;
 
+        [Header("Mouse Right-Click Turning")]
+        [Tooltip("If true, allows turning/orbiting the camera around the target by holding right-click and dragging in Exploration and Combat modes.")]
+        [SerializeField] private bool allowRightClickTurn = true;
+
+        [Tooltip("Sensitivity of camera turning with right mouse button drag.")]
+        [SerializeField] private float rightClickTurnSensitivity = 0.25f;
+
+        [Tooltip("Delay in seconds after releasing right-click before auto-turning towards movement direction resumes.")]
+        [SerializeField] private float autoTurnResumeDelay = 0.8f;
+
         #endregion
 
         #region Private State
@@ -74,6 +84,8 @@ namespace CastleOfTheD20.World
         private Vector3 lastTargetPosition = Vector3.zero;
         private bool isInitialized = false;
         private PlayerExplorationMovement cachedPlayerMovement;
+        private float lastRightClickTime = -10f;
+        private bool isRightClickDragging = false;
 
         #endregion
 
@@ -159,36 +171,61 @@ namespace CastleOfTheD20.World
                 InitializeYaw();
             }
 
-            Vector3 targetPosition;
-
-            if (turnTowardsMovementDirection)
+            // 1. Process Right-Click Camera Turning (active in both Exploration and Combat)
+            bool isRightClickActive = false;
+            if (allowRightClickTurn)
             {
-                // Verify whether dynamic rotation is allowed in the current game mode
-                bool allowRotation = true;
-                if (onlyDuringExploration && GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
+                if (GameInput.GetRightMouseButtonDown())
                 {
-                    allowRotation = false;
+                    isRightClickDragging = !IsPointerOverUI();
                 }
 
-                if (allowRotation)
+                if (GameInput.GetRightMouseButton() && isRightClickDragging)
+                {
+                    isRightClickActive = true;
+                    lastRightClickTime = Time.time;
+                    Vector2 mouseDelta = GameInput.GetMouseDelta();
+                    if (Mathf.Abs(mouseDelta.x) > 0.01f)
+                    {
+                        targetYaw = (targetYaw + mouseDelta.x * rightClickTurnSensitivity) % 360f;
+                        currentYaw = targetYaw;
+                        currentYawVelocity = 0f;
+                    }
+                }
+                else
+                {
+                    isRightClickDragging = false;
+                }
+            }
+
+            // 2. Dynamic auto-follow direction while walking (only in Exploration mode and when not right-clicking)
+            if (turnTowardsMovementDirection)
+            {
+                bool allowAutoTurn = true;
+                if (isRightClickActive || (Time.time - lastRightClickTime < autoTurnResumeDelay))
+                {
+                    allowAutoTurn = false;
+                }
+                else if (onlyDuringExploration && GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
+                {
+                    allowAutoTurn = false;
+                }
+
+                if (allowAutoTurn)
                 {
                     UpdateWalkDirection();
                 }
-
-                // Compute orbit position from horizontal distance, height, and current yaw
-                float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
-                if (horizontalDistance < 0.1f) horizontalDistance = 8f;
-                float height = offset.y > 0.1f ? offset.y : 8f;
-
-                Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
-                Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
-                Vector3 rotatedOffset = yawRotation * localOffset;
-                targetPosition = target.position + rotatedOffset;
             }
-            else
-            {
-                targetPosition = target.position + offset;
-            }
+
+            // 3. Compute orbit position from horizontal distance, height, and current yaw
+            float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
+            if (horizontalDistance < 0.1f) horizontalDistance = 8f;
+            float height = offset.y > 0.1f ? offset.y : 8f;
+
+            Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
+            Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
+            Vector3 rotatedOffset = yawRotation * localOffset;
+            Vector3 targetPosition = target.position + rotatedOffset;
 
             // Smoothly interpolate position using SmoothDamp to avoid frame-rate jitter
             transform.position = Vector3.SmoothDamp(
@@ -332,22 +369,14 @@ namespace CastleOfTheD20.World
             currentVelocity = Vector3.zero;
             currentYawVelocity = 0f;
 
-            Vector3 targetPosition;
-            if (turnTowardsMovementDirection)
-            {
-                float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
-                if (horizontalDistance < 0.1f) horizontalDistance = 8f;
-                float height = offset.y > 0.1f ? offset.y : 8f;
+            float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
+            if (horizontalDistance < 0.1f) horizontalDistance = 8f;
+            float height = offset.y > 0.1f ? offset.y : 8f;
 
-                Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
-                Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
-                Vector3 rotatedOffset = yawRotation * localOffset;
-                targetPosition = target.position + rotatedOffset;
-            }
-            else
-            {
-                targetPosition = target.position + offset;
-            }
+            Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
+            Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
+            Vector3 rotatedOffset = yawRotation * localOffset;
+            Vector3 targetPosition = target.position + rotatedOffset;
 
             transform.position = targetPosition;
             lastTargetPosition = target.position;
@@ -388,6 +417,16 @@ namespace CastleOfTheD20.World
                 cachedPlayerMovement = target.GetComponent<PlayerExplorationMovement>();
                 InitializeYaw();
             }
+        }
+
+        #endregion
+
+        #region Private Utilities
+
+        private bool IsPointerOverUI()
+        {
+            return UnityEngine.EventSystems.EventSystem.current != null &&
+                   UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         }
 
         #endregion

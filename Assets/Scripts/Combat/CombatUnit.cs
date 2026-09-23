@@ -200,14 +200,30 @@ namespace CastleOfTheD20.Combat
 
             try
             {
-                if (GridManager.Instance != null)
+                Vector3 targetWorldPos = GridManager.Instance != null
+                    ? GridManager.Instance.GetWorldPosition(gridPosition)
+                    : tile.transform.position;
+
+                // Adjust vertical position so the unit stands cleanly on top of the tile surface
+                if (cc != null)
                 {
-                    transform.position = GridManager.Instance.GetWorldPosition(gridPosition);
+                    float bottomOffset = (cc.height * 0.5f) - cc.center.y;
+                    if (bottomOffset > 0f)
+                    {
+                        targetWorldPos.y += bottomOffset;
+                    }
                 }
                 else
                 {
-                    transform.position = tile.transform.position;
+                    Collider col = GetComponent<Collider>();
+                    if (col != null)
+                    {
+                        targetWorldPos.y += col.bounds.extents.y;
+                    }
                 }
+
+                transform.position = targetWorldPos;
+                Physics.SyncTransforms();
             }
             finally
             {

@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.World
 {
@@ -71,6 +72,7 @@ namespace CastleOfTheD20.World
         protected virtual void OnMouseDown()
         {
             if (!isInteractable) return;
+            if (!GameInput.GetLeftMouseButtonDown()) return;
 
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             if (player == null)

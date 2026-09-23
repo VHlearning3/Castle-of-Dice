@@ -96,6 +96,59 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// True while the secondary mouse button (Right Click) is held down.
+        /// </summary>
+        public static bool GetRightMouseButton()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current != null)
+            {
+                return Mouse.current.rightButton.isPressed;
+            }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER || !ENABLE_INPUT_SYSTEM
+            try
+            {
+                return Input.GetMouseButton(1);
+            }
+            catch (InvalidOperationException)
+            {
+                return false;
+            }
+#else
+            return false;
+#endif
+        }
+
+        /// <summary>
+        /// Returns the mouse movement delta vector (X = Horizontal, Y = Vertical) since last frame.
+        /// Scaled to consistent units across New Input System and Legacy Input Manager.
+        /// </summary>
+        public static Vector2 GetMouseDelta()
+        {
+#if ENABLE_INPUT_SYSTEM
+            if (Mouse.current != null)
+            {
+                return Mouse.current.delta.ReadValue();
+            }
+#endif
+
+#if ENABLE_LEGACY_INPUT_MANAGER || !ENABLE_INPUT_SYSTEM
+            try
+            {
+                return new Vector2(Input.GetAxisRaw("Mouse X") * 15f, Input.GetAxisRaw("Mouse Y") * 15f);
+            }
+            catch (InvalidOperationException)
+            {
+                return Vector2.zero;
+            }
+#else
+            return Vector2.zero;
+#endif
+        }
+
+        /// <summary>
         /// Current screen coordinates of the mouse cursor in pixels.
         /// </summary>
         public static Vector2 GetMousePosition()

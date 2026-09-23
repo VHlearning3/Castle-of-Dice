@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.Combat
 {
@@ -140,6 +141,7 @@ namespace CastleOfTheD20.Combat
 
         private void OnMouseDown()
         {
+            if (!GameInput.GetLeftMouseButtonDown()) return;
             OnTileClicked?.Invoke(this);
         }
 

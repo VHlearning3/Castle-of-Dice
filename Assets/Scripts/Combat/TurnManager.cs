@@ -134,6 +134,14 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Starts combat by auto-enrolling all living players and enemies in the scene.
+        /// </summary>
+        public void StartCombat()
+        {
+            AutoEnrollSceneUnits();
+        }
+
+        /// <summary>
         /// Initializes the combat state machine with a specified list of combatants.
         /// </summary>
         public void StartCombat(List<CombatUnit> units)
@@ -160,6 +168,27 @@ namespace CastleOfTheD20.Combat
                 if (b is PlayerUnit && a is not PlayerUnit) return 1;
                 return 0;
             });
+
+            // Ensure tactical grid is generated around combatants if no tiles exist
+            if (GridManager.Instance != null && GridManager.Instance.Tiles.Count == 0 && activeUnits.Count > 0)
+            {
+                Vector3 combatCenter = Vector3.zero;
+                foreach (var u in activeUnits) combatCenter += u.transform.position;
+                combatCenter /= activeUnits.Count;
+
+                GridManager.Instance.GenerateGridAt(combatCenter, 8, 8, 2.0f);
+                Debug.Log($"[TurnManager] Auto-generated 8x8 combat grid around combatants centered at {combatCenter}.");
+
+                foreach (var u in activeUnits)
+                {
+                    Vector2Int pos = GridManager.Instance.GetGridPosition(u.transform.position);
+                    GridTile tile = GridManager.Instance.GetTileAt(pos);
+                    if (tile != null)
+                    {
+                        u.MoveToTile(tile);
+                    }
+                }
+            }
 
             isCombatActive = true;
             turnCounter = 1;

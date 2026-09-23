@@ -8,6 +8,7 @@ namespace CastleOfTheD20.Combat
     /// Singleton manager responsible for the tactical battlefield grid.
     /// Handles coordinate mappings, tile lookup, pathfinding, distance metrics, and area-of-effect calculations.
     /// </summary>
+    [SelectionBase]
     public class GridManager : MonoBehaviour
     {
         #region Singleton
@@ -23,6 +24,13 @@ namespace CastleOfTheD20.Combat
         [SerializeField] private int height = 10;
         [SerializeField] private float tileSize = 2.0f;
         [SerializeField] private Vector3 originWorldPosition = Vector3.zero;
+
+        [Header("Transform Alignment & Scaling")]
+        [Tooltip("If true, the grid center aligns with transform.position. If false, transform.position is the (0,0) corner.")]
+        [SerializeField] private bool centerGridOnTransform = true;
+
+        [Tooltip("If true, the grid dynamically calculates coordinates from transform.position and transform.localScale.")]
+        [SerializeField] private bool useTransformAsGridOrigin = true;
 
         [Header("Procedural Generation (Optional)")]
         [Tooltip("Prefab instantiated when GenerateGrid() is called programmatically.")]
@@ -45,11 +53,28 @@ namespace CastleOfTheD20.Combat
         /// <summary>Grid row count.</summary>
         public int Height => height;
 
-        /// <summary>Size of each square tile in Unity world units.</summary>
+        /// <summary>Base size of each square tile in Unity world units.</summary>
         public float TileSize => tileSize;
+
+        /// <summary>Effective tile size taking transform world scale into account.</summary>
+        public float EffectiveTileSize => tileSize * (useTransformAsGridOrigin ? Mathf.Max(0.01f, transform.lossyScale.x) : 1f);
 
         /// <summary>Read-only dictionary of all registered tiles.</summary>
         public IReadOnlyDictionary<Vector2Int, GridTile> Tiles => tiles;
+
+        /// <summary>World-space origin coordinates corresponding to grid (0, 0).</summary>
+        public Vector3 OriginWorldPosition
+        {
+            get => useTransformAsGridOrigin ? GetWorldPosition(Vector2Int.zero) : originWorldPosition;
+            set => originWorldPosition = value;
+        }
+
+        /// <summary>Whether the grid is centered on its Transform position.</summary>
+        public bool CenterGridOnTransform
+        {
+            get => centerGridOnTransform;
+            set => centerGridOnTransform = value;
+        }
 
         #endregion
 
@@ -113,6 +138,43 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Generates or centers the tactical combat grid around a specific center position (such as a dungeon room or cellar).
+        /// Automatically performs vertical surface raycasting to prevent Z-fighting with floors and detects solid obstacles (pillars, walls).
+        /// </summary>
+        public void GenerateGridAt(Vector3 centerPosition, int gridWidth, int gridHeight, float newTileSize = 2.0f, GameObject customPrefab = null)
+        {
+            tileSize = newTileSize > 0.1f ? newTileSize : 2.0f;
+            width = gridWidth;
+            height = gridHeight;
+
+            // Detect exact floor elevation
+            float floorY = centerPosition.y;
+            if (Physics.Raycast(centerPosition + Vector3.up * 3.0f, Vector3.down, out RaycastHit hit, 10.0f))
+            {
+                floorY = hit.point.y + 0.05f; // Place 0.05 units above floor surface to eliminate Z-fighting
+            }
+            else
+            {
+                floorY = centerPosition.y + 0.05f;
+            }
+
+            if (useTransformAsGridOrigin)
+            {
+                transform.position = new Vector3(centerPosition.x, floorY, centerPosition.z);
+                originWorldPosition = GetWorldPosition(Vector2Int.zero);
+            }
+            else
+            {
+                // Calculate origin (0, 0) such that the grid is centered at centerPosition
+                float halfSpanX = (gridWidth - 1) * 0.5f * tileSize;
+                float halfSpanZ = (gridHeight - 1) * 0.5f * tileSize;
+                originWorldPosition = new Vector3(centerPosition.x - halfSpanX, floorY, centerPosition.z - halfSpanZ);
+            }
+
+            GenerateGrid(gridWidth, gridHeight, customPrefab);
+        }
+
+        /// <summary>
         /// Programmatically creates a grid of tiles using the specified dimensions and prefab.
         /// </summary>
         public void GenerateGrid(int gridWidth, int gridHeight, GameObject customPrefab = null)
@@ -126,7 +188,15 @@ namespace CastleOfTheD20.Combat
             EnsureTilesParentExists();
             Transform parent = tilesParent != null ? tilesParent : transform;
 
-            // Unityn Quad vaatii 90 asteen X-kierron maatasoon asettumista varten
+            // Reset parent local transform to ensure clean alignment
+            if (parent != transform)
+            {
+                parent.localPosition = Vector3.zero;
+                parent.localRotation = Quaternion.identity;
+                parent.localScale = Vector3.one;
+            }
+
+            // Unity's Quad requires 90 degree X rotation to lie flat on the horizontal ground
             Quaternion tileRotation = Quaternion.Euler(90f, 0f, 0f);
 
             for (int x = 0; x < width; x++)
@@ -134,7 +204,8 @@ namespace CastleOfTheD20.Combat
                 for (int y = 0; y < height; y++)
                 {
                     Vector2Int pos = new Vector2Int(x, y);
-                    Vector3 worldPos = GetWorldPosition(pos);
+                    Vector3 localPos = GetLocalTilePosition(pos);
+                    Vector3 worldPos = transform.TransformPoint(localPos);
 
                     GameObject tileObj;
                     if (prefabToUse != null)
@@ -143,27 +214,25 @@ namespace CastleOfTheD20.Combat
                         if (!Application.isPlaying && UnityEditor.PrefabUtility.IsPartOfPrefabAsset(prefabToUse))
                         {
                             tileObj = (GameObject)UnityEditor.PrefabUtility.InstantiatePrefab(prefabToUse, parent);
-                            tileObj.transform.position = worldPos;
-                            tileObj.transform.rotation = tileRotation;
                         }
                         else
                         {
-                            tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
+                            tileObj = Instantiate(prefabToUse, parent);
                         }
 #else
-                        tileObj = Instantiate(prefabToUse, worldPos, tileRotation, parent);
+                        tileObj = Instantiate(prefabToUse, parent);
 #endif
                     }
                     else
                     {
                         tileObj = GameObject.CreatePrimitive(PrimitiveType.Quad);
-                        tileObj.transform.position = worldPos;
-                        tileObj.transform.rotation = tileRotation;
-                        tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
-                        tileObj.transform.SetParent(parent);
+                        tileObj.transform.SetParent(parent, false);
                     }
 
                     tileObj.name = $"Tile_{x}_{y}";
+                    tileObj.transform.localPosition = localPos;
+                    tileObj.transform.localRotation = tileRotation;
+                    tileObj.transform.localScale = new Vector3(tileSize * 0.95f, tileSize * 0.95f, 1f);
 
                     GridTile gridTile = tileObj.GetComponent<GridTile>();
                     if (gridTile == null)
@@ -171,7 +240,30 @@ namespace CastleOfTheD20.Combat
                         gridTile = tileObj.AddComponent<GridTile>();
                     }
 
-                    gridTile.Initialize(pos, walkable: true);
+                    // Check for solid environment obstacles (such as stone pillars or perimeter walls)
+                    bool isWalkable = true;
+                    Vector3 lossy = transform.lossyScale;
+                    Vector3 checkCenter = worldPos + transform.up * (1.0f * lossy.y);
+                    Vector3 checkHalfExtents = new Vector3(tileSize * 0.35f * lossy.x, 0.9f * lossy.y, tileSize * 0.35f * lossy.z);
+                    Collider[] hits = Physics.OverlapBox(checkCenter, checkHalfExtents, transform.rotation);
+                    foreach (Collider h in hits)
+                    {
+                        if (h.isTrigger) continue;
+                        if (h.CompareTag("Player") || h.CompareTag("Enemy")) continue;
+                        if (h.GetComponent<CombatUnit>() != null) continue;
+                        if (h.transform.IsChildOf(tileObj.transform) || h.gameObject == tileObj) continue;
+
+                        // Found a solid structural collider (pillar/wall)
+                        isWalkable = false;
+                        break;
+                    }
+
+                    gridTile.Initialize(pos, isWalkable);
+                    if (!isWalkable)
+                    {
+                        Renderer r = tileObj.GetComponentInChildren<Renderer>();
+                        if (r != null) r.enabled = false;
+                    }
                     RegisterTile(gridTile);
                 }
             }
@@ -205,6 +297,9 @@ namespace CastleOfTheD20.Combat
                 {
                     GameObject tilesObj = new GameObject("Tiles");
                     tilesObj.transform.SetParent(transform, false);
+                    tilesObj.transform.localPosition = Vector3.zero;
+                    tilesObj.transform.localRotation = Quaternion.identity;
+                    tilesObj.transform.localScale = Vector3.one;
                     tilesParent = tilesObj.transform;
                 }
             }
@@ -299,22 +394,47 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Converts a grid coordinate into local space relative to the GridManager transform.
+        /// </summary>
+        public Vector3 GetLocalTilePosition(Vector2Int gridPos)
+        {
+            float halfX = centerGridOnTransform ? (width - 1) * 0.5f * tileSize : 0f;
+            float halfZ = centerGridOnTransform ? (height - 1) * 0.5f * tileSize : 0f;
+            return new Vector3(gridPos.x * tileSize - halfX, 0f, gridPos.y * tileSize - halfZ);
+        }
+
+        /// <summary>
         /// Converts a grid coordinate into 3D world space coordinates.
+        /// When useTransformAsGridOrigin is true, tracks transform.position, rotation, and scale dynamically.
         /// </summary>
         public Vector3 GetWorldPosition(Vector2Int gridPos)
         {
+            if (useTransformAsGridOrigin)
+            {
+                return transform.TransformPoint(GetLocalTilePosition(gridPos));
+            }
             return originWorldPosition + new Vector3(gridPos.x * tileSize, 0f, gridPos.y * tileSize);
         }
 
         /// <summary>
         /// Converts a 3D world space coordinate into the nearest grid coordinate.
+        /// When useTransformAsGridOrigin is true, tracks transform.position, rotation, and scale dynamically.
         /// </summary>
         public Vector2Int GetGridPosition(Vector3 worldPos)
         {
-            Vector3 local = worldPos - originWorldPosition;
-            int x = Mathf.RoundToInt(local.x / tileSize);
-            int y = Mathf.RoundToInt(local.z / tileSize);
-            return new Vector2Int(x, y);
+            if (useTransformAsGridOrigin)
+            {
+                Vector3 local = transform.InverseTransformPoint(worldPos);
+                float halfX = centerGridOnTransform ? (width - 1) * 0.5f * tileSize : 0f;
+                float halfZ = centerGridOnTransform ? (height - 1) * 0.5f * tileSize : 0f;
+                int x = Mathf.RoundToInt((local.x + halfX) / tileSize);
+                int y = Mathf.RoundToInt((local.z + halfZ) / tileSize);
+                return new Vector2Int(x, y);
+            }
+            Vector3 localLegacy = worldPos - originWorldPosition;
+            int xLegacy = Mathf.RoundToInt(localLegacy.x / tileSize);
+            int yLegacy = Mathf.RoundToInt(localLegacy.z / tileSize);
+            return new Vector2Int(xLegacy, yLegacy);
         }
 
         #endregion
@@ -531,6 +651,44 @@ namespace CastleOfTheD20.Combat
                 }
             }
         }
+
+        #endregion
+
+        #region Editor Gizmos
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            float halfX = centerGridOnTransform ? (width - 1) * 0.5f * tileSize : 0f;
+            float halfZ = centerGridOnTransform ? (height - 1) * 0.5f * tileSize : 0f;
+            Vector3 centerLocal = new Vector3(centerGridOnTransform ? 0f : halfX, 0.05f, centerGridOnTransform ? 0f : halfZ);
+            Vector3 sizeLocal = new Vector3(width * tileSize, 0.1f, height * tileSize);
+
+            Matrix4x4 oldMatrix = Gizmos.matrix;
+            Gizmos.matrix = transform.localToWorldMatrix;
+
+            // Wireframe bounds of the entire grid
+            Gizmos.color = new Color(0.2f, 0.7f, 1f, 0.9f);
+            Gizmos.DrawWireCube(centerLocal, sizeLocal);
+
+            // Semi-transparent center fill
+            Gizmos.color = new Color(0.2f, 0.7f, 1f, 0.08f);
+            Gizmos.DrawCube(centerLocal, sizeLocal);
+
+            // Cell bounds
+            Gizmos.color = new Color(1f, 0.9f, 0.2f, 0.35f);
+            for (int x = 0; x < width; x++)
+            {
+                for (int y = 0; y < height; y++)
+                {
+                    Vector3 tLoc = GetLocalTilePosition(new Vector2Int(x, y));
+                    Gizmos.DrawWireCube(tLoc + Vector3.up * 0.05f, new Vector3(tileSize * 0.92f, 0.02f, tileSize * 0.92f));
+                }
+            }
+
+            Gizmos.matrix = oldMatrix;
+        }
+#endif
 
         #endregion
     }
