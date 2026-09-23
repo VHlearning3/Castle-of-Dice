@@ -180,6 +180,53 @@ namespace CastleOfTheD20.UI
                     }
                 }
             }
+
+            // Sanitize text properties for clean layout without overflow
+            if (healthText != null)
+            {
+                healthText.margin = Vector4.zero;
+                healthText.enableAutoSizing = true;
+                healthText.fontSizeMin = 14f;
+                healthText.fontSizeMax = 36f;
+                healthText.raycastTarget = false;
+            }
+            if (goldCounterText != null)
+            {
+                goldCounterText.margin = Vector4.zero;
+                goldCounterText.enableAutoSizing = true;
+                goldCounterText.fontSizeMin = 14f;
+                goldCounterText.fontSizeMax = 36f;
+                goldCounterText.raycastTarget = false;
+            }
+            if (potionCountText != null)
+            {
+                potionCountText.margin = Vector4.zero;
+                potionCountText.enableAutoSizing = true;
+                potionCountText.fontSizeMin = 12f;
+                potionCountText.fontSizeMax = 24f;
+                potionCountText.raycastTarget = false;
+            }
+            if (activeQuestSummaryText != null)
+            {
+                activeQuestSummaryText.margin = Vector4.zero;
+                activeQuestSummaryText.enableAutoSizing = true;
+                activeQuestSummaryText.fontSizeMin = 14f;
+                activeQuestSummaryText.fontSizeMax = 32f;
+                activeQuestSummaryText.textWrappingMode = TextWrappingModes.Normal;
+                activeQuestSummaryText.raycastTarget = false;
+            }
+            if (quickPotionButton != null)
+            {
+                TMP_Text pText = quickPotionButton.GetComponentInChildren<TMP_Text>(true);
+                if (pText != null)
+                {
+                    pText.margin = Vector4.zero;
+                    pText.enableAutoSizing = true;
+                    pText.fontSizeMin = 12f;
+                    pText.fontSizeMax = 24f;
+                    pText.raycastTarget = false;
+                }
+            }
         }
 
         #endregion

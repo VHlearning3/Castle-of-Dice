@@ -103,6 +103,8 @@ namespace CastleOfTheD20.UI
         private int lastHandledRollFrame = -1;
         private DiceResult? lastHandledResult;
 
+        public bool IsDisplaying { get; private set; }
+
         #endregion
 
         #region Unity Lifecycle
@@ -260,6 +262,55 @@ namespace CastleOfTheD20.UI
                     dismissButton = buttons[0];
                 }
             }
+
+            // 5. Sanitize text properties for flicker-free, non-clipped presentation
+            if (headerText != null)
+            {
+                headerText.margin = Vector4.zero;
+                headerText.enableAutoSizing = true;
+                headerText.fontSizeMin = 18f;
+                headerText.fontSizeMax = 40f;
+                headerText.textWrappingMode = TextWrappingModes.Normal;
+                headerText.raycastTarget = false;
+            }
+            if (rollValueText != null)
+            {
+                rollValueText.margin = Vector4.zero;
+                rollValueText.enableAutoSizing = true;
+                rollValueText.fontSizeMin = 36f;
+                rollValueText.fontSizeMax = 80f;
+                rollValueText.raycastTarget = false;
+            }
+            if (formulaText != null)
+            {
+                formulaText.margin = Vector4.zero;
+                formulaText.enableAutoSizing = true;
+                formulaText.fontSizeMin = 14f;
+                formulaText.fontSizeMax = 28f;
+                formulaText.textWrappingMode = TextWrappingModes.Normal;
+                formulaText.raycastTarget = false;
+            }
+            if (outcomeText != null)
+            {
+                outcomeText.margin = Vector4.zero;
+                outcomeText.enableAutoSizing = true;
+                outcomeText.fontSizeMin = 16f;
+                outcomeText.fontSizeMax = 36f;
+                outcomeText.textWrappingMode = TextWrappingModes.Normal;
+                outcomeText.raycastTarget = false;
+            }
+            if (dismissButton != null)
+            {
+                TMP_Text dText = dismissButton.GetComponentInChildren<TMP_Text>(true);
+                if (dText != null)
+                {
+                    dText.margin = Vector4.zero;
+                    dText.enableAutoSizing = true;
+                    dText.fontSizeMin = 12f;
+                    dText.fontSizeMax = 24f;
+                    dText.raycastTarget = false;
+                }
+            }
         }
 
         private void OnEnable()
@@ -281,6 +332,8 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void ShowPanel()
         {
+            IsDisplaying = true;
+
             if (!gameObject.activeSelf)
             {
                 gameObject.SetActive(true);
@@ -303,6 +356,15 @@ namespace CastleOfTheD20.UI
             {
                 diceModalPanel.transform.SetAsLastSibling();
             }
+
+            if (dismissButton != null)
+            {
+                TMP_Text dText = dismissButton.GetComponentInChildren<TMP_Text>(true);
+                if (dText != null)
+                {
+                    dText.text = "CONTINUE";
+                }
+            }
         }
 
         /// <summary>
@@ -310,6 +372,8 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void HidePanel()
         {
+            IsDisplaying = false;
+
             if (canvasGroup != null)
             {
                 canvasGroup.alpha = 0f;
@@ -335,7 +399,7 @@ namespace CastleOfTheD20.UI
         /// Displays the animated D20 roll popup modal for the provided result.
         /// Deduplicates calls made in the same frame for the same result.
         /// </summary>
-        public void ShowDiceRoll(DiceResult result)
+        public void ShowDiceRoll(DiceResult result, string checkTitle = null)
         {
             if (lastHandledRollFrame == Time.frameCount && lastHandledResult.HasValue && lastHandledResult.Value.Equals(result))
             {
@@ -352,7 +416,7 @@ namespace CastleOfTheD20.UI
             }
 
             ShowPanel();
-            activeRollCoroutine = StartCoroutine(AnimateRollRoutine(result));
+            activeRollCoroutine = StartCoroutine(AnimateRollRoutine(result, checkTitle));
         }
 
         private void HandleDiceRolled(DiceResult result)
@@ -364,22 +428,45 @@ namespace CastleOfTheD20.UI
 
         #region Animation Sequence
 
-        private IEnumerator AnimateRollRoutine(DiceResult result)
+        private IEnumerator AnimateRollRoutine(DiceResult result, string checkTitle = null)
         {
             ShowPanel();
+
+            // Calculate needed roll (raw D20 needed to meet or exceed DC)
+            int neededRoll = Mathf.Clamp(result.targetDC - result.bonus, 1, 20);
+            string bonusSign = result.bonus >= 0 ? $"+{result.bonus}" : $"{result.bonus}";
 
             // Setup Header
             if (headerText != null)
             {
-                headerText.text = result.advantageUsed switch
+                if (!string.IsNullOrEmpty(checkTitle))
                 {
-                    AdvantageType.Advantage => "D20 ROLL (ADVANTAGE)",
-                    AdvantageType.Disadvantage => "D20 ROLL (DISADVANTAGE)",
-                    _ => "D20 ROLL"
-                };
+                    headerText.text = $"CHECK: {checkTitle.ToUpperInvariant()}";
+                }
+                else
+                {
+                    headerText.text = result.advantageUsed switch
+                    {
+                        AdvantageType.Advantage => "D20 ROLL (ADVANTAGE)",
+                        AdvantageType.Disadvantage => "D20 ROLL (DISADVANTAGE)",
+                        _ => result.targetDC > 0 ? $"D20 CHECK (DC {result.targetDC})" : "D20 ROLL"
+                    };
+                }
             }
 
-            if (formulaText != null) formulaText.text = "Rolling...";
+            // Display target requirements during roll shuffle
+            if (formulaText != null)
+            {
+                if (result.targetDC > 0)
+                {
+                    formulaText.text = $"Target DC: {result.targetDC}  |  Bonus: {bonusSign}  |  Need to roll: {neededRoll}+";
+                }
+                else
+                {
+                    formulaText.text = "Rolling D20...";
+                }
+            }
+
             if (outcomeText != null) outcomeText.text = "";
             if (glowBorderImage != null) glowBorderImage.color = normalColor;
 
@@ -403,16 +490,15 @@ namespace CastleOfTheD20.UI
             }
 
             // Display formula breakdown
-            string sign = result.bonus >= 0 ? $"+{result.bonus}" : $"{result.bonus}";
             if (formulaText != null)
             {
                 if (result.targetDC > 0)
                 {
-                    formulaText.text = $"Roll: {result.rawRoll} {sign} = Total: {result.finalTotal}  (vs DC {result.targetDC})";
+                    formulaText.text = $"Roll: {result.rawRoll} {bonusSign} = Total: {result.finalTotal}  (vs DC {result.targetDC} - Needed {neededRoll}+)";
                 }
                 else
                 {
-                    formulaText.text = $"Roll: {result.rawRoll} {sign} = Total: {result.finalTotal}";
+                    formulaText.text = $"Roll: {result.rawRoll} {bonusSign} = Total: {result.finalTotal}";
                 }
             }
 
@@ -449,6 +535,8 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void Dismiss()
         {
+            IsDisplaying = false;
+
             if (activeRollCoroutine != null)
             {
                 StopCoroutine(activeRollCoroutine);

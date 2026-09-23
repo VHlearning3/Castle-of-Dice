@@ -255,6 +255,19 @@ namespace CastleOfTheD20.UI
             {
                 sellScrapButtonLabel = sellAllScrapButton.GetComponentInChildren<TMP_Text>(true);
             }
+
+            // Sanitize all shop text components and button labels
+            TMP_Text[] allShopTexts = GetComponentsInChildren<TMP_Text>(true);
+            foreach (var t in allShopTexts)
+            {
+                if (t == null) continue;
+                t.margin = Vector4.zero;
+                t.enableAutoSizing = true;
+                t.fontSizeMin = 12f;
+                t.fontSizeMax = Mathf.Max(20f, t.fontSize);
+                t.textWrappingMode = TextWrappingModes.Normal;
+                t.raycastTarget = false;
+            }
         }
 
         /// <summary>

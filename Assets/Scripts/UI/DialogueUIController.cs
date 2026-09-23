@@ -207,6 +207,29 @@ namespace CastleOfTheD20.UI
                 if (dialogueBodyText == null && idx < unassigned.Count) dialogueBodyText = unassigned[idx++];
             }
 
+            // Sanitize text properties to prevent clipping or displacement
+            if (dialogueBodyText != null)
+            {
+                dialogueBodyText.margin = Vector4.zero;
+                dialogueBodyText.enableAutoSizing = true;
+                dialogueBodyText.fontSizeMin = 16f;
+                dialogueBodyText.fontSizeMax = 30f;
+                dialogueBodyText.textWrappingMode = TextWrappingModes.Normal;
+                dialogueBodyText.overflowMode = TextOverflowModes.Overflow;
+                dialogueBodyText.raycastTarget = false;
+            }
+
+            if (speakerNameText != null)
+            {
+                speakerNameText.margin = Vector4.zero;
+                speakerNameText.enableAutoSizing = true;
+                speakerNameText.fontSizeMin = 16f;
+                speakerNameText.fontSizeMax = 35f;
+                speakerNameText.textWrappingMode = TextWrappingModes.Normal;
+                speakerNameText.overflowMode = TextOverflowModes.Overflow;
+                speakerNameText.raycastTarget = false;
+            }
+
             // 3. Auto-locate speaker portrait image
             if (speakerPortraitImage == null)
             {
@@ -383,11 +406,24 @@ namespace CastleOfTheD20.UI
         {
             ClearSpawnedButtons();
 
+            if (optionsContainer != null)
+            {
+                optionsContainer.gameObject.SetActive(true);
+            }
+
             IReadOnlyList<DialogueOption> options = node.Options;
 
             if (options != null && options.Count > 0)
             {
                 if (continueButton != null) continueButton.gameObject.SetActive(false);
+
+                // Determine active player's attribute bonus for skill check requirement previews
+                int playerBonus = 2;
+                var player = FindAnyObjectByType<Combat.PlayerUnit>();
+                if (player != null)
+                {
+                    playerBonus = player.PrimaryAttributeBonus;
+                }
 
                 foreach (var option in options)
                 {
@@ -411,12 +447,20 @@ namespace CastleOfTheD20.UI
                     Button btn = btnObj.GetComponent<Button>();
                     TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>(true);
 
+                    int neededRoll = Mathf.Clamp(option.TargetDC - playerBonus, 1, 20);
                     string formattedText = option.RequiresCheck
-                        ? $"[D20 DC {option.TargetDC} - {option.SkillCheckDescription}] {option.OptionText}"
+                        ? $"[{option.SkillCheckDescription} | DC {option.TargetDC} (Need {neededRoll}+)] {option.OptionText}"
                         : option.OptionText;
 
                     if (btnText != null)
                     {
+                        btnText.margin = Vector4.zero;
+                        btnText.enableAutoSizing = true;
+                        btnText.fontSizeMin = 12f;
+                        btnText.fontSizeMax = 22f;
+                        btnText.textWrappingMode = TextWrappingModes.Normal;
+                        btnText.overflowMode = TextOverflowModes.Overflow;
+                        btnText.raycastTarget = false;
                         btnText.text = formattedText;
                     }
                     else
@@ -424,6 +468,10 @@ namespace CastleOfTheD20.UI
                         Text legacyText = btnObj.GetComponentInChildren<Text>(true);
                         if (legacyText != null)
                         {
+                            legacyText.resizeTextForBestFit = true;
+                            legacyText.resizeTextMinSize = 12;
+                            legacyText.resizeTextMaxSize = 22;
+                            legacyText.raycastTarget = false;
                             legacyText.text = formattedText;
                         }
                     }
@@ -453,16 +501,52 @@ namespace CastleOfTheD20.UI
             }
             spawnedButtons.Clear();
 
-            // Deactivate any template children in optionsContainer so dummy buttons aren't visible
+            // Deactivate ALL existing children in optionsContainer so dummy template buttons aren't visible
             if (optionsContainer != null)
             {
                 foreach (Transform child in optionsContainer)
                 {
-                    if (optionButtonPrefab != null && child.gameObject == optionButtonPrefab)
+                    if (child != null)
                     {
                         child.gameObject.SetActive(false);
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Immediately hides and destroys choice buttons, used during dice rolls to prevent premature clicks.
+        /// </summary>
+        public void HideChoiceButtons()
+        {
+            ClearSpawnedButtons();
+
+            if (optionsContainer != null)
+            {
+                optionsContainer.gameObject.SetActive(false);
+            }
+
+            if (continueButton != null)
+            {
+                continueButton.gameObject.SetActive(false);
+            }
+        }
+
+        /// <summary>
+        /// Controls visibility and raycast blocking of the dialogue window via CanvasGroup without resetting active state.
+        /// </summary>
+        public void SetDialogueVisible(bool visible)
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = visible ? 1f : 0f;
+                canvasGroup.interactable = visible;
+                canvasGroup.blocksRaycasts = visible;
+            }
+
+            if (dialoguePanel != null && dialoguePanel != gameObject)
+            {
+                dialoguePanel.SetActive(visible);
             }
         }
 

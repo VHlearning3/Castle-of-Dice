@@ -44,6 +44,7 @@ namespace CastleOfTheD20.Dialogue
         private DialogueNodeSO currentNode;
         private PlayerUnit activePlayer;
         private bool isInDialogue = false;
+        private bool isResolvingCheck = false;
 
         // Stores unlocked combat debuff tags (e.g., "CommanderArmorWeakened", "-2 AC")
         private readonly HashSet<string> registeredCombatDebuffs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -157,7 +158,7 @@ namespace CastleOfTheD20.Dialogue
         /// </summary>
         public void SelectOption(DialogueOption option)
         {
-            if (!isInDialogue || option == null) return;
+            if (!isInDialogue || option == null || isResolvingCheck) return;
 
             OnOptionSelected?.Invoke(option);
 
@@ -174,25 +175,7 @@ namespace CastleOfTheD20.Dialogue
                     advantage = AdvantageType.Advantage;
                 }
 
-                DiceResult rollResult = DiceSystem.RollD20(bonus, option.TargetDC, advantage);
-                Debug.Log($"[DialogueController] Skill Check for '{option.SkillCheckDescription}' vs DC {option.TargetDC}: {rollResult}");
-
-                OnSkillCheckRolled?.Invoke(rollResult, rollResult.isSuccess);
-
-                if (rollResult.isSuccess)
-                {
-                    // Register combat debuff tag if present
-                    if (!string.IsNullOrEmpty(option.CombatDebuffTag))
-                    {
-                        RegisterCombatDebuff(option.CombatDebuffTag);
-                    }
-
-                    AdvanceToNode(option.NextNodeSuccess);
-                }
-                else
-                {
-                    AdvanceToNode(option.NextNodeFailure);
-                }
+                StartCoroutine(ResolveSkillCheckRoutine(option, bonus, advantage));
             }
             else
             {
@@ -203,6 +186,61 @@ namespace CastleOfTheD20.Dialogue
                 }
 
                 AdvanceToNode(option.NextNodeSuccess);
+            }
+        }
+
+        private System.Collections.IEnumerator ResolveSkillCheckRoutine(DialogueOption option, int bonus, AdvantageType advantage)
+        {
+            isResolvingCheck = true;
+
+            // 1. Hide choice buttons immediately and temporarily fade dialogue window so D20 modal is completely unobstructed
+            DialogueUIController ui = DialogueUIController.Instance;
+            if (ui != null)
+            {
+                ui.HideChoiceButtons();
+                ui.SetDialogueVisible(false);
+            }
+
+            // 2. Roll D20 and initiate dice UI
+            DiceResult rollResult = DiceSystem.RollD20(bonus, option.TargetDC, advantage);
+            Debug.Log($"[DialogueController] Skill Check for '{option.SkillCheckDescription}' vs DC {option.TargetDC}: {rollResult}");
+
+            // Present the check title in the dice roll overlay
+            if (DiceUIController.Instance != null)
+            {
+                DiceUIController.Instance.ShowDiceRoll(rollResult, option.SkillCheckDescription);
+            }
+
+            OnSkillCheckRolled?.Invoke(rollResult, rollResult.isSuccess);
+
+            // 3. Wait until the dice roll modal animation and outcome presentation are dismissed
+            if (DiceUIController.Instance != null)
+            {
+                while (DiceUIController.Instance != null && DiceUIController.Instance.IsDisplaying)
+                {
+                    yield return null;
+                }
+            }
+            else
+            {
+                yield return new WaitForSeconds(1.5f);
+            }
+
+            isResolvingCheck = false;
+
+            // 4. Branch to success or failure node and reveal dialogue UI with the NPC's response
+            if (rollResult.isSuccess)
+            {
+                if (!string.IsNullOrEmpty(option.CombatDebuffTag))
+                {
+                    RegisterCombatDebuff(option.CombatDebuffTag);
+                }
+
+                AdvanceToNode(option.NextNodeSuccess);
+            }
+            else
+            {
+                AdvanceToNode(option.NextNodeFailure);
             }
         }
 
@@ -238,6 +276,7 @@ namespace CastleOfTheD20.Dialogue
             if (!isInDialogue) return;
 
             isInDialogue = false;
+            isResolvingCheck = false;
             currentNode = null;
             activePlayer = null;
 

@@ -158,6 +158,67 @@ namespace CastleOfTheD20.UI
                     abilityButtons[i].onClick.RemoveAllListeners();
                     abilityButtons[i].onClick.AddListener(() => OnAbilitySlotClicked(slotIndex));
                 }
+
+                if (abilityNames.Count > i && abilityNames[i] != null)
+                {
+                    abilityNames[i].margin = Vector4.zero;
+                    abilityNames[i].enableAutoSizing = true;
+                    abilityNames[i].fontSizeMin = 11f;
+                    abilityNames[i].fontSizeMax = 22f;
+                    abilityNames[i].textWrappingMode = TextWrappingModes.Normal;
+                    abilityNames[i].raycastTarget = false;
+                }
+                if (abilityRanges.Count > i && abilityRanges[i] != null)
+                {
+                    abilityRanges[i].margin = Vector4.zero;
+                    abilityRanges[i].enableAutoSizing = true;
+                    abilityRanges[i].fontSizeMin = 10f;
+                    abilityRanges[i].fontSizeMax = 18f;
+                    abilityRanges[i].raycastTarget = false;
+                }
+            }
+
+            // Sanitize combat text components
+            if (turnBannerText != null)
+            {
+                turnBannerText.margin = Vector4.zero;
+                turnBannerText.enableAutoSizing = true;
+                turnBannerText.fontSizeMin = 16f;
+                turnBannerText.fontSizeMax = 36f;
+                turnBannerText.textWrappingMode = TextWrappingModes.Normal;
+                turnBannerText.raycastTarget = false;
+            }
+
+            if (roundCounterText != null)
+            {
+                roundCounterText.margin = Vector4.zero;
+                roundCounterText.enableAutoSizing = true;
+                roundCounterText.fontSizeMin = 12f;
+                roundCounterText.fontSizeMax = 24f;
+                roundCounterText.raycastTarget = false;
+            }
+
+            if (endTurnButton != null)
+            {
+                TMP_Text endText = endTurnButton.GetComponentInChildren<TMP_Text>(true);
+                if (endText != null)
+                {
+                    endText.margin = Vector4.zero;
+                    endText.enableAutoSizing = true;
+                    endText.fontSizeMin = 12f;
+                    endText.fontSizeMax = 24f;
+                    endText.raycastTarget = false;
+                }
+            }
+
+            if (combatLogText != null)
+            {
+                combatLogText.margin = Vector4.zero;
+                combatLogText.enableAutoSizing = true;
+                combatLogText.fontSizeMin = 12f;
+                combatLogText.fontSizeMax = 20f;
+                combatLogText.textWrappingMode = TextWrappingModes.Normal;
+                combatLogText.raycastTarget = false;
             }
         }
 
