@@ -69,7 +69,7 @@ namespace CastleOfTheD20.Combat
         /// <summary>True if a combat unit currently stands on this cell.</summary>
         public bool IsOccupied
         {
-            get => occupyingUnit != null;
+            get => occupyingUnit != null && occupyingUnit.IsAlive;
             set
             {
                 if (!value) occupyingUnit = null;
@@ -166,6 +166,14 @@ namespace CastleOfTheD20.Combat
         {
             currentHighlight = type;
             ApplyHighlightColor(type);
+        }
+
+        /// <summary>
+        /// Alias for SetHighlight.
+        /// </summary>
+        public void ApplyHighlight(TileHighlightType type)
+        {
+            SetHighlight(type);
         }
 
         /// <summary>

@@ -120,18 +120,23 @@ namespace CastleOfTheD20.World
                 GamePlayMode currentMode = GameManager.Instance != null ? GameManager.Instance.CurrentMode : GamePlayMode.Exploration;
                 Debug.Log($"[PlayerExplorationMovement] Start: Active GamePlayMode is '{currentMode}'. Ready for WASD movement.");
             }
+
+            // Check for StartSpawnPoint in scene and spawn here on initial game launch
+            StartSpawnPoint spawnPoint = StartSpawnPoint.GetSpawnPoint();
+            if (spawnPoint != null && spawnPoint.SnapPlayerOnStart)
+            {
+                spawnPoint.SpawnPlayer(this);
+            }
         }
 
         private void OnEnable()
         {
             GameManager.OnPlayModeChanged += HandlePlayModeChanged;
-            TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
         }
 
         private void OnDisable()
         {
             GameManager.OnPlayModeChanged -= HandlePlayModeChanged;
-            TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
         }
 
         private void Update()
@@ -295,26 +300,82 @@ namespace CastleOfTheD20.World
 
         #endregion
 
+        #region Teleportation & Spawning
+
+        /// <summary>
+        /// Instantly teleports the player to a target world position and rotation,
+        /// handling CharacterController deactivation/reactivation safely.
+        /// </summary>
+        public void TeleportTo(Vector3 worldPosition, Quaternion worldRotation)
+        {
+            bool ccWasEnabled = characterController != null && characterController.enabled;
+            if (characterController != null) characterController.enabled = false;
+
+            try
+            {
+                transform.position = worldPosition;
+                transform.rotation = worldRotation;
+                verticalVelocity = 0f;
+                Physics.SyncTransforms();
+            }
+            finally
+            {
+                if (characterController != null && ccWasEnabled)
+                {
+                    characterController.enabled = true;
+                }
+            }
+
+            // Keep camera synced immediately
+            CameraFollow camFollow = FindAnyObjectByType<CameraFollow>();
+            if (camFollow != null)
+            {
+                camFollow.SnapToTarget();
+            }
+        }
+
+        #endregion
+
         #region Grid Snapping on Combat Transition
 
         /// <summary>
         /// Snaps the player smoothly to the nearest GridTile coordinate and updates PlayerUnit spatial registration.
+        /// Only executes when actively entering or participating in turn-based combat on the same floor as the grid.
         /// </summary>
         public void SnapToNearestGridTile()
         {
             if (GridManager.Instance == null) return;
 
+            // Only snap if currently in Combat mode
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+            {
+                return;
+            }
+
+            // Guard against snapping across floors (e.g. village surface at Y=1 vs cellar at Y=-15)
+            float gridY = GridManager.Instance.transform.position.y;
+            if (Mathf.Abs(transform.position.y - gridY) > 3.5f)
+            {
+                Debug.LogWarning($"[PlayerExplorationMovement] Ignored SnapToNearestGridTile: Player elevation ({transform.position.y:F1}) is far from Grid ({gridY:F1}).");
+                return;
+            }
+
             Vector2Int gridCoord = GridManager.Instance.GetGridPosition(transform.position);
             GridTile targetTile = GridManager.Instance.GetTileAt(gridCoord);
 
-            if (targetTile == null)
+            // If targetTile is already occupied by the player, it is valid and NOT blocked
+            bool isBlockedByOther = targetTile != null && targetTile.IsOccupied && (playerUnit == null || targetTile.OccupyingUnit != playerUnit);
+            if (targetTile == null || !targetTile.IsWalkable || isBlockedByOther)
             {
-                // Search nearby valid tiles if outside exact boundary
+                // Search nearby valid tiles if outside exact boundary but still on the same floor
                 float closestDist = float.MaxValue;
                 foreach (var kvp in GridManager.Instance.Tiles)
                 {
-                    if (kvp.Value != null && kvp.Value.IsWalkable && !kvp.Value.IsOccupied)
+                    bool tileOccupiedByOther = kvp.Value.IsOccupied && (playerUnit == null || kvp.Value.OccupyingUnit != playerUnit);
+                    if (kvp.Value != null && kvp.Value.IsWalkable && !tileOccupiedByOther)
                     {
+                        if (Mathf.Abs(transform.position.y - kvp.Value.transform.position.y) > 3.5f) continue;
+
                         float d = Vector3.Distance(transform.position, kvp.Value.transform.position);
                         if (d < closestDist)
                         {
@@ -328,6 +389,14 @@ namespace CastleOfTheD20.World
 
             if (targetTile != null)
             {
+                // If player is already on targetTile, no movement needed
+                if (playerUnit != null && playerUnit.CurrentTile == targetTile)
+                {
+                    targetTile.OccupyingUnit = playerUnit;
+                    targetTile.IsOccupied = true;
+                    return;
+                }
+
                 // Safely disable CharacterController during coordinate repositioning
                 bool wasEnabled = characterController != null && characterController.enabled;
                 if (characterController != null) characterController.enabled = false;
@@ -362,19 +431,10 @@ namespace CastleOfTheD20.World
 
             if (mode == GamePlayMode.Combat && autoSnapOnCombat)
             {
-                SnapToNearestGridTile();
-            }
-        }
-
-        private void HandleTurnStateChanged(TurnState state)
-        {
-            if ((state == TurnState.PlayerTurn || state == TurnState.EnemyTurn) && autoSnapOnCombat)
-            {
-                if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat)
+                if (GridManager.Instance != null && Mathf.Abs(transform.position.y - GridManager.Instance.transform.position.y) <= 3.5f)
                 {
-                    GameManager.Instance.SetMode(GamePlayMode.Combat);
+                    SnapToNearestGridTile();
                 }
-                SnapToNearestGridTile();
             }
         }
 

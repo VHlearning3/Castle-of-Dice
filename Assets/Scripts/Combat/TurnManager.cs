@@ -25,6 +25,8 @@ namespace CastleOfTheD20.Combat
         [Header("State & Settings")]
         [SerializeField] private TurnState currentState = TurnState.PlayerTurn;
         [SerializeField] private float enemyTurnDelay = 0.6f;
+        [Tooltip("If true, automatically discovers living units and starts combat immediately upon scene start. Keep false for exploration zones such as StartVillage.")]
+        [SerializeField] private bool autoStartCombatOnStart = false;
 
         #endregion
 
@@ -85,10 +87,17 @@ namespace CastleOfTheD20.Combat
 
         private void Start()
         {
-            // Auto-enroll scene units if not manually started
-            if (!isCombatActive)
+            // Auto-enroll scene units only if explicitly enabled (e.g. standalone combat test scenes)
+            if (autoStartCombatOnStart && !isCombatActive)
             {
                 AutoEnrollSceneUnits();
+            }
+            else if (!isCombatActive)
+            {
+                if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
+                {
+                    GameManager.Instance.SetMode(GamePlayMode.Exploration);
+                }
             }
         }
 
@@ -113,9 +122,9 @@ namespace CastleOfTheD20.Combat
             List<PlayerUnit> players = new List<PlayerUnit>(FindObjectsByType<PlayerUnit>(FindObjectsSortMode.None));
             List<EnemyUnit> enemies = new List<EnemyUnit>(FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None));
 
-            // Prune dead or uninitialized units
-            players.RemoveAll(p => p == null || !p.IsAlive);
-            enemies.RemoveAll(e => e == null || !e.IsAlive);
+            // Prune dead, uninitialized, or inactive units
+            players.RemoveAll(p => p == null || !p.IsAlive || !p.gameObject.activeInHierarchy);
+            enemies.RemoveAll(e => e == null || !e.IsAlive || !e.gameObject.activeInHierarchy);
 
             if (players.Count > 0 && enemies.Count > 0)
             {
@@ -129,7 +138,7 @@ namespace CastleOfTheD20.Combat
                 isCombatActive = false;
                 GridManager.Instance?.ClearAllHighlights();
                 GameManager.Instance?.SetMode(GamePlayMode.Exploration);
-                Debug.Log("[TurnManager] Safe area detected (no living enemies found in scene). Safe exploration mode active.");
+                Debug.Log("[TurnManager] Safe area detected (no living active enemies found in scene). Safe exploration mode active.");
             }
         }
 
@@ -181,11 +190,14 @@ namespace CastleOfTheD20.Combat
 
                 foreach (var u in activeUnits)
                 {
-                    Vector2Int pos = GridManager.Instance.GetGridPosition(u.transform.position);
-                    GridTile tile = GridManager.Instance.GetTileAt(pos);
-                    if (tile != null)
+                    if (u != null && GridManager.Instance != null && Mathf.Abs(u.transform.position.y - GridManager.Instance.transform.position.y) <= 3.5f)
                     {
-                        u.MoveToTile(tile);
+                        Vector2Int pos = GridManager.Instance.GetGridPosition(u.transform.position);
+                        GridTile tile = GridManager.Instance.GetTileAt(pos);
+                        if (tile != null)
+                        {
+                            u.MoveToTile(tile);
+                        }
                     }
                 }
             }
@@ -194,12 +206,21 @@ namespace CastleOfTheD20.Combat
             turnCounter = 1;
             currentUnitIndex = -1;
 
-            // Ensure Combat UI is initialized and active
-            CombatUIController combatUI = CombatUIController.Instance;
-            if (combatUI != null && !combatUI.gameObject.activeSelf)
+            // Ensure all units are synchronized to their grid positions if on the same floor
+            foreach (var u in activeUnits)
             {
-                combatUI.gameObject.SetActive(true);
+                if (u != null)
+                {
+                    if (GridManager.Instance != null && Mathf.Abs(u.transform.position.y - GridManager.Instance.transform.position.y) <= 3.5f)
+                    {
+                        u.EnsureTilePosition();
+                    }
+                    if (u is PlayerUnit p) p.ResetTurnFlags();
+                }
             }
+
+            // Ensure CombatUIController is awake and active
+            CombatUIController.Instance?.EnsureActiveAndReady(true);
 
             Debug.Log($"[TurnManager] Combat initiated with {activeUnits.Count} combatants.");
             NextTurn();
@@ -260,8 +281,10 @@ namespace CastleOfTheD20.Combat
             // 2. Dispatch turn state based on unit type
             if (currentActiveUnit is PlayerUnit player)
             {
-                SetTurnState(TurnState.PlayerTurn);
+                CombatUIController.Instance?.EnsureActiveAndReady(true);
+                player.EnsureTilePosition();
                 player.ResetTurnFlags();
+                SetTurnState(TurnState.PlayerTurn);
 
                 // Highlight valid movement cells
                 HighlightPlayerReachableTiles(player);
@@ -379,9 +402,36 @@ namespace CastleOfTheD20.Combat
         {
             if (GridManager.Instance == null || player == null) return;
 
+            player.EnsureTilePosition();
             GridManager.Instance.ClearAllHighlights();
             var reachable = GridManager.Instance.GetReachableTiles(player.GridPosition, player.MovementRange);
             GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+
+            // Highlight enemies that are currently within direct primary attack range
+            CastleOfTheD20.Data.AbilitySO primaryAbility = player.GetAbility(0);
+            int primaryRange = primaryAbility != null ? primaryAbility.Range : 1;
+            List<GridTile> attackableTiles = GridManager.Instance.GetTilesInRadius(player.GridPosition, primaryRange);
+            foreach (var tile in attackableTiles)
+            {
+                CombatUnit targetUnit = tile.OccupyingUnit;
+                if (targetUnit == null)
+                {
+                    foreach (var u in activeUnits)
+                    {
+                        if (u != null && u.IsAlive && u is EnemyUnit && u.GridPosition == tile.GridPosition)
+                        {
+                            targetUnit = u;
+                            tile.OccupyingUnit = u;
+                            tile.IsOccupied = true;
+                            break;
+                        }
+                    }
+                }
+                if (targetUnit != null && targetUnit is EnemyUnit)
+                {
+                    tile.ApplyHighlight(TileHighlightType.EnemyTarget);
+                }
+            }
         }
 
         #endregion

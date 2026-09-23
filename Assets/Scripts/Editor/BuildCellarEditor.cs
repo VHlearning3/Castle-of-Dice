@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using CastleOfTheD20.World;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Editor
 {
@@ -31,14 +32,23 @@ namespace CastleOfTheD20.Editor
             var activeScene = EditorSceneManager.GetActiveScene();
             if (activeScene.IsValid() && activeScene.name == "StartVillage")
             {
+                EnsureStartSpawnConfigured();
+
                 GameObject cellar = GameObject.Find("Cellar_Chamber");
                 if (cellar == null)
                 {
                     Debug.Log("[BuildCellarEditor] StartVillage active and Cellar_Chamber not found. Auto-generating Cellar and Door...");
                     BuildCellarAndDoor(false);
+                    EnsureStartSpawnConfigured();
                 }
                 else
                 {
+                    EnsureChestConfigured();
+                    EnsureSpawnAndBarrierConfigured();
+                    EnsureCombatUIConfigured();
+                    EnsureCellarEnemiesConfigured();
+                    EnsureVillageHatchConfigured();
+
                     // Check if children are misaligned (e.g. user dragged geometry separately)
                     Transform geo = cellar.transform.Find("Cellar_Geometry");
                     Transform trigger = cellar.transform.Find("Cellar_Encounter_Trigger");
@@ -50,6 +60,222 @@ namespace CastleOfTheD20.Editor
                         Debug.Log("[BuildCellarEditor] Detected misaligned or missing Cellar_Chamber pieces. Auto-aligning...");
                         RealignCellarPiecesMenu();
                     }
+                }
+            }
+        }
+
+        [MenuItem("CastleOfDice/Create or Select StartSpawn Cube")]
+        public static void CreateOrSelectStartSpawnMenu()
+        {
+            GameObject spawnObj = EnsureStartSpawnConfigured(true);
+            if (spawnObj != null)
+            {
+                Selection.activeGameObject = spawnObj;
+                EditorGUIUtility.PingObject(spawnObj);
+            }
+        }
+
+        public static GameObject EnsureStartSpawnConfigured(bool forceSelect = false)
+        {
+            GameObject spawnObj = GameObject.Find("StartSpawn");
+            if (spawnObj == null)
+            {
+                spawnObj = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                spawnObj.name = "StartSpawn";
+                Undo.RegisterCreatedObjectUndo(spawnObj, "Create StartSpawn Cube");
+
+                PlayerExplorationMovement player = Object.FindAnyObjectByType<PlayerExplorationMovement>();
+                if (player != null)
+                {
+                    spawnObj.transform.position = new Vector3(player.transform.position.x, 0.2f, player.transform.position.z);
+                    spawnObj.transform.rotation = player.transform.rotation;
+                }
+                else
+                {
+                    spawnObj.transform.position = new Vector3(7.9f, 0.2f, -9.2f);
+                    spawnObj.transform.rotation = Quaternion.identity;
+                }
+
+                spawnObj.transform.localScale = new Vector3(1.2f, 0.4f, 1.2f);
+
+                BoxCollider col = spawnObj.GetComponent<BoxCollider>();
+                if (col != null) col.isTrigger = true;
+
+                Material mat = AssetDatabase.LoadAssetAtPath<Material>("Assets/LowPolyVillageAll/Omat Materials/M_Grass_1.mat")
+                    ?? AssetDatabase.LoadAssetAtPath<Material>("Assets/LowPolyVillageAll/Omat Materials/M_Crystals.mat");
+                if (mat != null)
+                {
+                    MeshRenderer mr = spawnObj.GetComponent<MeshRenderer>();
+                    if (mr != null) mr.sharedMaterial = mat;
+                }
+
+                spawnObj.AddComponent<StartSpawnPoint>();
+
+                EditorSceneManager.MarkSceneDirty(spawnObj.scene);
+                if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                {
+                    EditorSceneManager.SaveScene(spawnObj.scene);
+                }
+                Debug.Log("[BuildCellarEditor] Created StartSpawn cube in StartVillage scene.");
+            }
+            else
+            {
+                StartSpawnPoint spawnComp = spawnObj.GetComponent<StartSpawnPoint>();
+                if (spawnComp == null)
+                {
+                    spawnComp = Undo.AddComponent<StartSpawnPoint>(spawnObj);
+                    EditorSceneManager.MarkSceneDirty(spawnObj.scene);
+                }
+                BoxCollider col = spawnObj.GetComponent<BoxCollider>();
+                if (col != null && !col.isTrigger)
+                {
+                    col.isTrigger = true;
+                    EditorSceneManager.MarkSceneDirty(spawnObj.scene);
+                }
+            }
+
+            if (forceSelect && spawnObj != null)
+            {
+                Selection.activeGameObject = spawnObj;
+                EditorGUIUtility.PingObject(spawnObj);
+            }
+
+            return spawnObj;
+        }
+
+        private static void EnsureCombatUIConfigured()
+        {
+            CombatUIController ui = Object.FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
+            if (ui != null && !ui.gameObject.activeSelf)
+            {
+                Undo.RecordObject(ui.gameObject, "Activate CombatActionBar");
+                ui.gameObject.SetActive(true);
+                EditorSceneManager.MarkSceneDirty(ui.gameObject.scene);
+                EditorSceneManager.SaveScene(ui.gameObject.scene);
+                Debug.Log("[BuildCellarEditor] Auto-activated CombatActionBar GameObject in StartVillage scene.");
+            }
+        }
+
+        private static void EnsureChestConfigured()
+        {
+            GameObject cellar = GameObject.Find("Cellar_Chamber");
+            if (cellar != null)
+            {
+                Transform chest = cellar.transform.Find("Cellar_Reward_Chest");
+                if (chest != null)
+                {
+                    bool modified = false;
+                    BoxCollider col = chest.GetComponent<BoxCollider>();
+                    if (col == null)
+                    {
+                        col = chest.gameObject.AddComponent<BoxCollider>();
+                        modified = true;
+                    }
+                    if (col.center != new Vector3(0f, 0.45f, 0f) || col.size != new Vector3(1.4f, 0.9f, 1.0f))
+                    {
+                        col.center = new Vector3(0f, 0.45f, 0f);
+                        col.size = new Vector3(1.4f, 0.9f, 1.0f);
+                        modified = true;
+                    }
+
+                    ChestRewardInteraction chestReward = chest.GetComponent<ChestRewardInteraction>();
+                    if (chestReward == null)
+                    {
+                        chestReward = chest.gameObject.AddComponent<ChestRewardInteraction>();
+                        modified = true;
+                    }
+                    if (chestReward.GoldReward != 30)
+                    {
+                        chestReward.GoldReward = 30;
+                        modified = true;
+                    }
+
+                    if (modified)
+                    {
+                        EditorSceneManager.MarkSceneDirty(chest.gameObject.scene);
+                        EditorSceneManager.SaveScene(chest.gameObject.scene);
+                        Debug.Log("[BuildCellarEditor] Auto-configured Cellar_Reward_Chest with BoxCollider and ChestRewardInteraction (30 gold) and saved scene.");
+                    }
+                }
+            }
+        }
+
+        private static void EnsureSpawnAndBarrierConfigured()
+        {
+            GameObject cellar = GameObject.Find("Cellar_Chamber");
+            if (cellar != null)
+            {
+                bool modified = false;
+                Transform spawn = cellar.transform.Find("Cellar_PlayerSpawnPoint");
+                if (spawn != null && (spawn.localPosition - new Vector3(0f, 0.2f, -5.0f)).sqrMagnitude > 0.001f)
+                {
+                    spawn.localPosition = new Vector3(0f, 0.2f, -5.0f);
+                    modified = true;
+                }
+
+                Transform barrier = cellar.transform.Find("Cellar_Exit_Barrier");
+                if (barrier != null && (barrier.localPosition - new Vector3(0f, 2.0f, -7.5f)).sqrMagnitude > 0.001f)
+                {
+                    barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
+                    modified = true;
+                }
+
+                if (modified)
+                {
+                    EditorSceneManager.MarkSceneDirty(cellar.scene);
+                    EditorSceneManager.SaveScene(cellar.scene);
+                    Debug.Log("[BuildCellarEditor] Auto-aligned Cellar_PlayerSpawnPoint and Cellar_Exit_Barrier to prevent combat spawn blockage.");
+                }
+            }
+        }
+
+        private static void EnsureCellarEnemiesConfigured()
+        {
+            GameObject cellar = GameObject.Find("Cellar_Chamber");
+            if (cellar != null)
+            {
+                Transform enemies = cellar.transform.Find("Cellar_Enemies");
+                if (enemies != null)
+                {
+                    bool modified = false;
+                    foreach (Transform child in enemies)
+                    {
+                        if (child.gameObject.activeSelf)
+                        {
+                            Undo.RecordObject(child.gameObject, "Deactivate Cellar Enemy on Start");
+                            child.gameObject.SetActive(false);
+                            modified = true;
+                        }
+                    }
+                    if (modified)
+                    {
+                        EditorSceneManager.MarkSceneDirty(cellar.scene);
+                        if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                        {
+                            EditorSceneManager.SaveScene(cellar.scene);
+                        }
+                        Debug.Log("[BuildCellarEditor] Auto-deactivated Cellar_Enemies so they wait for Cellar_Encounter_Trigger.");
+                    }
+                }
+            }
+        }
+
+        private static void EnsureVillageHatchConfigured()
+        {
+            GameObject hatch = GameObject.Find("Village_Cellar_Hatch");
+            if (hatch != null)
+            {
+                DoorTeleporter dt = hatch.GetComponent<DoorTeleporter>();
+                if (dt != null && dt.TriggerOnWalk)
+                {
+                    Undo.RecordObject(dt, "Set Hatch Click to Interact");
+                    dt.TriggerOnWalk = false;
+                    EditorSceneManager.MarkSceneDirty(hatch.scene);
+                    if (!EditorApplication.isPlayingOrWillChangePlaymode)
+                    {
+                        EditorSceneManager.SaveScene(hatch.scene);
+                    }
+                    Debug.Log("[BuildCellarEditor] Configured Village_Cellar_Hatch to require click interaction (triggerOnWalk = false).");
                 }
             }
         }
@@ -84,13 +310,23 @@ namespace CastleOfTheD20.Editor
             if (ladder != null) ladder.localPosition = new Vector3(0f, 0f, -8.4f);
 
             Transform spawn = cellar.transform.Find("Cellar_PlayerSpawnPoint");
-            if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -6.0f);
+            if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -5.0f);
 
             Transform barrier = cellar.transform.Find("Cellar_Exit_Barrier");
-            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.2f);
+            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
 
             Transform chest = cellar.transform.Find("Cellar_Reward_Chest");
-            if (chest != null) chest.localPosition = new Vector3(0f, 0f, 7.2f);
+            if (chest != null)
+            {
+                chest.localPosition = new Vector3(0f, 0f, 7.2f);
+                ChestRewardInteraction chestReward = chest.GetComponent<ChestRewardInteraction>();
+                if (chestReward == null)
+                {
+                    chestReward = Undo.AddComponent<ChestRewardInteraction>(chest.gameObject);
+                }
+                chestReward.GoldReward = 30;
+                chestReward.EnsureChestCollider();
+            }
 
             Transform enemies = cellar.transform.Find("Cellar_Enemies");
             if (enemies != null) enemies.localPosition = Vector3.zero;
@@ -268,7 +504,7 @@ namespace CastleOfTheD20.Editor
             // Player spawn point when entering the cellar
             GameObject cellarSpawnPoint = new GameObject("Cellar_PlayerSpawnPoint");
             cellarSpawnPoint.transform.SetParent(cellarRoot.transform, false);
-            cellarSpawnPoint.transform.localPosition = new Vector3(0f, 0.2f, -6.0f);
+            cellarSpawnPoint.transform.localPosition = new Vector3(0f, 0.2f, -5.0f);
             cellarSpawnPoint.transform.localRotation = Quaternion.Euler(0f, 0f, 0f); // Facing north into room
 
             // Exit ladder against the South wall
@@ -297,7 +533,7 @@ namespace CastleOfTheD20.Editor
             // D. ENCOUNTER BARRIERS & GATES
             // ==========================================
             // Iron cellar portcullis that locks down over the ladder exit during combat
-            GameObject exitBarrier = CreateCube("Cellar_Exit_Barrier", new Vector3(0f, 2.0f, -7.2f), new Vector3(3.2f, 4.0f, 0.3f), metalMat, cellarRoot.transform);
+            GameObject exitBarrier = CreateCube("Cellar_Exit_Barrier", new Vector3(0f, 2.0f, -7.5f), new Vector3(3.2f, 4.0f, 0.3f), metalMat, cellarRoot.transform);
             // Inactive by default
             exitBarrier.SetActive(false);
 
@@ -338,6 +574,16 @@ namespace CastleOfTheD20.Editor
                 // Fallback decorative chest built from cubes
                 chestObj = CreateChest("Cellar_Reward_Chest", new Vector3(0f, 0.4f, 7.2f), woodMat, goldMat, cellarRoot.transform);
             }
+
+            // Ensure ChestRewardInteraction and BoxCollider with 30 gold
+            ChestRewardInteraction rewardComp = chestObj.GetComponent<ChestRewardInteraction>();
+            if (rewardComp == null)
+            {
+                rewardComp = chestObj.AddComponent<ChestRewardInteraction>();
+            }
+            rewardComp.GoldReward = 30;
+            rewardComp.EnsureChestCollider();
+
             chestObj.SetActive(false); // Inactive by default
 
             // ==========================================
@@ -430,6 +676,11 @@ namespace CastleOfTheD20.Editor
                 }
             }
 
+            // Ensure StartSpawn cube is present and configured
+            EnsureStartSpawnConfigured();
+            EnsureCellarEnemiesConfigured();
+            EnsureVillageHatchConfigured();
+
             // Mark scene dirty and save
             EditorSceneManager.MarkSceneDirty(activeScene);
             EditorSceneManager.SaveScene(activeScene);
@@ -517,8 +768,11 @@ namespace CastleOfTheD20.Editor
             CreateCube("Band_Right", new Vector3(0.4f, 0.38f, 0f), new Vector3(0.08f, 0.65f, 0.84f), goldMat, chest.transform);
 
             BoxCollider col = chest.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, 0.4f, 0f);
-            col.size = new Vector3(1.3f, 0.8f, 0.9f);
+            col.center = new Vector3(0f, 0.45f, 0f);
+            col.size = new Vector3(1.4f, 0.9f, 1.0f);
+
+            ChestRewardInteraction reward = chest.AddComponent<ChestRewardInteraction>();
+            reward.GoldReward = 30;
 
             return chest;
         }

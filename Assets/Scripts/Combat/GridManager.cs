@@ -13,7 +13,7 @@ namespace CastleOfTheD20.Combat
     {
         #region Singleton
 
-        public static GridManager Instance { get; private set; }
+        public static GridManager Instance { get; set; }
 
         #endregion
 
@@ -386,6 +386,58 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Finds the closest walkable, unoccupied tile to a given world position.
+        /// Rejects positions on different floors (vertical difference exceeding maxVerticalDistance).
+        /// </summary>
+        public GridTile FindClosestWalkableTile(Vector3 worldPos, float maxVerticalDistance = 3.5f)
+        {
+            float gridY = transform.position.y;
+            if (Mathf.Abs(worldPos.y - gridY) > maxVerticalDistance)
+            {
+                return null;
+            }
+
+            GridTile best = null;
+            float bestDist = float.MaxValue;
+            foreach (var kvp in tiles)
+            {
+                if (kvp.Value != null && kvp.Value.IsWalkable && !kvp.Value.IsOccupied)
+                {
+                    if (Mathf.Abs(worldPos.y - kvp.Value.transform.position.y) > maxVerticalDistance) continue;
+
+                    float d = Vector3.Distance(worldPos, kvp.Value.transform.position);
+                    if (d < bestDist)
+                    {
+                        bestDist = d;
+                        best = kvp.Value;
+                    }
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// Finds the closest walkable, unoccupied tile to a given grid coordinate.
+        /// </summary>
+        public GridTile FindClosestWalkableTile(Vector2Int gridPos)
+        {
+            Vector3 worldPos = GetWorldPosition(gridPos);
+            return FindClosestWalkableTile(worldPos);
+        }
+
+        /// <summary>
+        /// Checks whether a given 3D world space coordinate is vertically close to this grid and horizontally within its bounds.
+        /// </summary>
+        public bool IsWorldPositionOnGrid(Vector3 worldPos, float maxVerticalDistance = 3.5f)
+        {
+            float gridElevation = transform.position.y;
+            if (Mathf.Abs(worldPos.y - gridElevation) > maxVerticalDistance) return false;
+
+            Vector2Int pos = GetGridPosition(worldPos);
+            return IsWithinBounds(pos) && tiles.ContainsKey(pos);
+        }
+
+        /// <summary>
         /// Checks whether a given grid coordinate falls within standard rectangular bounds.
         /// </summary>
         public bool IsWithinBounds(Vector2Int pos)
@@ -442,9 +494,18 @@ namespace CastleOfTheD20.Combat
         #region Distance & Area Calculations
 
         /// <summary>
-        /// Calculates Manhattan distance (|dx| + |dy|) between two grid coordinates.
+        /// Calculates Chebyshev (diagonal-allowed) distance (max(|dx|, |dy|)) between two grid coordinates.
+        /// In standard D&D 5e / tactical grid combat, this defines attack and movement ranges.
         /// </summary>
         public int GetDistance(Vector2Int a, Vector2Int b)
+        {
+            return Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.y - b.y));
+        }
+
+        /// <summary>
+        /// Calculates Manhattan distance (|dx| + |dy|) between two grid coordinates.
+        /// </summary>
+        public int GetManhattanDistance(Vector2Int a, Vector2Int b)
         {
             return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y);
         }
@@ -526,7 +587,10 @@ namespace CastleOfTheD20.Combat
             queue.Enqueue((startPos, 0));
             visited.Add(startPos);
 
-            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            Vector2Int[] directions = {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+            };
 
             while (queue.Count > 0)
             {
@@ -558,6 +622,65 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Finds the best reachable unoccupied tile from startPos within movementRange
+        /// that places the unit within desiredRange of targetPos.
+        /// Returns null if no reachable tile can achieve desiredRange.
+        /// </summary>
+        public GridTile FindBestReachableTileToTarget(Vector2Int startPos, int movementRange, Vector2Int targetPos, int desiredRange)
+        {
+            if (GetDistance(startPos, targetPos) <= desiredRange)
+            {
+                return GetTileAt(startPos);
+            }
+
+            List<GridTile> reachable = GetReachableTiles(startPos, movementRange);
+            GridTile best = null;
+            int bestMoveDist = int.MaxValue;
+            int bestTargetDist = int.MaxValue;
+
+            foreach (var tile in reachable)
+            {
+                if (tile == null || !tile.IsWalkable || tile.IsOccupied) continue;
+
+                int distToTarget = GetDistance(tile.GridPosition, targetPos);
+                if (distToTarget <= desiredRange)
+                {
+                    int moveDist = GetDistance(startPos, tile.GridPosition);
+                    if (moveDist < bestMoveDist || (moveDist == bestMoveDist && distToTarget < bestTargetDist))
+                    {
+                        best = tile;
+                        bestMoveDist = moveDist;
+                        bestTargetDist = distToTarget;
+                    }
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// Finds the reachable tile that gets as close as possible to targetPos within movementRange.
+        /// </summary>
+        public GridTile FindReachableTileClosestToTarget(Vector2Int startPos, int movementRange, Vector2Int targetPos)
+        {
+            List<GridTile> reachable = GetReachableTiles(startPos, movementRange);
+            GridTile best = null;
+            int minDistance = int.MaxValue;
+
+            foreach (var tile in reachable)
+            {
+                if (tile == null || !tile.IsWalkable || tile.IsOccupied) continue;
+
+                int d = GetDistance(tile.GridPosition, targetPos);
+                if (d < minDistance)
+                {
+                    minDistance = d;
+                    best = tile;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
         /// Computes the shortest path between two points using BFS pathfinding.
         /// Returns an ordered list of tiles from start to destination (excluding start, including target).
         /// Returns null if no valid path exists.
@@ -575,7 +698,10 @@ namespace CastleOfTheD20.Combat
             queue.Enqueue(startPos);
             cameFrom[startPos] = startPos;
 
-            Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+            Vector2Int[] directions = {
+                Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right,
+                new Vector2Int(1, 1), new Vector2Int(1, -1), new Vector2Int(-1, 1), new Vector2Int(-1, -1)
+            };
             bool found = false;
 
             while (queue.Count > 0)

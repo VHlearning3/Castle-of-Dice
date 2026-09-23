@@ -87,9 +87,48 @@ namespace CastleOfTheD20.UI
                         }
                     }
                 }
+                if (instance != null && !instance.gameObject.activeSelf)
+                {
+                    instance.gameObject.SetActive(true);
+                }
+
                 return instance;
             }
             private set => instance = value;
+        }
+
+        /// <summary>
+        /// Guarantees that CombatUIController, its host GameObject, and the action bar container
+        /// are active, subscribed to events, and ready for combat interactions.
+        /// </summary>
+        public void EnsureActiveAndReady(bool showCombatBar = true)
+        {
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
+            if (combatActionBar != null && !combatActionBar.activeSelf)
+            {
+                combatActionBar.SetActive(true);
+            }
+
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+
+            LocatePlayer();
+
+            if (showCombatBar)
+            {
+                SetCombatBarVisible(true);
+                RefreshAbilityBar();
+            }
         }
 
         #endregion
@@ -270,6 +309,8 @@ namespace CastleOfTheD20.UI
         private GridTile lastHoveredTile;
         private Camera combatCamera;
         private readonly List<UnityEngine.EventSystems.RaycastResult> uiRaycastList = new List<UnityEngine.EventSystems.RaycastResult>();
+        private int lastClickFrame = -1;
+        private GridTile lastClickTile = null;
 
         private void Update()
         {
@@ -286,6 +327,26 @@ namespace CastleOfTheD20.UI
             }
 
             HandleCombatTileRaycast();
+        }
+
+        private bool IsEnemyOnTile(GridTile tile)
+        {
+            if (tile == null) return false;
+            if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit is EnemyUnit) return true;
+
+            if (TurnManager.Instance != null)
+            {
+                foreach (var unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit != null && unit.IsAlive && unit is EnemyUnit && unit.GridPosition == tile.GridPosition)
+                    {
+                        tile.OccupyingUnit = unit;
+                        tile.IsOccupied = true;
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         private void ClearHoveredTile()
@@ -326,7 +387,13 @@ namespace CastleOfTheD20.UI
                     CombatUnit hitUnit = hit.collider.GetComponentInParent<CombatUnit>();
                     if (hitUnit != null)
                     {
+                        hitUnit.EnsureTilePosition();
                         targetTile = hitUnit.CurrentTile ?? (GridManager.Instance != null ? GridManager.Instance.GetTileAt(hitUnit.GridPosition) : null);
+                        if (targetTile != null)
+                        {
+                            targetTile.OccupyingUnit = hitUnit;
+                            targetTile.IsOccupied = true;
+                        }
                     }
                 }
             }
@@ -341,7 +408,14 @@ namespace CastleOfTheD20.UI
 
                 if (targetTile != null)
                 {
-                    targetTile.TriggerHover();
+                    if (IsEnemyOnTile(targetTile))
+                    {
+                        targetTile.ApplyHighlight(TileHighlightType.EnemyTarget);
+                    }
+                    else
+                    {
+                        targetTile.TriggerHover();
+                    }
                 }
 
                 lastHoveredTile = targetTile;
@@ -398,6 +472,15 @@ namespace CastleOfTheD20.UI
             if (activePlayer == null)
             {
                 activePlayer = FindAnyObjectByType<PlayerUnit>();
+            }
+
+            if (activePlayer != null)
+            {
+                if (activePlayer.ActiveAbilities == null || activePlayer.ActiveAbilities.Count == 0)
+                {
+                    activePlayer.InitializeUnit();
+                }
+                activePlayer.EnsureTilePosition();
             }
         }
 
@@ -456,17 +539,13 @@ namespace CastleOfTheD20.UI
         {
             LocatePlayer();
             if (activePlayer == null || activePlayer.HasActedThisTurn) return;
+            activePlayer.EnsureTilePosition();
 
             // Clicking the same slot toggles it off
             if (selectedAbilitySlot == slotIndex)
             {
                 selectedAbilitySlot = -1;
-                GridManager.Instance?.ClearAllHighlights();
-                if (!activePlayer.HasMovedThisTurn && GridManager.Instance != null)
-                {
-                    var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
-                    GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
-                }
+                UpdateMovementHighlights();
                 RefreshAbilityBar();
                 return;
             }
@@ -474,17 +553,18 @@ namespace CastleOfTheD20.UI
             AbilitySO ability = activePlayer.GetAbility(slotIndex);
             if (ability == null) return;
 
-            selectedAbilitySlot = slotIndex;
-            LogCombatMessage($"Selected: {ability.AbilityName}. Target a grid cell.");
-
-            // If it's a Self ability, execute immediately
+            // If it's a Self ability, execute immediately in-place without needing tile click
             if (ability.TargetType == AbilityTargetType.Self)
             {
                 activePlayer.UseAbility(slotIndex, activePlayer.GridPosition, AbilityExecutor.Instance);
                 selectedAbilitySlot = -1;
                 RefreshAbilityBar();
+                UpdateMovementHighlights();
                 return;
             }
+
+            selectedAbilitySlot = slotIndex;
+            LogCombatMessage($"Selected: {ability.AbilityName}. Target an enemy or grid cell.");
 
             // Highlight targetable area
             HighlightAbilityTargets(ability);
@@ -495,62 +575,259 @@ namespace CastleOfTheD20.UI
             GridManager grid = GridManager.Instance;
             if (grid == null || activePlayer == null) return;
 
+            activePlayer.EnsureTilePosition();
             grid.ClearAllHighlights();
+
+            // 1. Direct attack range
             List<GridTile> targetableTiles = grid.GetTilesInRadius(activePlayer.GridPosition, ability.Range);
             grid.HighlightTiles(targetableTiles, TileHighlightType.TargetArea);
+
+            // Highlight enemies directly in attack range in Red
+            foreach (var tile in targetableTiles)
+            {
+                if (IsEnemyOnTile(tile))
+                {
+                    tile.ApplyHighlight(TileHighlightType.EnemyTarget);
+                }
+            }
+
+            // 2. If movement is available, also highlight enemies reachable with move + ability
+            if (!activePlayer.HasMovedThisTurn && activePlayer.MovementRange > 0)
+            {
+                int maxReach = activePlayer.MovementRange + ability.Range;
+                List<GridTile> reachTiles = grid.GetTilesInRadius(activePlayer.GridPosition, maxReach);
+                foreach (var tile in reachTiles)
+                {
+                    if (IsEnemyOnTile(tile) && !targetableTiles.Contains(tile))
+                    {
+                        tile.ApplyHighlight(TileHighlightType.EnemyTarget);
+                    }
+                }
+            }
         }
 
         private void HandleTileClicked(GridTile tile)
         {
             if (tile == null) return;
+            if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != TurnState.PlayerTurn) return;
+            if (Time.frameCount == lastClickFrame && lastClickTile == tile) return;
+            lastClickFrame = Time.frameCount;
+            lastClickTile = tile;
+
             LocatePlayer();
             if (activePlayer == null) return;
+            activePlayer.EnsureTilePosition();
 
-            // 1. If an ability is actively selected, execute it on target tile
+            // Find if there is an occupying unit, with fallback across active combatants
+            CombatUnit occupyingUnit = tile.OccupyingUnit;
+            if (occupyingUnit == null && TurnManager.Instance != null)
+            {
+                foreach (var unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit != null && unit.IsAlive && unit is EnemyUnit && unit.GridPosition == tile.GridPosition)
+                    {
+                        occupyingUnit = unit;
+                        tile.OccupyingUnit = unit;
+                        tile.IsOccupied = true;
+                        break;
+                    }
+                }
+            }
+            bool isEnemy = occupyingUnit != null && occupyingUnit is EnemyUnit;
+
+            // 1. If an ability is actively selected, execute it or move into range to execute
             if (selectedAbilitySlot >= 0)
             {
-                if (activePlayer.HasActedThisTurn) return;
+                ExecuteAbilityOrMoveIntoRange(selectedAbilitySlot, tile);
+                return;
+            }
 
-                bool success = activePlayer.UseAbility(selectedAbilitySlot, tile.GridPosition, AbilityExecutor.Instance);
-                if (success)
+            // 2. If no ability is selected, but the player clicked directly on an enemy:
+            // Automatically attack with Primary Ability (Slot 0, e.g. Sword Slash / basic attack)
+            if (isEnemy)
+            {
+                if (!activePlayer.HasActedThisTurn && activePlayer.CanUseAbility(0))
                 {
-                    selectedAbilitySlot = -1;
-                    GridManager.Instance?.ClearAllHighlights();
-                    RefreshAbilityBar();
-
-                    // Restore reachable tiles highlight if player still has movement
-                    if (!activePlayer.HasMovedThisTurn && GridManager.Instance != null)
-                    {
-                        var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
-                        GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
-                    }
+                    ExecuteAbilityOrMoveIntoRange(0, tile);
+                }
+                else if (activePlayer.HasActedThisTurn)
+                {
+                    LogCombatMessage($"{activePlayer.UnitName} has already used their action this turn.");
                 }
                 return;
             }
 
-            // 2. If no ability is selected, handle tactical movement
+            // 3. If no ability is selected and player clicked an empty walkable tile: handle tactical movement
             if (!activePlayer.HasMovedThisTurn && tile.IsWalkable && !tile.IsOccupied && GridManager.Instance != null)
             {
-                // Ensure activePlayer's current tile is known
-                if (activePlayer.CurrentTile == null)
-                {
-                    Vector2Int pPos = GridManager.Instance.GetGridPosition(activePlayer.transform.position);
-                    GridTile pTile = GridManager.Instance.GetTileAt(pPos);
-                    if (pTile != null)
-                    {
-                        activePlayer.MoveToTile(pTile);
-                        activePlayer.ResetTurnFlags();
-                    }
-                }
-
                 var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
                 if (reachable.Contains(tile))
                 {
                     activePlayer.MoveToTile(tile);
                     activePlayer.HasMovedThisTurn = true;
-                    GridManager.Instance.ClearAllHighlights();
                     RefreshAbilityBar();
+                    UpdateMovementHighlights();
                     LogCombatMessage($"{activePlayer.UnitName} moved to tile ({tile.GridPosition.x}, {tile.GridPosition.y}).");
+                }
+                else
+                {
+                    LogCombatMessage("Destination is out of movement range.");
+                }
+            }
+        }
+
+        private void ExecuteAbilityOrMoveIntoRange(int slotIndex, GridTile targetTile)
+        {
+            if (activePlayer == null || targetTile == null) return;
+
+            if (activePlayer.HasActedThisTurn)
+            {
+                LogCombatMessage($"{activePlayer.UnitName} has already used their action this turn.");
+                return;
+            }
+
+            AbilitySO ability = activePlayer.GetAbility(slotIndex);
+            if (ability == null) return;
+
+            GridManager grid = GridManager.Instance;
+            if (grid == null) return;
+
+            activePlayer.EnsureTilePosition();
+            Vector2Int casterPos = activePlayer.GridPosition;
+            Vector2Int targetPos = targetTile.GridPosition;
+
+            // Self-targeted abilities execute immediately in place without moving
+            if (ability.TargetType == AbilityTargetType.Self)
+            {
+                bool selfSuccess = activePlayer.UseAbility(slotIndex, casterPos, AbilityExecutor.Instance);
+                if (selfSuccess)
+                {
+                    selectedAbilitySlot = -1;
+                    RefreshAbilityBar();
+                    UpdateMovementHighlights();
+                }
+                return;
+            }
+
+            // Check if there is an occupying unit on this tile (fallback across active units)
+            CombatUnit targetOccupant = targetTile.OccupyingUnit;
+            if (targetOccupant == null && TurnManager.Instance != null)
+            {
+                foreach (var unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit != null && unit.IsAlive && unit.GridPosition == targetPos)
+                    {
+                        targetOccupant = unit;
+                        targetTile.OccupyingUnit = unit;
+                        targetTile.IsOccupied = true;
+                        break;
+                    }
+                }
+            }
+
+            // Check if a SingleTarget ability was clicked on an empty tile while movement is still available
+            bool isOccupiedUnit = targetOccupant != null;
+            if (ability.TargetType == AbilityTargetType.SingleTarget && !isOccupiedUnit)
+            {
+                if (!activePlayer.HasMovedThisTurn && targetTile.IsWalkable && !targetTile.IsOccupied)
+                {
+                    var reachable = grid.GetReachableTiles(casterPos, activePlayer.MovementRange);
+                    if (reachable.Contains(targetTile))
+                    {
+                        activePlayer.MoveToTile(targetTile);
+                        activePlayer.HasMovedThisTurn = true;
+                        selectedAbilitySlot = -1;
+                        RefreshAbilityBar();
+                        UpdateMovementHighlights();
+                        LogCombatMessage($"{activePlayer.UnitName} moved to tile ({targetTile.GridPosition.x}, {targetTile.GridPosition.y}).");
+                        return;
+                    }
+                }
+                LogCombatMessage($"{ability.AbilityName} requires a target enemy unit.");
+                return;
+            }
+
+            int currentDist = grid.GetDistance(casterPos, targetPos);
+
+            // Case A: Target is ALREADY within ability range! Attack immediately without moving!
+            if (currentDist <= ability.Range)
+            {
+                bool success = activePlayer.UseAbility(slotIndex, targetPos, AbilityExecutor.Instance);
+                if (success)
+                {
+                    selectedAbilitySlot = -1;
+                    RefreshAbilityBar();
+                    UpdateMovementHighlights();
+                }
+                return;
+            }
+
+            // Case B: Target is OUTSIDE ability range. Automatically move into range if movement is available!
+            if (!activePlayer.HasMovedThisTurn && activePlayer.MovementRange > 0)
+            {
+                GridTile bestTile = grid.FindBestReachableTileToTarget(casterPos, activePlayer.MovementRange, targetPos, ability.Range);
+                if (bestTile != null && bestTile != activePlayer.CurrentTile)
+                {
+                    activePlayer.MoveToTile(bestTile);
+                    activePlayer.HasMovedThisTurn = true;
+                    LogCombatMessage($"{activePlayer.UnitName} moved to ({bestTile.GridPosition.x}, {bestTile.GridPosition.y}) to use {ability.AbilityName}.");
+
+                    // Immediately execute the ability from the new position
+                    bool success = activePlayer.UseAbility(slotIndex, targetPos, AbilityExecutor.Instance);
+                    selectedAbilitySlot = -1;
+                    RefreshAbilityBar();
+                    UpdateMovementHighlights();
+                    return;
+                }
+                else
+                {
+                    // Target is out of full reach; move as close as possible along the path
+                    GridTile closestTile = grid.FindReachableTileClosestToTarget(casterPos, activePlayer.MovementRange, targetPos);
+                    if (closestTile != null && closestTile != activePlayer.CurrentTile)
+                    {
+                        activePlayer.MoveToTile(closestTile);
+                        activePlayer.HasMovedThisTurn = true;
+                        int remDist = grid.GetDistance(closestTile.GridPosition, targetPos);
+                        LogCombatMessage($"{activePlayer.UnitName} moved towards target ({closestTile.GridPosition.x}, {closestTile.GridPosition.y}), but remains out of range for {ability.AbilityName} (Distance: {remDist}, Range: {ability.Range}).");
+                        selectedAbilitySlot = -1;
+                        RefreshAbilityBar();
+                        UpdateMovementHighlights();
+                        return;
+                    }
+                    else
+                    {
+                        LogCombatMessage($"Target is out of reach! (Distance: {currentDist}, Movement: {activePlayer.MovementRange}, Range: {ability.Range})");
+                    }
+                }
+            }
+            else
+            {
+                LogCombatMessage($"Target is out of range! (Distance: {currentDist}, Range: {ability.Range})");
+            }
+        }
+
+        private void UpdateMovementHighlights()
+        {
+            if (activePlayer == null || GridManager.Instance == null) return;
+
+            GridManager.Instance.ClearAllHighlights();
+
+            // If player has movement available, no ability is selected, and it's player's turn:
+            if (!activePlayer.HasMovedThisTurn && selectedAbilitySlot < 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn)
+            {
+                var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
+                GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+
+                // Highlight any enemies currently within direct primary attack range with EnemyTarget (Red)
+                AbilitySO primaryAbility = activePlayer.GetAbility(0);
+                int attackRange = primaryAbility != null ? primaryAbility.Range : 1;
+                List<GridTile> inRangeTiles = GridManager.Instance.GetTilesInRadius(activePlayer.GridPosition, attackRange);
+                foreach (var tile in inRangeTiles)
+                {
+                    if (IsEnemyOnTile(tile))
+                    {
+                        tile.ApplyHighlight(TileHighlightType.EnemyTarget);
+                    }
                 }
             }
         }
@@ -669,6 +946,15 @@ namespace CastleOfTheD20.UI
             }
             else
             {
+                if (canvasGroup == null)
+                {
+                    canvasGroup = GetComponent<CanvasGroup>();
+                    if (canvasGroup == null)
+                    {
+                        canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                    }
+                }
+
                 if (canvasGroup != null)
                 {
                     canvasGroup.alpha = 0f;
@@ -677,10 +963,6 @@ namespace CastleOfTheD20.UI
                 }
 
                 if (combatActionBar != null && combatActionBar != gameObject)
-                {
-                    combatActionBar.SetActive(false);
-                }
-                else if (combatActionBar == gameObject && canvasGroup == null)
                 {
                     combatActionBar.SetActive(false);
                 }

@@ -252,13 +252,29 @@ namespace CastleOfTheD20.Combat
         private bool ExecuteBackstab(CombatUnit caster, AbilitySO ability, Vector2Int targetGridPos, GridManager grid)
         {
             GridTile targetTile = grid.GetTileAt(targetGridPos);
-            if (targetTile == null || !targetTile.IsOccupied || targetTile.OccupyingUnit == null)
+            CombatUnit target = targetTile != null ? targetTile.OccupyingUnit : null;
+            if (target == null && TurnManager.Instance != null)
             {
-                Debug.LogWarning("[AbilityExecutor] Backstab requires an occupied target tile.");
-                return false;
+                foreach (var unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit != null && unit.IsAlive && unit.GridPosition == targetGridPos)
+                    {
+                        target = unit;
+                        if (targetTile != null)
+                        {
+                            targetTile.OccupyingUnit = target;
+                            targetTile.IsOccupied = true;
+                        }
+                        break;
+                    }
+                }
             }
 
-            CombatUnit target = targetTile.OccupyingUnit;
+            if (target == null)
+            {
+                Debug.LogWarning("[AbilityExecutor] Backstab requires a living target unit at the selected position.");
+                return false;
+            }
             int bonus = GetCasterAttributeBonus(caster);
 
             // Backstab grants Advantage or 2x bonus modifier
@@ -305,13 +321,29 @@ namespace CastleOfTheD20.Combat
         private bool ExecuteSingleTargetAbility(CombatUnit caster, AbilitySO ability, Vector2Int targetGridPos, GridManager grid)
         {
             GridTile targetTile = grid.GetTileAt(targetGridPos);
-            if (targetTile == null || !targetTile.IsOccupied || targetTile.OccupyingUnit == null)
+            CombatUnit target = targetTile != null ? targetTile.OccupyingUnit : null;
+            if (target == null && TurnManager.Instance != null)
             {
-                Debug.LogWarning($"[AbilityExecutor] Ability {ability.AbilityName} requires an occupied target tile.");
-                return false;
+                foreach (var unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit != null && unit.IsAlive && unit.GridPosition == targetGridPos)
+                    {
+                        target = unit;
+                        if (targetTile != null)
+                        {
+                            targetTile.OccupyingUnit = target;
+                            targetTile.IsOccupied = true;
+                        }
+                        break;
+                    }
+                }
             }
 
-            CombatUnit target = targetTile.OccupyingUnit;
+            if (target == null)
+            {
+                Debug.LogWarning($"[AbilityExecutor] Ability {ability.AbilityName} requires a living target unit at {targetGridPos}.");
+                return false;
+            }
             int bonus = GetCasterAttributeBonus(caster);
             AdvantageType advantage = caster.StatusEffects != null ? caster.StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
 

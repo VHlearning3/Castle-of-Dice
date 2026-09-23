@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.Combat
 {
@@ -119,15 +120,54 @@ namespace CastleOfTheD20.Combat
             currentHP = Mathf.Clamp(currentHP, 1, maxHP);
             isDead = false;
 
-            // Locate starting tile if already placed in scene
-            if (GridManager.Instance != null && currentTile == null)
+            // Only locate starting tile if combat is actively running and the unit is on the same floor as the grid
+            if (GridManager.Instance != null && currentTile == null &&
+                (GameManager.Instance != null && GameManager.Instance.CurrentMode == GamePlayMode.Combat))
             {
-                Vector2Int initialPos = GridManager.Instance.GetGridPosition(transform.position);
-                GridTile startingTile = GridManager.Instance.GetTileAt(initialPos);
-                if (startingTile != null)
+                float gridY = GridManager.Instance.transform.position.y;
+                if (Mathf.Abs(transform.position.y - gridY) <= 3.5f)
                 {
-                    MoveToTile(startingTile);
+                    Vector2Int initialPos = GridManager.Instance.GetGridPosition(transform.position);
+                    GridTile startingTile = GridManager.Instance.GetTileAt(initialPos);
+                    if (startingTile != null)
+                    {
+                        MoveToTile(startingTile);
+                    }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Ensures that currentTile and gridPosition are accurately synchronized with the unit's transform position on the grid.
+        /// </summary>
+        public virtual void EnsureTilePosition()
+        {
+            if (GridManager.Instance == null || GridManager.Instance.Tiles.Count == 0) return;
+
+            // Do not snap units to the grid if not in Combat mode (e.g. during free village exploration)
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Combat) return;
+
+            // Do not snap across different floor elevations (e.g. surface village at Y=1 vs cellar at Y=-15)
+            float gridY = GridManager.Instance.transform.position.y;
+            if (Mathf.Abs(transform.position.y - gridY) > 3.5f) return;
+
+            Vector2Int currentPosOnGrid = GridManager.Instance.GetGridPosition(transform.position);
+            if (currentTile == null || !currentTile.gameObject.activeInHierarchy || gridPosition != currentPosOnGrid)
+            {
+                GridTile pTile = GridManager.Instance.GetTileAt(currentPosOnGrid);
+                if (pTile == null || !pTile.IsWalkable)
+                {
+                    pTile = GridManager.Instance.FindClosestWalkableTile(transform.position);
+                }
+                if (pTile != null)
+                {
+                    MoveToTile(pTile);
+                }
+            }
+            else if (currentTile != null)
+            {
+                currentTile.OccupyingUnit = this;
+                currentTile.IsOccupied = true;
             }
         }
 
@@ -171,6 +211,20 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[CombatUnit] {unitName} healed for {amount} HP. Current HP: {currentHP}/{maxHP}");
 
             OnHealthChanged?.Invoke(currentHP, maxHP);
+        }
+
+        /// <summary>
+        /// Releases the currently occupied tile without moving to a new tile.
+        /// Useful when transitioning to free-form exploration mode.
+        /// </summary>
+        public virtual void ClearTile()
+        {
+            if (currentTile != null && currentTile.OccupyingUnit == this)
+            {
+                currentTile.OccupyingUnit = null;
+                currentTile.IsOccupied = false;
+            }
+            currentTile = null;
         }
 
         /// <summary>

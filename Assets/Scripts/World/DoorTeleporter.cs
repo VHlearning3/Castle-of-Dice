@@ -21,7 +21,7 @@ namespace CastleOfTheD20.World
 
         [Header("Trigger Behavior")]
         [Tooltip("If true, entering the trigger volume automatically teleports the player without requiring a click.")]
-        [SerializeField] private bool triggerOnWalk = true;
+        [SerializeField] private bool triggerOnWalk = false;
 
         [Tooltip("Cooldown period in seconds between teleports to prevent ping-ponging between connected doors.")]
         [SerializeField] private float teleportCooldown = 1.0f;
@@ -47,14 +47,22 @@ namespace CastleOfTheD20.World
             set => destination = value;
         }
 
+        /// <summary>Whether walking into the trigger automatically teleports the player.</summary>
+        public bool TriggerOnWalk
+        {
+            get => triggerOnWalk;
+            set => triggerOnWalk = value;
+        }
+
         /// <summary>
         /// Configures destination and prompt parameters programmatically.
         /// </summary>
-        public void InitializeTeleporter(Transform destTarget, string prompt, float radius = 3.5f)
+        public void InitializeTeleporter(Transform destTarget, string prompt, float radius = 3.5f, bool walkTrigger = false)
         {
             destination = destTarget;
             promptMessage = prompt;
             interactionRadius = radius;
+            triggerOnWalk = walkTrigger;
         }
 
         #endregion
@@ -80,6 +88,7 @@ namespace CastleOfTheD20.World
         private void OnTriggerEnter(Collider other)
         {
             if (!triggerOnWalk || !isInteractable) return;
+            if (Time.timeSinceLevelLoad < 0.6f) return;
 
             PlayerUnit player = other.GetComponent<PlayerUnit>() ?? other.GetComponentInParent<PlayerUnit>();
             if (player == null && other.CompareTag("Player"))
@@ -104,6 +113,12 @@ namespace CastleOfTheD20.World
         public void PerformTeleport(GameObject playerObj)
         {
             if (playerObj == null) return;
+
+            // Prevent teleportation during initial level load
+            if (Time.timeSinceLevelLoad < 0.6f)
+            {
+                return;
+            }
 
             // Prevent rapid ping-pong transitions between linked doors
             if (Time.time < s_lastGlobalTeleportTime + teleportCooldown)

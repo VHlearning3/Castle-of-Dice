@@ -199,6 +199,11 @@ namespace CastleOfTheD20.World
                 ?? transform.parent?.GetComponentInChildren<GridManager>()
                 ?? GridManager.Instance;
 
+            if (grid != null && GridManager.Instance == null)
+            {
+                GridManager.Instance = grid;
+            }
+
             if (generateGridOnCombat && grid != null)
             {
                 // Detect exact floor elevation dynamically via downward raycast from room center
@@ -229,12 +234,12 @@ namespace CastleOfTheD20.World
             {
                 activeParticipants.Add(player);
 
-                // Snap player to nearest valid walkable grid tile
+                // Snap player to nearest valid walkable grid tile (ensuring not on/overlapping exit barriers)
                 if (grid != null)
                 {
                     Vector2Int playerTilePos = grid.GetGridPosition(player.transform.position);
                     GridTile pTile = grid.GetTileAt(playerTilePos);
-                    if (pTile == null || !pTile.IsWalkable || pTile.IsOccupied)
+                    if (pTile == null || !pTile.IsWalkable || pTile.IsOccupied || IsTileOverlappingBarrier(pTile))
                     {
                         pTile = FindClosestWalkableTile(grid, player.transform.position);
                     }
@@ -288,6 +293,9 @@ namespace CastleOfTheD20.World
                 GameManager.Instance.SetState(GamePlayMode.Combat);
             }
 
+            // Guarantee Combat UI is active and displaying
+            CastleOfTheD20.UI.CombatUIController.Instance?.EnsureActiveAndReady(true);
+
             // 4. Initialize the turn-based combat via TurnManager
             if (TurnManager.Instance != null)
             {
@@ -322,7 +330,14 @@ namespace CastleOfTheD20.World
             if (secretPassageOrChest != null)
             {
                 secretPassageOrChest.SetActive(true);
-                Debug.Log($"[DungeonRoomController] Secret passage or reward chest revealed in '{roomLocation}'.");
+                ChestRewardInteraction chestReward = secretPassageOrChest.GetComponent<ChestRewardInteraction>();
+                if (chestReward == null)
+                {
+                    chestReward = secretPassageOrChest.AddComponent<ChestRewardInteraction>();
+                    chestReward.GoldReward = 30;
+                }
+                chestReward.EnsureChestCollider();
+                Debug.Log($"[DungeonRoomController] Secret passage or reward chest revealed in '{roomLocation}' with {chestReward.GoldReward} gold reward.");
             }
 
             // 3. Revert the game state back to Exploration
@@ -374,6 +389,49 @@ namespace CastleOfTheD20.World
                     barrier.SetActive(locked);
                 }
             }
+
+            // Update walkability of tiles overlapping the barrier
+            UpdateBarrierTilesWalkability(locked);
+        }
+
+        private bool IsTileOverlappingBarrier(GridTile tile)
+        {
+            if (tile == null || exitBarriers == null) return false;
+            foreach (var barrier in exitBarriers)
+            {
+                if (barrier == null) continue;
+                Collider col = barrier.GetComponent<Collider>();
+                if (col != null)
+                {
+                    Vector3 tileCenter = tile.transform.position + Vector3.up * 0.5f;
+                    Bounds b = col.bounds;
+                    b.Expand(new Vector3(0.6f, 1.0f, 0.6f));
+                    if (b.Contains(tileCenter) || b.Contains(tile.transform.position))
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private void UpdateBarrierTilesWalkability(bool locked)
+        {
+            GridManager grid = GridManager.Instance;
+            if (grid == null || exitBarriers == null) return;
+
+            foreach (var kvp in grid.Tiles)
+            {
+                GridTile tile = kvp.Value;
+                if (tile != null && IsTileOverlappingBarrier(tile))
+                {
+                    tile.IsWalkable = !locked;
+                    if (locked)
+                    {
+                        tile.IsOccupied = true;
+                    }
+                }
+            }
         }
 
         private void HandleCombatEnded(bool isVictory)
@@ -392,7 +450,7 @@ namespace CastleOfTheD20.World
             float bestDist = float.MaxValue;
             foreach (var kvp in grid.Tiles)
             {
-                if (kvp.Value != null && kvp.Value.IsWalkable && !kvp.Value.IsOccupied)
+                if (kvp.Value != null && kvp.Value.IsWalkable && !kvp.Value.IsOccupied && !IsTileOverlappingBarrier(kvp.Value))
                 {
                     float d = Vector3.Distance(worldPos, kvp.Value.transform.position);
                     if (d < bestDist)
@@ -424,13 +482,23 @@ namespace CastleOfTheD20.World
             if (ladder != null) ladder.localPosition = new Vector3(0f, 0f, -8.4f);
 
             Transform spawn = root.Find("Cellar_PlayerSpawnPoint");
-            if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -6.0f);
+            if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -5.0f);
 
             Transform barrier = root.Find("Cellar_Exit_Barrier");
-            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.2f);
+            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
 
             Transform chest = root.Find("Cellar_Reward_Chest");
-            if (chest != null) chest.localPosition = new Vector3(0f, 0f, 7.2f);
+            if (chest != null)
+            {
+                chest.localPosition = new Vector3(0f, 0f, 7.2f);
+                ChestRewardInteraction chestReward = chest.GetComponent<ChestRewardInteraction>();
+                if (chestReward == null)
+                {
+                    chestReward = chest.gameObject.AddComponent<ChestRewardInteraction>();
+                }
+                chestReward.GoldReward = 30;
+                chestReward.EnsureChestCollider();
+            }
 
             Transform enemies = root.Find("Cellar_Enemies");
             if (enemies != null) enemies.localPosition = Vector3.zero;

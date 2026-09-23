@@ -101,6 +101,7 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
+            ResetTurnFlags();
             base.InitializeUnit();
         }
 
