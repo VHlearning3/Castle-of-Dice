@@ -25,7 +25,7 @@ MonoBehaviour:
     nextNodeSuccess: {fileID: 0}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_scrap_metal]'
-  - optionText: '[Shop] I already have scrap metal to sell.'
+  - optionText: '[Blacksmith] I already have scrap metal to sell.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

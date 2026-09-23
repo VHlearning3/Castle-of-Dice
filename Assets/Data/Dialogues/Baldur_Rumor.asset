@@ -19,7 +19,7 @@ MonoBehaviour:
     Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced
     by 2 for first 2 rounds)
   options:
-  - optionText: '[Shop] Good to know. Let me see what you have for sale.'
+  - optionText: '[Blacksmith] Good to know. Let me see what you have for sale.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

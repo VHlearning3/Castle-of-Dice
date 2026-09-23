@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Core
 {
@@ -238,6 +239,17 @@ namespace CastleOfTheD20.Core
         {
             try
             {
+                // Self-healing: Ensure DiceUIController is awake and presenting the animated roll modal
+                DiceUIController ui = DiceUIController.Instance;
+                if (ui != null)
+                {
+                    if (!ui.gameObject.activeInHierarchy)
+                    {
+                        ui.gameObject.SetActive(true);
+                    }
+                    ui.ShowDiceRoll(result);
+                }
+
                 OnDiceRolled?.Invoke(result);
             }
             catch (Exception ex)

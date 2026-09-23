@@ -4873,6 +4873,12 @@ MonoBehaviour:
   lookAtTarget: 1
   lookAtHeightOffset: 1
   fixedRotationEuler: {x: 50, y: 0, z: 0}
+  turnTowardsMovementDirection: 1
+  rotationSmoothTime: 1.5
+  maxRotationSpeed: 60
+  minWalkSpeed: 0.15
+  onlyDuringExploration: 1
+  lateralOffset: 0
 --- !u!1 &1092000591
 GameObject:
   m_ObjectHideFlags: 0
@@ -6269,7 +6275,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 73.10657, y: 19.479778}
+  m_AnchoredPosition: {x: 73.10669, y: 19.479778}
   m_SizeDelta: {x: 160, y: 30}
   m_Pivot: {x: 0, y: 0}
 --- !u!114 &1497515639
@@ -8267,6 +8273,10 @@ PrefabInstance:
     - target: {fileID: 5593424989692524585, guid: 3879baa445ccfad49968817a3a75f655, type: 3}
       propertyPath: m_Name
       value: OptionButtonPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 5593424989692524585, guid: 3879baa445ccfad49968817a3a75f655, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6150205459931460232, guid: 3879baa445ccfad49968817a3a75f655, type: 3}
       propertyPath: m_Pivot.x

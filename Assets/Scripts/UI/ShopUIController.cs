@@ -316,26 +316,31 @@ namespace CastleOfTheD20.UI
         {
             if (sellAllScrapButton != null)
             {
+                sellAllScrapButton.onClick.RemoveListener(SellAllScrap);
                 sellAllScrapButton.onClick.AddListener(SellAllScrap);
             }
 
             if (buyPotionButton != null)
             {
+                buyPotionButton.onClick.RemoveListener(BuyPotion);
                 buyPotionButton.onClick.AddListener(BuyPotion);
             }
 
             if (buyWeaponButton != null)
             {
+                buyWeaponButton.onClick.RemoveListener(BuyWeapon);
                 buyWeaponButton.onClick.AddListener(BuyWeapon);
             }
 
             if (buyArmorButton != null)
             {
+                buyArmorButton.onClick.RemoveListener(BuyArmor);
                 buyArmorButton.onClick.AddListener(BuyArmor);
             }
 
             if (exitShopButton != null)
             {
+                exitShopButton.onClick.RemoveListener(CloseShop);
                 exitShopButton.onClick.AddListener(CloseShop);
             }
         }

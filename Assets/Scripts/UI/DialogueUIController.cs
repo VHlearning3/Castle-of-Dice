@@ -47,14 +47,49 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
-        #region Singleton
+        #region Singleton & Access
 
-        public static DialogueUIController Instance { get; private set; }
+        private static DialogueUIController instance;
+
+        /// <summary>
+        /// Singleton instance accessor. Lazily discovers the component in the active scene
+        /// (including inactive objects) or under any Canvas hierarchy.
+        /// </summary>
+        public static DialogueUIController Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<DialogueUIController>(FindObjectsInactive.Include);
+                    if (instance == null)
+                    {
+                        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                        foreach (var canvas in canvases)
+                        {
+                            foreach (Transform child in canvas.GetComponentsInChildren<Transform>(true))
+                            {
+                                if (child.name.IndexOf("DialoguePanel", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    child.name.IndexOf("DialogueModal", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    instance = child.GetComponent<DialogueUIController>() ?? child.gameObject.AddComponent<DialogueUIController>();
+                                    break;
+                                }
+                            }
+                            if (instance != null) break;
+                        }
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         #endregion
 
         #region Private State
 
+        private CanvasGroup canvasGroup;
         private Coroutine activeTypewriterCoroutine;
         private readonly List<GameObject> spawnedButtons = new List<GameObject>();
         private string currentFullText = "";
@@ -65,31 +100,44 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
-            Instance = this;
+            instance = this;
 
             AutoLocateComponents();
 
-            if (dialoguePanel != null)
+            // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
+            if (canvasGroup == null)
             {
-                dialoguePanel.SetActive(false);
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                }
             }
+
+            HideDialogue();
 
             if (continueButton != null)
             {
+                continueButton.onClick.RemoveListener(OnContinueClicked);
                 continueButton.onClick.AddListener(OnContinueClicked);
             }
         }
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
+            }
+
+            if (continueButton != null)
+            {
+                continueButton.onClick.RemoveListener(OnContinueClicked);
             }
         }
 
@@ -265,9 +313,27 @@ namespace CastleOfTheD20.UI
 
             AutoLocateComponents();
 
-            if (dialoguePanel != null)
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
+            if (dialoguePanel != null && !dialoguePanel.activeSelf)
             {
                 dialoguePanel.SetActive(true);
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
+
+            transform.SetAsLastSibling();
+            if (dialoguePanel != null && dialoguePanel != gameObject)
+            {
+                dialoguePanel.transform.SetAsLastSibling();
             }
 
             // 1. Speaker Info
@@ -434,7 +500,18 @@ namespace CastleOfTheD20.UI
 
             ClearSpawnedButtons();
 
-            if (dialoguePanel != null)
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.interactable = false;
+                canvasGroup.blocksRaycasts = false;
+            }
+
+            if (dialoguePanel != null && dialoguePanel != gameObject)
+            {
+                dialoguePanel.SetActive(false);
+            }
+            else if (dialoguePanel == gameObject && canvasGroup == null)
             {
                 dialoguePanel.SetActive(false);
             }

@@ -54,8 +54,49 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Singleton & Access
+
+        private static CombatUIController instance;
+
+        /// <summary>
+        /// Singleton instance accessor. Lazily discovers the component in the active scene
+        /// (including inactive objects) or under any Canvas hierarchy.
+        /// </summary>
+        public static CombatUIController Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
+                    if (instance == null)
+                    {
+                        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                        foreach (var canvas in canvases)
+                        {
+                            foreach (Transform child in canvas.GetComponentsInChildren<Transform>(true))
+                            {
+                                if (child.name.IndexOf("CombatActionBar", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    child.name.IndexOf("CombatPanel", StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    instance = child.GetComponent<CombatUIController>() ?? child.gameObject.AddComponent<CombatUIController>();
+                                    break;
+                                }
+                            }
+                            if (instance != null) break;
+                        }
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
+
+        #endregion
+
         #region Private State
 
+        private CanvasGroup canvasGroup;
         private PlayerUnit activePlayer;
         private readonly List<string> logHistory = new List<string>();
         private int selectedAbilitySlot = -1;
@@ -66,6 +107,23 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
+
+            // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+
             if (combatActionBar == null)
             {
                 Transform barTransform = transform.Find("CombatActionBar")
@@ -87,6 +145,7 @@ namespace CastleOfTheD20.UI
 
             if (endTurnButton != null)
             {
+                endTurnButton.onClick.RemoveAllListeners();
                 endTurnButton.onClick.AddListener(OnEndTurnClicked);
             }
 
@@ -94,7 +153,24 @@ namespace CastleOfTheD20.UI
             for (int i = 0; i < abilityButtons.Count; i++)
             {
                 int slotIndex = i;
-                abilityButtons[i].onClick.AddListener(() => OnAbilitySlotClicked(slotIndex));
+                if (abilityButtons[i] != null)
+                {
+                    abilityButtons[i].onClick.RemoveAllListeners();
+                    abilityButtons[i].onClick.AddListener(() => OnAbilitySlotClicked(slotIndex));
+                }
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
+            }
+
+            if (endTurnButton != null)
+            {
+                endTurnButton.onClick.RemoveListener(OnEndTurnClicked);
             }
         }
 
@@ -326,16 +402,53 @@ namespace CastleOfTheD20.UI
 
         /// <summary>
         /// Controls visibility of the combat action bar and associated turn controls.
+        /// Utilizes CanvasGroup to fade in/out cleanly without deactivating the host script GameObject.
         /// </summary>
         public void SetCombatBarVisible(bool visible)
         {
-            if (combatActionBar != null)
+            if (visible)
             {
-                combatActionBar.SetActive(visible);
-            }
+                if (!gameObject.activeSelf)
+                {
+                    gameObject.SetActive(true);
+                }
 
-            if (!visible)
+                if (combatActionBar != null && !combatActionBar.activeSelf)
+                {
+                    combatActionBar.SetActive(true);
+                }
+
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 1f;
+                    canvasGroup.interactable = true;
+                    canvasGroup.blocksRaycasts = true;
+                }
+
+                transform.SetAsLastSibling();
+                if (combatActionBar != null && combatActionBar != gameObject)
+                {
+                    combatActionBar.transform.SetAsLastSibling();
+                }
+            }
+            else
             {
+                if (canvasGroup != null)
+                {
+                    canvasGroup.alpha = 0f;
+                    canvasGroup.interactable = false;
+                    canvasGroup.blocksRaycasts = false;
+                }
+
+                if (combatActionBar != null && combatActionBar != gameObject)
+                {
+                    combatActionBar.SetActive(false);
+                }
+                else if (combatActionBar == gameObject && canvasGroup == null)
+                {
+                    combatActionBar.SetActive(false);
+                }
+
                 selectedAbilitySlot = -1;
                 GridManager.Instance?.ClearAllHighlights();
             }

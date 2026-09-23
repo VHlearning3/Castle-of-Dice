@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Combat
 {
@@ -163,6 +164,13 @@ namespace CastleOfTheD20.Combat
             isCombatActive = true;
             turnCounter = 1;
             currentUnitIndex = -1;
+
+            // Ensure Combat UI is initialized and active
+            CombatUIController combatUI = CombatUIController.Instance;
+            if (combatUI != null && !combatUI.gameObject.activeSelf)
+            {
+                combatUI.gameObject.SetActive(true);
+            }
 
             Debug.Log($"[TurnManager] Combat initiated with {activeUnits.Count} combatants.");
             NextTurn();

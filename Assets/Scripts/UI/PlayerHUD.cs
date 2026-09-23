@@ -18,7 +18,20 @@ namespace CastleOfTheD20.UI
     {
         #region Singleton
 
-        public static PlayerHUD Instance { get; private set; }
+        private static PlayerHUD instance;
+
+        public static PlayerHUD Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<PlayerHUD>(FindObjectsInactive.Include);
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
 
         #endregion
 
@@ -61,13 +74,13 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (instance != null && instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            instance = this;
 
             AutoLocateComponents();
 
@@ -85,10 +98,6 @@ namespace CastleOfTheD20.UI
             QuestManager.OnQuestStateUpdated += HandleQuestStateUpdated;
 
             LocatePlayer();
-            if (trackedPlayer != null)
-            {
-                trackedPlayer.OnHealthChanged += HandleHealthChanged;
-            }
         }
 
         private void OnDisable()
@@ -106,9 +115,9 @@ namespace CastleOfTheD20.UI
 
         private void OnDestroy()
         {
-            if (Instance == this)
+            if (instance == this)
             {
-                Instance = null;
+                instance = null;
             }
 
             if (quickPotionButton != null)
@@ -184,6 +193,7 @@ namespace CastleOfTheD20.UI
                 trackedPlayer = FindAnyObjectByType<PlayerUnit>();
                 if (trackedPlayer != null)
                 {
+                    trackedPlayer.OnHealthChanged -= HandleHealthChanged;
                     trackedPlayer.OnHealthChanged += HandleHealthChanged;
                 }
             }

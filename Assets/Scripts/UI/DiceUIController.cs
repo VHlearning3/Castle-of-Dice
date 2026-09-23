@@ -55,9 +55,53 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Singleton & Access
+
+        private static DiceUIController instance;
+
+        /// <summary>
+        /// Singleton instance accessor. Lazily discovers the component in the active scene
+        /// (including inactive objects) or under any Canvas hierarchy.
+        /// </summary>
+        public static DiceUIController Instance
+        {
+            get
+            {
+                if (instance == null)
+                {
+                    instance = FindAnyObjectByType<DiceUIController>(FindObjectsInactive.Include);
+                    if (instance == null)
+                    {
+                        Canvas[] canvases = FindObjectsByType<Canvas>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                        foreach (var canvas in canvases)
+                        {
+                            foreach (Transform child in canvas.GetComponentsInChildren<Transform>(true))
+                            {
+                                if (child.name.IndexOf("DiceModalPanel", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    child.name.IndexOf("DiceRoll", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    child.name.IndexOf("DicePanel", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                {
+                                    instance = child.GetComponent<DiceUIController>() ?? child.gameObject.AddComponent<DiceUIController>();
+                                    break;
+                                }
+                            }
+                            if (instance != null) break;
+                        }
+                    }
+                }
+                return instance;
+            }
+            private set => instance = value;
+        }
+
+        #endregion
+
         #region Private State
 
+        private CanvasGroup canvasGroup;
         private Coroutine activeRollCoroutine;
+        private int lastHandledRollFrame = -1;
+        private DiceResult? lastHandledResult;
 
         #endregion
 
@@ -65,16 +109,44 @@ namespace CastleOfTheD20.UI
 
         private void Awake()
         {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
+
             AutoLocateComponents();
 
-            if (diceModalPanel != null)
+            // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
+            if (canvasGroup == null)
             {
-                diceModalPanel.SetActive(false);
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
+                }
+            }
+
+            HidePanel();
+
+            if (dismissButton != null)
+            {
+                dismissButton.onClick.RemoveListener(Dismiss);
+                dismissButton.onClick.AddListener(Dismiss);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (instance == this)
+            {
+                instance = null;
             }
 
             if (dismissButton != null)
             {
-                dismissButton.onClick.AddListener(Dismiss);
+                dismissButton.onClick.RemoveListener(Dismiss);
             }
         }
 
@@ -202,16 +274,90 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
-        #region Event Handling
+        #region Visibility & Display Helpers
 
-        private void HandleDiceRolled(DiceResult result)
+        /// <summary>
+        /// Ensures the modal and its hierarchy are active, brings to the top of the canvas, and reveals visually.
+        /// </summary>
+        public void ShowPanel()
         {
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
+            if (diceModalPanel != null && !diceModalPanel.activeSelf)
+            {
+                diceModalPanel.SetActive(true);
+            }
+
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 1f;
+                canvasGroup.interactable = true;
+                canvasGroup.blocksRaycasts = true;
+            }
+
+            transform.SetAsLastSibling();
+            if (diceModalPanel != null && diceModalPanel != gameObject)
+            {
+                diceModalPanel.transform.SetAsLastSibling();
+            }
+        }
+
+        /// <summary>
+        /// Hides the modal visually without disabling the host script GameObject.
+        /// </summary>
+        public void HidePanel()
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = 0f;
+                canvasGroup.interactable = false;
+                canvasGroup.blocksRaycasts = false;
+            }
+
+            if (diceModalPanel != null && diceModalPanel != gameObject)
+            {
+                diceModalPanel.SetActive(false);
+            }
+            else if (diceModalPanel == gameObject && canvasGroup == null)
+            {
+                diceModalPanel.SetActive(false);
+            }
+        }
+
+        #endregion
+
+        #region Event Handling & Public Dispatch
+
+        /// <summary>
+        /// Displays the animated D20 roll popup modal for the provided result.
+        /// Deduplicates calls made in the same frame for the same result.
+        /// </summary>
+        public void ShowDiceRoll(DiceResult result)
+        {
+            if (lastHandledRollFrame == Time.frameCount && lastHandledResult.HasValue && lastHandledResult.Value.Equals(result))
+            {
+                return;
+            }
+
+            lastHandledRollFrame = Time.frameCount;
+            lastHandledResult = result;
+
             if (activeRollCoroutine != null)
             {
                 StopCoroutine(activeRollCoroutine);
+                activeRollCoroutine = null;
             }
 
+            ShowPanel();
             activeRollCoroutine = StartCoroutine(AnimateRollRoutine(result));
+        }
+
+        private void HandleDiceRolled(DiceResult result)
+        {
+            ShowDiceRoll(result);
         }
 
         #endregion
@@ -220,10 +366,7 @@ namespace CastleOfTheD20.UI
 
         private IEnumerator AnimateRollRoutine(DiceResult result)
         {
-            if (diceModalPanel != null)
-            {
-                diceModalPanel.SetActive(true);
-            }
+            ShowPanel();
 
             // Setup Header
             if (headerText != null)
@@ -312,10 +455,7 @@ namespace CastleOfTheD20.UI
                 activeRollCoroutine = null;
             }
 
-            if (diceModalPanel != null)
-            {
-                diceModalPanel.SetActive(false);
-            }
+            HidePanel();
         }
 
         #endregion
