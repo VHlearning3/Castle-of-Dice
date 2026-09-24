@@ -40,6 +40,7 @@ namespace CastleOfTheD20.Editor
         }
 
         [MenuItem("CastleOfDice/Run Complete Game Setup & Build All", false, 0)]
+        [MenuItem("Tools/Castle of Dice/Run Complete Game Setup & Build All", false, 0)]
         public static void RunCompleteGameSetup()
         {
             var activeScene = EditorSceneManager.GetActiveScene();

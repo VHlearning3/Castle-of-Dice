@@ -511,12 +511,13 @@ namespace CastleOfTheD20.Editor
                 if (woodMat != null) chestObj.GetComponent<Renderer>().sharedMaterial = woodMat;
             }
 
-            BoxCollider col = chestObj.GetComponent<BoxCollider>() ?? chestObj.AddComponent<BoxCollider>();
-            col.size = new Vector3(1.4f, 0.9f, 1.0f);
-            col.center = new Vector3(0f, 0.45f, 0f);
-
-            ChestRewardInteraction reward = chestObj.GetComponent<ChestRewardInteraction>() ?? chestObj.AddComponent<ChestRewardInteraction>();
+            ChestRewardInteraction reward = chestObj.GetComponent<ChestRewardInteraction>();
+            if (reward == null)
+            {
+                reward = chestObj.AddComponent<ChestRewardInteraction>();
+            }
             reward.GoldReward = gold;
+            reward.EnsureChestCollider();
 
             return chestObj;
         }

@@ -314,7 +314,11 @@ namespace CastleOfTheD20.Editor
                 rend.sharedMaterial = herbMat;
             }
 
-            VillageNPC vNPC = mirabel.GetComponent<VillageNPC>() ?? mirabel.AddComponent<VillageNPC>();
+            VillageNPC vNPC = mirabel.GetComponent<VillageNPC>();
+            if (vNPC == null)
+            {
+                vNPC = mirabel.AddComponent<VillageNPC>();
+            }
             vNPC.PromptMessage = "Puhu Yrttiparantaja Mirabelille";
             vNPC.InteractionRadius = 5.0f;
             vNPC.IsInteractable = true;
@@ -343,7 +347,11 @@ namespace CastleOfTheD20.Editor
                 rend.sharedMaterial = elderMat;
             }
 
-            VillageNPC vNPC = othelia.GetComponent<VillageNPC>() ?? othelia.AddComponent<VillageNPC>();
+            VillageNPC vNPC = othelia.GetComponent<VillageNPC>();
+            if (vNPC == null)
+            {
+                vNPC = othelia.AddComponent<VillageNPC>();
+            }
             vNPC.PromptMessage = "Puhu Kylänvanhin Othelialle";
             vNPC.InteractionRadius = 5.0f;
             vNPC.IsInteractable = true;
