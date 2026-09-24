@@ -28,10 +28,18 @@ namespace CastleOfTheD20.World
         #region Public Properties
 
         /// <summary>Prompt text shown to the player.</summary>
-        public string PromptMessage => promptMessage;
+        public string PromptMessage
+        {
+            get => promptMessage;
+            set => promptMessage = value;
+        }
 
         /// <summary>Effective interaction distance threshold.</summary>
-        public float InteractionRadius => interactionRadius;
+        public float InteractionRadius
+        {
+            get => interactionRadius;
+            set => interactionRadius = value;
+        }
 
         /// <summary>Active interaction availability.</summary>
         public bool IsInteractable

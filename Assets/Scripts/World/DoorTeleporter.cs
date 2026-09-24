@@ -47,6 +47,16 @@ namespace CastleOfTheD20.World
             set => destination = value;
         }
 
+        /// <summary>Target landing world coordinates.</summary>
+        public Vector3 TargetSpawnPosition
+        {
+            get => fallbackDestination;
+            set => fallbackDestination = value;
+        }
+
+        /// <summary>Optional target zone identifier (Village, Courtyard, Library, CrownHall).</summary>
+        public string DestinationZone { get; set; } = string.Empty;
+
         /// <summary>Whether walking into the trigger automatically teleports the player.</summary>
         public bool TriggerOnWalk
         {
