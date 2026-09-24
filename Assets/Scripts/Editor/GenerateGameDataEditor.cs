@@ -609,6 +609,357 @@ namespace CastleOfTheD20.Editor
             });
             EditorUtility.SetDirty(barnabyIntro);
             assetCount++;
+
+            // 4. Elder Othelia Items & Dialogue Tree (Kadonnut perintökalleus)
+            ItemSO itemSignetRing = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SignetRing.asset");
+            itemSignetRing.Initialize(
+                id: "item_signet_ring",
+                name: "Othelia's Signet Ring",
+                desc: "Ancient golden seal bearing the noble crest of Othelia's ancestors. Lost in the castle courtyard.",
+                type: ItemType.QuestItem,
+                buyPrice: 0,
+                sellPrice: 0,
+                statBonus: 0,
+                consumable: false
+            );
+            EditorUtility.SetDirty(itemSignetRing);
+            assetCount++;
+
+            ItemSO itemRerollRune = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_RerollRuneStone.asset");
+            itemRerollRune.Initialize(
+                id: "item_reroll_rune",
+                name: "Rune of Fate (D20 Reroll)",
+                desc: "Mystical rune stone of Oakhaven. Allows the bearer to invoke a critical D20 reroll.",
+                type: ItemType.QuestItem,
+                buyPrice: 0,
+                sellPrice: 50,
+                statBonus: 1,
+                consumable: false
+            );
+            EditorUtility.SetDirty(itemRerollRune);
+            assetCount++;
+
+            QuestSO questSignetRing = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_LostSignetRing.asset");
+            questSignetRing.Initialize(
+                id: "quest_lost_signet_ring",
+                title: "Kadonnut perintökalleus",
+                desc: "Etsi Othelyan sukunsa sinettisormus linnan alapihan raunioista.",
+                state: QuestState.NotStarted,
+                reqAmount: 1,
+                gold: 50,
+                bonusGold: 0,
+                reward: itemRerollRune
+            );
+            EditorUtility.SetDirty(questSignetRing);
+            assetCount++;
+
+            DialogueNodeSO otheliaAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Accepted.asset");
+            otheliaAccepted.Initialize(
+                speaker: "Kylänvanhin Othelia",
+                text: "Kiitos, urhea seikkailija! Sukuni sinettisormus katosi linnan alapihoille, kun vartijat kaatuivat. Varo luurankoja raunioissa!",
+                portrait: null,
+                isExit: false
+            );
+            otheliaAccepted.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Leave] Etsin sormuksen heti kun pääsen linnaan.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(otheliaAccepted);
+            assetCount++;
+
+            DialogueNodeSO otheliaLore = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Lore.asset");
+            otheliaLore.Initialize(
+                speaker: "Kylänvanhin Othelia",
+                text: "Ennen kirousta Kivettymiskuningas hallitsi näitä maita oikeudenmukaisesti. Mutta hän tavoitteli kuolemattomuutta syvistä kallioista... ja hänen sydämensä muuttui kiveksi. Varjot nielaisivat linnan sisältäpäin.",
+                portrait: null,
+                isExit: false
+            );
+            otheliaLore.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Surullinen kohtalo. Voin etsiä sinettisormuksen puolestasi.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
+                new DialogueOption("[Exit] Kiitos tiedosta, jatkan matkaani.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(otheliaLore);
+            assetCount++;
+
+            DialogueNodeSO otheliaIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Intro.asset");
+            otheliaIntro.Initialize(
+                speaker: "Kylänvanhin Othelia",
+                text: "Tervehdys, matkalainen. Olen kylänvanhin Othelia. Kivenkolo eli rauhassa, kunnes vanha kivilinna heräsi pahuuteen. Jos uskaltaudut linnan porteille, voisitko etsiä perheeni kadonneen sinettisormuksen?",
+                portrait: null,
+                isExit: false
+            );
+            otheliaIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Etsin sormuksen puolestasi.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
+                new DialogueOption("Kerro minulle linnan menneisyydestä ja kuninkaasta.", otheliaLore, false, 10, "", null, ""),
+                new DialogueOption("[Exit] Minulla on kiireitä muualla.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(otheliaIntro);
+            assetCount++;
+
+            // 5. Herbalist Mirabel Items & Dialogue Tree (Yrttejä parantajalle)
+            ItemSO itemSwampHerb = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SwampHerb.asset");
+            itemSwampHerb.Initialize(
+                id: "item_swamp_herb",
+                name: "Castle Moat Blossom",
+                desc: "Harvinainen suokukka, joka kasvaa vain linnan vallihaudan liepeillä.",
+                type: ItemType.QuestItem,
+                buyPrice: 0,
+                sellPrice: 5,
+                statBonus: 0,
+                consumable: false
+            );
+            EditorUtility.SetDirty(itemSwampHerb);
+            assetCount++;
+
+            ItemSO itemPoisonVial = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_PoisonVial.asset");
+            itemPoisonVial.Initialize(
+                id: "item_poison_vial",
+                name: "Myrkkypullo (Venom Vial)",
+                desc: "Väkevä yrttiuute, joka lisää +5 vahinkoa seuraavaan taisteluun.",
+                type: ItemType.Consumable,
+                buyPrice: 30,
+                sellPrice: 15,
+                statBonus: 5,
+                consumable: true
+            );
+            EditorUtility.SetDirty(itemPoisonVial);
+            assetCount++;
+
+            ItemSO itemGreaterPotion = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_GreaterPotion.asset");
+            itemGreaterPotion.Initialize(
+                id: "item_greater_potion",
+                name: "Suuri Terveysjuoma",
+                desc: "Tiivistetty parannusrohto. Palauttaa 35 kestopistettä.",
+                type: ItemType.Consumable,
+                buyPrice: 50,
+                sellPrice: 25,
+                statBonus: 35,
+                consumable: true
+            );
+            EditorUtility.SetDirty(itemGreaterPotion);
+            assetCount++;
+
+            QuestSO questSwampHerbs = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_SwampHerbs.asset");
+            questSwampHerbs.Initialize(
+                id: "quest_swamp_herbs",
+                title: "Yrttejä parantajalle",
+                desc: "Kerää 3 suokukkaa vallihaudan liepeiltä Mirabelille.",
+                state: QuestState.NotStarted,
+                reqAmount: 3,
+                gold: 30,
+                bonusGold: 20,
+                reward: itemPoisonVial
+            );
+            EditorUtility.SetDirty(questSwampHerbs);
+            assetCount++;
+
+            DialogueNodeSO mirabelAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Accepted.asset");
+            mirabelAccepted.Initialize(
+                speaker: "Yrttiparantaja Mirabel",
+                text: "Loistavaa! Vallihaudalla kukkii harvinainen sinikukka. Kolme kukkaa riittää mahtavaan seokseen. Varo vain vallihaudan liepeillä vaeltavia varjoja!",
+                portrait: null,
+                isExit: false
+            );
+            mirabelAccepted.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Leave] Tuon kukat heti kun löydän ne.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(mirabelAccepted);
+            assetCount++;
+
+            DialogueNodeSO mirabelCheckSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Success.asset");
+            mirabelCheckSuccess.Initialize(
+                speaker: "Yrttiparantaja Mirabel",
+                text: "Tunnistat siis suokasvien arvoituksen! Koska ymmärrät luontoa näin syvästi, keitän sinulle tavallisen myrkyn sijaan Suuren Terveysjuoman palkkioksi!",
+                portrait: null,
+                isExit: false
+            );
+            mirabelCheckSuccess.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Sovittu. Haen suokukat vallihaudalta.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]")
+            });
+            EditorUtility.SetDirty(mirabelCheckSuccess);
+            assetCount++;
+
+            DialogueNodeSO mirabelCheckFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Fail.asset");
+            mirabelCheckFail.Initialize(
+                speaker: "Yrttiparantaja Mirabel",
+                text: "Kasvintuntemuksesi kaipaa vielä harjoitusta, mutta teräs on aina terästä. Saat myrkkypullon, kunhan tuot kukat ehjinä.",
+                portrait: null,
+                isExit: false
+            );
+            mirabelCheckFail.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Käy minulle. Haen kukat.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]")
+            });
+            EditorUtility.SetDirty(mirabelCheckFail);
+            assetCount++;
+
+            DialogueNodeSO mirabelIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Intro.asset");
+            mirabelIntro.Initialize(
+                speaker: "Yrttiparantaja Mirabel",
+                text: "Tss... hiljaa. Haistatko vallihaudan kitkerän sammaleen? Olen Mirabel, yrttiparantaja. Tarvitsisin kipeästi kolme suokukkaa linnan vallihaudan liepeiltä rohtojani varten, mutta epäkuolleet vartijat tekevät keräämisestä liian vaarallista.",
+                portrait: null,
+                isExit: false
+            );
+            mirabelIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("Voin noutaa kukat vallihaudalta.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]"),
+                new DialogueOption(
+                    "[DC 10 Luontotieto] Suokukka on arkaaista rohtoa – osaan kerätä ne juuria vahingoittamatta.",
+                    mirabelCheckSuccess,
+                    true,
+                    10,
+                    "Nature / Wisdom Check",
+                    mirabelCheckFail,
+                    ""
+                ),
+                new DialogueOption("[Exit] En ryve mudassa kukkien vuoksi.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            EditorUtility.SetDirty(mirabelIntro);
+            assetCount++;
+
+            // 6. Boss 1: Cursed Commander Dialogue (Siipi 1: Alapiha)
+            DialogueNodeSO commanderSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Success.asset");
+            commanderSuccess.Initialize(
+                speaker: "Kirottu Komentaja",
+                text: "Vala...? Se kaikuu mielessäni vuosisatojen takaa... Hetken epäröintiä! Haarniskani halkeilee!",
+                portrait: null,
+                isExit: true
+            );
+            commanderSuccess.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(commanderSuccess);
+            assetCount++;
+
+            DialogueNodeSO commanderFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Fail.asset");
+            commanderFail.Initialize(
+                speaker: "Kirottu Komentaja",
+                text: "Kunnia on kuollut, kuten minäkin! Teräkseni maistaa vertasi!",
+                portrait: null,
+                isExit: true
+            );
+            commanderFail.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(commanderFail);
+            assetCount++;
+
+            DialogueNodeSO commanderIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Intro.asset");
+            commanderIntro.Initialize(
+                speaker: "Kirottu Komentaja",
+                text: "Kuka uskaltaa häpäistä linnan vartiotornin? Minun miekkani on maannut haudassa vuosisatoja, mutta tänään se maistaa jälleen elävää verta!",
+                portrait: null,
+                isExit: false
+            );
+            commanderIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption(
+                    "[DC 13 Sotilaan kunnia] Vartijakaartin vala velvoittaa sinua yhä! Muista kunniasi äläkä palvele kirousta!",
+                    commanderSuccess,
+                    true,
+                    13,
+                    "Honor / Persuasion Check",
+                    commanderFail,
+                    "SoldiersHonor"
+                ),
+                new DialogueOption("[Taistelu] Puheesi ovat turhia, epäkuollut. Valmistaudu tuhoosi!", commanderFail, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(commanderIntro);
+            assetCount++;
+
+            // 7. Boss 2: Shadow Mage Malakor Dialogue (Siipi 2: Kirjasto)
+            DialogueNodeSO malakorSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Success.asset");
+            malakorSuccess.Initialize(
+                speaker: "Varjomaagi Malakor",
+                text: "Mitä?! Mistä tiedät tuon loitsun purkukaavan?! Harhakuva hajoaa!",
+                portrait: null,
+                isExit: true
+            );
+            malakorSuccess.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(malakorSuccess);
+            assetCount++;
+
+            DialogueNodeSO malakorFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Fail.asset");
+            malakorFail.Initialize(
+                speaker: "Varjomaagi Malakor",
+                text: "Sokea typerys! Et koskaan erota varjoa totuudesta peilieni salissa!",
+                portrait: null,
+                isExit: true
+            );
+            malakorFail.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(malakorFail);
+            assetCount++;
+
+            DialogueNodeSO malakorIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Intro.asset");
+            malakorIntro.Initialize(
+                speaker: "Varjomaagi Malakor",
+                text: "Tervetuloa arkaaniseen tutkimuskammiooni, kuolevainen. Etsitkö salaisuuksia? Vai vain omaa kuolemaasi peilieni labyrintissa?",
+                portrait: null,
+                isExit: false
+            );
+            malakorIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption(
+                    "[DC 14 Arkaaninen herja] Harhasi ovat alkeellisia. Tunnen peiliheijastuksesi taitteen!",
+                    malakorSuccess,
+                    true,
+                    14,
+                    "Arcana / Intelligence Check",
+                    malakorFail,
+                    "ArcaneHeresy"
+                ),
+                new DialogueOption("[Taistelu] Harhat särkyvät teräksen voimalla!", malakorFail, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(malakorIntro);
+            assetCount++;
+
+            // 8. Boss 3: Gargoyle King Dialogue (Siipi 3: Kruununsali)
+            DialogueNodeSO gargoyleSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Success.asset");
+            gargoyleSuccess.Initialize(
+                speaker: "Kivettymiskuningas",
+                text: "K-kivettymä... vanki?! Grraaaagh! Kivinen sydämeni järkkyy!",
+                portrait: null,
+                isExit: true
+            );
+            gargoyleSuccess.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(gargoyleSuccess);
+            assetCount++;
+
+            DialogueNodeSO gargoyleFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Fail.asset");
+            gargoyleFail.Initialize(
+                speaker: "Kivettymiskuningas",
+                text: "Pikkusieluinen madonruoka! Kallio ja kivivyöryt murskaavat sinut!",
+                portrait: null,
+                isExit: true
+            );
+            gargoyleFail.SetOptions(new List<DialogueOption>());
+            EditorUtility.SetDirty(gargoyleFail);
+            assetCount++;
+
+            DialogueNodeSO gargoyleIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Intro.asset");
+            gargoyleIntro.Initialize(
+                speaker: "Kivettymiskuningas",
+                text: "Kruununi on ikuista kiveä! Tämä valtakunta ei koskaan murene! Polvistu kiven herran edessä tai muutu osaksi linnoituksen lattiaa!",
+                portrait: null,
+                isExit: false
+            );
+            gargoyleIntro.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption(
+                    "[DC 16 Pelottelu] Sinä et ole kuningas, vaan kivettynyt vanki omassa haudassasi! Aikasi on ohi!",
+                    gargoyleSuccess,
+                    true,
+                    16,
+                    "Intimidation / Strength Check",
+                    gargoyleFail,
+                    "GargoyleKingIntimidated"
+                ),
+                new DialogueOption("[Taistelu] Hakkaan kivisen kruunusi sirpaleiksi!", gargoyleFail, false, 10, "", null, "")
+            });
+            EditorUtility.SetDirty(gargoyleIntro);
+            assetCount++;
+
+            Debug.Log($"[GenerateGameDataEditor] Successfully created and verified {assetCount} game assets (Items, Abilities, Quests, Characters, Dialogues).");
         }
 
         private static void EnsureFolderExists(string folderPath)

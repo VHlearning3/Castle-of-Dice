@@ -523,6 +523,10 @@ namespace CastleOfTheD20.UI
 
                     // Enable/disable based on whether action has already been used
                     abilityButtons[i].interactable = !activePlayer.HasActedThisTurn && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
+
+                    // Attach tooltip listener for rich ability card on hover
+                    var tooltip = abilityButtons[i].GetComponent<AbilityTooltipUI>() ?? abilityButtons[i].gameObject.AddComponent<AbilityTooltipUI>();
+                    tooltip.SlotIndex = i;
                 }
                 else
                 {

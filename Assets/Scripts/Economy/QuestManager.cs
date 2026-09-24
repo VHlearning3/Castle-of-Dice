@@ -113,6 +113,16 @@ namespace CastleOfTheD20.Economy
                     RegisterQuest(quest);
                 }
             }
+
+#if UNITY_EDITOR
+            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:QuestSO");
+            foreach (var g in guids)
+            {
+                string p = UnityEditor.AssetDatabase.GUIDToAssetPath(g);
+                QuestSO q = UnityEditor.AssetDatabase.LoadAssetAtPath<QuestSO>(p);
+                if (q != null) RegisterQuest(q);
+            }
+#endif
         }
 
         /// <summary>
