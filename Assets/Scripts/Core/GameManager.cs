@@ -187,6 +187,11 @@ namespace CastleOfTheD20.Core
         public void SetState(GamePlayMode state) => SetMode(state);
 
         /// <summary>
+        /// Alias for SetMode for play mode transitions.
+        /// </summary>
+        public void SetPlayMode(GamePlayMode mode) => SetMode(mode);
+
+        /// <summary>
         /// Marks a room or castle wing as cleared of enemies.
         /// </summary>
         public void NotifyRoomCleared(GameLocation location)

@@ -151,6 +151,26 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Starts combat for a specific room encounter.
+        /// </summary>
+        public void StartCombatEncounter(PlayerUnit player, string location = "", string bossId = "")
+        {
+            StartCombat();
+        }
+
+        /// <summary>
+        /// Concludes combat cleanly and resets highlights and game play mode.
+        /// </summary>
+        public void EndCombat(bool isVictory)
+        {
+            isCombatActive = false;
+            SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
+            GridManager.Instance?.ClearAllHighlights();
+            OnCombatEnded?.Invoke(isVictory);
+            GameManager.Instance?.SetMode(GamePlayMode.Exploration);
+        }
+
+        /// <summary>
         /// Initializes the combat state machine with a specified list of combatants.
         /// </summary>
         public void StartCombat(List<CombatUnit> units)

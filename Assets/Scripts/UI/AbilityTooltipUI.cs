@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using TMPro;
+using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Combat;
 
@@ -70,7 +71,7 @@ namespace CastleOfTheD20.UI
             {
                 AbilityTargetType.Self => "Itseen (Self)",
                 AbilityTargetType.SingleTarget => "Yksittäinen kohde (Single Target)",
-                AbilityTargetType.AreaOfEffect => $"Alue (AOE: {ability.AoeRadius}x{ability.AoeRadius})",
+                AbilityTargetType.Area3x3 => $"Alue (AOE: {ability.AreaOfEffectRadius}x{ability.AreaOfEffectRadius})",
                 _ => ability.TargetType.ToString()
             };
             string rangeStr = ability.TargetType == AbilityTargetType.Self ? "-" : $"{ability.Range} ruutua";
@@ -82,7 +83,7 @@ namespace CastleOfTheD20.UI
 
             if (formulaText != null)
             {
-                string checkStr = ability.CheckRequired ? "d20 + Bonus ≥ AC" : "Automaattinen";
+                string checkStr = ability.RequiresCheck ? "d20 + Bonus ≥ AC" : "Automaattinen";
                 string dmgStr = ability.BaseValue > 0 ? $"{ability.BaseValue} vahinkoa" : "Puolustus / Tehoste";
                 if (player.WeaponDamageBonus > 0 && ability.BaseValue > 0)
                 {
