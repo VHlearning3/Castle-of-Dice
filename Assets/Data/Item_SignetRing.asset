@@ -10,14 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe3e3279a02f3a74db8358204f715f94, type: 3}
-  m_Name: Item_Potion_Health
+  m_Name: Item_SignetRing
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
-  itemID: potion_health_small
-  itemName: Small Health Potion
-  description: Restores 15 hit points when consumed during exploration or combat.
+  itemID: item_signet_ring
+  itemName: Othelia's Signet Ring
+  description: Ancient golden seal bearing the noble crest of Othelia's ancestors.
+    Lost in the castle courtyard.
   itemIcon: {fileID: 0}
-  itemType: 0
-  buyPriceGold: 25
-  sellPriceGold: 10
-  statBonusValue: 15
-  isConsumable: 1
+  itemType: 3
+  buyPriceGold: 0
+  sellPriceGold: 0
+  statBonusValue: 0
+  isConsumable: 0

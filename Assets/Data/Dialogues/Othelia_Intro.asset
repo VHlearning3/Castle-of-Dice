@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
+  m_Name: Othelia_Intro
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
+  speakerName: "Kyl\xE4nvanhin Othelia"
+  speakerPortrait: {fileID: 0}
+  dialogueText: "Tervehdys, matkalainen. Olen kyl\xE4nvanhin Othelia. Kivenkolo eli
+    rauhassa, kunnes vanha kivilinna her\xE4si pahuuteen. Jos uskaltaudut linnan
+    porteille, voisitko etsi\xE4 perheeni kadonneen sinettisormuksen?"
+  options:
+  - optionText: Etsin sormuksen puolestasi.
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: 987fe80ae9a717848a795a47b5e99846, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]'
+  - optionText: "Kerro minulle linnan menneisyydest\xE4 ja kuninkaasta."
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: d61f386a08f95d74e8ffdaa1b67d717f, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: 
+  - optionText: "[Exit] Minulla on kiireit\xE4 muualla."
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 0}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: '[ACTION_CLOSE_DIALOGUE]'
+  isExitNode: 0

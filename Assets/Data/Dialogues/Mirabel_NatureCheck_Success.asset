@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
+  m_Name: Mirabel_NatureCheck_Success
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
+  speakerName: Yrttiparantaja Mirabel
+  speakerPortrait: {fileID: 0}
+  dialogueText: "Tunnistat siis suokasvien arvoituksen! Koska ymm\xE4rr\xE4t luontoa
+    n\xE4in syv\xE4sti, keit\xE4n sinulle tavallisen myrkyn sijaan Suuren Terveysjuoman
+    palkkioksi!"
+  options:
+  - optionText: Sovittu. Haen suokukat vallihaudalta.
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: 1995299417fdbb34c9f74f35aa2aeb2f, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]'
+  isExitNode: 0

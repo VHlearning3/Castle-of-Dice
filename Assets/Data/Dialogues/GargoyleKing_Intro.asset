@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
+  m_Name: GargoyleKing_Intro
+  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
+  speakerName: Kivettymiskuningas
+  speakerPortrait: {fileID: 0}
+  dialogueText: "Kruununi on ikuista kive\xE4! T\xE4m\xE4 valtakunta ei koskaan murene!
+    Polvistu kiven herran edess\xE4 tai muutu osaksi linnoituksen lattiaa!"
+  options:
+  - optionText: "[DC 16 Pelottelu] Sin\xE4 et ole kuningas, vaan kivettynyt vanki
+      omassa haudassasi! Aikasi on ohi!"
+    requiresCheck: 1
+    targetDC: 16
+    skillCheckDescription: Intimidation / Strength Check
+    nextNodeSuccess: {fileID: 11400000, guid: e3fb30bc6fe51ae4486df5c76ae41777, type: 2}
+    nextNodeFailure: {fileID: 11400000, guid: 337bea965dc951842aa7306c9d923e2c, type: 2}
+    combatDebuffTag: GargoyleKingIntimidated
+  - optionText: '[Taistelu] Hakkaan kivisen kruunusi sirpaleiksi!'
+    requiresCheck: 0
+    targetDC: 10
+    skillCheckDescription: 
+    nextNodeSuccess: {fileID: 11400000, guid: 337bea965dc951842aa7306c9d923e2c, type: 2}
+    nextNodeFailure: {fileID: 0}
+    combatDebuffTag: 
+  isExitNode: 0
