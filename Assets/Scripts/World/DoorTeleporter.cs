@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.World
 {
@@ -18,6 +19,10 @@ namespace CastleOfTheD20.World
 
         [Tooltip("Fallback world-space landing coordinates if destination Transform is unassigned.")]
         [SerializeField] private Vector3 fallbackDestination = Vector3.zero;
+
+        [Header("Zone Synchronization")]
+        [Tooltip("Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest).")]
+        [SerializeField] private string destinationZone = string.Empty;
 
         [Header("Trigger Behavior")]
         [Tooltip("If true, entering the trigger volume automatically teleports the player without requiring a click.")]
@@ -54,8 +59,12 @@ namespace CastleOfTheD20.World
             set => fallbackDestination = value;
         }
 
-        /// <summary>Optional target zone identifier (Village, Courtyard, Library, CrownHall).</summary>
-        public string DestinationZone { get; set; } = string.Empty;
+        /// <summary>Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest).</summary>
+        public string DestinationZone
+        {
+            get => destinationZone;
+            set => destinationZone = value;
+        }
 
         /// <summary>Whether walking into the trigger automatically teleports the player.</summary>
         public bool TriggerOnWalk
@@ -154,6 +163,14 @@ namespace CastleOfTheD20.World
                 playerObj.transform.position = targetPosition;
                 playerObj.transform.rotation = targetRotation;
                 Physics.SyncTransforms();
+
+                if (!string.IsNullOrEmpty(DestinationZone) && GameManager.Instance != null)
+                {
+                    if (Enum.TryParse<GameLocation>(DestinationZone, true, out GameLocation loc))
+                    {
+                        GameManager.Instance.SetLocation(loc);
+                    }
+                }
 
                 Debug.Log($"[DoorTeleporter] '{name}' teleported player to {targetPosition}.");
             }

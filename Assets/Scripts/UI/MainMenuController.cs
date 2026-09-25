@@ -20,6 +20,12 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Constants
+
+        public const string SCOTTISH_HARP_ATTRIBUTION_URL = "https://pixabay.com/music/scotland-harp-587446/";
+
+        #endregion
+
         #region Serialized Fields
 
         [Header("Menu Panels")]
@@ -123,6 +129,12 @@ namespace CastleOfTheD20.UI
         {
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
             if (rulesPanel != null) rulesPanel.SetActive(false);
+        }
+
+        public void OpenScottishHarpCredit()
+        {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            Application.OpenURL(SCOTTISH_HARP_ATTRIBUTION_URL);
         }
 
         public void SelectCharacterClass(CharacterClassSO chosenClass)
@@ -258,6 +270,22 @@ namespace CastleOfTheD20.UI
             Button rulesBtn = CreateMenuButton(btnContainer.transform, "Rules_Btn", "Säännöt & D20-opas", new Vector2(0f, -50f), new Color(0.45f, 0.35f, 0.25f));
             rulesBtn.onClick.AddListener(OpenRules);
 
+            // Music Attribution Link
+            GameObject creditObj = new GameObject("MusicCredit_Btn");
+            creditObj.transform.SetParent(panel.transform, false);
+            RectTransform creditRect = creditObj.AddComponent<RectTransform>();
+            creditRect.anchorMin = new Vector2(0.5f, 0f);
+            creditRect.anchorMax = new Vector2(0.5f, 0f);
+            creditRect.pivot = new Vector2(0.5f, 0f);
+            creditRect.anchoredPosition = new Vector2(0f, 15f);
+            creditRect.sizeDelta = new Vector2(500f, 30f);
+            TextMeshProUGUI creditTMP = creditObj.AddComponent<TextMeshProUGUI>();
+            creditTMP.text = "<size=13><color=#8899AA>Musiikki: <u><color=#AACCFF>Scottish Harp (Pixabay)</color></u></color></size>";
+            creditTMP.alignment = TextAlignmentOptions.Center;
+            creditTMP.raycastTarget = true;
+            Button creditBtn = creditObj.AddComponent<Button>();
+            creditBtn.onClick.AddListener(OpenScottishHarpCredit);
+
             // 2. Class Selection Modal
             BuildClassSelectionModal(panel.transform);
 
@@ -379,7 +407,7 @@ namespace CastleOfTheD20.UI
             GameObject box = new GameObject("Rules_Box");
             box.transform.SetParent(rPanel.transform, false);
             RectTransform bRect = box.AddComponent<RectTransform>();
-            bRect.sizeDelta = new Vector2(620f, 420f);
+            bRect.sizeDelta = new Vector2(640f, 450f);
 
             Image bImg = box.AddComponent<Image>();
             bImg.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
@@ -390,10 +418,10 @@ namespace CastleOfTheD20.UI
             GameObject textObj = new GameObject("Rules_Text");
             textObj.transform.SetParent(box.transform, false);
             RectTransform tRect = textObj.AddComponent<RectTransform>();
-            tRect.sizeDelta = new Vector2(580f, 330f);
+            tRect.sizeDelta = new Vector2(600f, 360f);
             tRect.anchoredPosition = new Vector2(0f, 25f);
             TextMeshProUGUI tTMP = textObj.AddComponent<TextMeshProUGUI>();
-            tTMP.fontSize = 15f;
+            tTMP.fontSize = 14f;
             tTMP.color = Color.white;
             tTMP.textWrappingMode = TextWrappingModes.Normal;
             tTMP.text = "<b><size=22><color=#F1C40F>D20-SÄÄNTÖJÄRJESTELMÄ</color></size></b>\n\n" +
@@ -401,9 +429,10 @@ namespace CastleOfTheD20.UI
                 "   <i>Tulos = d20 + Taitobonus ≥ DC / AC</i>\n\n" +
                 "• <b>Luonnollinen 20 (Nat 20):</b> Kriittinen osuma! Tuplavahinko taistelussa tai täydellinen onnistuminen dialogissa.\n\n" +
                 "• <b>Luonnollinen 1 (Nat 1):</b> Kriittinen epäonnistuminen. Vuoro päättyy välittömästi hutiin.\n\n" +
-                "• <b>Kivenkolon kylä:</b> Osta terveysjuomia ja päivityksiä (+1 vahinko / +1 AC) sepältä ennen linnaan astumista!";
+                "• <b>Kivenkolon kylä:</b> Osta terveysjuomia ja päivityksiä (+1 vahinko / +1 AC) sepältä ennen linnaan astumista!\n\n" +
+                "• <b>Musiikki / Credits:</b> Scottish Harp (Pixabay): https://pixabay.com/music/scotland-harp-587446/";
 
-            Button closeBtn = CreateMenuButton(box.transform, "CloseRules_Btn", "Sulje", new Vector2(0f, -165f), new Color(0.5f, 0.3f, 0.2f));
+            Button closeBtn = CreateMenuButton(box.transform, "CloseRules_Btn", "Sulje", new Vector2(0f, -180f), new Color(0.5f, 0.3f, 0.2f));
             closeBtn.onClick.AddListener(CloseRules);
 
             rPanel.SetActive(false);

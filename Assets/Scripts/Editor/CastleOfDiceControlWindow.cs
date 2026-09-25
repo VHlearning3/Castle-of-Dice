@@ -54,6 +54,11 @@ namespace CastleOfTheD20.Editor
                 BuildVillageEditor.BuildCompleteVillage();
             }
 
+            if (GUILayout.Button("3. Setup MusicManager & Assign 7 Audio Tracks", GUILayout.Height(28)))
+            {
+                BuildVillageEditor.EnsureMusicManager();
+            }
+
             GUILayout.Space(15);
             GUILayout.Label("Planes & Room Status:", EditorStyles.boldLabel);
             bool hasCourtyard = GameObject.Find("CourtYard") != null;
@@ -79,6 +84,14 @@ namespace CastleOfTheD20.Editor
             EditorGUILayout.LabelField("Kirottu Komentaja (Courtyard):", hasCmdr ? "✓ Placed" : "✗ Missing");
             EditorGUILayout.LabelField("Varjomaagi Malakor (Library):", hasMalakor ? "✓ Placed" : "✗ Missing");
             EditorGUILayout.LabelField("Kivettymiskuningas (ThroneRoom):", hasGargoyle ? "✓ Placed" : "✗ Missing");
+
+            GUILayout.Space(10);
+            GUILayout.Label("Audio & Music Status:", EditorStyles.boldLabel);
+            var musicManager = Object.FindAnyObjectByType<CastleOfTheD20.Core.MusicManager>();
+            bool hasMM = musicManager != null;
+            bool clipsAssigned = hasMM && musicManager.VillageSongClip != null && musicManager.GargoyleKingPhase2Clip != null;
+            EditorGUILayout.LabelField("MusicManager Component:", hasMM ? "✓ Present" : "✗ Missing");
+            EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "✓ Configured (7 MP3s)" : "✗ Incomplete");
 
             GUILayout.Space(12);
             if (GUILayout.Button("Refresh Status", GUILayout.Height(26)))

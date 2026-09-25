@@ -20,7 +20,10 @@ namespace CastleOfTheD20.Core
         Library,
 
         /// <summary>Wing 3: The Crown Hall (The Gargoyle King final boss).</summary>
-        CrownHall
+        CrownHall,
+
+        /// <summary>The Dark Forest entrance and approach to Castle of Dice.</summary>
+        Forest = 4
     }
 
     /// <summary>

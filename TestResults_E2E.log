@@ -1,0 +1,43 @@
+[Licensing::Module] Trying to connect to existing licensing client channel...
+Built from '6000.3/staging' branch; Version is '6000.3.14f1 (d68c3f99a318) revision 14060607'; Using compiler version '194234433'; Build Type 'Release'
+OS: 'Windows 10  (10.0.19045) 64bit Professional' Language: 'fi' Physical Memory: 32692 MB
+BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja" at "2026-09-25T13:31:52.9815823Z"
+System  architecture: x64
+Process architecture: x64
+Date: 2026-09-25T13:31:52Z
+[Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 10236, path: "D:/Unity/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
+[Licensing::Module] LicensingClient has failed validation; ignoring
+[Licensing::Client] Handshaking with LicensingClient:
+  Version:                 1.18.3+d7ffd15
+  Session Id:              ab51050a305f4fa9b548e25f5a98375f
+  Correlation Id:          6bc57de958bf3873e650d79b6d0e1a14
+  External correlation Id: 8234226422102479290
+  Machine Id:              yMLaEWuNA58AiaZJmR/NJXU7IhE=
+[Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-Omistaja" (connect: 0.00s, validation: 0.00s, handshake: 0.04s)
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja-notifications" at "2026-09-25T13:31:53.0276168Z"
+[Licensing::Module] Error: Access token is unavailable; failed to update
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] License group:
+  Id: 5773927197017-UnityPersXXXX
+  Product: Unity Personal
+  Type: Assigned
+  Expiration: Unlimited
+[Licensing::Client] Successfully updated license, isAsync: True, time: 0.00
+[Licensing::Client] Successfully resolved entitlement details
+[Licensing::Module] Licensing Background thread has ended after 0.05s
+
+COMMAND LINE ARGUMENTS:
+D:\6000.3.14f1\Editor\Unity.exe
+-projectpath
+D:\Unity\3D DnD selainpeli
+-batchmode
+-nographics
+-quit
+-executeMethod
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner.RunAllTestsBatchmode
+-logFile
+D:\Unity\3D DnD selainpeli\TestResults_E2E.log
+Successfully changed project path to: D:\Unity\3D DnD selainpeli
+D:/Unity/3D DnD selainpeli
+Exiting without the bug reporter. Application will terminate with return code 1

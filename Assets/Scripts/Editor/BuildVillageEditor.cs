@@ -377,6 +377,8 @@ namespace CastleOfTheD20.Editor
                 managers.AddComponent<DialogueActionTrigger>();
             }
 
+            EnsureMusicManager(managers);
+
             Canvas canvas = Object.FindAnyObjectByType<Canvas>();
             if (canvas != null)
             {
@@ -389,6 +391,44 @@ namespace CastleOfTheD20.Editor
                     canvas.gameObject.AddComponent<DefeatUIController>();
                 }
             }
+        }
+
+        public static MusicManager EnsureMusicManager(GameObject managersObj = null)
+        {
+            if (managersObj == null)
+            {
+                managersObj = GameObject.Find("Managers");
+                if (managersObj == null)
+                {
+                    managersObj = new GameObject("Managers");
+                    Undo.RegisterCreatedObjectUndo(managersObj, "Create Managers");
+                }
+            }
+
+            MusicManager mm = managersObj.GetComponent<MusicManager>();
+            if (mm == null)
+            {
+                mm = Object.FindAnyObjectByType<MusicManager>();
+            }
+
+            if (mm == null)
+            {
+                mm = managersObj.AddComponent<MusicManager>();
+                Undo.RegisterCreatedObjectUndo(mm, "Add MusicManager");
+            }
+
+            AudioClip village = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/VillageSong.mp3");
+            AudioClip castle = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/Castle_adventure_song.mp3");
+            AudioClip cellar = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/Cellar_combat_music.mp3");
+            AudioClip cursed = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/CursedCommander_Combat_music.mp3");
+            AudioClip malakor = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/Malakor_combat_music.mp3");
+            AudioClip gargoyle1 = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/1_Combat_GargoyleKing_music.mp3");
+            AudioClip gargoyle2 = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Music/2_Combat_GargoyleKing_music.mp3");
+
+            mm.AssignClips(village, castle, cellar, cursed, malakor, gargoyle1, gargoyle2);
+            EditorUtility.SetDirty(mm);
+            Debug.Log("[BuildVillageEditor] MusicManager configured on Managers with all 7 tracks assigned.");
+            return mm;
         }
     }
 }

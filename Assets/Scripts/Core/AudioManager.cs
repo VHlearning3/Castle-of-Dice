@@ -81,7 +81,14 @@ namespace CastleOfTheD20.Core
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                if (Instance.gameObject != gameObject)
+                {
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    Destroy(this);
+                }
                 return;
             }
 
@@ -95,6 +102,16 @@ namespace CastleOfTheD20.Core
         private void Start()
         {
             SubscribeToEvents();
+
+            // Yield BGM authority to MusicManager if active
+            if (MusicManager.Instance != null)
+            {
+                if (bgmSource != null && bgmSource.isPlaying)
+                {
+                    bgmSource.Stop();
+                }
+                return;
+            }
 
             // Start default village background music if available
             if (bgmSource != null && !bgmSource.isPlaying)
@@ -176,10 +193,16 @@ namespace CastleOfTheD20.Core
         #region Public BGM & SFX API
 
         /// <summary>
-        /// Plays background music with looping enabled.
+        /// Plays background music with looping enabled. Delegates to MusicManager if active.
         /// </summary>
         public void PlayBGM(AudioClip clip, bool loop = true)
         {
+            if (MusicManager.Instance != null)
+            {
+                MusicManager.Instance.PlayMusic(clip);
+                return;
+            }
+
             if (clip == null || bgmSource == null) return;
             if (bgmSource.clip == clip && bgmSource.isPlaying) return;
 
@@ -190,15 +213,26 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
-        /// Stops background music.
+        /// Stops background music on both MusicManager and legacy bgmSource.
         /// </summary>
         public void StopBGM()
         {
+            if (MusicManager.Instance != null)
+            {
+                MusicManager.Instance.StopMusic();
+            }
+
             if (bgmSource != null)
             {
                 bgmSource.Stop();
             }
         }
+
+        /// <summary>
+        /// Returns true if background music is currently playing on either MusicManager or bgmSource.
+        /// </summary>
+        public bool IsBGMPlaying => (MusicManager.Instance != null && MusicManager.Instance.IsPlaying) ||
+                                    (bgmSource != null && bgmSource.isPlaying);
 
         /// <summary>
         /// Plays a sound effect from an assigned clip or falls back to procedural synthesis.
@@ -229,7 +263,7 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
-        /// Sets volume levels (0.0 to 1.0).
+        /// Sets volume levels (0.0 to 1.0) and propagates BGM volume to MusicManager if active.
         /// </summary>
         public void SetVolumes(float master, float bgm, float sfx)
         {
@@ -237,6 +271,11 @@ namespace CastleOfTheD20.Core
             bgmVolume = Mathf.Clamp01(bgm);
             sfxVolume = Mathf.Clamp01(sfx);
             UpdateVolumes();
+
+            if (MusicManager.Instance != null)
+            {
+                MusicManager.Instance.SetVolume(masterVolume, bgmVolume);
+            }
         }
 
         private void UpdateVolumes()
@@ -273,6 +312,12 @@ namespace CastleOfTheD20.Core
 
         private void HandleLocationChanged(GameLocation newLocation)
         {
+            // MusicManager handles dynamic location-based music crossfading
+            if (MusicManager.Instance != null)
+            {
+                return;
+            }
+
             switch (newLocation)
             {
                 case GameLocation.Village:
@@ -281,6 +326,7 @@ namespace CastleOfTheD20.Core
                 case GameLocation.Courtyard:
                 case GameLocation.Library:
                 case GameLocation.CrownHall:
+                case GameLocation.Forest:
                     if (dungeonBgmClip != null) PlayBGM(dungeonBgmClip);
                     break;
             }
@@ -288,6 +334,12 @@ namespace CastleOfTheD20.Core
 
         private void HandlePlayModeChanged(GamePlayMode newMode)
         {
+            // MusicManager handles combat and exploration tracks via event subscriptions
+            if (MusicManager.Instance != null)
+            {
+                return;
+            }
+
             if (newMode == GamePlayMode.Combat && combatBgmClip != null)
             {
                 PlayBGM(combatBgmClip);

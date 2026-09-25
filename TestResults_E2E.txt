@@ -1,0 +1,88 @@
+================================================================================
+                   CASTLE OF DICE — E2E TEST RESULTS REPORT                    
+================================================================================
+Timestamp: 2026-09-25T13:40:34.9630721Z
+Total Tests: 77 | Passed: 76 | Failed: 1
+Total Duration: 65,9 ms
+--------------------------------------------------------------------------------
+Test Name                                     | Tier   | Result   | Duration  
+--------------------------------------------------------------------------------
+F1_1_01_MusicManager_SingletonIntegrity       | T1_Fea | [PASS]   |    0,2ms
+F1_1_02_MusicManager_DualAudioSources_Created | T1_Fea | [FAIL]   |    0,3ms
+    -> ERROR: Assertion FAILED (Expected Not Null): Channel A (sourceA) AudioSource must be initialized
+F1_1_03_MusicManager_AudioSources_2DSettings  | T1_Fea | [PASS]   |    0,1ms
+F1_1_04_MusicManager_CrossfadeVolumeCurve_... | T1_Fea | [PASS]   |    0,0ms
+F1_1_05_MusicManager_DefaultFadeDuration_I... | T1_Fea | [PASS]   |    0,0ms
+F1_2_01_AllSevenMP3Assets_ExistInProject      | T1_Fea | [PASS]   |    0,3ms
+F1_2_02_VillageSong_MappedAndPlayable         | T1_Fea | [PASS]   |    0,2ms
+F1_2_03_CastleAdventure_MappedAndPlayable     | T1_Fea | [PASS]   |    0,1ms
+F1_2_04_CellarCombat_MappedAndPlayable        | T1_Fea | [PASS]   |    0,1ms
+F1_2_05_BossTracks_MappedAndPlayable          | T1_Fea | [PASS]   |    0,4ms
+F1_3_01_AudioManager_DelegatesWhenMusicMan... | T1_Fea | [PASS]   |    0,1ms
+F1_3_02_AudioManager_PlayBGM_RedirectsToMu... | T1_Fea | [PASS]   |    0,0ms
+F1_3_03_AudioManager_BGMVolume_PropagatesT... | T1_Fea | [PASS]   |    0,0ms
+F1_3_04_AudioManager_SFXPreservedDuringDel... | T1_Fea | [PASS]   |    0,0ms
+F1_3_05_SoundTypeEnum_ContainsVictoryAndDe... | T1_Fea | [PASS]   |    0,0ms
+F2_1_01_GameLocation_ContainsForest           | T1_Fea | [PASS]   |    0,0ms
+F2_1_02_GameLocation_PreservesExistingEnum... | T1_Fea | [PASS]   |    0,0ms
+F2_1_03_GameManager_SetLocation_UpdatesCur... | T1_Fea | [PASS]   |    0,3ms
+F2_1_04_GameManager_OnLocationChanged_Even... | T1_Fea | [PASS]   |    0,2ms
+F2_1_05_GameLocation_StringParsing_CaseIns... | T1_Fea | [PASS]   |    0,0ms
+F2_2_01_DoorTeleporter_DestinationZone_Pro... | T1_Fea | [PASS]   |    0,0ms
+F2_2_02_DoorTeleporter_DestinationZone_Def... | T1_Fea | [PASS]   |    0,1ms
+F2_2_03_DoorTeleporter_DestinationZone_Map... | T1_Fea | [PASS]   |    0,0ms
+F2_2_04_DoorTeleporter_UnassignedDestinati... | T1_Fea | [PASS]   |    0,1ms
+F2_2_05_DoorTeleporter_Cooldown_Enforced      | T1_Fea | [PASS]   |    0,0ms
+F2_3_01_Exploration_VillageLocation_MapsTo... | T1_Fea | [PASS]   |    0,0ms
+F2_3_02_Exploration_ForestLocation_MapsToC... | T1_Fea | [PASS]   |    0,0ms
+F2_3_03_Exploration_CourtyardLocation_Maps... | T1_Fea | [PASS]   |    0,0ms
+F2_3_04_Exploration_LibraryLocation_MapsTo... | T1_Fea | [PASS]   |    0,0ms
+F2_3_05_Exploration_CrownHallLocation_Maps... | T1_Fea | [PASS]   |    0,0ms
+F2_4_01_DungeonRoomController_OnRoomCombat... | T1_Fea | [PASS]   |    0,0ms
+F2_4_02_Combat_CursedCommander_MapsToTrack    | T1_Fea | [PASS]   |    0,0ms
+F2_4_03_Combat_Malakor_MapsToTrack            | T1_Fea | [PASS]   |    0,0ms
+F2_4_04_Combat_GargoyleKing_MapsToPhase1Track | T1_Fea | [PASS]   |    0,0ms
+F2_4_05_Combat_TavernCellar_MapsToCellarTrack | T1_Fea | [PASS]   |    0,0ms
+F2_5_01_GargoyleKingBoss_OnStoneFormActiva... | T1_Fea | [PASS]   |    0,0ms
+F2_5_02_GargoyleKing_EnterStoneForm_FiresE... | T1_Fea | [PASS]   |    0,3ms
+F2_5_03_GargoyleKing_DamageThreshold_Trigg... | T1_Fea | [PASS]   |    0,5ms
+F2_5_04_GargoyleKing_StoneForm_DoesNotRetr... | T1_Fea | [PASS]   |    0,6ms
+F2_5_05_GargoyleKing_Phase2_TrackAsset_Exists | T1_Fea | [PASS]   |    0,0ms
+F2_6_01_TurnManager_OnCombatEnded_Exists      | T1_Fea | [PASS]   |    0,0ms
+F2_6_02_TurnManager_OnCombatEnded_Supports... | T1_Fea | [PASS]   |    0,0ms
+F2_6_03_CombatEnded_RestorationDelay_Is1Po... | T1_Fea | [PASS]   |    0,0ms
+F2_6_04_CombatEnded_RestoresVillageExplora... | T1_Fea | [PASS]   |    0,0ms
+F2_6_05_CombatEnded_RestoresDungeonExplora... | T1_Fea | [PASS]   |    0,0ms
+F3_1_01_ScottishHarpAttribution_URLString_... | T1_Fea | [PASS]   |    0,0ms
+F3_1_02_MainMenuController_AttributionCont... | T1_Fea | [PASS]   |    0,0ms
+F3_1_03_AttributionLink_ClickSafety           | T1_Fea | [PASS]   |    0,0ms
+F3_2_01_AbilityTooltipUI_Instantiation_Safe   | T1_Fea | [PASS]   |    0,0ms
+F3_2_02_DefeatUIController_ActionHandlers_... | T1_Fea | [PASS]   |    0,0ms
+F3_2_03_MainMenuController_ClassSelection_... | T1_Fea | [PASS]   |    0,0ms
+F4_1_01_BuildVillageEditor_ClassExists        | T1_Fea | [PASS]   |    0,0ms
+F4_1_02_StartVillageScene_Exists              | T1_Fea | [PASS]   |    0,0ms
+F4_2_01_CastleOfDiceControlWindow_Exists      | T1_Fea | [PASS]   |    0,0ms
+F4_3_01_AudioMetaFiles_AllExist               | T1_Fea | [PASS]   |    0,8ms
+F4_3_02_KnownGUIDs_Preserved                  | T1_Fea | [PASS]   |    0,3ms
+T2_01_ZeroFadeDuration_InstantCut             | T2_Bou | [PASS]   |    5,0ms
+T2_02_NegativeFadeDuration_Clamped            | T2_Bou | [PASS]   |    2,6ms
+T2_03_RapidTrackSwitching_PreemptsGracefully  | T2_Bou | [PASS]   |   12,4ms
+T2_04_NullClip_HandledGracefully              | T2_Bou | [PASS]   |    0,1ms
+T2_05_SameTrackRequest_IgnoresRedundantFade   | T2_Bou | [PASS]   |    4,0ms
+T2_06_ReversedTrackTransition_RecoversSmoo... | T2_Bou | [PASS]   |    7,1ms
+T2_07_VolumeClamping_BoundsEnforced           | T2_Bou | [PASS]   |    0,1ms
+T2_08_WebGL_AudioContext_UnlockSimulation     | T2_Bou | [PASS]   |    0,0ms
+T2_09_DoorTeleporter_RapidInteractionCooldown | T2_Bou | [PASS]   |    0,3ms
+T2_10_TurnScaleZero_TimeScaleIndependence     | T2_Bou | [PASS]   |    0,0ms
+T3_01_Flow_Village_To_CellarCombat_To_Vict... | T3_Cro | [PASS]   |    0,2ms
+T3_02_Flow_Village_To_Forest_To_Courtyard_... | T3_Cro | [PASS]   |    0,3ms
+T3_03_Flow_CrownHall_GargoyleKing_P1_To_St... | T3_Cro | [PASS]   |    1,0ms
+T3_04_Flow_Village_Dialogue_To_Library_To_... | T3_Cro | [PASS]   |    0,3ms
+T3_05_Flow_Rapid_CrossWing_Teleportation      | T3_Cro | [PASS]   |    0,6ms
+T4_01_FullCampaign_E2E_DungeonRun             | T4_Rea | [PASS]   |    1,6ms
+T4_02_WebGL_SessionSimulation                 | T4_Rea | [PASS]   |    0,0ms
+T5_01_MetaAndGUIDPreservation_StrictCheck     | T5_Adv | [PASS]   |    0,8ms
+T5_02_AudioSource_LeakAndGarbageCollection... | T5_Adv | [PASS]   |   20,8ms
+T5_03_ExtremeInput_StressTest                 | T5_Adv | [PASS]   |    0,0ms
+T5_04_Concurrent_EventBombardment             | T5_Adv | [PASS]   |    2,3ms
+================================================================================

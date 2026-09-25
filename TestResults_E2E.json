@@ -1,0 +1,702 @@
+{
+    "timestamp": "2026-09-25T13:40:34.9630721Z",
+    "totalTests": 77,
+    "passed": 76,
+    "failed": 1,
+    "totalDurationMs": 65.91609954833985,
+    "results": [
+        {
+            "testName": "F1_1_01_MusicManager_SingletonIntegrity",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.1",
+            "description": "Verify MusicManager enforces singleton integrity and persists across scenes",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.21960000693798066
+        },
+        {
+            "testName": "F1_1_02_MusicManager_DualAudioSources_Created",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.1",
+            "description": "Verify MusicManager instantiates two independent AudioSource channels",
+            "passed": false,
+            "errorMessage": "Assertion FAILED (Expected Not Null): Channel A (sourceA) AudioSource must be initialized",
+            "durationMs": 0.27379998564720156
+        },
+        {
+            "testName": "F1_1_03_MusicManager_AudioSources_2DSettings",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.1",
+            "description": "Verify AudioSources enforce 2D stereo (spatialBlend=0) and highest priority (priority=0)",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.07100000232458115
+        },
+        {
+            "testName": "F1_1_04_MusicManager_CrossfadeVolumeCurve_EqualPower",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.1",
+            "description": "Verify equal-power trigonometric crossfade preservation (0 dB sum of powers)",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.02319999970495701
+        },
+        {
+            "testName": "F1_1_05_MusicManager_DefaultFadeDuration_Is1Point2Seconds",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.1",
+            "description": "Verify default crossfade duration is 1.2 seconds",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.006099999882280827
+        },
+        {
+            "testName": "F1_2_01_AllSevenMP3Assets_ExistInProject",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.2",
+            "description": "Verify all 7 required MP3 assets exist in Assets/Music/",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.26899999380111697
+        },
+        {
+            "testName": "F1_2_02_VillageSong_MappedAndPlayable",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.2",
+            "description": "Verify VillageSong.mp3 maps and loads cleanly as an AudioClip",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.19300000369548798
+        },
+        {
+            "testName": "F1_2_03_CastleAdventure_MappedAndPlayable",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.2",
+            "description": "Verify Castle_adventure_song.mp3 maps and loads cleanly as an AudioClip",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.13950000703334809
+        },
+        {
+            "testName": "F1_2_04_CellarCombat_MappedAndPlayable",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.2",
+            "description": "Verify Cellar_combat_music.mp3 maps and loads cleanly as an AudioClip",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.13429999351501466
+        },
+        {
+            "testName": "F1_2_05_BossTracks_MappedAndPlayable",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.2",
+            "description": "Verify Boss combat tracks map and load cleanly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.4296000003814697
+        },
+        {
+            "testName": "F1_3_01_AudioManager_DelegatesWhenMusicManagerActive",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.3",
+            "description": "Verify AudioManager delegates BGM when MusicManager.Instance is active",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.1145000010728836
+        },
+        {
+            "testName": "F1_3_02_AudioManager_PlayBGM_RedirectsToMusicManager",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.3",
+            "description": "Verify AudioManager PlayBGM yields execution to MusicManager",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.015200000256299973
+        },
+        {
+            "testName": "F1_3_03_AudioManager_BGMVolume_PropagatesToMusicManager",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.3",
+            "description": "Verify SetVolumes propagates music volume cleanly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.008299999870359898
+        },
+        {
+            "testName": "F1_3_04_AudioManager_SFXPreservedDuringDelegation",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.3",
+            "description": "Verify AudioManager preserves SFX playback during delegation",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.009700000286102295
+        },
+        {
+            "testName": "F1_3_05_SoundTypeEnum_ContainsVictoryAndDefeat",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F1.3",
+            "description": "Verify SoundType enum includes Victory and Defeat fanfare types",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.005400000140070915
+        },
+        {
+            "testName": "F2_1_01_GameLocation_ContainsForest",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.1",
+            "description": "Verify GameLocation enum contains Forest value",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.010200000368058682
+        },
+        {
+            "testName": "F2_1_02_GameLocation_PreservesExistingEnumValues",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.1",
+            "description": "Verify GameLocation enum preserves existing serialized integer values",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.018200000748038293
+        },
+        {
+            "testName": "F2_1_03_GameManager_SetLocation_UpdatesCurrentLocation",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.1",
+            "description": "Verify GameManager SetLocation accepts location and updates CurrentLocation",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.337799996137619
+        },
+        {
+            "testName": "F2_1_04_GameManager_OnLocationChanged_EventFires",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.1",
+            "description": "Verify GameManager OnLocationChanged static event fires on location change",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.21469999849796296
+        },
+        {
+            "testName": "F2_1_05_GameLocation_StringParsing_CaseInsensitive",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.1",
+            "description": "Verify GameLocation string parsing is case-insensitive",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.008299999870359898
+        },
+        {
+            "testName": "F2_2_01_DoorTeleporter_DestinationZone_PropertyExists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.2",
+            "description": "Verify DoorTeleporter exposes DestinationZone property",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.007300000172108412
+        },
+        {
+            "testName": "F2_2_02_DoorTeleporter_DestinationZone_DefaultIsEmpty",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.2",
+            "description": "Verify DoorTeleporter DestinationZone default value is empty string",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.06599999964237213
+        },
+        {
+            "testName": "F2_2_03_DoorTeleporter_DestinationZone_MappingLogic",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.2",
+            "description": "Verify DoorTeleporter destination parsing maps valid zones",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.015599999576807022
+        },
+        {
+            "testName": "F2_2_04_DoorTeleporter_UnassignedDestination_UsesFallback",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.2",
+            "description": "Verify DoorTeleporter safe handling of unassigned destination Transform",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.06459999829530716
+        },
+        {
+            "testName": "F2_2_05_DoorTeleporter_Cooldown_Enforced",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.2",
+            "description": "Verify DoorTeleporter cooldown prevents rapid double-teleports",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.007400000002235174
+        },
+        {
+            "testName": "F2_3_01_Exploration_VillageLocation_MapsToVillageSong",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.3",
+            "description": "Verify entering Village location maps to VillageSong",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0038999998942017557
+        },
+        {
+            "testName": "F2_3_02_Exploration_ForestLocation_MapsToCastleAdventure",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.3",
+            "description": "Verify entering Forest location maps to Castle_adventure_song",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.004600000102072954
+        },
+        {
+            "testName": "F2_3_03_Exploration_CourtyardLocation_MapsToCastleAdventure",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.3",
+            "description": "Verify entering Courtyard location maps to Castle_adventure_song",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0035000001080334188
+        },
+        {
+            "testName": "F2_3_04_Exploration_LibraryLocation_MapsToCastleAdventure",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.3",
+            "description": "Verify entering Library location maps to Castle_adventure_song",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0034000000450760128
+        },
+        {
+            "testName": "F2_3_05_Exploration_CrownHallLocation_MapsToCastleAdventure",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.3",
+            "description": "Verify entering CrownHall location maps to Castle_adventure_song",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0034000000450760128
+        },
+        {
+            "testName": "F2_4_01_DungeonRoomController_OnRoomCombatStarted_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.4",
+            "description": "Verify DungeonRoomController OnRoomCombatStarted event exists",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.012199999764561654
+        },
+        {
+            "testName": "F2_4_02_Combat_CursedCommander_MapsToTrack",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.4",
+            "description": "Verify CursedCommander encounter maps to CursedCommander_Combat_music",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.03830000013113022
+        },
+        {
+            "testName": "F2_4_03_Combat_Malakor_MapsToTrack",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.4",
+            "description": "Verify ShadowMageMalakor encounter maps to Malakor_combat_music",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.023800000548362733
+        },
+        {
+            "testName": "F2_4_04_Combat_GargoyleKing_MapsToPhase1Track",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.4",
+            "description": "Verify GargoyleKing Phase 1 encounter maps to 1_Combat_GargoyleKing_music",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.024299999698996545
+        },
+        {
+            "testName": "F2_4_05_Combat_TavernCellar_MapsToCellarTrack",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.4",
+            "description": "Verify Tavern Cellar encounter maps to Cellar_combat_music",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.022700000554323198
+        },
+        {
+            "testName": "F2_5_01_GargoyleKingBoss_OnStoneFormActivated_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.5",
+            "description": "Verify GargoyleKingBoss OnStoneFormActivated event exists",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.010400000028312207
+        },
+        {
+            "testName": "F2_5_02_GargoyleKing_EnterStoneForm_FiresEvent",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.5",
+            "description": "Verify GargoyleKing EnterStoneForm fires OnStoneFormActivated",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.2558000087738037
+        },
+        {
+            "testName": "F2_5_03_GargoyleKing_DamageThreshold_TriggersPhase2",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.5",
+            "description": "Verify GargoyleKing takes damage and triggers StoneForm at <=50% HP",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.49720001220703127
+        },
+        {
+            "testName": "F2_5_04_GargoyleKing_StoneForm_DoesNotRetrigger",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.5",
+            "description": "Verify Stone Form does not re-trigger repeatedly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.6086000204086304
+        },
+        {
+            "testName": "F2_5_05_GargoyleKing_Phase2_TrackAsset_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.5",
+            "description": "Verify Phase 2 combat track asset exists",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.03590000048279762
+        },
+        {
+            "testName": "F2_6_01_TurnManager_OnCombatEnded_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.6",
+            "description": "Verify TurnManager OnCombatEnded event exists",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.010700000450015068
+        },
+        {
+            "testName": "F2_6_02_TurnManager_OnCombatEnded_SupportsVictoryAndDefeat",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.6",
+            "description": "Verify OnCombatEnded boolean signature supports Victory and Defeat",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.012900000438094139
+        },
+        {
+            "testName": "F2_6_03_CombatEnded_RestorationDelay_Is1Point5Seconds",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.6",
+            "description": "Verify combat end restoration delay is 1.5 seconds for fanfares",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.004000000189989805
+        },
+        {
+            "testName": "F2_6_04_CombatEnded_RestoresVillageExplorationMusic",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.6",
+            "description": "Verify restoration handles Village location correctly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.003700000001117587
+        },
+        {
+            "testName": "F2_6_05_CombatEnded_RestoresDungeonExplorationMusic",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F2.6",
+            "description": "Verify restoration handles Dungeon Wing locations correctly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0032999999821186067
+        },
+        {
+            "testName": "F3_1_01_ScottishHarpAttribution_URLString_Valid",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.1",
+            "description": "Verify Scottish Harp Pixabay credit URL is present",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.004100000020116568
+        },
+        {
+            "testName": "F3_1_02_MainMenuController_AttributionContainer_Safe",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.1",
+            "description": "Verify MainMenuController exposes credit or UI attribution container",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.003599999938160181
+        },
+        {
+            "testName": "F3_1_03_AttributionLink_ClickSafety",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.1",
+            "description": "Verify attribution link interaction does not throw exceptions",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.003700000001117587
+        },
+        {
+            "testName": "F3_2_01_AbilityTooltipUI_Instantiation_Safe",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.2",
+            "description": "Verify AbilityTooltipUI initializes and operates safely",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.003800000064074993
+        },
+        {
+            "testName": "F3_2_02_DefeatUIController_ActionHandlers_Exist",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.2",
+            "description": "Verify DefeatUIController exposes retry and return action handlers",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.013000000268220902
+        },
+        {
+            "testName": "F3_2_03_MainMenuController_ClassSelection_Safe",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F3.2",
+            "description": "Verify MainMenuController supports class selection without exceptions",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.014000000432133675
+        },
+        {
+            "testName": "F4_1_01_BuildVillageEditor_ClassExists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F4.1",
+            "description": "Verify BuildVillageEditor class exists in Editor assembly",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.038600001484155658
+        },
+        {
+            "testName": "F4_1_02_StartVillageScene_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F4.1",
+            "description": "Verify StartVillage scene asset exists in Assets/Scenes/",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.0421999990940094
+        },
+        {
+            "testName": "F4_2_01_CastleOfDiceControlWindow_Exists",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F4.2",
+            "description": "Verify CastleOfDiceControlWindow class exists and exposes ShowWindow",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.03790000081062317
+        },
+        {
+            "testName": "F4_3_01_AudioMetaFiles_AllExist",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F4.3",
+            "description": "Verify all 7 audio meta files exist",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.7886999845504761
+        },
+        {
+            "testName": "F4_3_02_KnownGUIDs_Preserved",
+            "tier": "Tier1_FeatureCoverage",
+            "featureId": "F4.3",
+            "description": "Verify known GUIDs for key tracks remain uncorrupted",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.2766000032424927
+        },
+        {
+            "testName": "T2_01_ZeroFadeDuration_InstantCut",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify zero fade duration executes instant track swap without errors",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 4.991199970245361
+        },
+        {
+            "testName": "T2_02_NegativeFadeDuration_Clamped",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify negative fade duration clamps to zero safely",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 2.5785999298095705
+        },
+        {
+            "testName": "T2_03_RapidTrackSwitching_PreemptsGracefully",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify rapid successive track switching does not leak coroutines or crash",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 12.363800048828125
+        },
+        {
+            "testName": "T2_04_NullClip_HandledGracefully",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify null AudioClip passed to PlayMusic fades to silence safely",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.10530000180006027
+        },
+        {
+            "testName": "T2_05_SameTrackRequest_IgnoresRedundantFade",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify requesting the currently playing clip avoids redundant fade restarts",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 3.9800000190734865
+        },
+        {
+            "testName": "T2_06_ReversedTrackTransition_RecoversSmoothly",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify rapid A -> B -> A reversal recovers gracefully",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 7.063499927520752
+        },
+        {
+            "testName": "T2_07_VolumeClamping_BoundsEnforced",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify volume setters clamp values strictly between 0.0 and 1.0",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.13259999454021455
+        },
+        {
+            "testName": "T2_08_WebGL_AudioContext_UnlockSimulation",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify WebGL autoplay unmuting logic when AudioListener is paused",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.006800000090152025
+        },
+        {
+            "testName": "T2_09_DoorTeleporter_RapidInteractionCooldown",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify DoorTeleporter cooldown window rejects premature teleports",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.2903999984264374
+        },
+        {
+            "testName": "T2_10_TurnScaleZero_TimeScaleIndependence",
+            "tier": "Tier2_BoundaryCornerCases",
+            "featureId": "Boundary",
+            "description": "Verify crossfade coroutine uses unscaledDeltaTime when Time.timeScale is 0",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.007199999876320362
+        },
+        {
+            "testName": "T3_01_Flow_Village_To_CellarCombat_To_Victory_To_Village",
+            "tier": "Tier3_CrossFeatureCombinations",
+            "featureId": "Flow",
+            "description": "Village -> Cellar Combat -> Victory -> Village Restoration",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.1678999960422516
+        },
+        {
+            "testName": "T3_02_Flow_Village_To_Forest_To_Courtyard_To_Commander_Defeat_Retry",
+            "tier": "Tier3_CrossFeatureCombinations",
+            "featureId": "Flow",
+            "description": "Village -> Forest -> Courtyard -> CursedCommander -> Defeat -> Retry",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.2632000148296356
+        },
+        {
+            "testName": "T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory",
+            "tier": "Tier3_CrossFeatureCombinations",
+            "featureId": "Flow",
+            "description": "Crown Hall -> Gargoyle King Phase 1 -> Stone Form Phase 2 -> Victory",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.9847000241279602
+        },
+        {
+            "testName": "T3_04_Flow_Village_Dialogue_To_Library_To_Malakor",
+            "tier": "Tier3_CrossFeatureCombinations",
+            "featureId": "Flow",
+            "description": "Village NPC Dialogue -> Door to Library -> Shadow Mage Malakor Combat",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.2727000117301941
+        },
+        {
+            "testName": "T3_05_Flow_Rapid_CrossWing_Teleportation",
+            "tier": "Tier3_CrossFeatureCombinations",
+            "featureId": "Flow",
+            "description": "Sequential Multi-Wing Teleportation (Village -> Courtyard -> Library -> CrownHall -> Village)",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.5799000263214111
+        },
+        {
+            "testName": "T4_01_FullCampaign_E2E_DungeonRun",
+            "tier": "Tier4_RealWorldScenarios",
+            "featureId": "Scenario",
+            "description": "Full Dungeon Campaign E2E Walkthrough: Village -> Boss 1 -> Boss 2 -> Final Boss P1&P2 -> Campaign Victory",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 1.6444000005722047
+        },
+        {
+            "testName": "T4_02_WebGL_SessionSimulation",
+            "tier": "Tier4_RealWorldScenarios",
+            "featureId": "Scenario",
+            "description": "WebGL Browser Lifecycle Simulation: Autoplay unlock -> Volume Adjust -> Pause -> Resume -> Teardown",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.008700000122189522
+        },
+        {
+            "testName": "T5_01_MetaAndGUIDPreservation_StrictCheck",
+            "tier": "Tier5_AdversarialHardening",
+            "featureId": "Adversarial",
+            "description": "Strict GUID & Meta-File Integrity Check for all 7 Audio Assets",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.8463000059127808
+        },
+        {
+            "testName": "T5_02_AudioSource_LeakAndGarbageCollection_Check",
+            "tier": "Tier5_AdversarialHardening",
+            "featureId": "Adversarial",
+            "description": "AudioSource Leak & Resource Flooding Prevention (50 rapid track iterations)",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 20.75160026550293
+        },
+        {
+            "testName": "T5_03_ExtremeInput_StressTest",
+            "tier": "Tier5_AdversarialHardening",
+            "featureId": "Adversarial",
+            "description": "Extreme Input Stress Test: Injects nulls, empty strings, and special characters",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 0.018699999898672105
+        },
+        {
+            "testName": "T5_04_Concurrent_EventBombardment",
+            "tier": "Tier5_AdversarialHardening",
+            "featureId": "Adversarial",
+            "description": "Concurrent Event Bombardment: Dispatches simultaneous location, combat, and end events",
+            "passed": true,
+            "errorMessage": "",
+            "durationMs": 2.3213999271392824
+        }
+    ]
+}
