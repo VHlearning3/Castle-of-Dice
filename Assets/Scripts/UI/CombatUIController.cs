@@ -52,6 +52,23 @@ namespace CastleOfTheD20.UI
         [Tooltip("Maximum lines displayed in the combat log before pruning.")]
         [SerializeField] private int maxLogLines = 20;
 
+        [Header("Fantasy Theme Sprites & Slots")]
+        [SerializeField] private Sprite panelDarkSprite;
+        [SerializeField] private Sprite slotFrameSprite;
+        [SerializeField] private Sprite dividerGoldSprite;
+        [SerializeField] private Sprite buttonNormalSprite;
+        [SerializeField] private Sprite buttonHoverSprite;
+        [SerializeField] private Sprite buttonPressedSprite;
+        [SerializeField] private Sprite hourglassIconSprite;
+        [SerializeField] private Sprite defaultAbilityIconSprite;
+
+        public GameObject CombatActionBar => combatActionBar;
+        public Button EndTurnButton => endTurnButton;
+        public IReadOnlyList<Button> AbilityButtons => abilityButtons;
+        public IReadOnlyList<Image> AbilityIcons => abilityIcons;
+        public IReadOnlyList<TMP_Text> AbilityNames => abilityNames;
+        public IReadOnlyList<TMP_Text> AbilityRanges => abilityRanges;
+
         #endregion
 
         #region Singleton & Access
@@ -122,6 +139,7 @@ namespace CastleOfTheD20.UI
                 }
             }
 
+            EnsureStyledHierarchy();
             LocatePlayer();
 
             if (showCombatBar)
@@ -142,27 +160,32 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
-        #region Unity Lifecycle
+        #region Theme Sprites & Auto-Discovery
 
-        private void Awake()
+        public void LoadThemeSpritesIfMissing()
         {
-            if (instance != null && instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            instance = this;
+#if UNITY_EDITOR
+            if (panelDarkSprite == null)
+                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+            if (slotFrameSprite == null)
+                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+            if (dividerGoldSprite == null)
+                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+            if (buttonNormalSprite == null)
+                buttonNormalSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
+            if (buttonHoverSprite == null)
+                buttonHoverSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
+            if (buttonPressedSprite == null)
+                buttonPressedSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
+            if (hourglassIconSprite == null)
+                hourglassIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Hourglass.png");
+            if (defaultAbilityIconSprite == null)
+                defaultAbilityIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Sword.png");
+#endif
+        }
 
-            // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
-            if (canvasGroup == null)
-            {
-                canvasGroup = GetComponent<CanvasGroup>();
-                if (canvasGroup == null)
-                {
-                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
-                }
-            }
-
+        public void AutoLocateComponents()
+        {
             if (combatActionBar == null)
             {
                 Transform barTransform = transform.Find("CombatActionBar")
@@ -176,6 +199,444 @@ namespace CastleOfTheD20.UI
                 else if (abilityButtons.Count > 0 && abilityButtons[0] != null)
                 {
                     combatActionBar = abilityButtons[0].transform.parent?.gameObject;
+                }
+                else
+                {
+                    combatActionBar = gameObject;
+                }
+            }
+
+            Transform root = combatActionBar != null ? combatActionBar.transform : transform;
+
+            // Locate End Turn button
+            if (endTurnButton == null)
+            {
+                Button[] buttons = root.GetComponentsInChildren<Button>(true);
+                foreach (var b in buttons)
+                {
+                    string lower = b.gameObject.name.ToLowerInvariant();
+                    if (lower.Contains("end") || lower.Contains("turn"))
+                    {
+                        endTurnButton = b;
+                        break;
+                    }
+                }
+            }
+
+            // Locate Ability buttons
+            Transform container = root.Find("AblilitiesContainer")
+                ?? root.Find("AbilitiesContainer")
+                ?? root.Find("AbilityContainer");
+
+            if (container != null)
+            {
+                Button[] btns = container.GetComponentsInChildren<Button>(true);
+                if (abilityButtons.Count < 4)
+                {
+                    abilityButtons.Clear();
+                    for (int i = 0; i < Mathf.Min(4, btns.Length); i++)
+                    {
+                        abilityButtons.Add(btns[i]);
+                    }
+                }
+            }
+
+            while (abilityIcons.Count < abilityButtons.Count) abilityIcons.Add(null);
+            while (abilityNames.Count < abilityButtons.Count) abilityNames.Add(null);
+            while (abilityRanges.Count < abilityButtons.Count) abilityRanges.Add(null);
+
+            for (int i = 0; i < abilityButtons.Count; i++)
+            {
+                if (abilityButtons[i] == null) continue;
+                Transform btnTr = abilityButtons[i].transform;
+
+                if (abilityIcons[i] == null)
+                {
+                    Transform iconTr = btnTr.Find("Ability_Slot_Frame/Ability_Icon")
+                        ?? btnTr.Find("Slot_Frame/Ability_Icon")
+                        ?? btnTr.Find("Ability_Icon")
+                        ?? btnTr.Find("Icon");
+
+                    if (iconTr != null)
+                    {
+                        abilityIcons[i] = iconTr.GetComponent<Image>();
+                    }
+                }
+
+                if (abilityNames[i] == null)
+                {
+                    Transform nameTr = btnTr.Find("Ability_Text_Area/Ability_Name_Text")
+                        ?? btnTr.Find("Ability_Name_Text")
+                        ?? btnTr.Find("Name")
+                        ?? btnTr.Find("Text (TMP)");
+
+                    if (nameTr != null)
+                    {
+                        abilityNames[i] = nameTr.GetComponent<TMP_Text>();
+                    }
+                }
+
+                if (abilityRanges[i] == null)
+                {
+                    Transform rangeTr = btnTr.Find("Ability_Text_Area/Ability_Range_Text")
+                        ?? btnTr.Find("Ability_Range_Text")
+                        ?? btnTr.Find("Range")
+                        ?? btnTr.Find("RangeText");
+
+                    if (rangeTr != null)
+                    {
+                        abilityRanges[i] = rangeTr.GetComponent<TMP_Text>();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Restructures and styles the Combat HUD:
+        /// 1. Centered bottom combat tray.
+        /// 2. 9-sliced fantasy End Turn button with hourglass icon and gold typography (replaces neon yellow).
+        /// 3. 4 tabletop ability cards with 9-sliced buttons, framed ability icon slots, bold titles, and range labels.
+        /// </summary>
+        public void EnsureStyledHierarchy()
+        {
+            LoadThemeSpritesIfMissing();
+            AutoLocateComponents();
+
+            if (combatActionBar == null) combatActionBar = gameObject;
+
+            // 1. Root Combat Action Bar
+            RectTransform barRect = combatActionBar.GetComponent<RectTransform>();
+            if (barRect != null)
+            {
+                barRect.anchorMin = new Vector2(0.5f, 0f);
+                barRect.anchorMax = new Vector2(0.5f, 0f);
+                barRect.pivot = new Vector2(0.5f, 0f);
+                barRect.anchoredPosition = new Vector2(0f, 20f);
+                barRect.sizeDelta = new Vector2(1080f, 76f);
+                barRect.localScale = Vector3.one;
+            }
+
+            // 2. Style End Turn Button
+            if (endTurnButton != null)
+            {
+                endTurnButton.transform.SetParent(combatActionBar.transform, false);
+                RectTransform endRect = endTurnButton.GetComponent<RectTransform>();
+                endRect.anchorMin = new Vector2(0f, 0.5f);
+                endRect.anchorMax = new Vector2(0f, 0.5f);
+                endRect.pivot = new Vector2(0f, 0.5f);
+                endRect.anchoredPosition = new Vector2(0f, 0f);
+                endRect.sizeDelta = new Vector2(165f, 66f);
+                endRect.localScale = Vector3.one; // Explicitly remove the 2x2x2 distortion!
+
+                Image endImg = endTurnButton.GetComponent<Image>();
+                if (endImg != null && buttonNormalSprite != null)
+                {
+                    endImg.sprite = buttonNormalSprite;
+                    endImg.type = Image.Type.Sliced;
+                    endImg.color = Color.white; // Explicitly remove lime-yellow color!
+                }
+
+                if (buttonHoverSprite != null && buttonPressedSprite != null)
+                {
+                    endTurnButton.transition = Selectable.Transition.SpriteSwap;
+                    SpriteState ss = new SpriteState
+                    {
+                        highlightedSprite = buttonHoverSprite,
+                        pressedSprite = buttonPressedSprite,
+                        selectedSprite = buttonHoverSprite,
+                        disabledSprite = buttonNormalSprite
+                    };
+                    endTurnButton.spriteState = ss;
+                }
+
+                // Add Hourglass Icon
+                Transform hIconTr = endTurnButton.transform.Find("Hourglass_Icon");
+                GameObject hIconObj = hIconTr != null ? hIconTr.gameObject : null;
+                if (hIconObj == null)
+                {
+                    hIconObj = new GameObject("Hourglass_Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    hIconObj.transform.SetParent(endTurnButton.transform, false);
+                }
+                RectTransform hiRect = hIconObj.GetComponent<RectTransform>();
+                hiRect.anchorMin = new Vector2(0f, 0.5f);
+                hiRect.anchorMax = new Vector2(0f, 0.5f);
+                hiRect.pivot = new Vector2(0f, 0.5f);
+                hiRect.anchoredPosition = new Vector2(14f, 0f);
+                hiRect.sizeDelta = new Vector2(28f, 28f);
+                hiRect.localScale = Vector3.one;
+
+                Image hiImg = hIconObj.GetComponent<Image>();
+                if (hiImg != null && hourglassIconSprite != null)
+                {
+                    hiImg.sprite = hourglassIconSprite;
+                    hiImg.preserveAspect = true;
+                    hiImg.color = Color.white;
+                    hiImg.raycastTarget = false;
+                }
+
+                // Style End Turn text
+                TMP_Text endText = endTurnButton.GetComponentInChildren<TMP_Text>(true);
+                if (endText != null)
+                {
+                    RectTransform etRect = endText.GetComponent<RectTransform>();
+                    etRect.anchorMin = Vector2.zero;
+                    etRect.anchorMax = Vector2.one;
+                    etRect.pivot = new Vector2(0.5f, 0.5f);
+                    etRect.offsetMin = new Vector2(44f, 0f);
+                    etRect.offsetMax = new Vector2(-8f, 0f);
+                    etRect.localScale = Vector3.one;
+
+                    endText.text = "End Turn";
+                    endText.fontSize = 15.5f;
+                    endText.fontStyle = FontStyles.Bold;
+                    endText.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                    endText.alignment = TextAlignmentOptions.Center;
+                    endText.enableAutoSizing = false;
+                    endText.raycastTarget = false;
+                }
+            }
+
+            // 3. Style Abilities Container
+            Transform containerTr = combatActionBar.transform.Find("AblilitiesContainer")
+                ?? combatActionBar.transform.Find("AbilitiesContainer")
+                ?? combatActionBar.transform.Find("AbilityContainer");
+
+            if (containerTr != null)
+            {
+                RectTransform contRect = containerTr.GetComponent<RectTransform>();
+                contRect.anchorMin = new Vector2(0f, 0.5f);
+                contRect.anchorMax = new Vector2(1f, 0.5f);
+                contRect.pivot = new Vector2(0f, 0.5f);
+                contRect.anchoredPosition = new Vector2(180f, 0f);
+                contRect.sizeDelta = new Vector2(-180f, 76f);
+                contRect.localScale = Vector3.one;
+
+                HorizontalLayoutGroup hlg = containerTr.GetComponent<HorizontalLayoutGroup>();
+                if (hlg == null) hlg = containerTr.gameObject.AddComponent<HorizontalLayoutGroup>();
+                hlg.spacing = 10f;
+                hlg.childAlignment = TextAnchor.MiddleLeft;
+                hlg.childControlWidth = false;
+                hlg.childControlHeight = false;
+                hlg.childForceExpandWidth = false;
+                hlg.childForceExpandHeight = false;
+            }
+
+            // 4. Style each of the 4 Ability Buttons
+            for (int i = 0; i < abilityButtons.Count; i++)
+            {
+                if (abilityButtons[i] == null) continue;
+                Button btn = abilityButtons[i];
+                Transform btnTr = btn.transform;
+
+                RectTransform bRect = btn.GetComponent<RectTransform>();
+                bRect.sizeDelta = new Vector2(215f, 66f);
+                bRect.localScale = Vector3.one;
+
+                // Button Sprite
+                Image btnImg = btn.GetComponent<Image>();
+                if (btnImg != null && buttonNormalSprite != null)
+                {
+                    btnImg.sprite = buttonNormalSprite;
+                    btnImg.type = Image.Type.Sliced;
+                    btnImg.color = Color.white;
+                }
+
+                if (buttonHoverSprite != null && buttonPressedSprite != null)
+                {
+                    btn.transition = Selectable.Transition.SpriteSwap;
+                    SpriteState ss = new SpriteState
+                    {
+                        highlightedSprite = buttonHoverSprite,
+                        pressedSprite = buttonPressedSprite,
+                        selectedSprite = buttonHoverSprite,
+                        disabledSprite = buttonNormalSprite
+                    };
+                    btn.spriteState = ss;
+                }
+
+                // Framed Ability Icon Slot
+                Transform frameTr = btnTr.Find("Ability_Slot_Frame");
+                GameObject frameObj = frameTr != null ? frameTr.gameObject : null;
+                if (frameObj == null)
+                {
+                    frameObj = new GameObject("Ability_Slot_Frame", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    frameObj.transform.SetParent(btnTr, false);
+                }
+                RectTransform fRect = frameObj.GetComponent<RectTransform>();
+                fRect.anchorMin = new Vector2(0f, 0.5f);
+                fRect.anchorMax = new Vector2(0f, 0.5f);
+                fRect.pivot = new Vector2(0f, 0.5f);
+                fRect.anchoredPosition = new Vector2(8f, 0f);
+                fRect.sizeDelta = new Vector2(48f, 48f);
+                fRect.localScale = Vector3.one;
+
+                Image frameImg = frameObj.GetComponent<Image>();
+                if (frameImg != null && slotFrameSprite != null)
+                {
+                    frameImg.sprite = slotFrameSprite;
+                    frameImg.type = Image.Type.Sliced;
+                    frameImg.color = Color.white;
+                    frameImg.raycastTarget = false;
+                }
+
+                // Child Icon Image inside Frame
+                Transform iconTr = frameObj.transform.Find("Ability_Icon");
+                GameObject iconObj = iconTr != null ? iconTr.gameObject : null;
+                if (iconObj == null)
+                {
+                    iconObj = new GameObject("Ability_Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    iconObj.transform.SetParent(frameObj.transform, false);
+                }
+                RectTransform iRect = iconObj.GetComponent<RectTransform>();
+                iRect.anchorMin = Vector2.zero;
+                iRect.anchorMax = Vector2.one;
+                iRect.pivot = new Vector2(0.5f, 0.5f);
+                iRect.anchoredPosition = Vector2.zero;
+                iRect.sizeDelta = new Vector2(-10f, -10f);
+                iRect.localScale = Vector3.one;
+
+                Image iconImg = iconObj.GetComponent<Image>();
+                if (iconImg != null)
+                {
+                    iconImg.preserveAspect = true;
+                    iconImg.color = Color.white;
+                    iconImg.raycastTarget = false;
+                    if (abilityIcons.Count > i)
+                    {
+                        abilityIcons[i] = iconImg;
+                    }
+                    else
+                    {
+                        abilityIcons.Add(iconImg);
+                    }
+                }
+
+                // Text Container Area (Right side)
+                Transform textAreaTr = btnTr.Find("Ability_Text_Area");
+                GameObject textAreaObj = textAreaTr != null ? textAreaTr.gameObject : null;
+                if (textAreaObj == null)
+                {
+                    textAreaObj = new GameObject("Ability_Text_Area", typeof(RectTransform));
+                    textAreaObj.transform.SetParent(btnTr, false);
+                }
+                RectTransform taRect = textAreaObj.GetComponent<RectTransform>();
+                taRect.anchorMin = new Vector2(0f, 0f);
+                taRect.anchorMax = new Vector2(1f, 1f);
+                taRect.pivot = new Vector2(0f, 0.5f);
+                taRect.offsetMin = new Vector2(62f, 4f);
+                taRect.offsetMax = new Vector2(-6f, -4f);
+                taRect.localScale = Vector3.one;
+
+                // Move original text child if it was directly under button
+                Transform oldText = btnTr.Find("Text (TMP)");
+                if (oldText != null && oldText.parent != textAreaObj.transform)
+                {
+                    oldText.SetParent(textAreaObj.transform, false);
+                    oldText.name = "Ability_Name_Text";
+                }
+
+                // Ability Name Text
+                Transform nameTr = textAreaObj.transform.Find("Ability_Name_Text");
+                GameObject nameObj = nameTr != null ? nameTr.gameObject : null;
+                if (nameObj == null)
+                {
+                    nameObj = new GameObject("Ability_Name_Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+                    nameObj.transform.SetParent(textAreaObj.transform, false);
+                }
+                RectTransform nameRect = nameObj.GetComponent<RectTransform>();
+                nameRect.anchorMin = new Vector2(0f, 0.5f);
+                nameRect.anchorMax = new Vector2(1f, 1f);
+                nameRect.pivot = new Vector2(0f, 0.5f);
+                nameRect.offsetMin = Vector2.zero;
+                nameRect.offsetMax = Vector2.zero;
+                nameRect.localScale = Vector3.one;
+
+                TMP_Text nameTxt = nameObj.GetComponent<TMP_Text>();
+                if (nameTxt != null)
+                {
+                    nameTxt.fontSize = 14f;
+                    nameTxt.fontStyle = FontStyles.Bold;
+                    nameTxt.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                    nameTxt.alignment = TextAlignmentOptions.MidlineLeft;
+                    nameTxt.enableAutoSizing = false;
+                    nameTxt.raycastTarget = false;
+                    if (abilityNames.Count > i)
+                    {
+                        abilityNames[i] = nameTxt;
+                    }
+                    else
+                    {
+                        abilityNames.Add(nameTxt);
+                    }
+                }
+
+                // Ability Range / Type Text
+                Transform rangeTr = textAreaObj.transform.Find("Ability_Range_Text");
+                GameObject rangeObj = rangeTr != null ? rangeTr.gameObject : null;
+                if (rangeObj == null)
+                {
+                    rangeObj = new GameObject("Ability_Range_Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+                    rangeObj.transform.SetParent(textAreaObj.transform, false);
+                }
+                RectTransform rangeRect = rangeObj.GetComponent<RectTransform>();
+                rangeRect.anchorMin = new Vector2(0f, 0f);
+                rangeRect.anchorMax = new Vector2(1f, 0.5f);
+                rangeRect.pivot = new Vector2(0f, 0.5f);
+                rangeRect.offsetMin = Vector2.zero;
+                rangeRect.offsetMax = Vector2.zero;
+                rangeRect.localScale = Vector3.one;
+
+                TMP_Text rangeTxt = rangeObj.GetComponent<TMP_Text>();
+                if (rangeTxt != null)
+                {
+                    rangeTxt.fontSize = 11.5f;
+                    rangeTxt.color = new Color(0.65f, 0.72f, 0.82f, 1f); // #A4B7D1
+                    rangeTxt.alignment = TextAlignmentOptions.MidlineLeft;
+                    rangeTxt.enableAutoSizing = false;
+                    rangeTxt.raycastTarget = false;
+                    if (abilityRanges.Count > i)
+                    {
+                        abilityRanges[i] = rangeTxt;
+                    }
+                    else
+                    {
+                        abilityRanges.Add(rangeTxt);
+                    }
+                }
+
+                // Attach / configure Tooltip component
+                var tooltip = btn.GetComponent<AbilityTooltipUI>() ?? btn.gameObject.AddComponent<AbilityTooltipUI>();
+                tooltip.SlotIndex = i;
+            }
+
+            AbilityTooltipUI.SetThemeSprites(panelDarkSprite, slotFrameSprite, dividerGoldSprite, defaultAbilityIconSprite);
+        }
+
+        #endregion
+
+        #region Unity Lifecycle
+
+        private void Awake()
+        {
+            if (instance != null && instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            instance = this;
+
+            LoadThemeSpritesIfMissing();
+            AutoLocateComponents();
+            EnsureStyledHierarchy();
+            AbilityTooltipUI.SetThemeSprites(panelDarkSprite, slotFrameSprite, dividerGoldSprite, defaultAbilityIconSprite);
+
+            // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
+            if (canvasGroup == null)
+            {
+                canvasGroup = GetComponent<CanvasGroup>();
+                if (canvasGroup == null)
+                {
+                    canvasGroup = gameObject.AddComponent<CanvasGroup>();
                 }
             }
 
@@ -196,24 +657,6 @@ namespace CastleOfTheD20.UI
                 {
                     abilityButtons[i].onClick.RemoveAllListeners();
                     abilityButtons[i].onClick.AddListener(() => OnAbilitySlotClicked(slotIndex));
-                }
-
-                if (abilityNames.Count > i && abilityNames[i] != null)
-                {
-                    abilityNames[i].margin = Vector4.zero;
-                    abilityNames[i].enableAutoSizing = true;
-                    abilityNames[i].fontSizeMin = 11f;
-                    abilityNames[i].fontSizeMax = 22f;
-                    abilityNames[i].textWrappingMode = TextWrappingModes.Normal;
-                    abilityNames[i].raycastTarget = false;
-                }
-                if (abilityRanges.Count > i && abilityRanges[i] != null)
-                {
-                    abilityRanges[i].margin = Vector4.zero;
-                    abilityRanges[i].enableAutoSizing = true;
-                    abilityRanges[i].fontSizeMin = 10f;
-                    abilityRanges[i].fontSizeMax = 18f;
-                    abilityRanges[i].raycastTarget = false;
                 }
             }
 
@@ -519,10 +962,22 @@ namespace CastleOfTheD20.UI
                             abilityIcons[i].sprite = ability.AbilityIcon;
                             abilityIcons[i].enabled = true;
                         }
+                        else if (defaultAbilityIconSprite != null)
+                        {
+                            abilityIcons[i].sprite = defaultAbilityIconSprite;
+                            abilityIcons[i].enabled = true;
+                        }
                     }
 
                     // Enable/disable based on whether action has already been used
                     abilityButtons[i].interactable = !activePlayer.HasActedThisTurn && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
+
+                    // Highlight selected ability button state
+                    Image btnImg = abilityButtons[i].GetComponent<Image>();
+                    if (btnImg != null && buttonNormalSprite != null)
+                    {
+                        btnImg.sprite = (selectedAbilitySlot == i && buttonHoverSprite != null) ? buttonHoverSprite : buttonNormalSprite;
+                    }
 
                     // Attach tooltip listener for rich ability card on hover
                     var tooltip = abilityButtons[i].GetComponent<AbilityTooltipUI>() ?? abilityButtons[i].gameObject.AddComponent<AbilityTooltipUI>();
@@ -532,6 +987,12 @@ namespace CastleOfTheD20.UI
                 {
                     abilityButtons[i].gameObject.SetActive(false);
                 }
+            }
+
+            if (endTurnButton != null)
+            {
+                bool isPlayerTurn = TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.PlayerTurn;
+                endTurnButton.interactable = isPlayerTurn;
             }
         }
 

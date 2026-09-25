@@ -26,14 +26,22 @@ namespace CastleOfTheD20.Editor
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
             var activeScene = EditorSceneManager.GetActiveScene();
+            if (!System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png"))
+            {
+                GenerateFantasyUISpritesEditor.GenerateAllSprites();
+            }
+
             if (activeScene.IsValid() && activeScene.name == "StartVillage")
             {
                 bool missingVillage = GameObject.Find("Village_Layout") == null || GameObject.Find("NPC_Othelia") == null || GameObject.Find("NPC_Mirabel") == null;
                 bool missingWings = GameObject.Find("Castle_Wings") == null;
+                var hud = Object.FindAnyObjectByType<CastleOfTheD20.UI.PlayerHUD>();
+                bool missingHUDStyling = hud == null || hud.transform.Find("Hero_Status_Card") == null;
+                bool missingDialogueShop = GameObject.Find("Portrait_Slot_Frame") == null;
 
-                if (missingVillage || missingWings)
+                if (missingVillage || missingWings || missingHUDStyling || missingDialogueShop)
                 {
-                    Debug.Log("[AutoSetupGameEditor] StartVillage active and missing layout pieces detected. Running auto-setup...");
+                    Debug.Log("[AutoSetupGameEditor] StartVillage active and missing layout pieces or UI styling detected. Running auto-setup...");
                     RunCompleteGameSetup();
                 }
             }
@@ -57,6 +65,12 @@ namespace CastleOfTheD20.Editor
 
             Debug.Log("[AutoSetupGameEditor] --- STEP 3: Building Castle Wings (Courtyard, Library, Crown Hall) ---");
             BuildDungeonWingsEditor.BuildAllDungeonWings();
+
+            Debug.Log("[AutoSetupGameEditor] --- STEP 4: Styling & Rebuilding Professional Tabletop D&D HUD ---");
+            BuildHUDEditor.RebuildAndStyleHUD();
+
+            Debug.Log("[AutoSetupGameEditor] --- STEP 5: Styling & Rebuilding Dialogue & Baldur Shop Panels ---");
+            BuildDialogueAndShopEditor.RebuildAndStyleDialogueAndShop();
 
             EditorSceneManager.MarkSceneDirty(activeScene);
             EditorSceneManager.SaveScene(activeScene);

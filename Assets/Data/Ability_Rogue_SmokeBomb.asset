@@ -16,7 +16,7 @@ MonoBehaviour:
   abilityName: Smoke Bomb
   description: Toss a dense smoke canister, blinding all targets in a 3x3 area for
     1 turn.
-  abilityIcon: {fileID: 0}
+  abilityIcon: {fileID: 21300000, guid: a11a11a110010001000100000000001b, type: 3}
   targetType: 1
   range: 4
   areaOfEffectRadius: 1

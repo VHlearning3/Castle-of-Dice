@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -10,8 +11,9 @@ namespace CastleOfTheD20.UI
 {
     /// <summary>
     /// User Interface Controller for branching conversations and skill checks.
-    /// Manages the dialogue modal panel, speaker portrait, typewriter text typing animation,
+    /// Manages the dialogue modal panel, speaker portrait slot, typewriter text typing animation,
     /// dynamic option button spawning with DC check badges, and continue/close buttons.
+    /// Fully styled with dark slate panels, burnished gold frames, and persistent portrait framing.
     /// </summary>
     public class DialogueUIController : MonoBehaviour
     {
@@ -45,6 +47,34 @@ namespace CastleOfTheD20.UI
         [Tooltip("Seconds delay between individual characters during typewriter effect.")]
         [SerializeField] private float typewriterSpeed = 0.02f;
 
+        [Header("Fantasy Theme Sprites & Slots")]
+        [Tooltip("9-sliced dark slate panel background sprite.")]
+        [SerializeField] private Sprite panelDarkSprite;
+
+        [Tooltip("9-sliced ornate frame for portrait and icon slots.")]
+        [SerializeField] private Sprite slotFrameSprite;
+
+        [Tooltip("Filigree gold horizontal divider sprite.")]
+        [SerializeField] private Sprite dividerGoldSprite;
+
+        [Tooltip("9-sliced button sprite for choice/continue buttons.")]
+        [SerializeField] private Sprite buttonNormalSprite;
+
+        [Tooltip("9-sliced button sprite for hovered state.")]
+        [SerializeField] private Sprite buttonHoverSprite;
+
+        [Tooltip("9-sliced button sprite for pressed state.")]
+        [SerializeField] private Sprite buttonPressedSprite;
+
+        [Tooltip("Default portrait placeholder sprite shown in the left portrait slot when NPC has no portrait.")]
+        [SerializeField] private Sprite defaultPortraitPlaceholder;
+
+        [Tooltip("Frame image holding the speaker portrait.")]
+        [SerializeField] private Image portraitFrameImage;
+
+        [Tooltip("Divider image under speaker name.")]
+        [SerializeField] private Image nameDividerImage;
+
         #endregion
 
         #region Singleton & Access
@@ -69,8 +99,8 @@ namespace CastleOfTheD20.UI
                         {
                             foreach (Transform child in canvas.GetComponentsInChildren<Transform>(true))
                             {
-                                if (child.name.IndexOf("DialoguePanel", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
-                                    child.name.IndexOf("DialogueModal", System.StringComparison.OrdinalIgnoreCase) >= 0)
+                                if (child.name.IndexOf("DialoguePanel", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                                    child.name.IndexOf("DialogueModal", StringComparison.OrdinalIgnoreCase) >= 0)
                                 {
                                     instance = child.GetComponent<DialogueUIController>() ?? child.gameObject.AddComponent<DialogueUIController>();
                                     break;
@@ -107,7 +137,9 @@ namespace CastleOfTheD20.UI
             }
             instance = this;
 
+            LoadThemeSpritesIfMissing();
             AutoLocateComponents();
+            EnsureStyledHierarchy();
 
             // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
             if (canvasGroup == null)
@@ -142,9 +174,34 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
+        /// Resolves theme sprites in Editor or from Resources if unassigned.
+        /// </summary>
+        public void LoadThemeSpritesIfMissing()
+        {
+#if UNITY_EDITOR
+            if (panelDarkSprite == null)
+                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+            if (slotFrameSprite == null)
+                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+            if (dividerGoldSprite == null)
+                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+            if (buttonNormalSprite == null)
+                buttonNormalSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
+            if (buttonHoverSprite == null)
+                buttonHoverSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
+            if (buttonPressedSprite == null)
+                buttonPressedSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
+            if (defaultPortraitPlaceholder == null)
+                defaultPortraitPlaceholder = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Portrait_Placeholder.png");
+            if (optionButtonPrefab == null)
+                optionButtonPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/UI/OptionButtonPrefab.prefab");
+#endif
+        }
+
+        /// <summary>
         /// Automatically locates required UI components in children if not manually assigned in the Inspector.
         /// </summary>
-        private void AutoLocateComponents()
+        public void AutoLocateComponents()
         {
             // 1. Auto-locate dialogue panel
             if (dialoguePanel == null)
@@ -207,41 +264,22 @@ namespace CastleOfTheD20.UI
                 if (dialogueBodyText == null && idx < unassigned.Count) dialogueBodyText = unassigned[idx++];
             }
 
-            // Sanitize text properties to prevent clipping or displacement
-            if (dialogueBodyText != null)
+            // 3. Auto-locate speaker portrait image and frame
+            Image[] images = GetComponentsInChildren<Image>(true);
+            foreach (Image img in images)
             {
-                dialogueBodyText.margin = Vector4.zero;
-                dialogueBodyText.enableAutoSizing = true;
-                dialogueBodyText.fontSizeMin = 16f;
-                dialogueBodyText.fontSizeMax = 30f;
-                dialogueBodyText.textWrappingMode = TextWrappingModes.Normal;
-                dialogueBodyText.overflowMode = TextOverflowModes.Overflow;
-                dialogueBodyText.raycastTarget = false;
-            }
-
-            if (speakerNameText != null)
-            {
-                speakerNameText.margin = Vector4.zero;
-                speakerNameText.enableAutoSizing = true;
-                speakerNameText.fontSizeMin = 16f;
-                speakerNameText.fontSizeMax = 35f;
-                speakerNameText.textWrappingMode = TextWrappingModes.Normal;
-                speakerNameText.overflowMode = TextOverflowModes.Overflow;
-                speakerNameText.raycastTarget = false;
-            }
-
-            // 3. Auto-locate speaker portrait image
-            if (speakerPortraitImage == null)
-            {
-                Image[] images = GetComponentsInChildren<Image>(true);
-                foreach (Image img in images)
+                string lower = img.name.ToLowerInvariant();
+                if (speakerPortraitImage == null && (lower == "speaker_portrait" || lower == "portrait" || lower.Contains("avatar") || lower.Contains("face")))
                 {
-                    string lower = img.name.ToLowerInvariant();
-                    if (lower.Contains("portrait") || lower.Contains("speaker") || lower.Contains("avatar") || lower.Contains("face") || lower.Contains("character"))
-                    {
-                        speakerPortraitImage = img;
-                        break;
-                    }
+                    speakerPortraitImage = img;
+                }
+                else if (portraitFrameImage == null && (lower.Contains("portrait_slot") || lower.Contains("portrait_frame") || lower.Contains("portraitframe")))
+                {
+                    portraitFrameImage = img;
+                }
+                else if (nameDividerImage == null && (lower.Contains("divider") || lower.Contains("gold_line")))
+                {
+                    nameDividerImage = img;
                 }
             }
 
@@ -268,7 +306,7 @@ namespace CastleOfTheD20.UI
                 foreach (Button btn in buttons)
                 {
                     string lower = btn.name.ToLowerInvariant();
-                    if (lower.Contains("continue") || lower.Contains("next") || lower.Contains("close") || lower.Contains("proceed"))
+                    if (lower.Contains("continue") || lower.Contains("next") || lower.Contains("proceed"))
                     {
                         continueButton = btn;
                         break;
@@ -284,11 +322,6 @@ namespace CastleOfTheD20.UI
                             continueButton = btn;
                             break;
                         }
-                    }
-
-                    if (continueButton == null)
-                    {
-                        continueButton = buttons[0];
                     }
                 }
             }
@@ -306,6 +339,246 @@ namespace CastleOfTheD20.UI
                         break;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Restructures and styles the Dialogue UI to match the professional tabletop D&D HUD:
+        /// 1. Cinematic bottom-anchored panel with dark slate 9-sliced frame and filigree gold trim.
+        /// 2. Framed left-side portrait slot that ALWAYS remains visible for character art or placeholder.
+        /// 3. Wide readable dialogue content area with golden engraved speaker title and divider.
+        /// 4. Stacked fantasy choice buttons with gold DC skill check badges.
+        /// </summary>
+        public void EnsureStyledHierarchy()
+        {
+            LoadThemeSpritesIfMissing();
+
+            if (dialoguePanel == null)
+            {
+                dialoguePanel = gameObject;
+            }
+
+            // A. Style Dialogue Panel
+            RectTransform panelRect = dialoguePanel.GetComponent<RectTransform>();
+            if (panelRect != null)
+            {
+                panelRect.anchorMin = new Vector2(0.5f, 0f);
+                panelRect.anchorMax = new Vector2(0.5f, 0f);
+                panelRect.pivot = new Vector2(0.5f, 0f);
+                panelRect.anchoredPosition = new Vector2(0f, 35f);
+                panelRect.sizeDelta = new Vector2(980f, 240f);
+            }
+
+            Image panelImg = dialoguePanel.GetComponent<Image>();
+            if (panelImg != null && panelDarkSprite != null)
+            {
+                panelImg.sprite = panelDarkSprite;
+                panelImg.type = Image.Type.Sliced;
+                panelImg.color = Color.white;
+            }
+
+            // B. Left-Side Portrait Slot Frame
+            Transform frameTr = dialoguePanel.transform.Find("Portrait_Slot_Frame");
+            GameObject frameObj = frameTr != null ? frameTr.gameObject : null;
+            if (frameObj == null)
+            {
+                frameObj = new GameObject("Portrait_Slot_Frame", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                frameObj.transform.SetParent(dialoguePanel.transform, false);
+            }
+
+            RectTransform frameRect = frameObj.GetComponent<RectTransform>();
+            frameRect.anchorMin = new Vector2(0f, 0.5f);
+            frameRect.anchorMax = new Vector2(0f, 0.5f);
+            frameRect.pivot = new Vector2(0f, 0.5f);
+            frameRect.anchoredPosition = new Vector2(24f, 0f);
+            frameRect.sizeDelta = new Vector2(136f, 136f);
+
+            portraitFrameImage = frameObj.GetComponent<Image>();
+            if (portraitFrameImage != null && slotFrameSprite != null)
+            {
+                portraitFrameImage.sprite = slotFrameSprite;
+                portraitFrameImage.type = Image.Type.Sliced;
+                portraitFrameImage.color = Color.white;
+            }
+
+            // C. Speaker Portrait Image inside Slot Frame
+            Transform portTr = frameObj.transform.Find("Speaker_Portrait");
+            if (portTr == null && speakerPortraitImage != null)
+            {
+                portTr = speakerPortraitImage.transform;
+            }
+
+            GameObject portObj = portTr != null ? portTr.gameObject : null;
+            if (portObj == null)
+            {
+                portObj = new GameObject("Speaker_Portrait", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            }
+            portObj.transform.SetParent(frameObj.transform, false);
+
+            RectTransform portRect = portObj.GetComponent<RectTransform>();
+            portRect.anchorMin = Vector2.zero;
+            portRect.anchorMax = Vector2.one;
+            portRect.pivot = new Vector2(0.5f, 0.5f);
+            portRect.anchoredPosition = Vector2.zero;
+            portRect.sizeDelta = new Vector2(-16f, -16f);
+
+            speakerPortraitImage = portObj.GetComponent<Image>();
+            if (speakerPortraitImage != null)
+            {
+                if (defaultPortraitPlaceholder != null && speakerPortraitImage.sprite == null)
+                {
+                    speakerPortraitImage.sprite = defaultPortraitPlaceholder;
+                }
+                speakerPortraitImage.type = Image.Type.Simple;
+                speakerPortraitImage.preserveAspect = true;
+                speakerPortraitImage.color = Color.white;
+                speakerPortraitImage.enabled = true;
+            }
+
+            // D. Right-Side Content Area (Width: ~770px)
+            Transform contentTr = dialoguePanel.transform.Find("Dialogue_Content_Area")
+                ?? dialoguePanel.transform.Find("NPC_Text_Area");
+            GameObject contentObj = contentTr != null ? contentTr.gameObject : null;
+            if (contentObj == null)
+            {
+                contentObj = new GameObject("Dialogue_Content_Area", typeof(RectTransform));
+                contentObj.transform.SetParent(dialoguePanel.transform, false);
+            }
+            else
+            {
+                contentObj.name = "Dialogue_Content_Area";
+            }
+
+            RectTransform contentRect = contentObj.GetComponent<RectTransform>();
+            contentRect.anchorMin = new Vector2(0f, 0f);
+            contentRect.anchorMax = new Vector2(1f, 1f);
+            contentRect.pivot = new Vector2(0f, 0.5f);
+            contentRect.offsetMin = new Vector2(185f, 16f);
+            contentRect.offsetMax = new Vector2(-26f, -16f);
+
+            // E. Speaker Name Text
+            if (speakerNameText != null)
+            {
+                speakerNameText.transform.SetParent(contentObj.transform, false);
+                RectTransform nameRect = speakerNameText.GetComponent<RectTransform>();
+                nameRect.anchorMin = new Vector2(0f, 1f);
+                nameRect.anchorMax = new Vector2(1f, 1f);
+                nameRect.pivot = new Vector2(0f, 1f);
+                nameRect.anchoredPosition = new Vector2(0f, 0f);
+                nameRect.sizeDelta = new Vector2(0f, 32f);
+
+                speakerNameText.fontSize = 20f;
+                speakerNameText.fontStyle = FontStyles.Bold;
+                speakerNameText.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                speakerNameText.alignment = TextAlignmentOptions.TopLeft;
+                speakerNameText.enableAutoSizing = false;
+                speakerNameText.raycastTarget = false;
+            }
+
+            // F. Ornate Gold Divider under Speaker Name
+            Transform divTr = contentObj.transform.Find("Name_Divider");
+            GameObject divObj = divTr != null ? divTr.gameObject : null;
+            if (divObj == null)
+            {
+                divObj = new GameObject("Name_Divider", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                divObj.transform.SetParent(contentObj.transform, false);
+            }
+
+            RectTransform divRect = divObj.GetComponent<RectTransform>();
+            divRect.anchorMin = new Vector2(0f, 1f);
+            divRect.anchorMax = new Vector2(1f, 1f);
+            divRect.pivot = new Vector2(0f, 1f);
+            divRect.anchoredPosition = new Vector2(0f, -32f);
+            divRect.sizeDelta = new Vector2(0f, 4f);
+
+            nameDividerImage = divObj.GetComponent<Image>();
+            if (nameDividerImage != null && dividerGoldSprite != null)
+            {
+                nameDividerImage.sprite = dividerGoldSprite;
+                nameDividerImage.type = Image.Type.Simple;
+                nameDividerImage.color = Color.white;
+            }
+
+            // G. Dialogue Body Text (Wide readable box)
+            if (dialogueBodyText != null)
+            {
+                dialogueBodyText.transform.SetParent(contentObj.transform, false);
+                RectTransform bodyRect = dialogueBodyText.GetComponent<RectTransform>();
+                bodyRect.anchorMin = new Vector2(0f, 0f);
+                bodyRect.anchorMax = new Vector2(1f, 1f);
+                bodyRect.pivot = new Vector2(0f, 1f);
+                bodyRect.offsetMin = new Vector2(0f, 0f);
+                bodyRect.offsetMax = new Vector2(0f, -44f);
+
+                dialogueBodyText.fontSize = 15.5f;
+                dialogueBodyText.color = new Color(0.93f, 0.90f, 0.85f, 1f); // #EDE6D8
+                dialogueBodyText.alignment = TextAlignmentOptions.TopLeft;
+                dialogueBodyText.enableAutoSizing = false;
+                dialogueBodyText.lineSpacing = 2f;
+                dialogueBodyText.paragraphSpacing = 6f;
+                dialogueBodyText.textWrappingMode = TextWrappingModes.Normal;
+                dialogueBodyText.overflowMode = TextOverflowModes.Overflow;
+                dialogueBodyText.richText = true;
+                dialogueBodyText.raycastTarget = false;
+            }
+
+            // H. Continue Button (Bottom-Right of Dialogue Panel)
+            if (continueButton != null)
+            {
+                continueButton.transform.SetParent(dialoguePanel.transform, false);
+                RectTransform contRect = continueButton.GetComponent<RectTransform>();
+                contRect.anchorMin = new Vector2(1f, 0f);
+                contRect.anchorMax = new Vector2(1f, 0f);
+                contRect.pivot = new Vector2(1f, 0f);
+                contRect.anchoredPosition = new Vector2(-24f, 16f);
+                contRect.sizeDelta = new Vector2(160f, 38f);
+
+                Image contImg = continueButton.GetComponent<Image>();
+                if (contImg != null && buttonNormalSprite != null)
+                {
+                    contImg.sprite = buttonNormalSprite;
+                    contImg.type = Image.Type.Sliced;
+                    contImg.color = Color.white;
+                }
+
+                TMP_Text contTxt = continueButton.GetComponentInChildren<TMP_Text>(true);
+                if (contTxt != null)
+                {
+                    contTxt.text = "Continue >";
+                    contTxt.fontSize = 14.5f;
+                    contTxt.fontStyle = FontStyles.Bold;
+                    contTxt.color = new Color(0.965f, 0.835f, 0.47f, 1f);
+                    contTxt.alignment = TextAlignmentOptions.Center;
+                    contTxt.enableAutoSizing = false;
+                    contTxt.raycastTarget = false;
+                }
+            }
+
+            // I. Options Container (Stacked above Dialogue Panel)
+            if (optionsContainer != null)
+            {
+                optionsContainer.SetParent(transform, false);
+                RectTransform optRect = optionsContainer.GetComponent<RectTransform>();
+                optRect.anchorMin = new Vector2(0.5f, 0f);
+                optRect.anchorMax = new Vector2(0.5f, 0f);
+                optRect.pivot = new Vector2(0.5f, 0f);
+                optRect.anchoredPosition = new Vector2(0f, 285f);
+                optRect.sizeDelta = new Vector2(840f, 180f);
+
+                VerticalLayoutGroup vlg = optionsContainer.GetComponent<VerticalLayoutGroup>();
+                if (vlg == null) vlg = optionsContainer.gameObject.AddComponent<VerticalLayoutGroup>();
+                vlg.spacing = 8f;
+                vlg.childAlignment = TextAnchor.LowerCenter;
+                vlg.childControlWidth = true;
+                vlg.childControlHeight = true;
+                vlg.childForceExpandWidth = true;
+                vlg.childForceExpandHeight = false;
+                vlg.padding = new RectOffset(0, 0, 0, 0);
+
+                ContentSizeFitter csf = optionsContainer.GetComponent<ContentSizeFitter>();
+                if (csf == null) csf = optionsContainer.gameObject.AddComponent<ContentSizeFitter>();
+                csf.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+                csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             }
         }
 
@@ -328,13 +601,14 @@ namespace CastleOfTheD20.UI
         #region Dialogue Rendering
 
         /// <summary>
-        /// Displays the dialogue node text, speaker info, portrait, and choice buttons.
+        /// Displays the dialogue node text, speaker info, portrait slot, and choice buttons.
         /// </summary>
         public void DisplayDialogueNode(DialogueNodeSO node)
         {
             if (node == null) return;
 
             AutoLocateComponents();
+            EnsureStyledHierarchy();
 
             if (!gameObject.activeSelf)
             {
@@ -365,20 +639,33 @@ namespace CastleOfTheD20.UI
                 speakerNameText.text = node.SpeakerName;
             }
 
+            // 2. Left Portrait Slot (Always visible and framed)
+            if (portraitFrameImage != null)
+            {
+                portraitFrameImage.enabled = true;
+            }
+
             if (speakerPortraitImage != null)
             {
+                speakerPortraitImage.enabled = true;
+                speakerPortraitImage.preserveAspect = true;
                 if (node.SpeakerPortrait != null)
                 {
                     speakerPortraitImage.sprite = node.SpeakerPortrait;
-                    speakerPortraitImage.enabled = true;
+                    speakerPortraitImage.color = Color.white;
+                }
+                else if (defaultPortraitPlaceholder != null)
+                {
+                    speakerPortraitImage.sprite = defaultPortraitPlaceholder;
+                    speakerPortraitImage.color = Color.white;
                 }
                 else
                 {
-                    speakerPortraitImage.enabled = false;
+                    speakerPortraitImage.color = new Color(0.9f, 0.85f, 0.75f, 0.9f);
                 }
             }
 
-            // 2. Typewriter Text
+            // 3. Typewriter Text
             currentFullText = node.DialogueText;
             if (activeTypewriterCoroutine != null)
             {
@@ -386,7 +673,7 @@ namespace CastleOfTheD20.UI
             }
             activeTypewriterCoroutine = StartCoroutine(TypewriterRoutine(currentFullText));
 
-            // 3. Build Options
+            // 4. Build Choice Options
             BuildOptions(node);
         }
 
@@ -436,7 +723,7 @@ namespace CastleOfTheD20.UI
                     }
                     else
                     {
-                        // Fallback button
+                        // Fallback button with fantasy styling
                         btnObj = new GameObject("OptionButton", typeof(RectTransform), typeof(Button), typeof(Image));
                         if (optionsContainer != null) btnObj.transform.SetParent(optionsContainer, false);
                     }
@@ -445,35 +732,65 @@ namespace CastleOfTheD20.UI
                     spawnedButtons.Add(btnObj);
 
                     Button btn = btnObj.GetComponent<Button>();
+                    Image btnImg = btnObj.GetComponent<Image>();
+                    if (btnImg != null && buttonNormalSprite != null && btnImg.sprite == null)
+                    {
+                        btnImg.sprite = buttonNormalSprite;
+                        btnImg.type = Image.Type.Sliced;
+                    }
+
                     TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>(true);
 
                     int neededRoll = Mathf.Clamp(option.TargetDC - playerBonus, 1, 20);
-                    string formattedText = option.RequiresCheck
-                        ? $"[{option.SkillCheckDescription} | DC {option.TargetDC} (Need {neededRoll}+)] {option.OptionText}"
-                        : option.OptionText;
 
-                    if (btnText != null)
+                    string cleanText = option.OptionText ?? "";
+                    string formattedText;
+                    if (option.RequiresCheck)
                     {
-                        btnText.margin = Vector4.zero;
-                        btnText.enableAutoSizing = true;
-                        btnText.fontSizeMin = 12f;
-                        btnText.fontSizeMax = 22f;
-                        btnText.textWrappingMode = TextWrappingModes.Normal;
-                        btnText.overflowMode = TextOverflowModes.Overflow;
-                        btnText.raycastTarget = false;
-                        btnText.text = formattedText;
+                        string checkTag = $"<color=#F6D378>[{option.SkillCheckDescription} | DC {option.TargetDC} (Need {neededRoll}+)]</color>";
+                        if (cleanText.StartsWith("[DC", StringComparison.OrdinalIgnoreCase))
+                        {
+                            int closeBracket = cleanText.IndexOf(']');
+                            if (closeBracket >= 0 && closeBracket < cleanText.Length - 1)
+                            {
+                                cleanText = cleanText.Substring(closeBracket + 1).TrimStart();
+                            }
+                        }
+                        formattedText = $"{checkTag} {cleanText}";
+                    }
+                    else if (cleanText.StartsWith("[Exit]", StringComparison.OrdinalIgnoreCase) || cleanText.StartsWith("[Poistu", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#E06666>[Exit]</color> {cleanText.Replace("[Exit]", "").Replace("[Poistu]", "").Trim()}";
+                    }
+                    else if (cleanText.StartsWith("[Blacksmith]", StringComparison.OrdinalIgnoreCase) || cleanText.StartsWith("[Shop]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#F6D378>[Blacksmith]</color> {cleanText.Replace("[Blacksmith]", "").Replace("[Shop]", "").Trim()}";
+                    }
+                    else if (cleanText.StartsWith("[Lore]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#82B1FF>[Lore]</color> {cleanText.Replace("[Lore]", "").Trim()}";
+                    }
+                    else if (cleanText.StartsWith("[Quests]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#B9F6CA>[Quests]</color> {cleanText.Replace("[Quests]", "").Trim()}";
                     }
                     else
                     {
-                        Text legacyText = btnObj.GetComponentInChildren<Text>(true);
-                        if (legacyText != null)
-                        {
-                            legacyText.resizeTextForBestFit = true;
-                            legacyText.resizeTextMinSize = 12;
-                            legacyText.resizeTextMaxSize = 22;
-                            legacyText.raycastTarget = false;
-                            legacyText.text = formattedText;
-                        }
+                        formattedText = cleanText;
+                    }
+
+                    if (btnText != null)
+                    {
+                        btnText.margin = new Vector4(20f, 0f, 20f, 0f);
+                        btnText.enableAutoSizing = false;
+                        btnText.fontSize = 15f;
+                        btnText.color = new Color(0.94f, 0.90f, 0.82f, 1f);
+                        btnText.alignment = TextAlignmentOptions.MidlineLeft;
+                        btnText.textWrappingMode = TextWrappingModes.Normal;
+                        btnText.overflowMode = TextOverflowModes.Ellipsis;
+                        btnText.raycastTarget = false;
+                        btnText.richText = true;
+                        btnText.text = formattedText;
                     }
 
                     if (btn != null)

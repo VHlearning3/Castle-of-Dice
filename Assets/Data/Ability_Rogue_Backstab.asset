@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityID: rogue_backstab
   abilityName: Backstab
   description: Strike from the shadows for devastating critical puncture damage.
-  abilityIcon: {fileID: 0}
+  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000019, type: 3}
   targetType: 0
   range: 1
   areaOfEffectRadius: 0

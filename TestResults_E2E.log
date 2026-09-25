@@ -2,20 +2,20 @@
 Built from '6000.3/staging' branch; Version is '6000.3.14f1 (d68c3f99a318) revision 14060607'; Using compiler version '194234433'; Build Type 'Release'
 OS: 'Windows 10  (10.0.19045) 64bit Professional' Language: 'fi' Physical Memory: 32692 MB
 BatchMode: 1, IsHumanControllingUs: 0, StartBugReporterOnCrash: 0, Is64bit: 1
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja" at "2026-09-25T13:31:52.9815823Z"
 System  architecture: x64
 Process architecture: x64
-Date: 2026-09-25T13:31:52Z
+Date: 2026-09-25T22:23:28Z
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja" at "2026-09-25T22:23:28.9955005Z"
 [Licensing::Client] Code 10 while verifying Licensing Client signature (process Id: 10236, path: "D:/Unity/Unity Hub/UnityLicensingClient_V1/Unity.Licensing.Client.exe")
 [Licensing::Module] LicensingClient has failed validation; ignoring
 [Licensing::Client] Handshaking with LicensingClient:
   Version:                 1.18.3+d7ffd15
-  Session Id:              ab51050a305f4fa9b548e25f5a98375f
+  Session Id:              1704829b100c4419b8a008c4a3a5a4f3
   Correlation Id:          6bc57de958bf3873e650d79b6d0e1a14
-  External correlation Id: 8234226422102479290
+  External correlation Id: 7833101520759546339
   Machine Id:              yMLaEWuNA58AiaZJmR/NJXU7IhE=
 [Licensing::Module] Successfully connected to LicensingClient on channel: "LicenseClient-Omistaja" (connect: 0.00s, validation: 0.00s, handshake: 0.04s)
-[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja-notifications" at "2026-09-25T13:31:53.0276168Z"
+[Licensing::IpcConnector] Successfully connected to: "LicenseClient-Omistaja-notifications" at "2026-09-25T22:23:29.0401861Z"
 [Licensing::Module] Error: Access token is unavailable; failed to update
 [Licensing::Client] Successfully resolved entitlement details
 [Licensing::Module] License group:
@@ -40,4 +40,1336 @@ CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner.RunAllTestsBatchmode
 D:\Unity\3D DnD selainpeli\TestResults_E2E.log
 Successfully changed project path to: D:\Unity\3D DnD selainpeli
 D:/Unity/3D DnD selainpeli
-Exiting without the bug reporter. Application will terminate with return code 1
+[UnityMemory] Configuration Parameters - Can be set up in boot.config
+    "memorysetup-temp-allocator-size-nav-mesh-worker=65536"
+    "memorysetup-temp-allocator-size-audio-worker=65536"
+    "memorysetup-temp-allocator-size-gfx=262144"
+    "memorysetup-allocator-temp-initial-block-size-main=262144"
+    "memorysetup-allocator-temp-initial-block-size-worker=262144"
+    "memorysetup-temp-allocator-size-background-worker=32768"
+    "memorysetup-temp-allocator-size-job-worker=262144"
+    "memorysetup-temp-allocator-size-preload-manager=33554432"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-temp-allocator-size-gi-baking-worker=262144"
+    "memorysetup-bucket-allocator-granularity=16"
+    "memorysetup-bucket-allocator-bucket-count=8"
+    "memorysetup-bucket-allocator-block-size=33554432"
+    "memorysetup-bucket-allocator-block-count=8"
+    "memorysetup-main-allocator-block-size=16777216"
+    "memorysetup-thread-allocator-block-size=16777216"
+    "memorysetup-gfx-main-allocator-block-size=16777216"
+    "memorysetup-gfx-thread-allocator-block-size=16777216"
+    "memorysetup-cache-allocator-block-size=4194304"
+    "memorysetup-typetree-allocator-block-size=2097152"
+    "memorysetup-profiler-bucket-allocator-granularity=16"
+    "memorysetup-profiler-bucket-allocator-bucket-count=8"
+    "memorysetup-profiler-bucket-allocator-block-size=33554432"
+    "memorysetup-profiler-bucket-allocator-block-count=8"
+    "memorysetup-profiler-allocator-block-size=16777216"
+    "memorysetup-profiler-editor-allocator-block-size=1048576"
+    "memorysetup-temp-allocator-size-main=16777216"
+    "memorysetup-job-temp-allocator-block-size=2097152"
+    "memorysetup-job-temp-allocator-block-size-background=1048576"
+    "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+    "memorysetup-temp-allocator-size-cloud-worker=32768"
+Player connection [23904]  Target information:
+
+Player connection [23904]  * "[IP] 86.60.178.19 [Port] 55504 [Flags] 2 [Guid] 836244845 [EditorId] 836244845 [Version] 1048832 [Id] WindowsEditor(7,DESKTOP-HVQMO4I) [Debug] 1 [PackageName] WindowsEditor [ProjectName] Editor" 
+
+Player connection [23904] Host joined multi-casting on [225.0.0.222:54997]...
+Player connection [23904] Host joined alternative multi-casting on [225.0.0.222:34997]...
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+[Package Manager] Connected to IPC stream "Upm-6036" after 0.4 seconds.
+[Licensing::Client] Successfully resolved entitlement details
+Library Redirect Path: Library/
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+Artifact Garbage Collection - Removed 13 unused hashed content files
+Refreshing native plugins compatible for Editor in 0.05 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Initialize engine version: 6000.3.14f1 (d68c3f99a318)
+[Subsystems] Discovering subsystems at path D:/6000.3.14f1/Editor/Data/Resources/UnitySubsystems
+[Subsystems] Discovering subsystems at path D:/Unity/3D DnD selainpeli/Assets
+Forcing GfxDevice: Null
+GfxDevice: creating device client; kGfxThreadingModeNonThreaded
+NullGfxDevice:
+    Version:  NULL 1.0 [1.0]
+    Renderer: Null Device
+    Vendor:   Unity Technologies
+Initialize mono
+Mono path[0] = 'D:/6000.3.14f1/Editor/Data/Managed'
+Mono path[1] = 'D:/6000.3.14f1/Editor/Data/MonoBleedingEdge/lib/mono/unityjit-win32'
+Mono config path = 'D:/6000.3.14f1/Editor/Data/MonoBleedingEdge/etc'
+Using monoOptions --debugger-agent=transport=dt_socket,embedding=1,server=y,suspend=n,address=127.0.0.1:56036
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+Using cacheserver namespaces - metadata:defaultmetadata, artifacts:defaultartifacts
+ImportWorker Server TCP listen port: 0
+AcceleratorClientConnectionCallback - disconnected - :0
+Begin MonoManager ReloadAssembly
+Registering precompiled unity dll's ...
+Register platform support module: D:/6000.3.14f1/Editor/Data/PlaybackEngines/WebGLSupport/UnityEditor.WebGL.Extensions.dll
+Register platform support module: D:/6000.3.14f1/Editor/Data/PlaybackEngines/WindowsStandaloneSupport/UnityEditor.WindowsStandalone.Extensions.dll
+Registered in 0.001659 seconds.
+- Loaded All Assemblies, in  0.555 seconds
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+Package Manager log level set to [2]
+ScheduleIndexationOnStartup MainProcess:False IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  0.568 seconds
+Domain Reload Profiling: 1124ms
+	BeginReloadAssembly (188ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (0ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (13ms)
+	RebuildCommonClasses (55ms)
+	RebuildNativeTypeToScriptingClass (18ms)
+	initialDomainReloadingComplete (54ms)
+	LoadAllAssembliesAndSetupDomain (240ms)
+		LoadAssemblies (174ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (235ms)
+			TypeCache.Refresh (233ms)
+				TypeCache.ScanAssembly (215ms)
+			BuildScriptInfoCaches (0ms)
+			ResolveRequiredComponents (1ms)
+	FinalizeReload (569ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (511ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (74ms)
+			SetLoadedEditorAssemblies (5ms)
+			BeforeProcessingInitializeOnLoad (116ms)
+			ProcessInitializeOnLoadAttributes (191ms)
+			ProcessInitializeOnLoadMethodAttributes (124ms)
+			AfterProcessingInitializeOnLoad (0ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (0ms)
+[Licensing::Client] Successfully resolved entitlement details
+Application.AssetDatabase Initial Refresh Start
+[Package Manager] Restoring resolved packages state from cache
+[Licensing::Client] Successfully resolved entitlement details
+[Package Manager] Registered 54 packages:
+  Packages from [https://packages.unity.com]:
+    com.unity.ai.navigation@2.0.14 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.ai.navigation@134dd6a3b97b)
+    com.unity.ide.visualstudio@2.0.28 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.ide.visualstudio@b5edea5f33f4)
+    com.unity.inputsystem@1.19.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.inputsystem@21a28c3a6c83)
+    com.unity.timeline@1.8.13 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.timeline@3a22918286f5)
+    com.unity.searcher@4.9.4 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.searcher@d45a78918735)
+    com.unity.burst@1.8.29 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.burst@6bb9aca3ef38)
+    com.unity.mathematics@1.3.3 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.mathematics@19a9377c4ffa)
+    com.unity.collections@2.6.5 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.collections@12999e356c23)
+    com.unity.nuget.mono-cecil@1.11.6 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff)
+    com.unity.test-framework.performance@3.4.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.test-framework.performance@aa81a99c4a75)
+  Built-in packages:
+    com.unity.2d.sprite@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.2d.sprite@d14b9d497a24)
+    com.unity.render-pipelines.universal@17.3.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.render-pipelines.universal@3b809f23691d)
+    com.unity.test-framework@1.6.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.test-framework@aebcb98460c6)
+    com.unity.ugui@2.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.ugui@8ccc29d23a79)
+    com.unity.modules.accessibility@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.accessibility)
+    com.unity.modules.adaptiveperformance@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.adaptiveperformance)
+    com.unity.modules.ai@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.ai)
+    com.unity.modules.androidjni@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.androidjni)
+    com.unity.modules.animation@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.animation)
+    com.unity.modules.assetbundle@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.assetbundle)
+    com.unity.modules.audio@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.audio)
+    com.unity.modules.cloth@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.cloth)
+    com.unity.modules.director@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.director)
+    com.unity.modules.imageconversion@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.imageconversion)
+    com.unity.modules.imgui@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.imgui)
+    com.unity.modules.jsonserialize@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.jsonserialize)
+    com.unity.modules.particlesystem@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.particlesystem)
+    com.unity.modules.physics@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.physics)
+    com.unity.modules.physics2d@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.physics2d)
+    com.unity.modules.screencapture@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.screencapture)
+    com.unity.modules.terrain@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.terrain)
+    com.unity.modules.terrainphysics@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.terrainphysics)
+    com.unity.modules.tilemap@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.tilemap)
+    com.unity.modules.ui@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.ui)
+    com.unity.modules.uielements@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.uielements)
+    com.unity.modules.umbra@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.umbra)
+    com.unity.modules.unityanalytics@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unityanalytics)
+    com.unity.modules.unitywebrequest@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unitywebrequest)
+    com.unity.modules.unitywebrequestassetbundle@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unitywebrequestassetbundle)
+    com.unity.modules.unitywebrequestaudio@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unitywebrequestaudio)
+    com.unity.modules.unitywebrequesttexture@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unitywebrequesttexture)
+    com.unity.modules.unitywebrequestwww@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.unitywebrequestwww)
+    com.unity.modules.vectorgraphics@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.vectorgraphics)
+    com.unity.modules.vehicles@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.vehicles)
+    com.unity.modules.video@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.video)
+    com.unity.modules.vr@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.vr)
+    com.unity.modules.wind@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.wind)
+    com.unity.modules.xr@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.xr)
+    com.unity.modules.subsystems@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.subsystems)
+    com.unity.modules.hierarchycore@1.0.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.modules.hierarchycore)
+    com.unity.ext.nunit@2.0.5 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.ext.nunit@d8c07649098d)
+    com.unity.render-pipelines.core@17.3.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.render-pipelines.core@02dfbe8e43de)
+    com.unity.shadergraph@17.3.0 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.shadergraph@28ee1cc75774)
+    com.unity.render-pipelines.universal-config@17.0.3 (location: D:\Unity\3D DnD selainpeli\Library\PackageCache\com.unity.render-pipelines.universal-config@8dc1aab4af1d)
+[Subsystems] No new subsystems found in resolved package list.
+[Package Manager] Done registering packages in 0.02 seconds
+[ScriptCompilation] Requested script compilation because: Assetdatabase observed changes in script compilation related files
+info: Microsoft.Hosting.Lifetime[14]
+      Now listening on: http://localhost:80
+info: Microsoft.Hosting.Lifetime[0]
+      Application started. Press Ctrl+C to shut down.
+info: Microsoft.Hosting.Lifetime[0]
+      Hosting environment: Production
+info: Microsoft.Hosting.Lifetime[0]
+      Content root path: D:\Unity\3D DnD selainpeli\
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/Ping'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/Ping application/grpc - - 200 - application/grpc 48.4362ms
+Starting: D:\6000.3.14f1\Editor\Data\Tools\BuildPipeline\bee_backend.exe --ipc --defer-dag-verification --dagfile="Library/Bee/1900b0aE.dag" --continue-on-failure --profile="Library/Bee/backend1.traceevents" ScriptAssemblies
+WorkingDir: D:/Unity/3D DnD selainpeli
+DisplayProgressbar: Compiling Scripts
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.runtime.interopservices.windowsruntime has duplicate hint path. Ignoring "D:\6000.3.14f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\Facades\System.Runtime.InteropServices.WindowsRuntime.dll" in favor of "D:\6000.3.14f1\Editor\Data\NetStandard\Extensions\2.0.0\System.Runtime.InteropServices.WindowsRuntime.dll"
+warn: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Assembly system.componentmodel.composition has duplicate hint path. Ignoring "D:\6000.3.14f1\Editor\Data\UnityReferenceAssemblies\unity-4.8-api\System.ComponentModel.Composition.dll" in favor of "D:\6000.3.14f1\Editor\Data\NetStandard\compat\2.1.0\shims\netfx\System.ComponentModel.Composition.dll"
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved Unity.Burst.Cecil, Version=0.11.6.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e with Library\PackageCache\com.unity.burst@6bb9aca3ef38\Unity.Burst.CodeGen\Unity.Burst.Cecil.dll
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved Mono.Cecil, Version=0.11.5.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e with Library\PackageCache\com.unity.nuget.mono-cecil@ecb9724e46ff\Mono.Cecil.dll
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/ConfigurePostProcessors'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/ConfigurePostProcessors application/grpc - - 200 - application/grpc 56.2332ms
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/PostProcessAssembly application/grpc -
+info: Microsoft.AspNetCore.Hosting.Diagnostics[1]
+      Request starting HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/PostProcessAssembly application/grpc -
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/PostProcessAssembly'
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[0]
+      Executing endpoint 'gRPC - /UnityILPP.PostProcessing/PostProcessAssembly'
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll, with 135 defines and 314 references
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll, with 137 defines and 301 references
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      running Unity.Jobs.CodeGen.JobsILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      running Unity.Jobs.CodeGen.JobsILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved Unity.Collections, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null with Library\Bee\artifacts\1900b0aE.dag\Unity.Collections.dll
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved UnityEditor.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null with D:\6000.3.14f1\Editor\Data\Managed\UnityEngine\UnityEditor.CoreModule.dll
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null with D:\6000.3.14f1\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingPipeline[0]
+      running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+info: Unity.ILPP.Runner.PostProcessingAssemblyLoadContext[0]
+      Resolved Unity.Burst.Cecil.Rocks, Version=0.11.6.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e with Library\PackageCache\com.unity.burst@6bb9aca3ef38\Unity.Burst.CodeGen\Unity.Burst.Cecil.Rocks.dll
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/PostProcessAssembly'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/PostProcessAssembly application/grpc - - 200 - application/grpc 492.9912ms
+info: Microsoft.AspNetCore.Routing.EndpointMiddleware[1]
+      Executed endpoint 'gRPC - /UnityILPP.PostProcessing/PostProcessAssembly'
+info: Microsoft.AspNetCore.Hosting.Diagnostics[2]
+      Request finished HTTP/2 POST http://ilpp/UnityILPP.PostProcessing/PostProcessAssembly application/grpc - - 200 - application/grpc 494.6955ms
+ExitCode: 0 Duration: 3s361ms
+[559/703    0s] ILPP-Configuration Library/ilpp-configuration.nevergeneratedoutput
+[695/703    1s] Csc Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll (+2 others)
+[697/703    0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp-Editor.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp-Editor.dll, with 135 defines and 314 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[698/703    0s] ILPostProcess Library/Bee/artifacts/1900b0aE.dag/post-processed/Assembly-CSharp.dll (+pdb)
+Processing assembly Library/Bee/artifacts/1900b0aE.dag/Assembly-CSharp.dll, with 137 defines and 301 references
+
+processors: Unity.Jobs.CodeGen.JobsILPostProcessor, zzzUnity.Burst.CodeGen.BurstILPostProcessor
+
+running Unity.Jobs.CodeGen.JobsILPostProcessor
+
+running zzzUnity.Burst.CodeGen.BurstILPostProcessor
+[700/703    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.pdb
+[701/703    0s] CopyFiles Library/ScriptAssemblies/Assembly-CSharp.dll
+*** Tundra build success (3.30 seconds), 6 items updated, 703 evaluated
+AssetDatabase: script compilation time: 3.911825s
+Begin MonoManager ReloadAssembly
+- Loaded All Assemblies, in  1.145 seconds
+Refreshing native plugins compatible for Editor in 0.38 ms, found 0 plugins.
+Native extension for WindowsStandalone target not found
+Native extension for WebGL target not found
+ScheduleIndexationOnStartup MainProcess:True IndexOnStartup:True
+Mono: successfully reloaded assembly
+- Finished resetting the current domain, in  1.439 seconds
+Domain Reload Profiling: 2583ms
+	BeginReloadAssembly (388ms)
+		ExecutionOrderSort (0ms)
+		DisableScriptedObjects (42ms)
+		BackupInstance (0ms)
+		ReleaseScriptingObjects (0ms)
+		CreateAndSetChildDomain (160ms)
+	RebuildCommonClasses (53ms)
+	RebuildNativeTypeToScriptingClass (18ms)
+	initialDomainReloadingComplete (31ms)
+	LoadAllAssembliesAndSetupDomain (653ms)
+		LoadAssemblies (580ms)
+		RebuildTransferFunctionScriptingTraits (0ms)
+		AnalyzeDomain (202ms)
+			TypeCache.Refresh (134ms)
+				TypeCache.ScanAssembly (124ms)
+			BuildScriptInfoCaches (53ms)
+			ResolveRequiredComponents (13ms)
+	FinalizeReload (1439ms)
+		ReleaseScriptCaches (0ms)
+		RebuildScriptCaches (0ms)
+		SetupLoadedEditorAssemblies (1098ms)
+			LogAssemblyErrors (0ms)
+			InitializePlatformSupportModulesInManaged (41ms)
+			SetLoadedEditorAssemblies (6ms)
+			BeforeProcessingInitializeOnLoad (239ms)
+			ProcessInitializeOnLoadAttributes (697ms)
+			ProcessInitializeOnLoadMethodAttributes (111ms)
+			AfterProcessingInitializeOnLoad (4ms)
+			EditorAssembliesLoaded (0ms)
+		ExecutionOrderSort2 (0ms)
+		AwakeInstancesAfterBackupRestoration (28ms)
+Refreshing native plugins compatible for Editor in 0.18 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=fb8b1bed2f9ae9147b9e1749f9514608): Total: 7.189 seconds - Initiated by InitialRefreshV2(ForceSynchronousImport)
+	Summary:
+		Imports: total=0 (actual=0, local cache=0, cache server=0)
+		Asset DB Process Time: managed=0 ms, native=1811 ms
+		Asset DB Callback time: managed=247 ms, native=28 ms
+		Scripting: domain reloads=1, domain reload time=1145 ms, compile time=3914 ms, other=42 ms
+		Project Asset Count: scripts=974, non-scripts=2393
+		Asset File Changes: new=0, changed=1, moved=0, deleted=0
+		Scan Filter Count: 0
+	InvokeCustomDependenciesCallbacks: 0.001ms
+	InvokePackagesCallback: 26.205ms
+	ApplyChangesToAssetFolders: 0.796ms
+	Scan: 85.952ms
+	OnSourceAssetsModified: 0.760ms
+	CategorizeAssetsWithTransientArtifact: 27.867ms
+	ProcessAssetsWithTransientArtifactChanges: 71.131ms
+	CategorizeAssets: 52.141ms
+	ImportOutOfDateAssets: 1445.933ms (-2470.135ms without children)
+		CompileScripts: 3913.774ms
+		ReloadNativeAssets: 0.023ms
+		UnloadImportedAssets: 0.909ms
+		EnsureUptoDateAssetsAreRegisteredWithGuidPM: 0.795ms
+		InitializingProgressBar: 0.000ms
+		PostProcessAllAssetNotificationsAddChangedAssets: 0.000ms
+		OnDemandSchedulerStart: 0.567ms
+	PostProcessAllAssets: 248.022ms
+	Hotreload: 2.201ms
+	GatherAllCurrentPrimaryArtifactRevisions: 0.002ms
+	UnloadStreamsBegin: 2.472ms
+	PersistCurrentRevisions: 0.207ms
+	UnloadStreamsEnd: 0.001ms
+	GenerateScriptTypeHashes: 3.059ms
+	Untracked: 5225.562ms
+
+Application.AssetDatabase Initial Refresh End
+Scanning for USB devices : 2.467ms
+Initializing Unity extensions:
+[MODES] ModeService[none].Initialize
+[MODES] ModeService[none].LoadModes
+[MODES] Loading mode Default (0) for mode-current-id-My project
+Unloading 19 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 4131 unused Assets / (2.6 MB). Loaded Objects now: 5010.
+Memory consumption went from 175.5 MB to 172.9 MB.
+Total: 14.125300 ms (FindLiveObjects: 0.615000 ms CreateObjectMapping: 0.751700 ms MarkObjects: 10.116800 ms  DeleteObjects: 2.640500 ms)
+
+==================================================================
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:143)
+
+(Filename: Assets/Tests/E2E/Editor/E2ETestRunner.cs Line: 143)
+
+  CASTLE OF DICE — BATCHMODE E2E TEST RUNNER STARTING
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:144)
+
+(Filename: Assets/Tests/E2E/Editor/E2ETestRunner.cs Line: 144)
+
+==================================================================
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:145)
+
+(Filename: Assets/Tests/E2E/Editor/E2ETestRunner.cs Line: 145)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_1_03_GameManager_SetLocation_UpdatesCurrentLocation () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:62)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_1_04_GameManager_OnLocationChanged_EventFires () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:88)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[DialogueController] Auto-created DialogueController GameObject in scene.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Dialogue.DialogueController:get_Instance () (at Assets/Scripts/Dialogue/DialogueController.cs:32)
+CastleOfTheD20.Bosses.GargoyleKingBoss:CheckIntimidationDebuff () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:98)
+CastleOfTheD20.Bosses.GargoyleKingBoss:InitializeUnit () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:93)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_02_GargoyleKing_EnterStoneForm_FiresEvent () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:288)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Dialogue/DialogueController.cs Line: 32)
+
+[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:EnterStoneForm () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:182)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_02_GargoyleKing_EnterStoneForm_FiresEvent () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:291)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 182)
+
+[CombatUnit] The Gargoyle King took 25 damage. Remaining HP: 35/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_03_GargoyleKing_DamageThreshold_TriggersPhase2 () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:313)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[CombatUnit] The Gargoyle King took 10 damage. Remaining HP: 25/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_03_GargoyleKing_DamageThreshold_TriggersPhase2 () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:317)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:EnterStoneForm () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:182)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:126)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_03_GargoyleKing_DamageThreshold_TriggersPhase2 () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:317)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 182)
+
+[CombatUnit] The Gargoyle King took 40 damage. Remaining HP: 20/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_04_GargoyleKing_StoneForm_DoesNotRetrigger () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:338)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:EnterStoneForm () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:182)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:126)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_04_GargoyleKing_StoneForm_DoesNotRetrigger () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:338)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 182)
+
+[GargoyleKing] The Stone Form absorbs the blow! Hardened granite resists the strike.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:118)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_04_GargoyleKing_StoneForm_DoesNotRetrigger () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:339)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 118)
+
+[CombatUnit] The Gargoyle King took 5 damage. Remaining HP: 15/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage.Tier1_F2_StateAudioIntegrationTests:F2_5_04_GargoyleKing_StoneForm_DoesNotRetrigger () (at Assets/Tests/E2E/Tier1_FeatureCoverage/Tier1_F2_StateAudioIntegrationTests.cs:339)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+Opening scene 'Assets/Scenes/StartVillage.unity'
+Unloading 64 Unused Serialized files (Serialized files now loaded: 0)
+Loaded scene 'Assets/Scenes/StartVillage.unity'
+	Deserialize:            145.421 ms
+	Integration:            216.352 ms
+	Integration of assets:  3.746 ms
+	Thread Wait Time:       -0.002 ms
+	Total Operation Time:   365.518 ms
+Unloading 2 unused Assets / (1.0 KB). Loaded Objects now: 9599.
+Memory consumption went from 182.5 MB to 182.5 MB.
+Total: 7.959300 ms (FindLiveObjects: 0.682200 ms CreateObjectMapping: 0.306100 ms MarkObjects: 6.945800 ms  DeleteObjects: 0.024300 ms)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_02_Flow_Village_To_Forest_To_Courtyard_To_Commander_Defeat_Retry () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:59)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:90)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[CombatUnit] The Gargoyle King took 35 damage. Remaining HP: 25/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:99)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:EnterStoneForm () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:182)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:126)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:99)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 182)
+
+[GargoyleKing] The Stone Form absorbs the blow! Hardened granite resists the strike.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:118)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:104)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 118)
+
+[CombatUnit] The Gargoyle King took 100 damage. Remaining HP: 0/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:104)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[CombatUnit] The Gargoyle King has died.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:Die () (at Assets/Scripts/Combat/CombatUnit.cs:304)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:198)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_03_Flow_CrownHall_GargoyleKing_P1_To_StoneForm_P2_To_Victory () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:104)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 304)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_04_Flow_Village_Dialogue_To_Library_To_Malakor () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:126)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_05_Flow_Rapid_CrossWing_Teleportation () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:160)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_05_Flow_Rapid_CrossWing_Teleportation () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:160)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_05_Flow_Rapid_CrossWing_Teleportation () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:160)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Village
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations.Tier3_CrossFeatureTests:T3_05_Flow_Rapid_CrossWing_Teleportation () (at Assets/Tests/E2E/Tier3_CrossFeatureCombinations/Tier3_CrossFeatureTests.cs:160)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:32)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Boss Defeated: CursedCommander!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:NotifyBossDefeated (string) (at Assets/Scripts/Core/GameManager.cs:215)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:34)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 215)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:38)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Boss Defeated: ShadowMageMalakor!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:NotifyBossDefeated (string) (at Assets/Scripts/Core/GameManager.cs:215)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:40)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 215)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:44)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[CombatUnit] The Gargoyle King took 35 damage. Remaining HP: 25/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:51)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:EnterStoneForm () (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:182)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:126)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:51)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 182)
+
+[GargoyleKing] The Stone Form absorbs the blow! Hardened granite resists the strike.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:118)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:55)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Bosses/GargoyleKingBoss.cs Line: 118)
+
+[CombatUnit] The Gargoyle King took 100 damage. Remaining HP: 0/60
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:191)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:55)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 191)
+
+[CombatUnit] The Gargoyle King has died.
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Combat.CombatUnit:Die () (at Assets/Scripts/Combat/CombatUnit.cs:304)
+CastleOfTheD20.Combat.CombatUnit:TakeDamage (int,bool) (at Assets/Scripts/Combat/CombatUnit.cs:198)
+CastleOfTheD20.Bosses.GargoyleKingBoss:TakeDamage (int,bool) (at Assets/Scripts/Bosses/GargoyleKingBoss.cs:121)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:55)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Combat/CombatUnit.cs Line: 304)
+
+[GameManager] Boss Defeated: GargoyleKing!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:NotifyBossDefeated (string) (at Assets/Scripts/Core/GameManager.cs:215)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:56)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 215)
+
+[GameManager] CAMPAIGN VICTORY! The Castle of the D20 has been liberated from the stone curse!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:TriggerGameVictory () (at Assets/Scripts/Core/GameManager.cs:229)
+CastleOfTheD20.Core.GameManager:NotifyBossDefeated (string) (at Assets/Scripts/Core/GameManager.cs:220)
+CastleOfTheD20.Tests.E2E.Tier4_RealWorldScenarios.Tier4_RealWorldScenarioTests:T4_01_FullCampaign_E2E_DungeonRun () (at Assets/Tests/E2E/Tier4_RealWorldScenarios/Tier4_RealWorldScenarioTests.cs:56)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 229)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Village
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Village
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Village
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Village
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Courtyard
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: Library
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[GameManager] Entered location: CrownHall
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Core.GameManager:SetLocation (CastleOfTheD20.Core.GameLocation) (at Assets/Scripts/Core/GameManager.cs:170)
+CastleOfTheD20.Tests.E2E.Tier5_AdversarialHardening.Tier5_AdversarialTests:T5_04_Concurrent_EventBombardment () (at Assets/Tests/E2E/Tier5_AdversarialHardening/Tier5_AdversarialTests.cs:83)
+System.Reflection.RuntimeMethodInfo:Invoke (object,System.Reflection.BindingFlags,System.Reflection.Binder,object[],System.Globalization.CultureInfo)
+System.Reflection.MethodBase:Invoke (object,object[])
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:ExecuteTestSuite (System.Collections.Generic.HashSet`1<CastleOfTheD20.Tests.E2E.Common.TestTier>) (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:247)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:147)
+
+(Filename: Assets/Scripts/Core/GameManager.cs Line: 170)
+
+[E2ETestRunner] BATCHMODE SUCCESS: All 80 tests passed in 489,1ms!
+UnityEngine.Debug:ExtractStackTraceNoAlloc (byte*,int,string)
+UnityEngine.StackTraceUtility:ExtractStackTrace ()
+UnityEngine.DebugLogHandler:Internal_Log (UnityEngine.LogType,UnityEngine.LogOption,string,UnityEngine.Object)
+UnityEngine.DebugLogHandler:LogFormat (UnityEngine.LogType,UnityEngine.Object,string,object[])
+UnityEngine.Logger:Log (UnityEngine.LogType,object)
+UnityEngine.Debug:Log (object)
+CastleOfTheD20.Tests.E2E.Editor.E2ETestRunner:RunAllTestsBatchmode () (at Assets/Tests/E2E/Editor/E2ETestRunner.cs:157)
+
+(Filename: Assets/Tests/E2E/Editor/E2ETestRunner.cs Line: 157)
+
+Start importing ProjectSettings/TimeManager.asset using Guid(00000000000000007000000000000000) (LibraryAssetImporter) -> (artifact id: '52c307e924e96ceef905bcc2cea85a00') in 0.0088807 seconds
+Refreshing native plugins compatible for Editor in 0.29 ms, found 0 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Asset Pipeline Refresh (id=fc81574f18e3f89489d65c6fd958ff6a): Total: 0.079 seconds - Initiated by StopAssetImportingV2(NoUpdateAssetOptions)
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input System polling thread exited.
+Input System module state changed to: Shutdown.
+[Licensing::IpcConnector] LicenseClient-Omistaja-notifications channel disconnected successfully.
+[Licensing::IpcConnector] LicenseClient-Omistaja channel disconnected successfully.
+AcceleratorClientConnectionCallback - disconnected - :0
+Cleanup mono
+abort_threads: Failed aborting id: 0000000000005774, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000007D20, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000005774, mono_thread_manage will ignore it
+
+abort_threads: Failed aborting id: 0000000000007D20, mono_thread_manage will ignore it
+
+debugger-agent: Unable to listen on 3272
+Checking for leaked weakptr:
+  Found no leaked weakptrs.
+[Package Manager] Server process was shutdown
+##utp:{"type":"MemoryLeaks","version":2,"phase":"Immediate","time":1790375021451,"processId":6036,"allocatedMemory":14421344,"memoryLabels":[{"Default":29313},{"Permanent":15236},{"NewDelete":67747},{"Thread":4230344},{"Manager":32797},{"VertexData":8},{"Geometry":816},{"Texture":160},{"Shader":79319},{"Material":24},{"GfxDevice":55865},{"Animation":392},{"Audio":3040},{"FreeType":8},{"FontEngine":736},{"Physics":2090},{"Physics2D":16},{"Serialization":592},{"Input":14984},{"JobScheduler":33024},{"TextLib":216},{"Mono":32},{"MonoCode":64},{"ScriptingNativeRuntime":155060},{"BaseObject":1620272},{"Resource":1336},{"Renderer":3000},{"Transform":4685},{"File":3941},{"WebCam":616},{"Culling":32},{"Terrain":11394},{"Wind":24},{"STL":40},{"String":16674},{"DynamicArray":107966},{"HashMap":87164},{"Utility":2660278},{"Curl":2498},{"PoolAlloc":2152},{"AI":80},{"TypeTree":13637},{"ScriptManager":512},{"RuntimeInitializeOnLoadManager":64},{"SpriteAtlas":112},{"GI":7792},{"Director":8240},{"CloudService":7776},{"WebRequest":808},{"VR":47994},{"SceneManager":504},{"Video":64},{"LazyScriptCache":32},{"Camera":17},{"Secure":2113},{"SerializationCache":1576},{"APIUpdating":10320},{"Subsystems":336},{"VirtualTexturing":57888},{"StaticSafetyDebugInfo":278528},{"Analytics":560},{"Hierarchy":608},{"CoreStats":13032},{"Identifiers":12960},{"Gui":96},{"EditorUtility":116280},{"VersionControl":4},{"Undo":947},{"AssetDatabase":4549263},{"EditorGi":328},{"UnityConnect":29208},{"Upm":1896},{"AssetCompliance":64},{"DrivenProperties":72},{"LocalIPC":266},{"ProfilerEditor":9746},{"CoreBusinessMetrics":2930},{"Licensing":776},{"AssetReference":32},{"IPCStream":32}]}
+~StackAllocator(ALLOC_TEMP_MAIN) m_LastAlloc not NULL. Did you forget to call FreeAllStackAllocations()? To get more information, run app with -diag-temp-memory-leak-validation cmd line argument

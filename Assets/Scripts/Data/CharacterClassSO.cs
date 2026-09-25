@@ -59,6 +59,9 @@ namespace CastleOfTheD20.Data
         /// <summary>The archetype classification of this character.</summary>
         public CharacterClassType ClassType => classType;
 
+        /// <summary>Archetype class name string (e.g. Warrior, Mage, Rogue).</summary>
+        public string ClassName => classType.ToString();
+
         /// <summary>Hero display name.</summary>
         public string CharacterName => characterName;
 

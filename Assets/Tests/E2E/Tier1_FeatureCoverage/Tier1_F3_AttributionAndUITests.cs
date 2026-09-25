@@ -69,6 +69,96 @@ namespace CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage
             E2EAudioAssert.IsNotNull(rogueField, "MainMenuController must serialize rogueClass");
         }
 
+        private void EnsureStartVillageSceneLoaded()
+        {
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != "StartVillage")
+            {
+                UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", UnityEditor.SceneManagement.OpenSceneMode.Single);
+            }
+        }
+
+        [E2ETestCase(TestTier.Tier1_FeatureCoverage, "F3.2", "Verify End Turn button is styled with 1x scale, fantasy sprite, and hourglass icon")]
+        public void F3_2_04_EndTurnButton_StylingAndIcon_Valid()
+        {
+            EnsureStartVillageSceneLoaded();
+            var combatUI = UnityEngine.Object.FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
+            E2EAudioAssert.IsNotNull(combatUI, "CombatUIController must exist in the scene");
+
+            var endBtn = combatUI.EndTurnButton;
+            E2EAudioAssert.IsNotNull(endBtn, "EndTurnButton must be assigned on CombatUIController");
+
+            // Local scale must be (1, 1, 1), not distorted 2x2x2
+            E2EAudioAssert.IsTrue(Vector3.Distance(endBtn.transform.localScale, Vector3.one) < 0.01f,
+                $"End Turn button localScale must be (1,1,1), actual: {endBtn.transform.localScale}");
+
+            // Hourglass icon must exist as child
+            Transform hourglassTr = endBtn.transform.Find("Hourglass_Icon");
+            E2EAudioAssert.IsNotNull(hourglassTr, "End Turn button must have an Hourglass_Icon child");
+
+            var img = hourglassTr.GetComponent<UnityEngine.UI.Image>();
+            E2EAudioAssert.IsNotNull(img, "Hourglass_Icon must have an Image component");
+            E2EAudioAssert.IsNotNull(img.sprite, "Hourglass_Icon must have a valid sprite assigned");
+            E2EAudioAssert.IsTrue(img.sprite.name.Contains("Hourglass"), "Hourglass sprite must be UI_Icon_Hourglass");
+        }
+
+        [E2ETestCase(TestTier.Tier1_FeatureCoverage, "F3.2", "Verify 4 Ability Buttons have dedicated framed icon slots and all 12 AbilitySO assets have icons")]
+        public void F3_2_05_AbilityButtons_FramedIconSlots_Valid()
+        {
+            EnsureStartVillageSceneLoaded();
+            var combatUI = UnityEngine.Object.FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
+            E2EAudioAssert.IsNotNull(combatUI, "CombatUIController must exist in the scene");
+
+            E2EAudioAssert.AreEqual(4, combatUI.AbilityButtons.Count, "Combat action bar must have exactly 4 ability buttons");
+            E2EAudioAssert.AreEqual(4, combatUI.AbilityIcons.Count, "Combat action bar must have 4 dedicated icon images");
+
+            for (int i = 0; i < combatUI.AbilityButtons.Count; i++)
+            {
+                var btn = combatUI.AbilityButtons[i];
+                E2EAudioAssert.IsNotNull(btn, $"Ability button {i} must be assigned");
+
+                Transform frameTr = btn.transform.Find("Ability_Slot_Frame");
+                E2EAudioAssert.IsNotNull(frameTr, $"Ability button {i} must have an Ability_Slot_Frame child");
+
+                Transform iconTr = frameTr.Find("Ability_Icon");
+                E2EAudioAssert.IsNotNull(iconTr, $"Ability_Slot_Frame on button {i} must have an Ability_Icon child");
+
+                Transform textAreaTr = btn.transform.Find("Ability_Text_Area");
+                E2EAudioAssert.IsNotNull(textAreaTr, $"Ability button {i} must have an Ability_Text_Area child");
+                E2EAudioAssert.IsNotNull(textAreaTr.Find("Ability_Name_Text"), $"Button {i} must have Ability_Name_Text");
+                E2EAudioAssert.IsNotNull(textAreaTr.Find("Ability_Range_Text"), $"Button {i} must have Ability_Range_Text");
+            }
+
+            // Verify all 12 abilities have non-null icons
+            string[] abilityGuids = UnityEditor.AssetDatabase.FindAssets("t:AbilitySO", new[] { "Assets/Data" });
+            E2EAudioAssert.AreEqual(12, abilityGuids.Length, "Must have exactly 12 AbilitySO assets in Assets/Data");
+
+            foreach (var guid in abilityGuids)
+            {
+                string path = UnityEditor.AssetDatabase.GUIDToAssetPath(guid);
+                var ability = UnityEditor.AssetDatabase.LoadAssetAtPath<CastleOfTheD20.Data.AbilitySO>(path);
+                E2EAudioAssert.IsNotNull(ability, $"AbilitySO at {path} must load");
+                E2EAudioAssert.IsNotNull(ability.AbilityIcon, $"AbilitySO '{ability.AbilityName}' ({path}) must have an AbilityIcon assigned");
+            }
+        }
+
+        [E2ETestCase(TestTier.Tier1_FeatureCoverage, "F3.2", "Verify AbilityTooltipUI has theme injection and rich card support")]
+        public void F3_2_06_AbilityTooltip_DimensionsAndHierarchy_Valid()
+        {
+            MethodInfo showMethod = typeof(AbilityTooltipUI).GetMethod("ShowTooltipForSlot", BindingFlags.Static | BindingFlags.Public);
+            MethodInfo hideMethod = typeof(AbilityTooltipUI).GetMethod("HideTooltip", BindingFlags.Static | BindingFlags.Public);
+            MethodInfo setSpritesMethod = typeof(AbilityTooltipUI).GetMethod("SetThemeSprites", BindingFlags.Static | BindingFlags.Public);
+
+            E2EAudioAssert.IsNotNull(showMethod, "AbilityTooltipUI must provide public static ShowTooltipForSlot");
+            E2EAudioAssert.IsNotNull(hideMethod, "AbilityTooltipUI must provide public static HideTooltip");
+            E2EAudioAssert.IsNotNull(setSpritesMethod, "AbilityTooltipUI must provide public static SetThemeSprites");
+
+            // Verify required fantasy UI theme sprite assets exist
+            E2EAudioAssert.IsTrue(System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png"), "UI_Fantasy_Panel_Dark.png must exist");
+            E2EAudioAssert.IsTrue(System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png"), "UI_Fantasy_Slot_Frame.png must exist");
+            E2EAudioAssert.IsTrue(System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png"), "UI_Fantasy_Divider_Gold.png must exist");
+            E2EAudioAssert.IsTrue(System.IO.File.Exists("Assets/UI/Sprites/UI_Icon_Hourglass.png"), "UI_Icon_Hourglass.png must exist");
+        }
+
         #endregion
     }
 }

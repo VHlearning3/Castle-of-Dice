@@ -16,7 +16,7 @@ MonoBehaviour:
   abilityName: Shield Block
   description: Raise shield defensively, granting +3 Armor Class and damage mitigation
     until next turn.
-  abilityIcon: {fileID: 0}
+  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000010, type: 3}
   targetType: 2
   range: 0
   areaOfEffectRadius: 0

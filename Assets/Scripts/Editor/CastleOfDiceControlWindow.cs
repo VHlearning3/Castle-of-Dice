@@ -59,6 +59,16 @@ namespace CastleOfTheD20.Editor
                 BuildVillageEditor.EnsureMusicManager();
             }
 
+            if (GUILayout.Button("4. Rebuild & Style Professional D&D HUD", GUILayout.Height(28)))
+            {
+                BuildHUDEditor.RebuildAndStyleHUD();
+            }
+
+            if (GUILayout.Button("5. Rebuild & Style Dialogue & Baldur Shop Panels", GUILayout.Height(28)))
+            {
+                BuildDialogueAndShopEditor.RebuildAndStyleDialogueAndShop();
+            }
+
             GUILayout.Space(15);
             GUILayout.Label("Planes & Room Status:", EditorStyles.boldLabel);
             bool hasCourtyard = GameObject.Find("CourtYard") != null;
@@ -92,6 +102,14 @@ namespace CastleOfTheD20.Editor
             bool clipsAssigned = hasMM && musicManager.VillageSongClip != null && musicManager.GargoyleKingPhase2Clip != null;
             EditorGUILayout.LabelField("MusicManager Component:", hasMM ? "✓ Present" : "✗ Missing");
             EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "✓ Configured (7 MP3s)" : "✗ Incomplete");
+
+            GUILayout.Space(10);
+            GUILayout.Label("HUD & Interface Status:", EditorStyles.boldLabel);
+            var hud = Object.FindAnyObjectByType<CastleOfTheD20.UI.PlayerHUD>();
+            bool hasHUD = hud != null;
+            bool hasHeroCard = hasHUD && hud.transform.Find("Hero_Status_Card") != null;
+            EditorGUILayout.LabelField("PlayerHUD Component:", hasHUD ? "✓ Present" : "✗ Missing");
+            EditorGUILayout.LabelField("Tabletop D&D Styling:", hasHeroCard ? "✓ Configured & Styled" : "✗ Needs Rebuilding");
 
             GUILayout.Space(12);
             if (GUILayout.Button("Refresh Status", GUILayout.Height(26)))

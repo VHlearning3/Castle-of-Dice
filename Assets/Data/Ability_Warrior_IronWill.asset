@@ -16,7 +16,7 @@ MonoBehaviour:
   abilityName: Iron Will
   description: Channel inner fortitude to immediately restore 30% of maximum hit
     points.
-  abilityIcon: {fileID: 0}
+  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000013, type: 3}
   targetType: 2
   range: 0
   areaOfEffectRadius: 0

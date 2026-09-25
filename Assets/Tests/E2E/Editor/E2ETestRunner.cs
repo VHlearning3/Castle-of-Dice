@@ -47,6 +47,7 @@ namespace CastleOfTheD20.Tests.E2E.Editor
     public static class E2ETestRunner
     {
         private static readonly string TriggerPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp", "run_tests.trigger");
+        private static readonly string HudTriggerPath = Path.Combine(Directory.GetCurrentDirectory(), "Temp", "rebuild_hud.trigger");
         public static TestSuiteSummary LastSummary { get; private set; }
 
         static E2ETestRunner()
@@ -56,6 +57,28 @@ namespace CastleOfTheD20.Tests.E2E.Editor
 
         private static void CheckFileTrigger()
         {
+            if (File.Exists(HudTriggerPath))
+            {
+                try
+                {
+                    File.Delete(HudTriggerPath);
+                }
+                catch
+                {
+                    // Ignore deletion locks
+                }
+
+                UnityEngine.Debug.Log("[E2ETestRunner] HUD Rebuild trigger detected. Rebuilding and styling HUD & Combat HUD...");
+                CastleOfTheD20.Editor.BuildHUDEditor.RebuildAndStyleHUD();
+                try
+                {
+                    File.WriteAllText(Path.Combine(Directory.GetCurrentDirectory(), "Temp", "hud_rebuilt.done"), "OK");
+                }
+                catch
+                {
+                }
+            }
+
             if (File.Exists(TriggerPath))
             {
                 try

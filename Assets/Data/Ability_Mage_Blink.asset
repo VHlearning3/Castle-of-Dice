@@ -16,7 +16,7 @@ MonoBehaviour:
   abilityName: Blink
   description: Instantly teleport to an unoccupied grid tile up to 5 tiles away without
     provoking attacks.
-  abilityIcon: {fileID: 0}
+  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000018, type: 3}
   targetType: 0
   range: 5
   areaOfEffectRadius: 0
