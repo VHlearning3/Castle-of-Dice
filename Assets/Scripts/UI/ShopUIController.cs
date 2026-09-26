@@ -668,9 +668,22 @@ namespace CastleOfTheD20.UI
             }
 
             // Scrap Text
+            if (scrapMetalText == null)
+            {
+                Transform stTr = scrapPillObj.transform.Find("Scrap_Metal_Text") ?? scrapPillObj.transform.Find("Scrap_Text");
+                if (stTr != null) scrapMetalText = stTr.GetComponent<TMP_Text>();
+                if (scrapMetalText == null)
+                {
+                    GameObject stObj = new GameObject("Scrap_Metal_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                    stObj.transform.SetParent(scrapPillObj.transform, false);
+                    scrapMetalText = stObj.GetComponent<TextMeshProUGUI>();
+                }
+            }
+
             if (scrapMetalText != null)
             {
                 scrapMetalText.transform.SetParent(scrapPillObj.transform, false);
+                scrapMetalText.name = "Scrap_Metal_Text";
                 RectTransform stRect = scrapMetalText.GetComponent<RectTransform>();
                 stRect.anchorMin = Vector2.zero;
                 stRect.anchorMax = Vector2.one;
@@ -716,10 +729,10 @@ namespace CastleOfTheD20.UI
             vlg.childForceExpandHeight = false;
 
             // Setup each of the 4 item rows with framed item image slots
-            SetupItemRow(shelfObj.transform, "Row_Potion", "Small Health Potion", "Restores 15 Hit Points instantly.", potionSprite, buyPotionButton, ref potionIconImage, "Buy (15g)");
-            SetupItemRow(shelfObj.transform, "Row_Sword", "Sharpen Blade (+1 DMG)", "Hones steel edge for permanent +1 attack damage.", swordIconSprite, buyWeaponButton, ref weaponIconImage, "Upgrade (50g)");
-            SetupItemRow(shelfObj.transform, "Row_Shield", "Reinforce Shield (+1 AC)", "Tempers runic armor for permanent +1 Armor Class.", shieldIconSprite, buyArmorButton, ref armorIconImage, "Upgrade (50g)");
-            SetupItemRow(shelfObj.transform, "Row_Scrap", "Scrap Metal Salvage", "Sell recovered ruin metal to Baldur at 10 Gold each.", scrapOreSprite, sellAllScrapButton, ref scrapActionIconImage, "Sell All (+50g)");
+            SetupItemRow(shelfObj.transform, "Row_Potion", "Small Health Potion", "Restores 15 Hit Points instantly.", potionSprite, ref buyPotionButton, ref potionIconImage, "Buy (15g)");
+            SetupItemRow(shelfObj.transform, "Row_Sword", "Sharpen Blade (+1 DMG)", "Hones steel edge for permanent +1 attack damage.", swordIconSprite, ref buyWeaponButton, ref weaponIconImage, "Upgrade (50g)");
+            SetupItemRow(shelfObj.transform, "Row_Shield", "Reinforce Shield (+1 AC)", "Tempers runic armor for permanent +1 Armor Class.", shieldIconSprite, ref buyArmorButton, ref armorIconImage, "Upgrade (50g)");
+            SetupItemRow(shelfObj.transform, "Row_Scrap", "Scrap Metal Salvage", "Sell recovered ruin metal to Baldur at 10 Gold each.", scrapOreSprite, ref sellAllScrapButton, ref scrapActionIconImage, "Sell All (+50g)");
 
             // H. Bottom Footer Divider
             Transform botDivTr = shopPanel.transform.Find("Bottom_Divider");
@@ -745,9 +758,25 @@ namespace CastleOfTheD20.UI
             }
 
             // I. Leave Shop Button
+            if (exitShopButton == null)
+            {
+                Transform exTr = shopPanel.transform.Find("ExitShopButton") ?? shopPanel.transform.Find("LeaveShopButton") ?? shopPanel.transform.Find("CloseButton");
+                if (exTr != null) exitShopButton = exTr.GetComponent<Button>();
+                if (exitShopButton == null)
+                {
+                    GameObject exObj = new GameObject("ExitShopButton", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                    exObj.transform.SetParent(shopPanel.transform, false);
+                    exitShopButton = exObj.GetComponent<Button>();
+
+                    GameObject exTxtObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                    exTxtObj.transform.SetParent(exObj.transform, false);
+                }
+            }
+
             if (exitShopButton != null)
             {
                 exitShopButton.transform.SetParent(shopPanel.transform, false);
+                exitShopButton.name = "ExitShopButton";
                 RectTransform exRect = exitShopButton.GetComponent<RectTransform>();
                 exRect.anchorMin = new Vector2(0.5f, 0f);
                 exRect.anchorMax = new Vector2(0.5f, 0f);
@@ -763,9 +792,25 @@ namespace CastleOfTheD20.UI
                     exImg.color = Color.white;
                 }
 
+                if (buttonHoverSprite != null && buttonPressedSprite != null)
+                {
+                    exitShopButton.transition = Selectable.Transition.SpriteSwap;
+                    SpriteState ss = exitShopButton.spriteState;
+                    ss.highlightedSprite = buttonHoverSprite;
+                    ss.pressedSprite = buttonPressedSprite;
+                    ss.selectedSprite = buttonHoverSprite;
+                    exitShopButton.spriteState = ss;
+                }
+
                 TMP_Text exTxt = exitShopButton.GetComponentInChildren<TMP_Text>(true);
                 if (exTxt != null)
                 {
+                    RectTransform extRect = exTxt.GetComponent<RectTransform>();
+                    extRect.anchorMin = Vector2.zero;
+                    extRect.anchorMax = Vector2.one;
+                    extRect.anchoredPosition = Vector2.zero;
+                    extRect.sizeDelta = Vector2.zero;
+
                     exTxt.text = "Leave Shop";
                     exTxt.fontSize = 15f;
                     exTxt.fontStyle = FontStyles.Bold;
@@ -775,9 +820,12 @@ namespace CastleOfTheD20.UI
                     exTxt.raycastTarget = false;
                 }
             }
+
+            SubscribeButtonListeners();
+            RefreshEconomyDisplay();
         }
 
-        private void SetupItemRow(Transform parent, string rowName, string title, string desc, Sprite iconSprite, Button btn, ref Image iconSlotImage, string defaultBtnText)
+        private void SetupItemRow(Transform parent, string rowName, string title, string desc, Sprite iconSprite, ref Button btn, ref Image iconSlotImage, string defaultBtnText)
         {
             Transform rowTr = parent.Find(rowName);
             GameObject rowObj = rowTr != null ? rowTr.gameObject : null;
@@ -914,8 +962,33 @@ namespace CastleOfTheD20.UI
             }
 
             // 3. Purchase Button
+            string buttonName = rowName switch
+            {
+                "Row_Potion" => "BuyPotionButton",
+                "Row_Sword" => "BuyWeaponButton",
+                "Row_Shield" => "BuyArmorButton",
+                "Row_Scrap" => "SellAllScrapButton",
+                _ => "Action_Button"
+            };
+
+            if (btn == null)
+            {
+                Transform btnTr = rowObj.transform.Find(buttonName) ?? rowObj.transform.Find("Action_Button");
+                if (btnTr != null) btn = btnTr.GetComponent<Button>();
+                if (btn == null)
+                {
+                    GameObject btnObj = new GameObject(buttonName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                    btnObj.transform.SetParent(rowObj.transform, false);
+                    btn = btnObj.GetComponent<Button>();
+
+                    GameObject txtObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                    txtObj.transform.SetParent(btnObj.transform, false);
+                }
+            }
+
             if (btn != null)
             {
+                btn.name = buttonName;
                 btn.transform.SetParent(rowObj.transform, false);
                 RectTransform bRect = btn.GetComponent<RectTransform>();
                 bRect.anchorMin = new Vector2(1f, 0.5f);
@@ -932,9 +1005,25 @@ namespace CastleOfTheD20.UI
                     bImg.color = Color.white;
                 }
 
+                if (buttonHoverSprite != null && buttonPressedSprite != null)
+                {
+                    btn.transition = Selectable.Transition.SpriteSwap;
+                    SpriteState ss = btn.spriteState;
+                    ss.highlightedSprite = buttonHoverSprite;
+                    ss.pressedSprite = buttonPressedSprite;
+                    ss.selectedSprite = buttonHoverSprite;
+                    btn.spriteState = ss;
+                }
+
                 TMP_Text bTxt = btn.GetComponentInChildren<TMP_Text>(true);
                 if (bTxt != null)
                 {
+                    RectTransform btRect = bTxt.GetComponent<RectTransform>();
+                    btRect.anchorMin = Vector2.zero;
+                    btRect.anchorMax = Vector2.one;
+                    btRect.anchoredPosition = Vector2.zero;
+                    btRect.sizeDelta = Vector2.zero;
+
                     bTxt.text = defaultBtnText;
                     bTxt.fontSize = 13.5f;
                     bTxt.fontStyle = FontStyles.Bold;
@@ -942,6 +1031,11 @@ namespace CastleOfTheD20.UI
                     bTxt.alignment = TextAlignmentOptions.Center;
                     bTxt.enableAutoSizing = false;
                     bTxt.raycastTarget = false;
+
+                    if (rowName == "Row_Scrap")
+                    {
+                        sellScrapButtonLabel = bTxt;
+                    }
                 }
             }
         }

@@ -194,6 +194,11 @@ namespace CastleOfTheD20.World
             currentState = RoomState.CombatActive;
             Debug.Log($"[DungeonRoomController] Encounter triggered in '{roomLocation}'! Locking chamber doors.");
 
+            // Disable encounter trigger collider so it does not intercept camera raycasts during combat
+            if (triggerCollider != null) triggerCollider.enabled = false;
+            Collider directCol = GetComponent<Collider>();
+            if (directCol != null && directCol.isTrigger) directCol.enabled = false;
+
             // 1. Locate or generate combat grid
             GridManager grid = GetComponentInChildren<GridManager>()
                 ?? transform.parent?.GetComponentInChildren<GridManager>()

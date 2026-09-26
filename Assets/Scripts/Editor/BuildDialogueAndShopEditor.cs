@@ -111,17 +111,33 @@ namespace CastleOfTheD20.Editor
 
             diagSO.ApplyModifiedProperties();
 
-            // 4. Setup Shop UI
-            GameObject shopObj = GameObject.Find("ShopPanel");
+            // 4. Setup Shop UI - Clean up duplicates under Canvas first
+            ShopUIController[] existingShops = canvas.GetComponentsInChildren<ShopUIController>(true);
+            ShopUIController shopUI = null;
+            if (existingShops != null && existingShops.Length > 0)
+            {
+                // Prefer the one that has references or the first one
+                for (int i = 0; i < existingShops.Length; i++)
+                {
+                    if (existingShops[i] != null && existingShops[i].gameObject != null)
+                    {
+                        if (shopUI == null)
+                        {
+                            shopUI = existingShops[i];
+                        }
+                        else
+                        {
+                            Undo.DestroyObjectImmediate(existingShops[i].gameObject);
+                        }
+                    }
+                }
+            }
+
+            GameObject shopObj = shopUI != null ? shopUI.gameObject : null;
             if (shopObj == null)
             {
                 shopObj = new GameObject("ShopPanel", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
                 shopObj.transform.SetParent(canvas.transform, false);
-            }
-
-            ShopUIController shopUI = shopObj.GetComponent<ShopUIController>();
-            if (shopUI == null)
-            {
                 shopUI = shopObj.AddComponent<ShopUIController>();
             }
 
@@ -155,10 +171,12 @@ namespace CastleOfTheD20.Editor
             shopSO.Update();
 
             Transform goldTextTr = shopObj.transform.Find("Currency_Bar/Gold_Pill/Gold_Balance_Text") 
+                ?? shopObj.transform.Find("Currency_Bar/Gold_Pill/Gold_Text")
                 ?? shopObj.transform.Find("CurrencyContainer/GoldText");
             if (goldTextTr != null) shopSO.FindProperty("goldBalanceText").objectReferenceValue = goldTextTr.GetComponent<TMP_Text>();
 
             Transform scrapTextTr = shopObj.transform.Find("Currency_Bar/Scrap_Pill/Scrap_Metal_Text")
+                ?? shopObj.transform.Find("Currency_Bar/Scrap_Pill/Scrap_Text")
                 ?? shopObj.transform.Find("CurrencyContainer/ScrapText");
             if (scrapTextTr != null) shopSO.FindProperty("scrapMetalText").objectReferenceValue = scrapTextTr.GetComponent<TMP_Text>();
 
@@ -181,18 +199,22 @@ namespace CastleOfTheD20.Editor
             if (scrapActIconTr != null) shopSO.FindProperty("scrapActionIconImage").objectReferenceValue = scrapActIconTr.GetComponent<Image>();
 
             Transform buyPotionBtnTr = shopObj.transform.Find("Stock_Shelf_Container/Row_Potion/BuyPotionButton")
+                ?? shopObj.transform.Find("Stock_Shelf_Container/Row_Potion/Action_Button")
                 ?? shopObj.transform.Find("ActionContainer/BuyPotionButton");
             if (buyPotionBtnTr != null) shopSO.FindProperty("buyPotionButton").objectReferenceValue = buyPotionBtnTr.GetComponent<Button>();
 
             Transform buyWeaponBtnTr = shopObj.transform.Find("Stock_Shelf_Container/Row_Sword/BuyWeaponButton")
+                ?? shopObj.transform.Find("Stock_Shelf_Container/Row_Sword/Action_Button")
                 ?? shopObj.transform.Find("ActionContainer/BuyWeaponButton");
             if (buyWeaponBtnTr != null) shopSO.FindProperty("buyWeaponButton").objectReferenceValue = buyWeaponBtnTr.GetComponent<Button>();
 
             Transform buyArmorBtnTr = shopObj.transform.Find("Stock_Shelf_Container/Row_Shield/BuyArmorButton")
+                ?? shopObj.transform.Find("Stock_Shelf_Container/Row_Shield/Action_Button")
                 ?? shopObj.transform.Find("ActionContainer/BuyArmorButton");
             if (buyArmorBtnTr != null) shopSO.FindProperty("buyArmorButton").objectReferenceValue = buyArmorBtnTr.GetComponent<Button>();
 
             Transform sellScrapBtnTr = shopObj.transform.Find("Stock_Shelf_Container/Row_Scrap/SellAllScrapButton")
+                ?? shopObj.transform.Find("Stock_Shelf_Container/Row_Scrap/Action_Button")
                 ?? shopObj.transform.Find("ActionContainer/SellAllScrapButton");
             if (sellScrapBtnTr != null)
             {
@@ -202,7 +224,9 @@ namespace CastleOfTheD20.Editor
                 if (ssbl != null) shopSO.FindProperty("sellScrapButtonLabel").objectReferenceValue = ssbl;
             }
 
-            Transform exitBtnTr = shopObj.transform.Find("ExitShopButton");
+            Transform exitBtnTr = shopObj.transform.Find("ExitShopButton")
+                ?? shopObj.transform.Find("LeaveShopButton")
+                ?? shopObj.transform.Find("CloseButton");
             if (exitBtnTr != null) shopSO.FindProperty("exitShopButton").objectReferenceValue = exitBtnTr.GetComponent<Button>();
 
             Transform cornerCloseTr = shopObj.transform.Find("Close_Corner_Button");

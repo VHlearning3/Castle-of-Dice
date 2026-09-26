@@ -118,6 +118,24 @@ namespace CastleOfTheD20.Combat
             }
 
             propBlock = new MaterialPropertyBlock();
+
+            // Ensure a thick BoxCollider exists for reliable physics raycasting
+            BoxCollider box = GetComponent<BoxCollider>();
+            if (box == null)
+            {
+                // Remove thin MeshCollider if present on primitive Quad
+                MeshCollider mc = GetComponent<MeshCollider>();
+                if (mc != null)
+                {
+                    if (Application.isPlaying) Destroy(mc);
+                    else DestroyImmediate(mc);
+                }
+                box = gameObject.AddComponent<BoxCollider>();
+            }
+            box.size = new Vector3(1f, 1f, 0.4f);
+            box.center = new Vector3(0f, 0f, -0.2f);
+            box.isTrigger = false;
+
             ApplyHighlightColor(TileHighlightType.Normal);
         }
 

@@ -604,9 +604,22 @@ namespace CastleOfTheD20.UI
                     }
                 }
 
-                // Attach / configure Tooltip component
-                var tooltip = btn.GetComponent<AbilityTooltipUI>() ?? btn.gameObject.AddComponent<AbilityTooltipUI>();
-                tooltip.SlotIndex = i;
+                // Destroy legacy ghost text children (1ButtonText, 2ButtonText, Text, etc.)
+                for (int c = btnTr.childCount - 1; c >= 0; c--)
+                {
+                    Transform child = btnTr.GetChild(c);
+                    string childName = child.name;
+                    if (childName != "Ability_Slot_Frame" && childName != "Ability_Text_Area" && childName != "Hourglass_Icon")
+                    {
+                        if (childName.Contains("ButtonText") || childName.Contains("Text (") || childName == "Text" || child.GetComponent<TMP_Text>() != null || child.GetComponent<UnityEngine.UI.Text>() != null)
+                        {
+                            if (Application.isPlaying)
+                                Destroy(child.gameObject);
+                            else
+                                DestroyImmediate(child.gameObject);
+                        }
+                    }
+                }
             }
 
             AbilityTooltipUI.SetThemeSprites(panelDarkSprite, slotFrameSprite, dividerGoldSprite, defaultAbilityIconSprite);
@@ -819,23 +832,63 @@ namespace CastleOfTheD20.UI
             Ray ray = combatCamera.ScreenPointToRay(GameInput.GetMousePosition());
             GridTile targetTile = null;
 
-            if (Physics.Raycast(ray, out RaycastHit hit, 250f))
+            // Use RaycastAll to pierce through trigger colliders (e.g. Cellar_Encounter_Trigger BoxCollider)
+            RaycastHit[] hits = Physics.RaycastAll(ray, 250f, ~0, QueryTriggerInteraction.Ignore);
+            if (hits != null && hits.Length > 0)
             {
-                // First check if a tile was directly hit
-                targetTile = hit.collider.GetComponentInParent<GridTile>();
+                // Sort by distance so nearest physical hit is prioritized
+                System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
 
-                // If hit a combat unit, target the tile occupied by that unit
+                // Priority 1: Direct GridTile hit
+                for (int i = 0; i < hits.Length; i++)
+                {
+                    GridTile directTile = hits[i].collider.GetComponentInParent<GridTile>();
+                    if (directTile != null)
+                    {
+                        targetTile = directTile;
+                        break;
+                    }
+                }
+
+                // Priority 2: Direct CombatUnit hit -> resolve unit's tile
                 if (targetTile == null)
                 {
-                    CombatUnit hitUnit = hit.collider.GetComponentInParent<CombatUnit>();
-                    if (hitUnit != null)
+                    for (int i = 0; i < hits.Length; i++)
                     {
-                        hitUnit.EnsureTilePosition();
-                        targetTile = hitUnit.CurrentTile ?? (GridManager.Instance != null ? GridManager.Instance.GetTileAt(hitUnit.GridPosition) : null);
-                        if (targetTile != null)
+                        CombatUnit hitUnit = hits[i].collider.GetComponentInParent<CombatUnit>();
+                        if (hitUnit != null)
                         {
-                            targetTile.OccupyingUnit = hitUnit;
-                            targetTile.IsOccupied = true;
+                            hitUnit.EnsureTilePosition();
+                            targetTile = hitUnit.CurrentTile ?? (GridManager.Instance != null ? GridManager.Instance.GetTileAt(hitUnit.GridPosition) : null);
+                            if (targetTile != null)
+                            {
+                                targetTile.OccupyingUnit = hitUnit;
+                                targetTile.IsOccupied = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Priority 3: Hit floor or ground surface -> project point onto grid coordinates
+                if (targetTile == null && GridManager.Instance != null)
+                {
+                    for (int i = 0; i < hits.Length; i++)
+                    {
+                        RaycastHit h = hits[i];
+                        if (h.collider != null && !h.collider.isTrigger)
+                        {
+                            Vector3 origin = GridManager.Instance.OriginWorldPosition;
+                            if (Mathf.Abs(h.point.y - origin.y) < 3.0f)
+                            {
+                                Vector2Int gridPos = GridManager.Instance.GetGridPosition(h.point);
+                                GridTile floorTile = GridManager.Instance.GetTileAt(gridPos);
+                                if (floorTile != null)
+                                {
+                                    targetTile = floorTile;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -1345,6 +1398,11 @@ namespace CastleOfTheD20.UI
             }
 
             RefreshAbilityBar();
+            if (newState == TurnState.PlayerTurn)
+            {
+                LocatePlayer();
+                UpdateMovementHighlights();
+            }
         }
 
         private void HandleUnitTurnStarted(CombatUnit unit)
@@ -1362,6 +1420,11 @@ namespace CastleOfTheD20.UI
             bool isPlayer = unit is PlayerUnit;
             SetCombatBarVisible(isPlayer);
             RefreshAbilityBar();
+            if (isPlayer)
+            {
+                LocatePlayer();
+                UpdateMovementHighlights();
+            }
         }
 
         private void HandleUnitDamaged(CombatUnit unit, int damage, bool isCritical)

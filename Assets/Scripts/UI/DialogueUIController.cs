@@ -774,6 +774,14 @@ namespace CastleOfTheD20.UI
                     {
                         formattedText = $"<color=#B9F6CA>[Quests]</color> {cleanText.Replace("[Quests]", "").Trim()}";
                     }
+                    else if (cleanText.StartsWith("[Accept]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#81C784>[Accept]</color> {cleanText.Replace("[Accept]", "").Trim()}";
+                    }
+                    else if (cleanText.StartsWith("[Back]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#B0BEC5>[Back]</color> {cleanText.Replace("[Back]", "").Trim()}";
+                    }
                     else
                     {
                         formattedText = cleanText;
