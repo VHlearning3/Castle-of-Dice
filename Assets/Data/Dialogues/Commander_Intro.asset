@@ -12,21 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Commander_Intro
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Kirottu Komentaja
+  speakerName: Cursed Commander
   speakerPortrait: {fileID: 0}
-  dialogueText: "Kuka uskaltaa h\xE4p\xE4ist\xE4 linnan vartiotornin? Minun miekkani
-    on maannut haudassa vuosisatoja, mutta t\xE4n\xE4\xE4n se maistaa j\xE4lleen
-    el\xE4v\xE4\xE4 verta!"
+  dialogueText: Who dares desecrate the castle watchtower? My blade has lain in the
+    grave for centuries, but today it hungers for living blood once more!
   options:
-  - optionText: "[DC 13 Sotilaan kunnia] Vartijakaartin vala velvoittaa sinua yh\xE4!
-      Muista kunniasi \xE4l\xE4k\xE4 palvele kirousta!"
+  - optionText: '[DC 13 Soldier''s Honor] The oath of the royal guard still binds
+      you! Remember your honor and serve the curse no longer!'
     requiresCheck: 1
     targetDC: 13
     skillCheckDescription: Honor / Persuasion Check
     nextNodeSuccess: {fileID: 11400000, guid: ce76df5ad2beee848a0b8bc0db1c785d, type: 2}
     nextNodeFailure: {fileID: 11400000, guid: 1edf218a808a8b743b8257ae24470541, type: 2}
     combatDebuffTag: SoldiersHonor
-  - optionText: "[Taistelu] Puheesi ovat turhia, ep\xE4kuollut. Valmistaudu tuhoosi!"
+  - optionText: '[Fight] Your words are hollow, undead fiend. Prepare for destruction!'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

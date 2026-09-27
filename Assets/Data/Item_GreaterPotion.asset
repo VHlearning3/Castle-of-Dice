@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Item_GreaterPotion
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_greater_potion
-  itemName: Suuri Terveysjuoma
-  description: "Tiivistetty parannusrohto. Palauttaa 35 kestopistett\xE4."
+  itemName: Greater Health Potion
+  description: Concentrated healing draught. Restores 35 Hit Points.
   itemIcon: {fileID: 0}
   itemType: 0
   buyPriceGold: 50

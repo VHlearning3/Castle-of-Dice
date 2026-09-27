@@ -55,9 +55,11 @@ namespace CastleOfTheD20.Editor
                     Transform grid = cellar.transform.Find("CombatGrid");
                     if ((geo != null && geo.localPosition.sqrMagnitude > 0.01f) ||
                         (trigger != null && Mathf.Abs(trigger.localPosition.y - 2.0f) > 0.1f) ||
+                        (cellar.transform.position.y > -35f) ||
+                        (geo != null && geo.Find("Cellar_Ceiling") != null) ||
                         grid == null)
                     {
-                        Debug.Log("[BuildCellarEditor] Detected misaligned or missing Cellar_Chamber pieces. Auto-aligning...");
+                        Debug.Log("[BuildCellarEditor] Detected cellar needing deep underground placement or camera alignment. Realigning...");
                         RealignCellarPiecesMenu();
                     }
                 }
@@ -299,9 +301,37 @@ namespace CastleOfTheD20.Editor
                 roomCtrl.AlignCellarComponents();
             }
 
+            // Ensure Cellar_Chamber is deep underground (y = -50) to give complete clearance below village plane
+            if (cellar.transform.position.y > -35f)
+            {
+                Undo.RecordObject(cellar.transform, "Move Cellar Deep Underground");
+                cellar.transform.position = new Vector3(0f, -50f, 0f);
+            }
+
             // Ensure geometry is at (0, 0, 0)
             Transform geo = cellar.transform.Find("Cellar_Geometry");
-            if (geo != null) geo.localPosition = Vector3.zero;
+            if (geo != null)
+            {
+                geo.localPosition = Vector3.zero;
+
+                // Remove camera-blocking ceiling for top-down isometric view
+                Transform ceiling = geo.Find("Cellar_Ceiling");
+                if (ceiling != null)
+                {
+                    Undo.DestroyObjectImmediate(ceiling.gameObject);
+                }
+
+                // Lower South wall to cutaway 1.2m half-wall with no raycast-blocking collider
+                Transform wallSouth = geo.Find("Wall_South");
+                if (wallSouth != null)
+                {
+                    Undo.RecordObject(wallSouth, "Lower South Wall to Cutaway");
+                    wallSouth.localPosition = new Vector3(0f, 0.6f, -9f);
+                    wallSouth.localScale = new Vector3(18f, 1.2f, 1f);
+                    Collider wsCol = wallSouth.GetComponent<Collider>();
+                    if (wsCol != null) Undo.DestroyObjectImmediate(wsCol);
+                }
+            }
 
             Transform lighting = cellar.transform.Find("Cellar_Lighting");
             if (lighting != null) lighting.localPosition = Vector3.zero;
@@ -414,11 +444,10 @@ namespace CastleOfTheD20.Editor
             GameObject chestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Chest.prefab");
 
             // 2. Clean up existing Cellar root or legacy controllers if present
-            Vector3 cellarPosition = new Vector3(0f, -15f, 0f);
+            Vector3 cellarPosition = new Vector3(0f, -50f, 0f);
             GameObject existingCellar = GameObject.Find("Cellar_Chamber");
             if (existingCellar != null)
             {
-                cellarPosition = existingCellar.transform.position;
                 Undo.DestroyObjectImmediate(existingCellar);
             }
             GameObject existingHatch = GameObject.Find("Village_Cellar_Hatch");
@@ -443,15 +472,16 @@ namespace CastleOfTheD20.Editor
             GameObject geoContainer = new GameObject("Cellar_Geometry");
             geoContainer.transform.SetParent(cellarRoot.transform, false);
 
-            // Floor (18 x 1 x 18 cube, top at y = -15.0)
+            // Floor (18 x 1 x 18 cube, top at y = -50.0)
             GameObject floor = CreateCube("Cellar_Floor", new Vector3(0f, -0.5f, 0f), new Vector3(18f, 1f, 18f), wallMat, geoContainer.transform);
 
-            // Ceiling (18 x 1 x 18 cube, bottom at y = -10.0 -> local y = +5.0)
-            GameObject ceiling = CreateCube("Cellar_Ceiling", new Vector3(0f, 5.5f, 0f), new Vector3(18f, 1f, 18f), wallMat, geoContainer.transform);
+            // Ceiling omitted to allow an unblocked, panoramic top-down isometric camera view
 
-            // Walls (5m tall, enclosing the 18x18 room)
+            // Walls (North, East, West are 5m tall enclosing walls; Wall_South is a 1.2m cutaway half-wall with no collider so isometric camera has clear line-of-sight)
             GameObject wallNorth = CreateCube("Wall_North", new Vector3(0f, 2.5f, 9f), new Vector3(18f, 5f, 1f), wallMat, geoContainer.transform);
-            GameObject wallSouth = CreateCube("Wall_South", new Vector3(0f, 2.5f, -9f), new Vector3(18f, 5f, 1f), wallMat, geoContainer.transform);
+            GameObject wallSouth = CreateCube("Wall_South", new Vector3(0f, 0.6f, -9f), new Vector3(18f, 1.2f, 1f), wallMat, geoContainer.transform);
+            Collider wsCol = wallSouth.GetComponent<Collider>();
+            if (wsCol != null) Object.DestroyImmediate(wsCol);
             GameObject wallEast  = CreateCube("Wall_East",  new Vector3(9f, 2.5f, 0f), new Vector3(1f, 5f, 18f), wallMat, geoContainer.transform);
             GameObject wallWest  = CreateCube("Wall_West",  new Vector3(-9f, 2.5f, 0f), new Vector3(1f, 5f, 18f), wallMat, geoContainer.transform);
 

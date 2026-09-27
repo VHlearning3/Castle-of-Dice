@@ -12,29 +12,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Mirabel_Intro
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Yrttiparantaja Mirabel
+  speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: "Tss... hiljaa. Haistatko vallihaudan kitker\xE4n sammaleen? Olen
-    Mirabel, yrttiparantaja. Tarvitsisin kipe\xE4sti kolme suokukkaa linnan vallihaudan
-    liepeilt\xE4 rohtojani varten, mutta ep\xE4kuolleet vartijat tekev\xE4t ker\xE4\xE4misest\xE4
-    liian vaarallista."
+  dialogueText: Hush... be quiet. Do you smell the bitter moss of the moat? I am
+    Mirabel, herbalist of Oakhaven. I desperately need three swamp flowers from near
+    the moat for my remedies, but the undead sentries make foraging far too perilous.
   options:
-  - optionText: Voin noutaa kukat vallihaudalta.
+  - optionText: I can retrieve the flowers from the moat for you.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 11400000, guid: 1995299417fdbb34c9f74f35aa2aeb2f, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_swamp_herbs]'
-  - optionText: "[DC 10 Luontotieto] Suokukka on arkaaista rohtoa \u2013 osaan ker\xE4t\xE4
-      ne juuria vahingoittamatta."
+  - optionText: '[DC 10 Nature Lore] Moat blossoms are an ancient remedy - I know
+      how to harvest them without damaging the roots.'
     requiresCheck: 1
     targetDC: 10
     skillCheckDescription: Nature / Wisdom Check
     nextNodeSuccess: {fileID: 11400000, guid: fb66f302afdd6534baf7485f7d5f946b, type: 2}
     nextNodeFailure: {fileID: 11400000, guid: 8b58dacdc8a69b44daa6957d60594b6c, type: 2}
     combatDebuffTag: 
-  - optionText: '[Exit] En ryve mudassa kukkien vuoksi.'
+  - optionText: '[Exit] I''m not wallowing in mud for wild flowers.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

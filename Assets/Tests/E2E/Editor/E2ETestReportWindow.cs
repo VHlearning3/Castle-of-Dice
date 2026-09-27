@@ -12,7 +12,6 @@ namespace CastleOfTheD20.Tests.E2E.Editor
     {
         private Vector2 scrollPos;
         private string filterText = "";
-        private TestTier selectedTierFilter = 0; // 0 = All
 
         [MenuItem("CastleOfDice/Tests/Open E2E Test Dashboard", false, 1)]
         [MenuItem("Tools/Castle of Dice/Open E2E Test Dashboard", false, 100)]
@@ -33,7 +32,7 @@ namespace CastleOfTheD20.Tests.E2E.Editor
             // Controls
             EditorGUILayout.BeginHorizontal();
             GUI.backgroundColor = new Color(0.2f, 0.8f, 0.3f);
-            if (GUILayout.Button("▶ Run All E2E Tests (Tiers 1-5)", GUILayout.Height(35)))
+            if (GUILayout.Button("Run All E2E Tests (Tiers 1-5)", GUILayout.Height(35)))
             {
                 E2ETestRunner.RunAllTests(silentSuccess: true);
             }
@@ -82,8 +81,8 @@ namespace CastleOfTheD20.Tests.E2E.Editor
             GUI.color = Color.white;
 
             string statusMsg = summary.failed == 0
-                ? $"✓ ALL TESTS PASSED: {summary.passed} / {summary.totalTests} ({summary.totalDurationMs:F1}ms)"
-                : $"✗ TESTS FAILED: {summary.failed} Failed, {summary.passed} Passed of {summary.totalTests} ({summary.totalDurationMs:F1}ms)";
+                ? $"[PASS] ALL TESTS PASSED: {summary.passed} / {summary.totalTests} ({summary.totalDurationMs:F1}ms)"
+                : $"[FAIL] TESTS FAILED: {summary.failed} Failed, {summary.passed} Passed of {summary.totalTests} ({summary.totalDurationMs:F1}ms)";
 
             GUILayout.Label(statusMsg, EditorStyles.boldLabel);
             GUILayout.Label($"Last Run: {summary.timestamp}", EditorStyles.miniLabel);

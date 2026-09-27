@@ -47,6 +47,9 @@ namespace CastleOfTheD20.Economy
         [Tooltip("Initial quantity of raw scrap metal/ore collected from castle ruins.")]
         [SerializeField] private int scrapMetalCount = 5;
 
+        [Tooltip("Initial count of Rune of Reroll scrolls / stones owned by the player.")]
+        [SerializeField] private int rerollScrollCount = 1;
+
         [Header("Persistence")]
         [Tooltip("If true, retains instance across Unity scene transitions.")]
         [SerializeField] private bool persistAcrossScenes = true;
@@ -67,6 +70,12 @@ namespace CastleOfTheD20.Economy
         /// <summary>Current quantity of scrap metal pieces.</summary>
         public int ScrapMetalCount => scrapMetalCount;
 
+        /// <summary>Current count of Rune of Reroll scrolls.</summary>
+        public int RerollScrollCount => rerollScrollCount;
+
+        /// <summary>Whether the player currently possesses at least one reroll scroll.</summary>
+        public bool HasRerollScroll => rerollScrollCount > 0;
+
         /// <summary>Read-only dictionary of current inventory items and quantities.</summary>
         public IReadOnlyDictionary<ItemSO, int> Items => items;
 
@@ -79,6 +88,9 @@ namespace CastleOfTheD20.Economy
 
         /// <summary>Fired when scrap metal count changes: (newScrapCount).</summary>
         public static event Action<int> OnScrapMetalChanged;
+
+        /// <summary>Fired when reroll scroll count changes: (newRerollCount).</summary>
+        public static event Action<int> OnRerollScrollsChanged;
 
         /// <summary>Fired when items are added, removed, or consumed.</summary>
         public static event Action OnInventoryChanged;
@@ -179,6 +191,41 @@ namespace CastleOfTheD20.Economy
 
         #endregion
 
+        #region Reroll Scroll Operations
+
+        /// <summary>
+        /// Adds Rune of Reroll scrolls to the player's inventory.
+        /// </summary>
+        public void AddRerollScroll(int amount = 1)
+        {
+            if (amount <= 0) return;
+
+            rerollScrollCount += amount;
+            Debug.Log($"[InventoryManager] Gained {amount} Reroll Scroll(s). Total: {rerollScrollCount}");
+            OnRerollScrollsChanged?.Invoke(rerollScrollCount);
+            OnInventoryChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Consumes one Rune of Reroll scroll if available. Returns true on success.
+        /// </summary>
+        public bool ConsumeRerollScroll()
+        {
+            if (rerollScrollCount > 0)
+            {
+                rerollScrollCount--;
+                Debug.Log($"[InventoryManager] Consumed 1 Reroll Scroll. Remaining: {rerollScrollCount}");
+                OnRerollScrollsChanged?.Invoke(rerollScrollCount);
+                OnInventoryChanged?.Invoke();
+                return true;
+            }
+
+            Debug.LogWarning("[InventoryManager] Cannot consume Reroll Scroll: Count is zero.");
+            return false;
+        }
+
+        #endregion
+
         #region Item Management
 
         /// <summary>
@@ -191,6 +238,12 @@ namespace CastleOfTheD20.Economy
             if (item.ItemType == ItemType.ScrapMetal)
             {
                 AddScrapMetal(quantity);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(item.ItemID) && (item.ItemID.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0 || item.ItemName.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                AddRerollScroll(quantity);
                 return;
             }
 
@@ -217,6 +270,16 @@ namespace CastleOfTheD20.Economy
             if (item.ItemType == ItemType.ScrapMetal)
             {
                 return RemoveScrapMetal(quantity);
+            }
+
+            if (!string.IsNullOrEmpty(item.ItemID) && (item.ItemID.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0 || item.ItemName.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                if (rerollScrollCount >= quantity)
+                {
+                    for (int i = 0; i < quantity; i++) ConsumeRerollScroll();
+                    return true;
+                }
+                return false;
             }
 
             if (items.TryGetValue(item, out int currentCount) && currentCount >= quantity)
@@ -247,6 +310,11 @@ namespace CastleOfTheD20.Economy
                 return scrapMetalCount >= quantity;
             }
 
+            if (!string.IsNullOrEmpty(item.ItemID) && (item.ItemID.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0 || item.ItemName.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return rerollScrollCount >= quantity;
+            }
+
             return items.TryGetValue(item, out int count) && count >= quantity;
         }
 
@@ -260,6 +328,11 @@ namespace CastleOfTheD20.Economy
             if (item.ItemType == ItemType.ScrapMetal)
             {
                 return scrapMetalCount;
+            }
+
+            if (!string.IsNullOrEmpty(item.ItemID) && (item.ItemID.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0 || item.ItemName.IndexOf("reroll", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return rerollScrollCount;
             }
 
             return items.TryGetValue(item, out int count) ? count : 0;

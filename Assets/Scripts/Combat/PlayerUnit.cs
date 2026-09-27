@@ -116,6 +116,84 @@ namespace CastleOfTheD20.Combat
 
         #endregion
 
+        #region Level & Progression Upgrades
+
+        [Header("Progression & Milestone")]
+        [Tooltip("Current hero level: 1 (Starting), 2 (Castle Veteran), 3 (Arcane Crusher).")]
+        [SerializeField] private int level = 1;
+
+        /// <summary>Current hero milestone level (1..3).</summary>
+        public int Level
+        {
+            get => level;
+            set => level = Mathf.Clamp(value, 1, 3);
+        }
+
+        /// <summary>
+        /// Hero's Resilience: Increases Max HP by 5 and fully restores HP.
+        /// </summary>
+        public void ApplyHeroResilience(int hpIncrease = 5)
+        {
+            // 1. Increase the max cap
+            maxHP += hpIncrease;
+
+            // 2. Use the base class Heal method to fill the health.
+            // Heal() automatically clamps the value, logs the action, and calls NotifyHealthChanged().
+            Heal(maxHP);
+
+            Debug.Log($"[PlayerUnit] Hero's Resilience chosen! Max HP increased by {hpIncrease} to {maxHP}.");
+        }
+        /// <summary>
+        /// Attribute Bonus Growth: Adds permanent bonus (+1) to primary attribute (d20 checks & damage).
+        /// </summary>
+        public void AddAttributeBonus(int amount = 1)
+        {
+            primaryAttributeBonus += amount;
+            Debug.Log($"[PlayerUnit] Primary Attribute Bonus increased by {amount}. New bonus: +{primaryAttributeBonus}");
+        }
+
+        /// <summary>
+        /// Ability Empowerment (Rank 2): Upgrades the ability in the specified slot (0..3)
+        /// with +3 potency and marked as Rank 2.
+        /// </summary>
+        public bool UpgradeAbilityToRank2(int slotIndex)
+        {
+            if (slotIndex < 0 || slotIndex >= activeAbilities.Count || activeAbilities[slotIndex] == null)
+            {
+                Debug.LogWarning($"[PlayerUnit] Cannot upgrade ability slot {slotIndex}: invalid index or empty slot.");
+                return false;
+            }
+
+            AbilitySO original = activeAbilities[slotIndex];
+            if (original.AbilityName.Contains("[Rank 2]"))
+            {
+                Debug.LogWarning($"[PlayerUnit] Ability {original.AbilityName} is already Rank 2.");
+                return false;
+            }
+
+            AbilitySO rank2 = ScriptableObject.CreateInstance<AbilitySO>();
+            rank2.Initialize(
+                original.AbilityID + "_rank2",
+                $"{original.AbilityName} [Rank 2]",
+                $"{original.Description}\n<color=#4ade80>[Rank 2] Potency +3</color>",
+                original.TargetType,
+                original.Range,
+                original.AreaOfEffectRadius,
+                original.BaseValue + 3,
+                original.RequiresCheck,
+                original.AppliedEffect,
+                original.EffectDurationTurns,
+                original.AnimationTriggerName,
+                original.AbilityIcon
+            );
+
+            activeAbilities[slotIndex] = rank2;
+            Debug.Log($"[PlayerUnit] Upgraded slot {slotIndex} ({rank2.AbilityName}) to Rank 2! New BaseValue: {rank2.BaseValue}");
+            return true;
+        }
+
+        #endregion
+
         #region Permanent Upgrades
 
         /// <summary>

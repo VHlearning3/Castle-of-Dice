@@ -12,13 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Mirabel_Accepted
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Yrttiparantaja Mirabel
+  speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: "Loistavaa! Vallihaudalla kukkii harvinainen sinikukka. Kolme kukkaa
-    riitt\xE4\xE4 mahtavaan seokseen. Varo vain vallihaudan liepeill\xE4 vaeltavia
-    varjoja!"
+  dialogueText: Splendid! Rare blue blossoms thrive along the moat. Three flowers
+    will suffice for a potent brew. Beware the shadows lurking near the moat!
   options:
-  - optionText: "[Leave] Tuon kukat heti kun l\xF6yd\xE4n ne."
+  - optionText: '[Leave] I shall return with the blossoms as soon as I find them.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

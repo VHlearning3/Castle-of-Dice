@@ -1,0 +1,8 @@
+{
+  "runId": "watchdog-run",
+  "testMode": "PlayMode",
+  "status": "error",
+  "runStartedAt": "2026-09-27T05:12:09.7732775Z",
+  "lastUpdate": "2026-09-27T05:12:29.7732775Z",
+  "code": "RUNNER_TIMEOUT"
+}

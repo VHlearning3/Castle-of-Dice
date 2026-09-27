@@ -12,20 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: GargoyleKing_Intro
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Kivettymiskuningas
+  speakerName: The Gargoyle King
   speakerPortrait: {fileID: 0}
-  dialogueText: "Kruununi on ikuista kive\xE4! T\xE4m\xE4 valtakunta ei koskaan murene!
-    Polvistu kiven herran edess\xE4 tai muutu osaksi linnoituksen lattiaa!"
+  dialogueText: My crown is eternal stone! This realm shall never crumble! Kneel
+    before the Lord of Stone or become part of the fortress floor!
   options:
-  - optionText: "[DC 16 Pelottelu] Sin\xE4 et ole kuningas, vaan kivettynyt vanki
-      omassa haudassasi! Aikasi on ohi!"
+  - optionText: '[DC 16 Intimidation] You are no king, but a petrified prisoner in
+      your own tomb! Your reign ends now!'
     requiresCheck: 1
     targetDC: 16
     skillCheckDescription: Intimidation / Strength Check
     nextNodeSuccess: {fileID: 11400000, guid: e3fb30bc6fe51ae4486df5c76ae41777, type: 2}
     nextNodeFailure: {fileID: 11400000, guid: 337bea965dc951842aa7306c9d923e2c, type: 2}
     combatDebuffTag: GargoyleKingIntimidated
-  - optionText: '[Taistelu] Hakkaan kivisen kruunusi sirpaleiksi!'
+  - optionText: '[Fight] I shall smash your stone crown to pieces!'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

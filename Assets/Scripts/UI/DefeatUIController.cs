@@ -99,13 +99,13 @@ namespace CastleOfTheD20.UI
 
             if (titleText != null)
             {
-                titleText.text = "SANKARISI KAATUI";
+                titleText.text = "YOUR HERO HAS FALLEN";
             }
 
             if (messageText != null)
             {
                 messageText.text = string.IsNullOrEmpty(customMessage)
-                    ? "Linnan varjot olivat tällä kertaa liikaa...\nMutta noppa voi vielä kääntyä eduksesi."
+                    ? "The shadows of the castle were too strong this time...\nYet fortune's dice may still turn in your favor."
                     : customMessage;
             }
 
@@ -269,7 +269,7 @@ namespace CastleOfTheD20.UI
             titleRect.anchoredPosition = new Vector2(0f, 95f);
             titleRect.sizeDelta = new Vector2(440f, 50f);
             titleText = titleObj.AddComponent<TextMeshProUGUI>();
-            titleText.text = "SANKARISI KAATUI";
+            titleText.text = "YOUR HERO HAS FALLEN";
             titleText.fontSize = 32f;
             titleText.fontStyle = FontStyles.Bold;
             titleText.alignment = TextAlignmentOptions.Center;
@@ -282,16 +282,16 @@ namespace CastleOfTheD20.UI
             msgRect.anchoredPosition = new Vector2(0f, 25f);
             msgRect.sizeDelta = new Vector2(420f, 70f);
             messageText = msgObj.AddComponent<TextMeshProUGUI>();
-            messageText.text = "Linnan varjot olivat tällä kertaa liikaa...\nMutta noppa voi vielä kääntyä eduksesi.";
+            messageText.text = "The shadows of the castle were too strong this time...\nYet fortune's dice may still turn in your favor.";
             messageText.fontSize = 16f;
             messageText.alignment = TextAlignmentOptions.Center;
             messageText.color = new Color(0.85f, 0.85f, 0.85f);
 
             // Retry Button
-            retryButton = CreateModalButton(card.transform, "Retry_Button", "Yritä uudelleen", new Vector2(0f, -45f), new Color(0.2f, 0.5f, 0.25f));
+            retryButton = CreateModalButton(card.transform, "Retry_Button", "Try Again", new Vector2(0f, -45f), new Color(0.2f, 0.5f, 0.25f));
 
             // Return to Village Button
-            returnToVillageButton = CreateModalButton(card.transform, "ReturnVillage_Button", "Palaa Kivenkoloon", new Vector2(0f, -105f), new Color(0.3f, 0.3f, 0.4f));
+            returnToVillageButton = CreateModalButton(card.transform, "ReturnVillage_Button", "Return to Oakhaven", new Vector2(0f, -105f), new Color(0.3f, 0.3f, 0.4f));
 
             panel.SetActive(false);
         }
@@ -306,8 +306,10 @@ namespace CastleOfTheD20.UI
 
             Image img = btnObj.AddComponent<Image>();
             img.color = normalColor;
+            img.raycastTarget = true;
 
             Button btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
             ColorBlock cb = btn.colors;
             cb.highlightedColor = normalColor * 1.25f;
             cb.pressedColor = normalColor * 0.85f;
@@ -316,13 +318,16 @@ namespace CastleOfTheD20.UI
             GameObject textObj = new GameObject("Text");
             textObj.transform.SetParent(btnObj.transform, false);
             RectTransform textRect = textObj.AddComponent<RectTransform>();
-            textRect.sizeDelta = rect.sizeDelta;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
             TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
             tmp.fontSize = 17f;
             tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = Color.white;
+            tmp.raycastTarget = false;
 
             return btn;
         }

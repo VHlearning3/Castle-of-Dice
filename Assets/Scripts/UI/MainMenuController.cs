@@ -1,6 +1,8 @@
 using System;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using TMPro;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Combat;
@@ -11,6 +13,8 @@ namespace CastleOfTheD20.UI
     /// <summary>
     /// Controls the Title Screen, Class Selection (Warrior, Mage, Rogue),
     /// and Game Rules modal. Fulfills the "Main menu" requirement from the notebook.
+    /// Resiliently ensures EventSystem (InputSystemUIInputModule), GraphicRaycaster,
+    /// and cursor state for robust WebGL and desktop input.
     /// </summary>
     public class MainMenuController : MonoBehaviour
     {
@@ -63,6 +67,7 @@ namespace CastleOfTheD20.UI
             Instance = this;
 
             LoadClassAssetsIfMissing();
+            EnsureEventSystem();
             EnsureUIHierarchy();
         }
 
@@ -77,14 +82,96 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Input System & EventSystem Setup
+
+        /// <summary>
+        /// Ensures an EventSystem exists in the scene and is configured with
+        /// InputSystemUIInputModule (removing any legacy StandaloneInputModule)
+        /// with valid actions hooked so hover and clicks work reliably in WebGL.
+        /// </summary>
+        public static void EnsureEventSystem()
+        {
+            EventSystem eventSystem = EventSystem.current ?? FindAnyObjectByType<EventSystem>();
+            if (eventSystem == null)
+            {
+                GameObject esObj = new GameObject("EventSystem");
+                eventSystem = esObj.AddComponent<EventSystem>();
+            }
+
+            // 1. Remove legacy StandaloneInputModule if present
+            StandaloneInputModule standalone = eventSystem.GetComponent<StandaloneInputModule>();
+            if (standalone != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(standalone);
+                }
+                else
+                {
+                    DestroyImmediate(standalone);
+                }
+            }
+
+            // 2. Ensure InputSystemUIInputModule is present
+            InputSystemUIInputModule uiModule = eventSystem.GetComponent<InputSystemUIInputModule>();
+            if (uiModule == null)
+            {
+                uiModule = eventSystem.gameObject.AddComponent<InputSystemUIInputModule>();
+            }
+
+            // 3. If actionsAsset is missing or unassigned, or actions are not hooked, assign default actions
+            if (uiModule.actionsAsset == null || uiModule.point == null || uiModule.point.action == null ||
+                uiModule.leftClick == null || uiModule.leftClick.action == null)
+            {
+                uiModule.AssignDefaultActions();
+            }
+
+            uiModule.enabled = true;
+            eventSystem.enabled = true;
+        }
+
+        /// <summary>
+        /// Ensures the target Canvas has a GraphicRaycaster component attached and enabled.
+        /// </summary>
+        public static void EnsureGraphicRaycaster(Canvas canvas)
+        {
+            if (canvas == null) return;
+            GraphicRaycaster raycaster = canvas.GetComponent<GraphicRaycaster>();
+            if (raycaster == null)
+            {
+                raycaster = canvas.gameObject.AddComponent<GraphicRaycaster>();
+            }
+            raycaster.enabled = true;
+        }
+
+        #endregion
+
         #region Public Controls
 
         public void ShowMainMenu()
         {
+            EnsureEventSystem();
             EnsureUIHierarchy();
-            if (mainMenuPanel != null) mainMenuPanel.SetActive(true);
+
+            if (mainMenuPanel != null)
+            {
+                mainMenuPanel.SetActive(true);
+                mainMenuPanel.transform.SetAsLastSibling();
+
+                CanvasGroup cg = mainMenuPanel.GetComponent<CanvasGroup>();
+                if (cg != null)
+                {
+                    cg.alpha = 1f;
+                    cg.interactable = true;
+                    cg.blocksRaycasts = true;
+                }
+            }
+
             if (classSelectionPanel != null) classSelectionPanel.SetActive(false);
             if (rulesPanel != null) rulesPanel.SetActive(false);
+
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
 
             if (GameManager.Instance != null)
             {
@@ -110,25 +197,41 @@ namespace CastleOfTheD20.UI
         public void OpenClassSelection()
         {
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
-            if (classSelectionPanel != null) classSelectionPanel.SetActive(true);
+            if (classSelectionPanel != null)
+            {
+                classSelectionPanel.SetActive(true);
+                classSelectionPanel.transform.SetAsLastSibling();
+            }
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         public void CloseClassSelection()
         {
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
             if (classSelectionPanel != null) classSelectionPanel.SetActive(false);
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         public void OpenRules()
         {
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
-            if (rulesPanel != null) rulesPanel.SetActive(true);
+            if (rulesPanel != null)
+            {
+                rulesPanel.SetActive(true);
+                rulesPanel.transform.SetAsLastSibling();
+            }
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         public void CloseRules()
         {
             if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
             if (rulesPanel != null) rulesPanel.SetActive(false);
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
         }
 
         public void OpenScottishHarpCredit()
@@ -139,7 +242,11 @@ namespace CastleOfTheD20.UI
 
         public void SelectCharacterClass(CharacterClassSO chosenClass)
         {
-            if (chosenClass == null) return;
+            if (chosenClass == null)
+            {
+                Debug.LogWarning("[MainMenuController] SelectCharacterClass called with null class! Check that warrior/mage/rogue assets are assigned.");
+                return;
+            }
 
             if (AudioManager.Instance != null)
             {
@@ -204,15 +311,32 @@ namespace CastleOfTheD20.UI
 
         private void EnsureUIHierarchy()
         {
-            if (mainMenuPanel != null) return;
+            EnsureEventSystem();
 
             Canvas canvas = GetComponentInParent<Canvas>() ?? FindAnyObjectByType<Canvas>();
             if (canvas == null) return;
 
-            Transform existing = canvas.transform.Find("MainMenuPanel");
-            if (existing != null)
+            EnsureGraphicRaycaster(canvas);
+
+            // Deactivate LevelUp modal if active at boot
+            Transform levelUpPanel = canvas.transform.Find("LevelUp_Modal_Panel");
+            if (levelUpPanel != null && levelUpPanel.gameObject.activeSelf)
             {
-                mainMenuPanel = existing.gameObject;
+                levelUpPanel.gameObject.SetActive(false);
+            }
+
+            if (mainMenuPanel == null)
+            {
+                Transform existing = canvas.transform.Find("MainMenuPanel");
+                if (existing != null)
+                {
+                    mainMenuPanel = existing.gameObject;
+                }
+            }
+
+            if (mainMenuPanel != null)
+            {
+                WireExistingHierarchy(mainMenuPanel);
                 return;
             }
 
@@ -226,8 +350,14 @@ namespace CastleOfTheD20.UI
             rect.anchorMax = Vector2.one;
             rect.sizeDelta = Vector2.zero;
 
+            CanvasGroup cg = panel.AddComponent<CanvasGroup>();
+            cg.alpha = 1f;
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
+
             Image bg = panel.AddComponent<Image>();
             bg.color = new Color(0.06f, 0.07f, 0.1f, 0.96f);
+            bg.raycastTarget = true;
 
             // Title
             GameObject titleObj = new GameObject("Title_Text");
@@ -241,6 +371,7 @@ namespace CastleOfTheD20.UI
             titleTMP.fontStyle = FontStyles.Bold;
             titleTMP.alignment = TextAlignmentOptions.Center;
             titleTMP.color = new Color(1f, 0.82f, 0.28f);
+            titleTMP.raycastTarget = false;
 
             // Subtitle
             GameObject subObj = new GameObject("Subtitle_Text");
@@ -249,10 +380,11 @@ namespace CastleOfTheD20.UI
             subRect.anchoredPosition = new Vector2(0f, 105f);
             subRect.sizeDelta = new Vector2(600f, 40f);
             TextMeshProUGUI subTMP = subObj.AddComponent<TextMeshProUGUI>();
-            subTMP.text = "Castle of the D20 — Taktinen 3D-Linnaseikkailu";
+            subTMP.text = "Castle of the D20 — Tactical 3D Castle Adventure";
             subTMP.fontSize = 20f;
             subTMP.alignment = TextAlignmentOptions.Center;
             subTMP.color = new Color(0.8f, 0.85f, 0.9f);
+            subTMP.raycastTarget = false;
 
             // Buttons Container
             GameObject btnContainer = new GameObject("Menu_Buttons");
@@ -261,13 +393,13 @@ namespace CastleOfTheD20.UI
             bcRect.anchoredPosition = new Vector2(0f, -40f);
             bcRect.sizeDelta = new Vector2(280f, 220f);
 
-            Button newGameBtn = CreateMenuButton(btnContainer.transform, "NewGame_Btn", "Uusi seikkailu", new Vector2(0f, 70f), new Color(0.2f, 0.55f, 0.3f));
+            Button newGameBtn = CreateMenuButton(btnContainer.transform, "NewGame_Btn", "New Adventure", new Vector2(0f, 70f), new Color(0.2f, 0.55f, 0.3f));
             newGameBtn.onClick.AddListener(OpenClassSelection);
 
-            Button continueBtn = CreateMenuButton(btnContainer.transform, "Continue_Btn", "Jatka peliä", new Vector2(0f, 10f), new Color(0.25f, 0.4f, 0.6f));
+            Button continueBtn = CreateMenuButton(btnContainer.transform, "Continue_Btn", "Continue", new Vector2(0f, 10f), new Color(0.25f, 0.4f, 0.6f));
             continueBtn.onClick.AddListener(HideMainMenu);
 
-            Button rulesBtn = CreateMenuButton(btnContainer.transform, "Rules_Btn", "Säännöt & D20-opas", new Vector2(0f, -50f), new Color(0.45f, 0.35f, 0.25f));
+            Button rulesBtn = CreateMenuButton(btnContainer.transform, "Rules_Btn", "Rules & D20 Guide", new Vector2(0f, -50f), new Color(0.45f, 0.35f, 0.25f));
             rulesBtn.onClick.AddListener(OpenRules);
 
             // Music Attribution Link
@@ -280,7 +412,7 @@ namespace CastleOfTheD20.UI
             creditRect.anchoredPosition = new Vector2(0f, 15f);
             creditRect.sizeDelta = new Vector2(500f, 30f);
             TextMeshProUGUI creditTMP = creditObj.AddComponent<TextMeshProUGUI>();
-            creditTMP.text = "<size=13><color=#8899AA>Musiikki: <u><color=#AACCFF>Scottish Harp (Pixabay)</color></u></color></size>";
+            creditTMP.text = "<size=13><color=#8899AA>Music: <u><color=#AACCFF>Scottish Harp (Pixabay)</color></u></color></size>";
             creditTMP.alignment = TextAlignmentOptions.Center;
             creditTMP.raycastTarget = true;
             Button creditBtn = creditObj.AddComponent<Button>();
@@ -291,6 +423,141 @@ namespace CastleOfTheD20.UI
 
             // 3. Rules Modal
             BuildRulesModal(panel.transform);
+        }
+
+        private void WireExistingHierarchy(GameObject panel)
+        {
+            CanvasGroup cg = panel.GetComponent<CanvasGroup>();
+            if (cg == null)
+            {
+                cg = panel.AddComponent<CanvasGroup>();
+            }
+            cg.alpha = 1f;
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
+
+            // Wire Menu_Buttons
+            Transform btnContainer = panel.transform.Find("Menu_Buttons");
+            if (btnContainer != null)
+            {
+                Transform newGameTr = btnContainer.Find("NewGame_Btn");
+                if (newGameTr != null)
+                {
+                    Button btn = newGameTr.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.interactable = true;
+                        btn.onClick.RemoveListener(OpenClassSelection);
+                        btn.onClick.AddListener(OpenClassSelection);
+                    }
+                }
+
+                Transform continueTr = btnContainer.Find("Continue_Btn");
+                if (continueTr != null)
+                {
+                    Button btn = continueTr.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.interactable = true;
+                        btn.onClick.RemoveListener(HideMainMenu);
+                        btn.onClick.AddListener(HideMainMenu);
+                    }
+                }
+
+                Transform rulesTr = btnContainer.Find("Rules_Btn");
+                if (rulesTr != null)
+                {
+                    Button btn = rulesTr.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.interactable = true;
+                        btn.onClick.RemoveListener(OpenRules);
+                        btn.onClick.AddListener(OpenRules);
+                    }
+                }
+            }
+
+            Transform creditTr = panel.transform.Find("MusicCredit_Btn");
+            if (creditTr != null)
+            {
+                Button btn = creditTr.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.onClick.RemoveListener(OpenScottishHarpCredit);
+                    btn.onClick.AddListener(OpenScottishHarpCredit);
+                }
+            }
+
+            Transform csTr = panel.transform.Find("ClassSelectionModal");
+            if (csTr != null)
+            {
+                classSelectionPanel = csTr.gameObject;
+                Transform backTr = csTr.Find("Back_Btn");
+                if (backTr != null)
+                {
+                    Button btn = backTr.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick.RemoveListener(CloseClassSelection);
+                        btn.onClick.AddListener(CloseClassSelection);
+                    }
+                }
+
+                WireClassCard(csTr.Find("Warrior_Card"), () => SelectCharacterClass(warriorClass));
+                WireClassCard(csTr.Find("Mage_Card"), () => SelectCharacterClass(mageClass));
+                WireClassCard(csTr.Find("Rogue_Card"), () => SelectCharacterClass(rogueClass));
+            }
+            else
+            {
+                BuildClassSelectionModal(panel.transform);
+            }
+
+            Transform rulesTrModal = panel.transform.Find("RulesModal");
+            if (rulesTrModal != null)
+            {
+                rulesPanel = rulesTrModal.gameObject;
+                Transform boxTr = rulesTrModal.Find("Rules_Box");
+                if (boxTr != null)
+                {
+                    Transform closeTr = boxTr.Find("CloseRules_Btn");
+                    if (closeTr != null)
+                    {
+                        Button btn = closeTr.GetComponent<Button>();
+                        if (btn != null)
+                        {
+                            btn.onClick.RemoveListener(CloseRules);
+                            btn.onClick.AddListener(CloseRules);
+                        }
+                    }
+                }
+            }
+            else
+            {
+                BuildRulesModal(panel.transform);
+            }
+        }
+
+        private void WireClassCard(Transform cardTr, UnityEngine.Events.UnityAction onSelect)
+        {
+            if (cardTr == null) return;
+            Button cardBtn = cardTr.GetComponent<Button>();
+            if (cardBtn != null)
+            {
+                cardBtn.interactable = true;
+                cardBtn.onClick.RemoveAllListeners();
+                cardBtn.onClick.AddListener(onSelect);
+            }
+            Transform selectBtnTr = cardTr.Find("SelectBtn");
+            if (selectBtnTr != null)
+            {
+                Button sBtn = selectBtnTr.GetComponent<Button>();
+                if (sBtn != null)
+                {
+                    sBtn.interactable = true;
+                    sBtn.onClick.RemoveAllListeners();
+                    sBtn.onClick.AddListener(onSelect);
+                }
+            }
         }
 
         private void BuildClassSelectionModal(Transform parent)
@@ -304,8 +571,14 @@ namespace CastleOfTheD20.UI
             rect.anchorMax = Vector2.one;
             rect.sizeDelta = Vector2.zero;
 
+            CanvasGroup cg = csPanel.AddComponent<CanvasGroup>();
+            cg.alpha = 1f;
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
+
             Image bg = csPanel.AddComponent<Image>();
             bg.color = new Color(0.04f, 0.05f, 0.08f, 0.98f);
+            bg.raycastTarget = true;
 
             // Title
             GameObject titleObj = new GameObject("CS_Title");
@@ -314,19 +587,20 @@ namespace CastleOfTheD20.UI
             titleRect.anchoredPosition = new Vector2(0f, 190f);
             titleRect.sizeDelta = new Vector2(600f, 60f);
             TextMeshProUGUI titleTMP = titleObj.AddComponent<TextMeshProUGUI>();
-            titleTMP.text = "VALITSE SANKARISI";
+            titleTMP.text = "CHOOSE YOUR HERO";
             titleTMP.fontSize = 36f;
             titleTMP.fontStyle = FontStyles.Bold;
             titleTMP.alignment = TextAlignmentOptions.Center;
             titleTMP.color = new Color(1f, 0.85f, 0.3f);
+            titleTMP.raycastTarget = false;
 
             // 3 Class Cards
-            CreateClassCard(csPanel.transform, "Warrior_Card", "Sir Roland Rautakoura", "SOTURI", "Korkea HP & AC. Etulinjan miekkataituri.", new Vector2(-280f, 10f), () => SelectCharacterClass(warriorClass));
-            CreateClassCard(csPanel.transform, "Mage_Card", "Oppinut Elira", "VELHO", "Massiivinen Tulipallo-aluevahinko (3x3). Teleportti.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
-            CreateClassCard(csPanel.transform, "Rogue_Card", "Varjo-Corvo", "VARAS", "Kriittinen pistevahinko, Savupommi ja tiirikointi.", new Vector2(280f, 10f), () => SelectCharacterClass(rogueClass));
+            CreateClassCard(csPanel.transform, "Warrior_Card", "Sir Roland", "WARRIOR", "High HP & AC. Frontline swordmaster.", new Vector2(-280f, 10f), () => SelectCharacterClass(warriorClass));
+            CreateClassCard(csPanel.transform, "Mage_Card", "Scholar Elira", "MAGE", "Devastating Fireball area damage (3x3). Teleportation.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
+            CreateClassCard(csPanel.transform, "Rogue_Card", "Shadow-Corvo", "ROGUE", "Critical puncture damage, Smoke Bomb and lockpicking.", new Vector2(280f, 10f), () => SelectCharacterClass(rogueClass));
 
             // Back button
-            Button backBtn = CreateMenuButton(csPanel.transform, "Back_Btn", "Takaisin", new Vector2(0f, -190f), new Color(0.4f, 0.2f, 0.2f));
+            Button backBtn = CreateMenuButton(csPanel.transform, "Back_Btn", "Back", new Vector2(0f, -190f), new Color(0.4f, 0.2f, 0.2f));
             backBtn.onClick.AddListener(CloseClassSelection);
 
             csPanel.SetActive(false);
@@ -342,6 +616,21 @@ namespace CastleOfTheD20.UI
 
             Image img = card.AddComponent<Image>();
             img.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+            img.raycastTarget = true;
+
+            // Make the entire card clickable
+            Button cardBtn = card.AddComponent<Button>();
+            cardBtn.targetGraphic = img;
+            cardBtn.interactable = true;
+            Navigation nav = cardBtn.navigation;
+            nav.mode = Navigation.Mode.None;
+            cardBtn.navigation = nav;
+
+            ColorBlock ccb = cardBtn.colors;
+            ccb.highlightedColor = new Color(0.18f, 0.22f, 0.28f, 1f);
+            ccb.pressedColor = new Color(0.08f, 0.10f, 0.14f, 1f);
+            cardBtn.colors = ccb;
+            cardBtn.onClick.AddListener(onSelect);
 
             Outline outline = card.AddComponent<Outline>();
             outline.effectColor = new Color(0.85f, 0.7f, 0.2f, 0.8f);
@@ -359,6 +648,7 @@ namespace CastleOfTheD20.UI
             nt.fontStyle = FontStyles.Bold;
             nt.alignment = TextAlignmentOptions.Center;
             nt.color = Color.white;
+            nt.raycastTarget = false;
 
             // Role
             GameObject roleObj = new GameObject("Role");
@@ -370,6 +660,7 @@ namespace CastleOfTheD20.UI
             rt.text = $"<color=#F1C40F>[ {role} ]</color>";
             rt.fontSize = 15f;
             rt.alignment = TextAlignmentOptions.Center;
+            rt.raycastTarget = false;
 
             // Desc
             GameObject descObj = new GameObject("Desc");
@@ -383,9 +674,10 @@ namespace CastleOfTheD20.UI
             dt.alignment = TextAlignmentOptions.Center;
             dt.color = new Color(0.85f, 0.85f, 0.85f);
             dt.textWrappingMode = TextWrappingModes.Normal;
+            dt.raycastTarget = false;
 
-            // Choose button
-            Button chooseBtn = CreateMenuButton(card.transform, "SelectBtn", "Valitse", new Vector2(0f, -100f), new Color(0.2f, 0.55f, 0.3f));
+            // Choose button (secondary, still present for visual affordance)
+            Button chooseBtn = CreateMenuButton(card.transform, "SelectBtn", "Select", new Vector2(0f, -100f), new Color(0.2f, 0.55f, 0.3f));
             chooseBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(180f, 40f);
             chooseBtn.onClick.AddListener(onSelect);
         }
@@ -401,8 +693,14 @@ namespace CastleOfTheD20.UI
             rect.anchorMax = Vector2.one;
             rect.sizeDelta = Vector2.zero;
 
+            CanvasGroup cg = rPanel.AddComponent<CanvasGroup>();
+            cg.alpha = 1f;
+            cg.interactable = true;
+            cg.blocksRaycasts = true;
+
             Image bg = rPanel.AddComponent<Image>();
             bg.color = new Color(0.04f, 0.05f, 0.08f, 0.98f);
+            bg.raycastTarget = true;
 
             GameObject box = new GameObject("Rules_Box");
             box.transform.SetParent(rPanel.transform, false);
@@ -411,6 +709,7 @@ namespace CastleOfTheD20.UI
 
             Image bImg = box.AddComponent<Image>();
             bImg.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+            bImg.raycastTarget = true;
 
             Outline o = box.AddComponent<Outline>();
             o.effectColor = new Color(0.85f, 0.7f, 0.2f, 0.8f);
@@ -424,15 +723,16 @@ namespace CastleOfTheD20.UI
             tTMP.fontSize = 14f;
             tTMP.color = Color.white;
             tTMP.textWrappingMode = TextWrappingModes.Normal;
-            tTMP.text = "<b><size=22><color=#F1C40F>D20-SÄÄNTÖJÄRJESTELMÄ</color></size></b>\n\n" +
-                "• <b>Toiminnot:</b> Jokainen toiminto ja hyökkäys ratkaistaan 20-tahoisella nopalla:\n" +
-                "   <i>Tulos = d20 + Taitobonus ≥ DC / AC</i>\n\n" +
-                "• <b>Luonnollinen 20 (Nat 20):</b> Kriittinen osuma! Tuplavahinko taistelussa tai täydellinen onnistuminen dialogissa.\n\n" +
-                "• <b>Luonnollinen 1 (Nat 1):</b> Kriittinen epäonnistuminen. Vuoro päättyy välittömästi hutiin.\n\n" +
-                "• <b>Kivenkolon kylä:</b> Osta terveysjuomia ja päivityksiä (+1 vahinko / +1 AC) sepältä ennen linnaan astumista!\n\n" +
-                "• <b>Musiikki / Credits:</b> Scottish Harp (Pixabay): https://pixabay.com/music/scotland-harp-587446/";
+            tTMP.text = "<b><size=22><color=#F1C40F>D20 RULE SYSTEM</color></size></b>\n\n" +
+                "• <b>Actions:</b> Every action and attack is resolved with a 20-sided die:\n" +
+                "   <i>Result = d20 + Skill Bonus >= DC / AC</i>\n\n" +
+                "• <b>Natural 20 (Nat 20):</b> Critical Success! Double damage in combat or automatic triumph in dialogue.\n\n" +
+                "• <b>Natural 1 (Nat 1):</b> Critical Failure! Action ends in an immediate fumble.\n\n" +
+                "• <b>Oakhaven Village:</b> Purchase health potions and forge upgrades (+1 Damage / +1 AC) from the blacksmith before entering the castle!\n\n" +
+                "• <b>Music / Credits:</b> Scottish Harp (Pixabay): https://pixabay.com/music/scotland-harp-587446/";
+            tTMP.raycastTarget = false;
 
-            Button closeBtn = CreateMenuButton(box.transform, "CloseRules_Btn", "Sulje", new Vector2(0f, -180f), new Color(0.5f, 0.3f, 0.2f));
+            Button closeBtn = CreateMenuButton(box.transform, "CloseRules_Btn", "Close", new Vector2(0f, -180f), new Color(0.5f, 0.3f, 0.2f));
             closeBtn.onClick.AddListener(CloseRules);
 
             rPanel.SetActive(false);
@@ -448,23 +748,38 @@ namespace CastleOfTheD20.UI
 
             Image img = btnObj.AddComponent<Image>();
             img.color = color;
+            img.raycastTarget = true;
 
             Button btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.interactable = true;
+            Navigation nav = btn.navigation;
+            nav.mode = Navigation.Mode.None;
+            btn.navigation = nav;
+
             ColorBlock cb = btn.colors;
+            cb.normalColor = color;
             cb.highlightedColor = color * 1.3f;
             cb.pressedColor = color * 0.8f;
+            cb.selectedColor = color * 1.2f;
+            cb.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            cb.colorMultiplier = 1f;
+            cb.fadeDuration = 0.1f;
             btn.colors = cb;
 
             GameObject textObj = new GameObject("Text");
             textObj.transform.SetParent(btnObj.transform, false);
             RectTransform textRect = textObj.AddComponent<RectTransform>();
-            textRect.sizeDelta = rect.sizeDelta;
+            textRect.anchorMin = Vector2.zero;
+            textRect.anchorMax = Vector2.one;
+            textRect.sizeDelta = Vector2.zero;
             TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
             tmp.text = label;
             tmp.fontSize = 17f;
             tmp.fontStyle = FontStyles.Bold;
             tmp.alignment = TextAlignmentOptions.Center;
             tmp.color = Color.white;
+            tmp.raycastTarget = false;
 
             return btn;
         }

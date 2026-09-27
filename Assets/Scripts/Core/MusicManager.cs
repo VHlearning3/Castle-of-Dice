@@ -61,7 +61,7 @@ namespace CastleOfTheD20.Core
         #region Serialized Fields - Music Track Clips
 
         [Header("Music Tracks (Assets/Music/)")]
-        [Tooltip("VillageSong.mp3 - Oakhaven / Kivenkolo Village theme")]
+        [Tooltip("VillageSong.mp3 - Oakhaven Village theme")]
         [SerializeField] private AudioClip villageSongClip;
 
         [Tooltip("Castle_adventure_song.mp3 - Forest, Courtyard, Library, Crown Hall exploration theme")]
@@ -215,7 +215,7 @@ namespace CastleOfTheD20.Core
         private void Update()
         {
             // WebGL Autoplay Unmuting: resume audio if browser muted AudioListener prior to user interaction
-            if (AudioListener.pause && (Input.anyKeyDown || Input.GetMouseButtonDown(0)))
+            if (AudioListener.pause && GameInput.IsAnyInputDetected())
             {
                 AudioListener.pause = false;
             }

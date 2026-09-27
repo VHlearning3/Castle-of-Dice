@@ -228,6 +228,12 @@ namespace CastleOfTheD20.Dialogue
 
             isResolvingCheck = false;
 
+            // If a reroll took place during modal interaction, adopt the finalized outcome
+            if (DiceUIController.Instance != null && DiceUIController.Instance.LastFinalResult.rawRoll > 0)
+            {
+                rollResult = DiceUIController.Instance.LastFinalResult;
+            }
+
             // 4. Branch to success or failure node and reveal dialogue UI with the NPC's response
             if (rollResult.isSuccess)
             {

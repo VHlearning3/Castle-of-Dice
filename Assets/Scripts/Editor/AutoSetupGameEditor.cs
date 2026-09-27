@@ -1,12 +1,13 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.Editor
 {
     /// <summary>
     /// Master editor controller that runs all setup steps: generating game data assets,
-    /// constructing Kivenkolo Village layout (Baldur, Barnaby, Othelia, Mirabel, Castle Gate),
+    /// constructing Oakhaven Village layout (Baldur, Barnaby, Othelia, Mirabel, Castle Gate),
     /// building the 3 Castle Wings (Courtyard, Library, Crown Hall), and saving the scene.
     /// </summary>
     public static class AutoSetupGameEditor
@@ -23,7 +24,7 @@ namespace CastleOfTheD20.Editor
 
         private static void CheckAndAutoSetup()
         {
-            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+            if (EditorApplication.isPlayingOrWillChangePlaymode || Application.isPlaying) return;
 
             var activeScene = EditorSceneManager.GetActiveScene();
             if (!System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png"))
@@ -51,6 +52,12 @@ namespace CastleOfTheD20.Editor
         [MenuItem("Tools/Castle of Dice/Run Complete Game Setup & Build All", false, 0)]
         public static void RunCompleteGameSetup()
         {
+            if (Application.isPlaying)
+            {
+                Debug.LogWarning("[AutoSetupGameEditor] Cannot run setup during play mode.");
+                return;
+            }
+
             var activeScene = EditorSceneManager.GetActiveScene();
             if (activeScene.name != "StartVillage")
             {
@@ -71,6 +78,40 @@ namespace CastleOfTheD20.Editor
 
             Debug.Log("[AutoSetupGameEditor] --- STEP 5: Styling & Rebuilding Dialogue & Baldur Shop Panels ---");
             BuildDialogueAndShopEditor.RebuildAndStyleDialogueAndShop();
+
+            Debug.Log("[AutoSetupGameEditor] --- STEP 6: Ensuring EventSystem, GraphicRaycaster & Core GameManager ---");
+            MainMenuController.EnsureEventSystem();
+            Canvas mainCanvas = Object.FindAnyObjectByType<Canvas>(FindObjectsInactive.Include);
+            if (mainCanvas != null)
+            {
+                MainMenuController.EnsureGraphicRaycaster(mainCanvas);
+            }
+
+            // Ensure GameManager exists on Managers object
+            GameObject managersObj = GameObject.Find("Managers") ?? new GameObject("Managers");
+            if (managersObj.GetComponent<CastleOfTheD20.Core.GameManager>() == null)
+            {
+                managersObj.AddComponent<CastleOfTheD20.Core.GameManager>();
+                Debug.Log("[AutoSetupGameEditor] Attached GameManager to 'Managers' object.");
+            }
+
+            // Ensure PlayerHero in scene has no conflicting CapsuleCollider and valid CharacterController center
+            GameObject playerObj = GameObject.FindWithTag("Player") ?? GameObject.Find("PlayerHero");
+            if (playerObj != null)
+            {
+                CapsuleCollider col = playerObj.GetComponent<CapsuleCollider>();
+                if (col != null)
+                {
+                    Object.DestroyImmediate(col);
+                    Debug.Log("[AutoSetupGameEditor] Removed conflicting CapsuleCollider from player in scene.");
+                }
+
+                CharacterController cc = playerObj.GetComponent<CharacterController>();
+                if (cc != null)
+                {
+                    cc.center = new Vector3(0f, cc.height * 0.5f, 0f);
+                }
+            }
 
             EditorSceneManager.MarkSceneDirty(activeScene);
             EditorSceneManager.SaveScene(activeScene);

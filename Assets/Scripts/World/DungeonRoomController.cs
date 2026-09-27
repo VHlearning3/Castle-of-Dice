@@ -204,7 +204,7 @@ namespace CastleOfTheD20.World
                 ?? transform.parent?.GetComponentInChildren<GridManager>()
                 ?? GridManager.Instance;
 
-            if (grid != null && GridManager.Instance == null)
+            if (grid != null)
             {
                 GridManager.Instance = grid;
             }
@@ -478,7 +478,27 @@ namespace CastleOfTheD20.World
             Transform root = transform.parent != null ? transform.parent : transform;
 
             Transform geo = root.Find("Cellar_Geometry");
-            if (geo != null) geo.localPosition = Vector3.zero;
+            if (geo != null)
+            {
+                geo.localPosition = Vector3.zero;
+
+                // Ensure camera-blocking ceiling is removed for top-down isometric view
+                Transform ceiling = geo.Find("Cellar_Ceiling");
+                if (ceiling != null)
+                {
+                    DestroyImmediate(ceiling.gameObject);
+                }
+
+                // Ensure South wall is a cutaway half-wall without camera-blocking colliders
+                Transform wallSouth = geo.Find("Wall_South");
+                if (wallSouth != null)
+                {
+                    wallSouth.localPosition = new Vector3(0f, 0.6f, -9f);
+                    wallSouth.localScale = new Vector3(18f, 1.2f, 1f);
+                    Collider wsCol = wallSouth.GetComponent<Collider>();
+                    if (wsCol != null) DestroyImmediate(wsCol);
+                }
+            }
 
             Transform lighting = root.Find("Cellar_Lighting");
             if (lighting != null) lighting.localPosition = Vector3.zero;

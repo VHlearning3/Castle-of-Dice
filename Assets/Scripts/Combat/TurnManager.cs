@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.UI;
+using CastleOfTheD20.Economy;
 
 namespace CastleOfTheD20.Combat
 {
@@ -27,6 +28,15 @@ namespace CastleOfTheD20.Combat
         [SerializeField] private float enemyTurnDelay = 0.6f;
         [Tooltip("If true, automatically discovers living units and starts combat immediately upon scene start. Keep false for exploration zones such as StartVillage.")]
         [SerializeField] private bool autoStartCombatOnStart = false;
+
+        [Header("Combat Victory Loot")]
+        [Tooltip("Minimum scrap metal dropped upon combat victory (MasterSpec §5.4).")]
+        [Range(1, 20)]
+        [SerializeField] private int minVictoryScrapDrop = 2;
+
+        [Tooltip("Maximum scrap metal dropped upon combat victory (MasterSpec §5.4).")]
+        [Range(1, 50)]
+        [SerializeField] private int maxVictoryScrapDrop = 10;
 
         #endregion
 
@@ -69,6 +79,9 @@ namespace CastleOfTheD20.Combat
 
         /// <summary>Fired when combat concludes: true for Victory, false for Defeat.</summary>
         public static event Action<bool> OnCombatEnded;
+
+        /// <summary>Fired upon combat victory when scrap metal is awarded: (scrapAmount).</summary>
+        public static event Action<int> OnCombatVictoryScrapAwarded;
 
         #endregion
 
@@ -166,6 +179,10 @@ namespace CastleOfTheD20.Combat
             isCombatActive = false;
             SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
             GridManager.Instance?.ClearAllHighlights();
+            if (isVictory)
+            {
+                AwardCombatVictoryScrap();
+            }
             OnCombatEnded?.Invoke(isVictory);
             GameManager.Instance?.SetMode(GamePlayMode.Exploration);
         }
@@ -401,11 +418,35 @@ namespace CastleOfTheD20.Combat
                 SetTurnState(TurnState.Victory);
                 GridManager.Instance?.ClearAllHighlights();
                 Debug.Log("[TurnManager] VICTORY! All enemies have been vanquished.");
+                AwardCombatVictoryScrap();
                 OnCombatEnded?.Invoke(true);
                 return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Awards 2–10 pieces of scrap metal upon combat victory as specified in MasterSpec §5.4.
+        /// </summary>
+        public int AwardCombatVictoryScrap()
+        {
+            int minScrap = Mathf.Max(1, minVictoryScrapDrop);
+            int maxScrap = Mathf.Max(minScrap, maxVictoryScrapDrop);
+            int scrapReward = UnityEngine.Random.Range(minScrap, maxScrap + 1); // min to max inclusive (e.g. 2 to 10)
+
+            if (InventoryManager.Instance != null)
+            {
+                InventoryManager.Instance.AddScrapMetal(scrapReward);
+                Debug.Log($"[TurnManager] Combat Victory Loot: +{scrapReward} Scrap Metal dropped (MasterSpec §5.4, 2–10 range)!");
+            }
+            else
+            {
+                Debug.LogWarning($"[TurnManager] InventoryManager not found; could not persist {scrapReward} scrap metal drop.");
+            }
+
+            OnCombatVictoryScrapAwarded?.Invoke(scrapReward);
+            return scrapReward;
         }
 
         #endregion

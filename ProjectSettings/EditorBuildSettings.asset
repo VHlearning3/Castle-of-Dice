@@ -9,5 +9,6 @@ EditorBuildSettings:
     path: Assets/Scenes/StartVillage.unity
     guid: a77bedb6b7b56af4a91238cd585dd792
   m_configObjects:
+    com.unity.addressableassets: {fileID: 11400000, guid: cfe9e009cdc7de0468d34c7f9bec323c, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

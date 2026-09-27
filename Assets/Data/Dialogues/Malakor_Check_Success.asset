@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Malakor_Check_Success
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Varjomaagi Malakor
+  speakerName: Shadow Mage Malakor
   speakerPortrait: {fileID: 0}
-  dialogueText: "Mit\xE4?! Mist\xE4 tied\xE4t tuon loitsun purkukaavan?! Harhakuva
-    hajoaa!"
+  dialogueText: What?! How do you know the dispel formula for that incantation?!
+    The phantom reflection shatters!
   options: []
   isExitNode: 1

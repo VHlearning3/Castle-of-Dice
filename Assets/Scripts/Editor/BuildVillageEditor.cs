@@ -131,7 +131,7 @@ namespace CastleOfTheD20.Editor
             }
 
             // ========================================================
-            // C. HERBALIST MIRABEL'S WITCH HOUSE (Pieni aita vallihaudan suuntaan === Witch_house)
+            // C. HERBALIST MIRABEL'S WITCH HOUSE (Small fence facing the moat === Witch_house)
             // ========================================================
             GameObject mirabelArea = new GameObject("Area_MirabelsHut");
             mirabelArea.transform.SetParent(villageRoot.transform, false);
@@ -230,7 +230,7 @@ namespace CastleOfTheD20.Editor
             }
 
             // ========================================================
-            // F. NORTHERN CASTLE IRON GATE (Tie, josta siirrytään linnaan)
+            // F. NORTHERN CASTLE IRON GATE (Road leading into the castle)
             // ========================================================
             GameObject gateArea = new GameObject("Area_NorthernCastleGate");
             gateArea.transform.SetParent(villageRoot.transform, false);
@@ -275,7 +275,7 @@ namespace CastleOfTheD20.Editor
             gateCollider.isTrigger = true;
 
             DoorTeleporter gateTeleporter = gateTriggerObj.AddComponent<DoorTeleporter>();
-            gateTeleporter.PromptMessage = "Astu Linnan Alapihalle (Wing 1: Courtyard)";
+            gateTeleporter.PromptMessage = "Enter Castle Courtyard (Wing 1: Courtyard)";
             gateTeleporter.DestinationZone = "Courtyard";
             gateTeleporter.InteractionRadius = 4.5f;
 
@@ -319,7 +319,7 @@ namespace CastleOfTheD20.Editor
             {
                 vNPC = mirabel.AddComponent<VillageNPC>();
             }
-            vNPC.PromptMessage = "Puhu Yrttiparantaja Mirabelille";
+            vNPC.PromptMessage = "Talk to Mirabel the Herbalist";
             vNPC.InteractionRadius = 5.0f;
             vNPC.IsInteractable = true;
             vNPC.StartingDialogueNode = AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Mirabel_Intro.asset");
@@ -352,7 +352,7 @@ namespace CastleOfTheD20.Editor
             {
                 vNPC = othelia.AddComponent<VillageNPC>();
             }
-            vNPC.PromptMessage = "Puhu Kylänvanhin Othelialle";
+            vNPC.PromptMessage = "Talk to Elder Othelia";
             vNPC.InteractionRadius = 5.0f;
             vNPC.IsInteractable = true;
             vNPC.StartingDialogueNode = AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Othelia_Intro.asset");

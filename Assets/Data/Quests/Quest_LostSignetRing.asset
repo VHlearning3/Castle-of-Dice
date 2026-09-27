@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Quest_LostSignetRing
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_lost_signet_ring
-  questTitle: "Kadonnut perint\xF6kalleus"
-  description: Etsi Othelyan sukunsa sinettisormus linnan alapihan raunioista.
+  questTitle: The Lost Signet Ring
+  description: Search for Elder Othelia's ancestral signet ring in the courtyard
+    ruins.
   defaultState: 0
   requiredAmount: 1
   rewardGold: 50

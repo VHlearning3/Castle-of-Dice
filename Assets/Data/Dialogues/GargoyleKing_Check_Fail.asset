@@ -12,8 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: GargoyleKing_Check_Fail
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Kivettymiskuningas
+  speakerName: The Gargoyle King
   speakerPortrait: {fileID: 0}
-  dialogueText: "Pikkusieluinen madonruoka! Kallio ja kivivy\xF6ryt murskaavat sinut!"
+  dialogueText: Insolent worm! The mountain stone and rockslides will crush you to
+    dust!
   options: []
   isExitNode: 1

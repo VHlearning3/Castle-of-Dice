@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Quest_SwampHerbs
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_swamp_herbs
-  questTitle: "Yrttej\xE4 parantajalle"
-  description: "Ker\xE4\xE4 3 suokukkaa vallihaudan liepeilt\xE4 Mirabelille."
+  questTitle: Herbs for the Healer
+  description: Gather 3 swamp flowers near the moat for Mirabel.
   defaultState: 0
   requiredAmount: 3
   rewardGold: 30

@@ -47,11 +47,15 @@ namespace CastleOfTheD20.UI
         [Tooltip("Duration of the rolling number shuffle animation in seconds.")]
         [SerializeField] private float rollAnimationDuration = 0.8f;
 
-        [Tooltip("Delay in seconds before the modal automatically dismisses.")]
-        [SerializeField] private float autoDismissDelay = 2.5f;
+        [Tooltip("Delay in seconds before the modal automatically dismisses when no reroll scrolls are held (~1.0s per MasterSpec §4.2).")]
+        [SerializeField] private float autoDismissDelay = 1.0f;
 
         [Tooltip("Optional button allowing the player to tap/click to dismiss early.")]
         [SerializeField] private Button dismissButton;
+
+        [Header("Rune of Reroll Flow")]
+        [Tooltip("Controller managing the pause and reroll scroll button flow.")]
+        [SerializeField] private RuneOfRerollController rerollController;
 
         #endregion
 
@@ -102,8 +106,12 @@ namespace CastleOfTheD20.UI
         private Coroutine activeRollCoroutine;
         private int lastHandledRollFrame = -1;
         private DiceResult? lastHandledResult;
+        private string currentCheckTitle;
 
         public bool IsDisplaying { get; private set; }
+
+        /// <summary>The final evaluated dice result of the last displayed roll (including any reroll).</summary>
+        public DiceResult LastFinalResult => lastHandledResult ?? default;
 
         #endregion
 
@@ -155,7 +163,7 @@ namespace CastleOfTheD20.UI
         /// <summary>
         /// Automatically locates required UI components in children if not manually assigned in the Inspector.
         /// </summary>
-        private void AutoLocateComponents()
+        public void AutoLocateComponents()
         {
             // 1. Auto-locate modal panel
             if (diceModalPanel == null)
@@ -263,7 +271,24 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // 5. Sanitize text properties for flicker-free, non-clipped presentation
+            // 5. Auto-locate or attach RuneOfRerollController
+            if (rerollController == null)
+            {
+                rerollController = GetComponentInChildren<RuneOfRerollController>(true)
+                    ?? (diceModalPanel != null ? diceModalPanel.GetComponent<RuneOfRerollController>() : null);
+
+                if (rerollController == null && diceModalPanel != null)
+                {
+                    rerollController = diceModalPanel.AddComponent<RuneOfRerollController>();
+                }
+            }
+
+            if (rerollController != null)
+            {
+                rerollController.AutoLocateButtons();
+            }
+
+            // 6. Sanitize text properties for flicker-free, non-clipped presentation
             if (headerText != null)
             {
                 headerText.margin = Vector4.zero;
@@ -401,6 +426,8 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void ShowDiceRoll(DiceResult result, string checkTitle = null)
         {
+            currentCheckTitle = checkTitle;
+
             if (lastHandledRollFrame == Time.frameCount && lastHandledResult.HasValue && lastHandledResult.Value.Equals(result))
             {
                 return;
@@ -431,6 +458,11 @@ namespace CastleOfTheD20.UI
         private IEnumerator AnimateRollRoutine(DiceResult result, string checkTitle = null)
         {
             ShowPanel();
+
+            if (rerollController != null)
+            {
+                rerollController.HideActionButtons();
+            }
 
             // Calculate needed roll (raw D20 needed to meet or exceed DC)
             int neededRoll = Mathf.Clamp(result.targetDC - result.bonus, 1, 20);
@@ -524,10 +556,40 @@ namespace CastleOfTheD20.UI
                 if (glowBorderImage != null) glowBorderImage.color = standardFailColor;
             }
 
-            // Auto-dismiss after display delay
+            // Check if player owns a Reroll Scroll to pause for decision
+            if (rerollController != null && rerollController.ShouldPauseForDecision(result))
+            {
+                rerollController.PresentDecisionOptions(result, onContinue: Dismiss, onReroll: TriggerReroll);
+                yield break;
+            }
+
+            // Auto-dismiss after display delay (~1.0s per MasterSpec §4.2)
             yield return new WaitForSecondsRealtime(autoDismissDelay);
 
             Dismiss();
+        }
+
+        /// <summary>
+        /// Executes an immediate reroll of the current D20 check with the exact same parameters.
+        /// Called by RuneOfRerollController after consuming a reroll scroll.
+        /// </summary>
+        public void TriggerReroll()
+        {
+            if (!lastHandledResult.HasValue) return;
+            DiceResult prev = lastHandledResult.Value;
+
+            // Roll new D20 result with matching bonus, DC, and advantage mode
+            DiceResult newResult = DiceSystem.RollD20(prev.bonus, prev.targetDC, prev.advantageUsed);
+            Debug.Log($"[DiceUIController] Reroll executed: {newResult} (replaced {prev})");
+
+            if (activeRollCoroutine != null)
+            {
+                StopCoroutine(activeRollCoroutine);
+                activeRollCoroutine = null;
+            }
+
+            lastHandledResult = newResult;
+            activeRollCoroutine = StartCoroutine(AnimateRollRoutine(newResult, currentCheckTitle));
         }
 
         /// <summary>
@@ -536,6 +598,11 @@ namespace CastleOfTheD20.UI
         public void Dismiss()
         {
             IsDisplaying = false;
+
+            if (rerollController != null)
+            {
+                rerollController.HideActionButtons();
+            }
 
             if (activeRollCoroutine != null)
             {

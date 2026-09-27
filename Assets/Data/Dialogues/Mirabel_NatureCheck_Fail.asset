@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Mirabel_NatureCheck_Fail
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Yrttiparantaja Mirabel
+  speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: "Kasvintuntemuksesi kaipaa viel\xE4 harjoitusta, mutta ter\xE4s on
-    aina ter\xE4st\xE4. Saat myrkkypullon, kunhan tuot kukat ehjin\xE4."
+  dialogueText: Your herb lore needs practice, but steel is steel. You'll receive
+    a poison vial, provided you return the blossoms undamaged.
   options:
-  - optionText: "K\xE4y minulle. Haen kukat."
+  - optionText: Fair enough. I will fetch the flowers.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

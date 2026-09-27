@@ -736,6 +736,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted += HandleUnitTurnStarted;
             TurnManager.OnCombatEnded += HandleCombatEnded;
+            TurnManager.OnCombatVictoryScrapAwarded += HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged += HandleUnitDamaged;
             GridTile.OnTileClicked += HandleTileClicked;
         }
@@ -746,6 +747,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
             TurnManager.OnUnitTurnStarted -= HandleUnitTurnStarted;
             TurnManager.OnCombatEnded -= HandleCombatEnded;
+            TurnManager.OnCombatVictoryScrapAwarded -= HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged -= HandleUnitDamaged;
             GridTile.OnTileClicked -= HandleTileClicked;
         }
@@ -1439,6 +1441,11 @@ namespace CastleOfTheD20.UI
             string outcome = isVictory ? "VICTORY! All foes vanquished." : "DEFEAT! Party defeated.";
             LogCombatMessage(outcome);
             RefreshAbilityBar();
+        }
+
+        private void HandleCombatVictoryScrapAwarded(int scrapAmount)
+        {
+            LogCombatMessage($"<color=#E0A938>[LOOT] Gained +{scrapAmount} Scrap Metal from defeated enemies!</color>");
         }
 
         /// <summary>

@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Item_PoisonVial
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_poison_vial
-  itemName: Myrkkypullo (Venom Vial)
-  description: "V\xE4kev\xE4 yrttiuute, joka lis\xE4\xE4 +5 vahinkoa seuraavaan taisteluun."
+  itemName: Poison Vial
+  description: Potent herbal extract that adds +5 bonus damage in the next combat
+    encounter.
   itemIcon: {fileID: 0}
   itemType: 0
   buyPriceGold: 30

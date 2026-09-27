@@ -420,7 +420,7 @@ namespace CastleOfTheD20.Editor
             EditorGUILayout.Space(12);
 
             GUI.backgroundColor = new Color(0.35f, 0.85f, 0.45f);
-            if (GUILayout.Button("★ Generate Procedural Village ★", GUILayout.Height(42)))
+            if (GUILayout.Button("Generate Procedural Village", GUILayout.Height(42)))
             {
                 GenerateVillage();
             }
@@ -448,7 +448,7 @@ namespace CastleOfTheD20.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     list[i] = (GameObject)EditorGUILayout.ObjectField($"Prefab #{i + 1}", list[i], typeof(GameObject), false);
-                    if (GUILayout.Button("✕", GUILayout.Width(24)))
+                    if (GUILayout.Button("X", GUILayout.Width(24)))
                     {
                         removeIndex = i;
                     }
@@ -484,7 +484,7 @@ namespace CastleOfTheD20.Editor
                 using (new EditorGUILayout.HorizontalScope())
                 {
                     pathWaypoints[i] = EditorGUILayout.Vector3Field($"Waypoint {i + 1}", pathWaypoints[i]);
-                    if (GUILayout.Button("✕", GUILayout.Width(24)))
+                    if (GUILayout.Button("X", GUILayout.Width(24)))
                     {
                         removeIndex = i;
                     }

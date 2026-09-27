@@ -75,6 +75,21 @@ namespace CastleOfTheD20.World
 
         private void Awake()
         {
+            // 1. Remove redundant static CapsuleCollider that conflicts with CharacterController physics sweeps
+            CapsuleCollider redundantCapsule = GetComponent<CapsuleCollider>();
+            if (redundantCapsule != null)
+            {
+                if (Application.isPlaying)
+                {
+                    Destroy(redundantCapsule);
+                }
+                else
+                {
+                    DestroyImmediate(redundantCapsule);
+                }
+                Debug.Log($"[PlayerExplorationMovement] Removed redundant static CapsuleCollider from {name}.");
+            }
+
             characterController = GetComponent<CharacterController>();
             if (characterController == null)
             {
@@ -92,8 +107,10 @@ namespace CastleOfTheD20.World
             if (characterController.height < 0.2f)
             {
                 characterController.height = 2.0f;
-                characterController.center = new Vector3(0, 1.0f, 0);
             }
+
+            // Always center the controller at height * 0.5f so the base sits cleanly on the ground at local y = 0
+            characterController.center = new Vector3(0f, characterController.height * 0.5f, 0f);
 
             playerUnit = GetComponent<PlayerUnit>();
             EnsureCameraReference();
@@ -101,13 +118,16 @@ namespace CastleOfTheD20.World
             if (debugLogging)
             {
                 string camName = explorationCamera != null ? explorationCamera.name : "None";
-                Debug.Log($"[PlayerExplorationMovement] Awake on '{name}'. CC Enabled: {characterController.enabled}, Camera: '{camName}', MoveSpeed: {moveSpeed}.");
+                Debug.Log($"[PlayerExplorationMovement] Awake on '{name}'. CC Enabled: {characterController.enabled}, Center: {characterController.center}, Camera: '{camName}', MoveSpeed: {moveSpeed}.");
             }
         }
 
         private void Start()
         {
             EnsureCameraReference();
+
+            // Guarantee exploration input is active and not suspended
+            GameInput.SetExplorationInputEnabled(true);
 
             if (!characterController.enabled)
             {

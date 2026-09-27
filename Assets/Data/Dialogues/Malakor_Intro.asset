@@ -12,20 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Malakor_Intro
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Varjomaagi Malakor
+  speakerName: Shadow Mage Malakor
   speakerPortrait: {fileID: 0}
-  dialogueText: "Tervetuloa arkaaniseen tutkimuskammiooni, kuolevainen. Etsitk\xF6
-    salaisuuksia? Vai vain omaa kuolemaasi peilieni labyrintissa?"
+  dialogueText: Welcome to my arcane sanctum, mortal. Do you seek ancient secrets?
+    Or merely your doom within my labyrinth of mirrors?
   options:
-  - optionText: '[DC 14 Arkaaninen herja] Harhasi ovat alkeellisia. Tunnen peiliheijastuksesi
-      taitteen!'
+  - optionText: '[DC 14 Arcane Rebuke] Your phantoms are rudimentary. I see through
+      the refraction of your mirrors!'
     requiresCheck: 1
     targetDC: 14
     skillCheckDescription: Arcana / Intelligence Check
     nextNodeSuccess: {fileID: 11400000, guid: 4c9b344e49445aa4eacba0570b1e4ec1, type: 2}
     nextNodeFailure: {fileID: 11400000, guid: 9c76ac9cb1e84054db83909e851e8527, type: 2}
     combatDebuffTag: ArcaneHeresy
-  - optionText: "[Taistelu] Harhat s\xE4rkyv\xE4t ter\xE4ksen voimalla!"
+  - optionText: '[Fight] Illusions shatter before cold steel!'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

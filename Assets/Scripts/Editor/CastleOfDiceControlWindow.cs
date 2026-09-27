@@ -27,7 +27,7 @@ namespace CastleOfTheD20.Editor
             GUILayout.Space(12);
 
             GUI.backgroundColor = new Color(0.2f, 0.75f, 1.0f);
-            if (GUILayout.Button("★ Build Walls, Doors & Place Bosses on Planes ★", GUILayout.Height(40)))
+            if (GUILayout.Button("Build Walls, Doors & Place Bosses on Planes", GUILayout.Height(40)))
             {
                 BuildDungeonWingsEditor.BuildAllDungeonWings();
             }
@@ -49,7 +49,7 @@ namespace CastleOfTheD20.Editor
                 GenerateGameDataEditor.GenerateAllGameAssets();
             }
 
-            if (GUILayout.Button("2. Build Kivenkolo Village & NPCs (Othelia, Mirabel)", GUILayout.Height(28)))
+            if (GUILayout.Button("2. Build Oakhaven Village & NPCs (Othelia, Mirabel)", GUILayout.Height(28)))
             {
                 BuildVillageEditor.BuildCompleteVillage();
             }
@@ -77,11 +77,11 @@ namespace CastleOfTheD20.Editor
             bool hasThroneRoom = GameObject.Find("ThroneRoom") != null;
             bool hasDoors = GameObject.Find("Doors_And_Passages") != null;
 
-            EditorGUILayout.LabelField("CourtYard Plane:", hasCourtyard ? "✓ Detected" : "✗ Missing");
-            EditorGUILayout.LabelField("Forest Plane:", hasForest ? "✓ Detected" : "✗ Missing");
-            EditorGUILayout.LabelField("Library Plane:", hasLibrary ? "✓ Detected" : "✗ Missing");
-            EditorGUILayout.LabelField("ThroneRoom Plane:", hasThroneRoom ? "✓ Detected" : "✗ Missing");
-            EditorGUILayout.LabelField("Walls & Connecting Doors:", hasDoors ? "✓ Built" : "✗ Not built yet");
+            EditorGUILayout.LabelField("CourtYard Plane:", hasCourtyard ? "[OK] Detected" : "[MISSING]");
+            EditorGUILayout.LabelField("Forest Plane:", hasForest ? "[OK] Detected" : "[MISSING]");
+            EditorGUILayout.LabelField("Library Plane:", hasLibrary ? "[OK] Detected" : "[MISSING]");
+            EditorGUILayout.LabelField("ThroneRoom Plane:", hasThroneRoom ? "[OK] Detected" : "[MISSING]");
+            EditorGUILayout.LabelField("Walls & Connecting Doors:", hasDoors ? "[OK] Built" : "[MISSING] Not built yet");
 
             GUILayout.Space(10);
             GUILayout.Label("Boss & NPC Status:", EditorStyles.boldLabel);
@@ -90,26 +90,26 @@ namespace CastleOfTheD20.Editor
             bool hasGargoyle = GameObject.Find("Boss_GargoyleKing") != null || GameObject.Find("NPC_GargoyleKing") != null;
             bool hasVillage = GameObject.Find("Village_Layout") != null;
 
-            EditorGUILayout.LabelField("Kivenkolo Village & NPCs:", hasVillage ? "✓ Present" : "✗ Missing");
-            EditorGUILayout.LabelField("Kirottu Komentaja (Courtyard):", hasCmdr ? "✓ Placed" : "✗ Missing");
-            EditorGUILayout.LabelField("Varjomaagi Malakor (Library):", hasMalakor ? "✓ Placed" : "✗ Missing");
-            EditorGUILayout.LabelField("Kivettymiskuningas (ThroneRoom):", hasGargoyle ? "✓ Placed" : "✗ Missing");
+            EditorGUILayout.LabelField("Oakhaven Village & NPCs:", hasVillage ? "[OK] Present" : "[MISSING]");
+            EditorGUILayout.LabelField("Cursed Commander (Courtyard):", hasCmdr ? "[OK] Placed" : "[MISSING]");
+            EditorGUILayout.LabelField("Shadow Mage Malakor (Library):", hasMalakor ? "[OK] Placed" : "[MISSING]");
+            EditorGUILayout.LabelField("The Gargoyle King (ThroneRoom):", hasGargoyle ? "[OK] Placed" : "[MISSING]");
 
             GUILayout.Space(10);
             GUILayout.Label("Audio & Music Status:", EditorStyles.boldLabel);
             var musicManager = Object.FindAnyObjectByType<CastleOfTheD20.Core.MusicManager>();
             bool hasMM = musicManager != null;
             bool clipsAssigned = hasMM && musicManager.VillageSongClip != null && musicManager.GargoyleKingPhase2Clip != null;
-            EditorGUILayout.LabelField("MusicManager Component:", hasMM ? "✓ Present" : "✗ Missing");
-            EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "✓ Configured (7 MP3s)" : "✗ Incomplete");
+            EditorGUILayout.LabelField("MusicManager Component:", hasMM ? "[OK] Present" : "[MISSING]");
+            EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "[OK] Configured (7 MP3s)" : "[MISSING] Incomplete");
 
             GUILayout.Space(10);
             GUILayout.Label("HUD & Interface Status:", EditorStyles.boldLabel);
             var hud = Object.FindAnyObjectByType<CastleOfTheD20.UI.PlayerHUD>();
             bool hasHUD = hud != null;
             bool hasHeroCard = hasHUD && hud.transform.Find("Hero_Status_Card") != null;
-            EditorGUILayout.LabelField("PlayerHUD Component:", hasHUD ? "✓ Present" : "✗ Missing");
-            EditorGUILayout.LabelField("Tabletop D&D Styling:", hasHeroCard ? "✓ Configured & Styled" : "✗ Needs Rebuilding");
+            EditorGUILayout.LabelField("PlayerHUD Component:", hasHUD ? "[OK] Present" : "[MISSING]");
+            EditorGUILayout.LabelField("Tabletop D&D Styling:", hasHeroCard ? "[OK] Configured & Styled" : "[MISSING] Needs Rebuilding");
 
             GUILayout.Space(12);
             if (GUILayout.Button("Refresh Status", GUILayout.Height(26)))

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_swamp_herb
   itemName: Castle Moat Blossom
-  description: "Harvinainen suokukka, joka kasvaa vain linnan vallihaudan liepeill\xE4."
+  description: Rare swamp flower that blooms only near the castle moat.
   itemIcon: {fileID: 0}
   itemType: 3
   buyPriceGold: 0

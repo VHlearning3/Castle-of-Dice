@@ -8,7 +8,7 @@ using CastleOfTheD20.Combat;
 namespace CastleOfTheD20.Economy
 {
     /// <summary>
-    /// Implements Blacksmith Baldur's trading post mechanics in Oakhaven (Kivenkolo).
+    /// Implements Blacksmith Baldur's trading post mechanics in Oakhaven.
     /// Handles scrap metal conversion (1 scrap = 10 gold), item purchasing (potions, weapons, armor),
     /// and selling loot back for gold.
     /// </summary>

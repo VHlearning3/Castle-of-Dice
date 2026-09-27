@@ -12,13 +12,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Mirabel_NatureCheck_Success
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: Yrttiparantaja Mirabel
+  speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: "Tunnistat siis suokasvien arvoituksen! Koska ymm\xE4rr\xE4t luontoa
-    n\xE4in syv\xE4sti, keit\xE4n sinulle tavallisen myrkyn sijaan Suuren Terveysjuoman
-    palkkioksi!"
+  dialogueText: You truly understand marsh flora! Since you possess such deep knowledge
+    of nature, I shall brew you a Greater Health Potion instead of ordinary poison
+    as your reward!
   options:
-  - optionText: Sovittu. Haen suokukat vallihaudalta.
+  - optionText: Agreed. I will gather the swamp blossoms from the moat.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

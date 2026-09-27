@@ -12,12 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Othelia_Accepted
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: "Kyl\xE4nvanhin Othelia"
+  speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: Kiitos, urhea seikkailija! Sukuni sinettisormus katosi linnan alapihoille,
-    kun vartijat kaatuivat. Varo luurankoja raunioissa!
+  dialogueText: Thank you, brave adventurer! My family's signet ring was lost in
+    the lower courtyards when the guards fell. Beware the skeletons among the ruins!
   options:
-  - optionText: "[Leave] Etsin sormuksen heti kun p\xE4\xE4sen linnaan."
+  - optionText: '[Leave] I shall search for the ring as soon as I enter the castle.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

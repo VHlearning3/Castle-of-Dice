@@ -328,6 +328,46 @@ namespace CastleOfTheD20.Economy
             return GetQuestState(questID) == QuestState.Completed;
         }
 
+        /// <summary>
+        /// Returns all registered quest ScriptableObject definitions.
+        /// </summary>
+        public List<QuestSO> GetAllRegisteredQuests()
+        {
+            return new List<QuestSO>(registeredQuests.Values);
+        }
+
+        /// <summary>
+        /// Returns all quests currently marked as InProgress.
+        /// </summary>
+        public List<QuestSO> GetAllActiveQuests()
+        {
+            List<QuestSO> list = new List<QuestSO>();
+            foreach (var kvp in questStates)
+            {
+                if (kvp.Value == QuestState.InProgress && registeredQuests.TryGetValue(kvp.Key, out QuestSO q))
+                {
+                    if (!list.Contains(q)) list.Add(q);
+                }
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Returns all tracked quests that are either InProgress or Completed.
+        /// </summary>
+        public List<QuestSO> GetTrackedQuests()
+        {
+            List<QuestSO> list = new List<QuestSO>();
+            foreach (var kvp in questStates)
+            {
+                if ((kvp.Value == QuestState.InProgress || kvp.Value == QuestState.Completed) && registeredQuests.TryGetValue(kvp.Key, out QuestSO q))
+                {
+                    if (!list.Contains(q)) list.Add(q);
+                }
+            }
+            return list;
+        }
+
         #endregion
     }
 }

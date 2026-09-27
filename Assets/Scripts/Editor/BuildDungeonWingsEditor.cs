@@ -249,7 +249,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_CursedCommander", new Vector3(center.x, 1.0f, center.z - 15f), metalMat, "Assets/Data/Dialogues/Commander_Intro.asset", "Haasta Kirottu Komentaja", wingObj.transform);
+            CreateBossDialogueNPC("NPC_CursedCommander", new Vector3(center.x, 1.0f, center.z - 15f), metalMat, "Assets/Data/Dialogues/Commander_Intro.asset", "Challenge the Cursed Commander", wingObj.transform);
 
             // Reward Chest (Contains Othelia's Signet Ring + 40 Gold)
             GameObject chestObj = CreateRewardChest("Courtyard_Reward_Chest", new Vector3(center.x, 0.4f, center.z + 30f), woodMat, goldMat, chestPrefab, wingObj.transform, 40, signetRing);
@@ -319,7 +319,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_Malakor", new Vector3(center.x, 1.0f, center.z - 15f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Haasta Varjomaagi Malakor", wingObj.transform);
+            CreateBossDialogueNPC("NPC_Malakor", new Vector3(center.x, 1.0f, center.z - 15f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Challenge Shadow Mage Malakor", wingObj.transform);
 
             // Reward Chest (Greater potion + 60 gold)
             GameObject chestObj = CreateRewardChest("Library_Reward_Chest", new Vector3(center.x, 0.4f, center.z + 30f), woodMat, goldMat, chestPrefab, wingObj.transform, 60, potionReward);
@@ -393,7 +393,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_GargoyleKing", new Vector3(center.x, 1.2f, center.z - 10f), wallMat, "Assets/Data/Dialogues/GargoyleKing_Intro.asset", "Haasta Kivettymiskuningas", wingObj.transform);
+            CreateBossDialogueNPC("NPC_GargoyleKing", new Vector3(center.x, 1.2f, center.z - 10f), wallMat, "Assets/Data/Dialogues/GargoyleKing_Intro.asset", "Challenge the Gargoyle King", wingObj.transform);
 
             // Royal Treasure Chest (100 Gold + Campaign Victory)
             GameObject chestObj = CreateRewardChest("CrownHall_Treasure_Chest", new Vector3(center.x, 1.4f, center.z + 34f), woodMat, goldMat, chestPrefab, wingObj.transform, 100, null);
@@ -428,32 +428,32 @@ namespace CastleOfTheD20.Editor
             // Boundary at Z ≈ 59.2, X ≈ 0
             Vector3 door1Pos = new Vector3(0f, 0f, 59.2f);
             CreateDoorway("Door_Village_Forest", door1Pos, Quaternion.identity,
-                "Astu Syvään Metsään (Forest)", "Forest", new Vector3(0f, 0.5f, 65f),
-                "Palaa Kivenkolon kylään (Village)", "Village", new Vector3(0f, 0.5f, 53f),
+                "Enter the Whispering Woods (Forest)", "Forest", new Vector3(0f, 0.5f, 65f),
+                "Return to Oakhaven Village (Village)", "Village", new Vector3(0f, 0.5f, 53f),
                 wallMat, archPrefab, pillarPrefab, doorsRoot.transform);
 
             // 2. Door: Forest <-> CourtYard (Castle Outer Gate)
             // Boundary at Z ≈ 158.5, X ≈ 0
             Vector3 door2Pos = new Vector3(0f, 0f, 158.5f);
             CreateDoorway("Door_Forest_Courtyard", door2Pos, Quaternion.identity,
-                "Astu Linnan Alapihalle (Wing 1: Courtyard)", "Courtyard", new Vector3(0f, 0.5f, 166f),
-                "Palaa Metsään (Forest)", "Forest", new Vector3(0f, 0.5f, 150f),
+                "Enter Castle Courtyard (Wing 1: Courtyard)", "Courtyard", new Vector3(0f, 0.5f, 166f),
+                "Return to the Forest (Forest)", "Forest", new Vector3(0f, 0.5f, 150f),
                 wallMat, archPrefab, pillarPrefab, doorsRoot.transform);
 
             // 3. Door: CourtYard <-> Library (Arcane Archway)
             // Boundary at X ≈ -50.0, Z ≈ 208.2 (rotated 90 degrees around Y)
             Vector3 door3Pos = new Vector3(-50.0f, 0f, 208.2f);
             CreateDoorway("Door_Courtyard_Library", door3Pos, Quaternion.Euler(0f, 90f, 0f),
-                "Astu Salatieteen Kirjastoon (Wing 2: Library)", "Library", new Vector3(-58f, 0.5f, 208.2f),
-                "Palaa Alapihalle (Wing 1: Courtyard)", "Courtyard", new Vector3(-42f, 0.5f, 208.2f),
+                "Enter Grand Archives (Wing 2: Library)", "Library", new Vector3(-58f, 0.5f, 208.2f),
+                "Return to Courtyard (Wing 1: Courtyard)", "Courtyard", new Vector3(-42f, 0.5f, 208.2f),
                 wallMat, archPrefab, pillarPrefab, doorsRoot.transform);
 
             // 4. Door: CourtYard <-> ThroneRoom (Crown Hall Iron Gate)
             // Boundary at Z ≈ 257.7, X ≈ 0.15
             Vector3 door4Pos = new Vector3(0.15f, 0f, 257.7f);
             CreateDoorway("Door_Courtyard_ThroneRoom", door4Pos, Quaternion.identity,
-                "Astu Kruununsaliin (Wing 3: Final Boss)", "CrownHall", new Vector3(0.3f, 0.5f, 266f),
-                "Palaa Alapihalle (Wing 1: Courtyard)", "Courtyard", new Vector3(0f, 0.5f, 250f),
+                "Enter Crown Hall (Wing 3: Final Boss)", "CrownHall", new Vector3(0.3f, 0.5f, 266f),
+                "Return to Courtyard (Wing 1: Courtyard)", "Courtyard", new Vector3(0f, 0.5f, 250f),
                 wallMat, archPrefab, pillarPrefab, doorsRoot.transform);
         }
 
@@ -538,7 +538,7 @@ namespace CastleOfTheD20.Editor
                 DoorTeleporter dt = portal.GetComponent<DoorTeleporter>();
                 if (dt != null)
                 {
-                    dt.PromptMessage = "Astu Syvään Metsään (Forest)";
+                    dt.PromptMessage = "Enter Deep Forest (Forest)";
                     dt.DestinationZone = "Forest";
                     dt.TargetSpawnPosition = new Vector3(0f, 0.5f, 65.0f);
                 }
@@ -732,7 +732,7 @@ namespace CastleOfTheD20.Editor
             {
                 reward.ItemReward = herbItem;
             }
-            reward.PromptMessage = "Kerää Suokukka (Mirabelin tehtävä)";
+            reward.PromptMessage = "Collect Swamp Blossom (Mirabel's Quest)";
             reward.InteractionRadius = 4.0f;
             reward.EnsureChestCollider();
 

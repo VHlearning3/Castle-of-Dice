@@ -12,27 +12,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d67eb3bbd33543e46af195b5529bfaec, type: 3}
   m_Name: Othelia_Intro
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
-  speakerName: "Kyl\xE4nvanhin Othelia"
+  speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: "Tervehdys, matkalainen. Olen kyl\xE4nvanhin Othelia. Kivenkolo eli
-    rauhassa, kunnes vanha kivilinna her\xE4si pahuuteen. Jos uskaltaudut linnan
-    porteille, voisitko etsi\xE4 perheeni kadonneen sinettisormuksen?"
+  dialogueText: Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace
+    until the ancient stone castle stirred with evil. If you venture to the castle
+    gates, could you search for my family's lost signet ring?
   options:
-  - optionText: Etsin sormuksen puolestasi.
+  - optionText: I will find the ring for you.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 11400000, guid: 987fe80ae9a717848a795a47b5e99846, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]'
-  - optionText: "Kerro minulle linnan menneisyydest\xE4 ja kuninkaasta."
+  - optionText: Tell me about the castle's history and the King.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 11400000, guid: d61f386a08f95d74e8ffdaa1b67d717f, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: 
-  - optionText: "[Exit] Minulla on kiireit\xE4 muualla."
+  - optionText: '[Exit] I have urgent matters elsewhere.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

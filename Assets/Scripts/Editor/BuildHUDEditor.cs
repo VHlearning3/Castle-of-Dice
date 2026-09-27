@@ -5,6 +5,9 @@ using UnityEditor.SceneManagement;
 using TMPro;
 using CastleOfTheD20.UI;
 using CastleOfTheD20.Data;
+using CastleOfTheD20.Core;
+using CastleOfTheD20.Audio;
+using CastleOfTheD20.World;
 
 namespace CastleOfTheD20.Editor
 {
@@ -44,6 +47,7 @@ namespace CastleOfTheD20.Editor
 
             Sprite coinSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/ICONSART/CoinIcon.png");
             Sprite potionSprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/ICONSART/HealthPotionIcon.png");
+            Sprite scrapOre = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
             ItemSO potionItem = AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset");
             TMP_FontAsset fontAsset = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
 
@@ -88,6 +92,7 @@ namespace CastleOfTheD20.Editor
             so.FindProperty("crestWarriorSprite").objectReferenceValue = crestWarrior;
             so.FindProperty("crestMageSprite").objectReferenceValue = crestMage;
             so.FindProperty("crestRogueSprite").objectReferenceValue = crestRogue;
+            so.FindProperty("scrapOreSprite").objectReferenceValue = scrapOre;
             if (potionItem != null)
             {
                 so.FindProperty("healthPotionItem").objectReferenceValue = potionItem;
@@ -249,6 +254,17 @@ namespace CastleOfTheD20.Editor
                 }
             }
 
+            Transform questCard = hud.transform.Find("Quest_Tracker_Card");
+            if (questCard != null)
+            {
+                QuestHUDUIController qCtrl = questCard.GetComponent<QuestHUDUIController>();
+                if (qCtrl == null)
+                {
+                    qCtrl = questCard.gameObject.AddComponent<QuestHUDUIController>();
+                }
+                qCtrl.AutoLocateOrBuildHierarchy();
+            }
+
             Transform zoneTitle = hud.transform.Find("Zone_Indicator_Banner/Zone_Title_Text");
             if (zoneTitle != null)
             {
@@ -256,7 +272,7 @@ namespace CastleOfTheD20.Editor
                 if (zt != null)
                 {
                     so.FindProperty("zoneTitleText").objectReferenceValue = zt;
-                    zt.text = "Kivenkolo Village";
+                    zt.text = "Oakhaven Village";
                     zt.fontSize = 15f;
                     zt.fontStyle = FontStyles.Bold;
                 }
@@ -277,11 +293,40 @@ namespace CastleOfTheD20.Editor
 
             so.ApplyModifiedProperties();
 
+            // 8. Ensure LevelUpUIController and Progression components exist on Canvas / Scene
+            LevelUpUIController levelUpCtrl = canvas.GetComponentInChildren<LevelUpUIController>(true);
+            if (levelUpCtrl == null)
+            {
+                GameObject lvlObj = new GameObject("LevelUpUIController", typeof(LevelUpUIController));
+                lvlObj.transform.SetParent(canvas.transform, false);
+                levelUpCtrl = lvlObj.GetComponent<LevelUpUIController>();
+            }
+            levelUpCtrl.EnsureUIHierarchy();
+
+            PlayerProgressionManager progManager = Object.FindAnyObjectByType<PlayerProgressionManager>(FindObjectsInactive.Include);
+            if (progManager == null)
+            {
+                GameObject progObj = new GameObject("PlayerProgressionManager", typeof(PlayerProgressionManager));
+                progManager = progObj.GetComponent<PlayerProgressionManager>();
+            }
+
+            SFXManager sfxMgr = Object.FindAnyObjectByType<SFXManager>(FindObjectsInactive.Include);
+            if (sfxMgr == null)
+            {
+                GameObject sfxObj = new GameObject("SFXManager", typeof(SFXManager));
+            }
+
+            FloatingCombatText fct = Object.FindAnyObjectByType<FloatingCombatText>(FindObjectsInactive.Include);
+            if (fct == null)
+            {
+                GameObject fctObj = new GameObject("FloatingCombatText", typeof(FloatingCombatText));
+            }
+
             EditorUtility.SetDirty(hud.gameObject);
             EditorSceneManager.MarkSceneDirty(activeScene);
             EditorSceneManager.SaveScene(activeScene);
 
-            Debug.Log("[BuildHUDEditor] Tabletop D&D HUD successfully rebuilt, styled, and saved into StartVillage.unity!");
+            Debug.Log("[BuildHUDEditor] Tabletop D&D HUD & Progression successfully rebuilt, styled, and saved into StartVillage.unity!");
 
             // Rebuild and style Combat HUD in tandem
             RebuildAndStyleCombatHUD();
@@ -425,6 +470,90 @@ namespace CastleOfTheD20.Editor
 
             AssetDatabase.SaveAssets();
             Debug.Log("[BuildHUDEditor] All 12 AbilitySO assets successfully assigned their authentic fantasy icons!");
+        }
+
+        [MenuItem("CastleOfDice/Setup Rune of Reroll Dice Modal", false, 28)]
+        [MenuItem("Tools/Castle of Dice/Setup Rune of Reroll Dice Modal", false, 28)]
+        public static void SetupRuneOfRerollDiceModal()
+        {
+            var activeScene = EditorSceneManager.GetActiveScene();
+            if (activeScene.name != "StartVillage")
+            {
+                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
+            }
+
+            Canvas canvas = Object.FindAnyObjectByType<Canvas>(FindObjectsInactive.Include);
+            if (canvas == null)
+            {
+                Debug.LogWarning("[BuildHUDEditor] Canvas not found in scene!");
+                return;
+            }
+
+            Transform diceModalTr = null;
+            foreach (Transform t in canvas.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == "DiceModalPanel")
+                {
+                    diceModalTr = t;
+                    break;
+                }
+            }
+
+            if (diceModalTr == null)
+            {
+                Debug.LogWarning("[BuildHUDEditor] DiceModalPanel not found in Canvas!");
+                return;
+            }
+
+            DiceUIController diceUI = diceModalTr.GetComponent<DiceUIController>();
+            if (diceUI == null)
+            {
+                diceUI = diceModalTr.gameObject.AddComponent<DiceUIController>();
+            }
+
+            RuneOfRerollController reroll = diceModalTr.GetComponent<RuneOfRerollController>();
+            if (reroll == null)
+            {
+                reroll = diceModalTr.gameObject.AddComponent<RuneOfRerollController>();
+            }
+
+            diceUI.AutoLocateComponents();
+            reroll.AutoLocateButtons();
+
+            SerializedObject diceSO = new SerializedObject(diceUI);
+            SerializedProperty rerollProp = diceSO.FindProperty("rerollController");
+            if (rerollProp != null)
+            {
+                rerollProp.objectReferenceValue = reroll;
+                diceSO.ApplyModifiedProperties();
+            }
+
+            SerializedObject rerollSO = new SerializedObject(reroll);
+            Button[] buttons = diceModalTr.GetComponentsInChildren<Button>(true);
+            foreach (var b in buttons)
+            {
+                if (b.name == "DismissButton" || b.name.Contains("Continue"))
+                {
+                    SerializedProperty cbProp = rerollSO.FindProperty("continueButton");
+                    if (cbProp != null) cbProp.objectReferenceValue = b;
+                    SerializedProperty cbtProp = rerollSO.FindProperty("continueButtonText");
+                    if (cbtProp != null) cbtProp.objectReferenceValue = b.GetComponentInChildren<TMP_Text>(true);
+                }
+                else if (b.name == "RerollButton")
+                {
+                    SerializedProperty rbProp = rerollSO.FindProperty("rerollButton");
+                    if (rbProp != null) rbProp.objectReferenceValue = b;
+                    SerializedProperty rbtProp = rerollSO.FindProperty("rerollButtonText");
+                    if (rbtProp != null) rbtProp.objectReferenceValue = b.GetComponentInChildren<TMP_Text>(true);
+                }
+            }
+            rerollSO.ApplyModifiedProperties();
+
+            EditorUtility.SetDirty(diceModalTr.gameObject);
+            EditorSceneManager.MarkSceneDirty(activeScene);
+            EditorSceneManager.SaveScene(activeScene);
+
+            Debug.Log("[BuildHUDEditor] Rune of Reroll Dice Modal successfully configured and saved into StartVillage.unity!");
         }
     }
 }

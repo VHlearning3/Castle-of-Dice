@@ -11,7 +11,7 @@ using CastleOfTheD20.Combat;
 namespace CastleOfTheD20.UI
 {
     /// <summary>
-    /// User Interface Controller for Blacksmith Baldur's Shop in Oakhaven / Kivenkolo Village.
+    /// User Interface Controller for Blacksmith Baldur's Shop in Oakhaven Village.
     /// Displays current gold and scrap metal resources in ornate tabletop D&D pill badges,
     /// presents stock items in styled rows with framed item image slots, and handles one-click purchases.
     /// Strictly preserves authentic CoinIcon.png and HealthPotionIcon.png assets.
@@ -444,7 +444,7 @@ namespace CastleOfTheD20.UI
             TMP_Text subText = subObj.GetComponent<TMP_Text>();
             if (subText != null)
             {
-                subText.text = "Blacksmith of Kivenkolo Village • Arms, Armor & Field Supplies";
+                subText.text = "Blacksmith of Oakhaven Village - Arms, Armor & Field Supplies";
                 subText.fontSize = 12f;
                 subText.color = new Color(0.62f, 0.67f, 0.74f, 1f);
                 subText.alignment = TextAlignmentOptions.Center;

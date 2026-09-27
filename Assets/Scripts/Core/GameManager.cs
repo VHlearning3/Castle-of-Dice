@@ -50,11 +50,25 @@ namespace CastleOfTheD20.Core
     /// </summary>
     public class GameManager : MonoBehaviour
     {
-        #region Singleton
+        private static GameManager _instance;
 
-        public static GameManager Instance { get; private set; }
-
-        #endregion
+        public static GameManager Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindAnyObjectByType<GameManager>();
+                    if (_instance == null)
+                    {
+                        GameObject managersObj = GameObject.Find("Managers") ?? new GameObject("Managers");
+                        _instance = managersObj.AddComponent<GameManager>();
+                    }
+                }
+                return _instance;
+            }
+            private set => _instance = value;
+        }
 
         #region Serialized Fields
 
@@ -119,13 +133,13 @@ namespace CastleOfTheD20.Core
 
         private void Awake()
         {
-            if (Instance != null && Instance != this)
+            if (_instance != null && _instance != this)
             {
                 Destroy(gameObject);
                 return;
             }
 
-            Instance = this;
+            _instance = this;
 
             // Ensure game always starts in clean exploration mode
             currentMode = GamePlayMode.Exploration;

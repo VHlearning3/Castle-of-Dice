@@ -76,6 +76,16 @@ namespace CastleOfTheD20.UI
         [Tooltip("Image holding the authentic user-provided CoinIcon.png.")]
         [SerializeField] private Image coinIconImage;
 
+        [Header("Scrap Metal Counter (MasterSpec §6)")]
+        [Tooltip("Text display indicating available scrap metal pieces in the player's pack (e.g. '8 kpl').")]
+        [SerializeField] private TMP_Text scrapCounterText;
+
+        [Tooltip("Image displaying the authentic UI_Icon_ScrapOre.png.")]
+        [SerializeField] private Image scrapIconImage;
+
+        [Tooltip("Sprite asset for the scrap ore icon in HUD.")]
+        [SerializeField] private Sprite scrapOreSprite;
+
         [Header("Quick Potion Hotbar")]
         [Tooltip("Button allowing immediate consumption of a Health Potion.")]
         [SerializeField] private Button quickPotionButton;
@@ -97,7 +107,7 @@ namespace CastleOfTheD20.UI
         [SerializeField] private TMP_Text questHeaderText;
 
         [Header("Zone & Location Banner")]
-        [Tooltip("Text component displaying current atmospheric zone name (e.g. 'Kivenkolo Village').")]
+        [Tooltip("Text component displaying current atmospheric zone name (e.g. 'Oakhaven Village').")]
         [SerializeField] private TMP_Text zoneTitleText;
 
         [Tooltip("Text component displaying campaign chapter or subtitle.")]
@@ -155,6 +165,7 @@ namespace CastleOfTheD20.UI
         private void OnEnable()
         {
             InventoryManager.OnGoldChanged += HandleGoldChanged;
+            InventoryManager.OnScrapMetalChanged += HandleScrapMetalChanged;
             InventoryManager.OnInventoryChanged += HandleInventoryChanged;
             QuestManager.OnQuestProgressUpdated += HandleQuestProgressUpdated;
             QuestManager.OnQuestStateUpdated += HandleQuestStateUpdated;
@@ -167,6 +178,7 @@ namespace CastleOfTheD20.UI
         private void OnDisable()
         {
             InventoryManager.OnGoldChanged -= HandleGoldChanged;
+            InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
             InventoryManager.OnInventoryChanged -= HandleInventoryChanged;
             QuestManager.OnQuestProgressUpdated -= HandleQuestProgressUpdated;
             QuestManager.OnQuestStateUpdated -= HandleQuestStateUpdated;
@@ -226,7 +238,7 @@ namespace CastleOfTheD20.UI
             }
 
             // 4. Quick Potion Hotkey [Q]
-            if (Input.GetKeyDown(KeyCode.Q))
+            if (GameInput.IsQuickPotionHotkeyPressed())
             {
                 if (quickPotionButton != null && quickPotionButton.interactable)
                 {
@@ -262,6 +274,9 @@ namespace CastleOfTheD20.UI
                 crestMageSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Mage.png");
             if (crestRogueSprite == null)
                 crestRogueSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Rogue.png");
+
+            if (scrapOreSprite == null)
+                scrapOreSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
 
             if (healthPotionItem == null)
                 healthPotionItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset");
@@ -304,6 +319,10 @@ namespace CastleOfTheD20.UI
                 else if (goldCounterText == null && (lower.Contains("gold") || lower.Contains("money") || lower.Contains("coin")))
                 {
                     goldCounterText = txt;
+                }
+                else if (scrapCounterText == null && (lower.Contains("scrap") || lower.Contains("romu") || lower.Contains("ore")))
+                {
+                    scrapCounterText = txt;
                 }
                 else if (potionCountText == null && (lower.Contains("potioncount") || lower.Contains("count") || lower.Contains("qty")))
                 {
@@ -726,6 +745,90 @@ namespace CastleOfTheD20.UI
                 }
             }
 
+            // 1G. Scrap Metal Banner (MasterSpec Section 6 & UNITY_SETUP_GUIDE: Scrap Metal: 8 pcs)
+            Transform scrapContainer = transform.Find("Scrap_Container") ?? heroCardObj.transform.Find("Scrap_Container");
+            if (scrapContainer == null)
+            {
+                GameObject scObj = new GameObject("Scrap_Container", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                scObj.transform.SetParent(heroCardObj.transform, false);
+                scrapContainer = scObj.transform;
+            }
+            else
+            {
+                scrapContainer.SetParent(heroCardObj.transform, false);
+            }
+
+            RectTransform scRect = scrapContainer.GetComponent<RectTransform>();
+            scRect.anchorMin = new Vector2(0f, 1f);
+            scRect.anchorMax = new Vector2(0f, 1f);
+            scRect.pivot = new Vector2(0f, 1f);
+            scRect.anchoredPosition = new Vector2(296f, -86f);
+            scRect.sizeDelta = new Vector2(140f, 36f);
+
+            Image scBg = scrapContainer.GetComponent<Image>();
+            if (scBg == null) scBg = scrapContainer.gameObject.AddComponent<Image>();
+            if (pillBadgeSprite != null)
+            {
+                scBg.sprite = pillBadgeSprite;
+                scBg.type = Image.Type.Sliced;
+                scBg.color = Color.white;
+            }
+
+            // Scrap Icon (using authentic UI_Icon_ScrapOre.png)
+            Transform scrapImgTr = scrapContainer.Find("Scrap_Icon")
+                ?? scrapContainer.Find("Ore_Icon")
+                ?? scrapContainer.Find("Image");
+
+            if (scrapImgTr == null)
+            {
+                GameObject sIconObj = new GameObject("Scrap_Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                sIconObj.transform.SetParent(scrapContainer, false);
+                scrapImgTr = sIconObj.transform;
+            }
+
+            scrapImgTr.name = "Scrap_Icon";
+            scrapIconImage = scrapImgTr.GetComponent<Image>();
+            if (scrapIconImage != null)
+            {
+                if (scrapOreSprite != null) scrapIconImage.sprite = scrapOreSprite;
+                scrapIconImage.preserveAspect = true;
+                scrapIconImage.raycastTarget = false;
+                RectTransform scIconRect = scrapIconImage.GetComponent<RectTransform>();
+                scIconRect.anchorMin = new Vector2(0f, 0.5f);
+                scIconRect.anchorMax = new Vector2(0f, 0.5f);
+                scIconRect.pivot = new Vector2(0f, 0.5f);
+                scIconRect.anchoredPosition = new Vector2(8f, 0f);
+                scIconRect.sizeDelta = new Vector2(22f, 22f);
+                scIconRect.localScale = Vector3.one;
+            }
+
+            // Scrap counter text (formatted as e.g. '8 kpl' per MasterSpec §6)
+            Transform scrapTextTr = scrapContainer.Find("Scrap_Text");
+            if (scrapTextTr == null)
+            {
+                GameObject sTextObj = new GameObject("Scrap_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                sTextObj.transform.SetParent(scrapContainer, false);
+                scrapTextTr = sTextObj.transform;
+            }
+
+            scrapCounterText = scrapTextTr.GetComponent<TMP_Text>();
+            if (scrapCounterText != null)
+            {
+                scrapCounterText.text = "0 kpl";
+                scrapCounterText.alignment = TextAlignmentOptions.MidlineLeft;
+                scrapCounterText.fontSize = 13f;
+                scrapCounterText.fontStyle = FontStyles.Bold;
+                scrapCounterText.color = new Color(0.85f, 0.88f, 0.92f, 1f); // Metallic silver
+                scrapCounterText.raycastTarget = false;
+                RectTransform sctRect = scrapCounterText.GetComponent<RectTransform>();
+                sctRect.anchorMin = new Vector2(0f, 0f);
+                sctRect.anchorMax = new Vector2(1f, 1f);
+                sctRect.pivot = new Vector2(0f, 0.5f);
+                sctRect.anchoredPosition = new Vector2(36f, 0f);
+                sctRect.sizeDelta = new Vector2(-42f, 0f);
+                sctRect.localScale = Vector3.one;
+            }
+
             // ========================================================
             // 2. TOP-CENTER: ZONE & LOCATION BANNER (Emoji-free, clean typography)
             // ========================================================
@@ -750,7 +853,7 @@ namespace CastleOfTheD20.UI
             GameObject zTitleObj = zTitleTr != null ? zTitleTr.gameObject : new GameObject("Zone_Title_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             zTitleObj.transform.SetParent(zoneBannerObj.transform, false);
             zoneTitleText = zTitleObj.GetComponent<TMP_Text>();
-            zoneTitleText.text = "Kivenkolo Village";
+            zoneTitleText.text = "Oakhaven Village";
             zoneTitleText.fontSize = 15f;
             zoneTitleText.fontStyle = FontStyles.Bold;
             zoneTitleText.alignment = TextAlignmentOptions.Center;
@@ -855,6 +958,14 @@ namespace CastleOfTheD20.UI
                     activeQuestSummaryText.richText = true;
                 }
             }
+
+            // 3D. Attach and initialize QuestHUDUIController
+            QuestHUDUIController questHUD = questCardObj.GetComponent<QuestHUDUIController>();
+            if (questHUD == null)
+            {
+                questHUD = questCardObj.AddComponent<QuestHUDUIController>();
+            }
+            questHUD.AutoLocateOrBuildHierarchy();
         }
 
         #endregion
@@ -892,10 +1003,11 @@ namespace CastleOfTheD20.UI
                 UpdateHeroDisplay();
             }
 
-            // 2. Gold Counter & Potions
+            // 2. Gold Counter, Scrap Metal & Potions
             if (InventoryManager.Instance != null)
             {
                 UpdateGoldDisplay(InventoryManager.Instance.CurrentGold);
+                UpdateScrapDisplay(InventoryManager.Instance.ScrapMetalCount);
                 UpdatePotionDisplay();
             }
 
@@ -931,7 +1043,8 @@ namespace CastleOfTheD20.UI
                 {
                     classType = trackedPlayer.CharacterClass.ClassType;
                 }
-                heroClassText.text = $"{classType} • Level 1";
+                int level = trackedPlayer.Level > 0 ? trackedPlayer.Level : 1;
+                heroClassText.text = $"{classType} • Level {level}";
             }
 
             // Armor Class
@@ -987,6 +1100,14 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        public void UpdateScrapDisplay(int scrapCount)
+        {
+            if (scrapCounterText != null)
+            {
+                scrapCounterText.text = $"{scrapCount} kpl";
+            }
+        }
+
         private void UpdatePotionDisplay()
         {
             InventoryManager inventory = InventoryManager.Instance;
@@ -1020,7 +1141,7 @@ namespace CastleOfTheD20.UI
             switch (location)
             {
                 case GameLocation.Village:
-                    zoneTitleText.text = "Kivenkolo Village";
+                    zoneTitleText.text = "Oakhaven Village";
                     if (zoneSubtitleText != null) zoneSubtitleText.text = "Safe Haven • Starting Area";
                     break;
                 case GameLocation.Forest:
@@ -1052,6 +1173,8 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void UpdateQuestSummaryText(string customText = null)
         {
+            QuestHUDUIController.Instance?.RefreshQuestList();
+
             if (activeQuestSummaryText == null) return;
 
             if (!string.IsNullOrEmpty(customText))
@@ -1084,7 +1207,7 @@ namespace CastleOfTheD20.UI
 
             activeQuestSummaryText.text =
                 "<color=#FFF8DC><size=13.5><b>Village Exploration</b></size></color>\n" +
-                "<color=#E2E8F0>- Explore Kivenkolo Village</color>\n" +
+                "<color=#E2E8F0>- Explore Oakhaven Village</color>\n" +
                 "<color=#A0AEC0><size=10.5>Speak with Baldur at the Forge or Barnaby at the Tavern.</size></color>";
         }
 
@@ -1117,6 +1240,11 @@ namespace CastleOfTheD20.UI
         private void HandleGoldChanged(int newGold)
         {
             UpdateGoldDisplay(newGold);
+        }
+
+        private void HandleScrapMetalChanged(int newScrap)
+        {
+            UpdateScrapDisplay(newScrap);
         }
 
         private void HandleInventoryChanged()

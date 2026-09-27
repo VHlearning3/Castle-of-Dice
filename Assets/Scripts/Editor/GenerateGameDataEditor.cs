@@ -642,8 +642,8 @@ namespace CastleOfTheD20.Editor
             QuestSO questSignetRing = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_LostSignetRing.asset");
             questSignetRing.Initialize(
                 id: "quest_lost_signet_ring",
-                title: "Kadonnut perintökalleus",
-                desc: "Etsi Othelyan sukunsa sinettisormus linnan alapihan raunioista.",
+                title: "The Lost Signet Ring",
+                desc: "Search for Elder Othelia's ancestral signet ring in the courtyard ruins.",
                 state: QuestState.NotStarted,
                 reqAmount: 1,
                 gold: 50,
@@ -655,45 +655,45 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO otheliaAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Accepted.asset");
             otheliaAccepted.Initialize(
-                speaker: "Kylänvanhin Othelia",
-                text: "Kiitos, urhea seikkailija! Sukuni sinettisormus katosi linnan alapihoille, kun vartijat kaatuivat. Varo luurankoja raunioissa!",
+                speaker: "Elder Othelia",
+                text: "Thank you, brave adventurer! My family's signet ring was lost in the lower courtyards when the guards fell. Beware the skeletons among the ruins!",
                 portrait: null,
                 isExit: false
             );
             otheliaAccepted.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("[Leave] Etsin sormuksen heti kun pääsen linnaan.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("[Leave] I shall search for the ring as soon as I enter the castle.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(otheliaAccepted);
             assetCount++;
 
             DialogueNodeSO otheliaLore = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Lore.asset");
             otheliaLore.Initialize(
-                speaker: "Kylänvanhin Othelia",
-                text: "Ennen kirousta Kivettymiskuningas hallitsi näitä maita oikeudenmukaisesti. Mutta hän tavoitteli kuolemattomuutta syvistä kallioista... ja hänen sydämensä muuttui kiveksi. Varjot nielaisivat linnan sisältäpäin.",
+                speaker: "Elder Othelia",
+                text: "Before the curse, the Petrified King ruled these lands justly. But he sought immortality from the deep crags... and his heart turned to stone. Shadows consumed the fortress from within.",
                 portrait: null,
                 isExit: false
             );
             otheliaLore.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Surullinen kohtalo. Voin etsiä sinettisormuksen puolestasi.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
-                new DialogueOption("[Exit] Kiitos tiedosta, jatkan matkaani.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("A tragic fate. I can search for the signet ring on your behalf.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
+                new DialogueOption("[Exit] Thank you for the knowledge, I shall be on my way.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(otheliaLore);
             assetCount++;
 
             DialogueNodeSO otheliaIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Intro.asset");
             otheliaIntro.Initialize(
-                speaker: "Kylänvanhin Othelia",
-                text: "Tervehdys, matkalainen. Olen kylänvanhin Othelia. Kivenkolo eli rauhassa, kunnes vanha kivilinna heräsi pahuuteen. Jos uskaltaudut linnan porteille, voisitko etsiä perheeni kadonneen sinettisormuksen?",
+                speaker: "Elder Othelia",
+                text: "Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace until the ancient stone castle stirred with evil. If you venture to the castle gates, could you search for my family's lost signet ring?",
                 portrait: null,
                 isExit: false
             );
             otheliaIntro.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Etsin sormuksen puolestasi.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
-                new DialogueOption("Kerro minulle linnan menneisyydestä ja kuninkaasta.", otheliaLore, false, 10, "", null, ""),
-                new DialogueOption("[Exit] Minulla on kiireitä muualla.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("I will find the ring for you.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
+                new DialogueOption("Tell me about the castle's history and the King.", otheliaLore, false, 10, "", null, ""),
+                new DialogueOption("[Exit] I have urgent matters elsewhere.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(otheliaIntro);
             assetCount++;
@@ -703,7 +703,7 @@ namespace CastleOfTheD20.Editor
             itemSwampHerb.Initialize(
                 id: "item_swamp_herb",
                 name: "Castle Moat Blossom",
-                desc: "Harvinainen suokukka, joka kasvaa vain linnan vallihaudan liepeillä.",
+                desc: "Rare swamp flower that blooms only near the castle moat.",
                 type: ItemType.QuestItem,
                 buyPrice: 0,
                 sellPrice: 5,
@@ -716,8 +716,8 @@ namespace CastleOfTheD20.Editor
             ItemSO itemPoisonVial = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_PoisonVial.asset");
             itemPoisonVial.Initialize(
                 id: "item_poison_vial",
-                name: "Myrkkypullo (Venom Vial)",
-                desc: "Väkevä yrttiuute, joka lisää +5 vahinkoa seuraavaan taisteluun.",
+                name: "Poison Vial",
+                desc: "Potent herbal extract that adds +5 bonus damage in the next combat encounter.",
                 type: ItemType.Consumable,
                 buyPrice: 30,
                 sellPrice: 15,
@@ -730,8 +730,8 @@ namespace CastleOfTheD20.Editor
             ItemSO itemGreaterPotion = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_GreaterPotion.asset");
             itemGreaterPotion.Initialize(
                 id: "item_greater_potion",
-                name: "Suuri Terveysjuoma",
-                desc: "Tiivistetty parannusrohto. Palauttaa 35 kestopistettä.",
+                name: "Greater Health Potion",
+                desc: "Concentrated healing draught. Restores 35 Hit Points.",
                 type: ItemType.Consumable,
                 buyPrice: 50,
                 sellPrice: 25,
@@ -744,8 +744,8 @@ namespace CastleOfTheD20.Editor
             QuestSO questSwampHerbs = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_SwampHerbs.asset");
             questSwampHerbs.Initialize(
                 id: "quest_swamp_herbs",
-                title: "Yrttejä parantajalle",
-                desc: "Kerää 3 suokukkaa vallihaudan liepeiltä Mirabelille.",
+                title: "Herbs for the Healer",
+                desc: "Gather 3 swamp flowers near the moat for Mirabel.",
                 state: QuestState.NotStarted,
                 reqAmount: 3,
                 gold: 30,
@@ -757,58 +757,58 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO mirabelAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Accepted.asset");
             mirabelAccepted.Initialize(
-                speaker: "Yrttiparantaja Mirabel",
-                text: "Loistavaa! Vallihaudalla kukkii harvinainen sinikukka. Kolme kukkaa riittää mahtavaan seokseen. Varo vain vallihaudan liepeillä vaeltavia varjoja!",
+                speaker: "Mirabel the Herbalist",
+                text: "Splendid! Rare blue blossoms thrive along the moat. Three flowers will suffice for a potent brew. Beware the shadows lurking near the moat!",
                 portrait: null,
                 isExit: false
             );
             mirabelAccepted.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("[Leave] Tuon kukat heti kun löydän ne.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("[Leave] I shall return with the blossoms as soon as I find them.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(mirabelAccepted);
             assetCount++;
 
             DialogueNodeSO mirabelCheckSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Success.asset");
             mirabelCheckSuccess.Initialize(
-                speaker: "Yrttiparantaja Mirabel",
-                text: "Tunnistat siis suokasvien arvoituksen! Koska ymmärrät luontoa näin syvästi, keitän sinulle tavallisen myrkyn sijaan Suuren Terveysjuoman palkkioksi!",
+                speaker: "Mirabel the Herbalist",
+                text: "You truly understand marsh flora! Since you possess such deep knowledge of nature, I shall brew you a Greater Health Potion instead of ordinary poison as your reward!",
                 portrait: null,
                 isExit: false
             );
             mirabelCheckSuccess.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Sovittu. Haen suokukat vallihaudalta.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]")
+                new DialogueOption("Agreed. I will gather the swamp blossoms from the moat.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]")
             });
             EditorUtility.SetDirty(mirabelCheckSuccess);
             assetCount++;
 
             DialogueNodeSO mirabelCheckFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Fail.asset");
             mirabelCheckFail.Initialize(
-                speaker: "Yrttiparantaja Mirabel",
-                text: "Kasvintuntemuksesi kaipaa vielä harjoitusta, mutta teräs on aina terästä. Saat myrkkypullon, kunhan tuot kukat ehjinä.",
+                speaker: "Mirabel the Herbalist",
+                text: "Your herb lore needs practice, but steel is steel. You'll receive a poison vial, provided you return the blossoms undamaged.",
                 portrait: null,
                 isExit: false
             );
             mirabelCheckFail.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Käy minulle. Haen kukat.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]")
+                new DialogueOption("Fair enough. I will fetch the flowers.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]")
             });
             EditorUtility.SetDirty(mirabelCheckFail);
             assetCount++;
 
             DialogueNodeSO mirabelIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Intro.asset");
             mirabelIntro.Initialize(
-                speaker: "Yrttiparantaja Mirabel",
-                text: "Tss... hiljaa. Haistatko vallihaudan kitkerän sammaleen? Olen Mirabel, yrttiparantaja. Tarvitsisin kipeästi kolme suokukkaa linnan vallihaudan liepeiltä rohtojani varten, mutta epäkuolleet vartijat tekevät keräämisestä liian vaarallista.",
+                speaker: "Mirabel the Herbalist",
+                text: "Hush... be quiet. Do you smell the bitter moss of the moat? I am Mirabel, herbalist of Oakhaven. I desperately need three swamp flowers from near the moat for my remedies, but the undead sentries make foraging far too perilous.",
                 portrait: null,
                 isExit: false
             );
             mirabelIntro.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Voin noutaa kukat vallihaudalta.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]"),
+                new DialogueOption("I can retrieve the flowers from the moat for you.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]"),
                 new DialogueOption(
-                    "[DC 10 Luontotieto] Suokukka on arkaaista rohtoa – osaan kerätä ne juuria vahingoittamatta.",
+                    "[DC 10 Nature Lore] Moat blossoms are an ancient remedy - I know how to harvest them without damaging the roots.",
                     mirabelCheckSuccess,
                     true,
                     10,
@@ -816,7 +816,7 @@ namespace CastleOfTheD20.Editor
                     mirabelCheckFail,
                     ""
                 ),
-                new DialogueOption("[Exit] En ryve mudassa kukkien vuoksi.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("[Exit] I'm not wallowing in mud for wild flowers.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(mirabelIntro);
             assetCount++;
@@ -824,8 +824,8 @@ namespace CastleOfTheD20.Editor
             // 6. Boss 1: Cursed Commander Dialogue (Siipi 1: Alapiha)
             DialogueNodeSO commanderSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Success.asset");
             commanderSuccess.Initialize(
-                speaker: "Kirottu Komentaja",
-                text: "Vala...? Se kaikuu mielessäni vuosisatojen takaa... Hetken epäröintiä! Haarniskani halkeilee!",
+                speaker: "Cursed Commander",
+                text: "An oath...? It echoes across centuries in my mind... A moment of hesitation! My armor splinters!",
                 portrait: null,
                 isExit: true
             );
@@ -835,8 +835,8 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO commanderFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Fail.asset");
             commanderFail.Initialize(
-                speaker: "Kirottu Komentaja",
-                text: "Kunnia on kuollut, kuten minäkin! Teräkseni maistaa vertasi!",
+                speaker: "Cursed Commander",
+                text: "Honor is dead, as am I! My blade shall taste your blood!",
                 portrait: null,
                 isExit: true
             );
@@ -846,15 +846,15 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO commanderIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Intro.asset");
             commanderIntro.Initialize(
-                speaker: "Kirottu Komentaja",
-                text: "Kuka uskaltaa häpäistä linnan vartiotornin? Minun miekkani on maannut haudassa vuosisatoja, mutta tänään se maistaa jälleen elävää verta!",
+                speaker: "Cursed Commander",
+                text: "Who dares desecrate the castle watchtower? My blade has lain in the grave for centuries, but today it hungers for living blood once more!",
                 portrait: null,
                 isExit: false
             );
             commanderIntro.SetOptions(new List<DialogueOption>
             {
                 new DialogueOption(
-                    "[DC 13 Sotilaan kunnia] Vartijakaartin vala velvoittaa sinua yhä! Muista kunniasi äläkä palvele kirousta!",
+                    "[DC 13 Soldier's Honor] The oath of the royal guard still binds you! Remember your honor and serve the curse no longer!",
                     commanderSuccess,
                     true,
                     13,
@@ -862,7 +862,7 @@ namespace CastleOfTheD20.Editor
                     commanderFail,
                     "SoldiersHonor"
                 ),
-                new DialogueOption("[Taistelu] Puheesi ovat turhia, epäkuollut. Valmistaudu tuhoosi!", commanderFail, false, 10, "", null, "")
+                new DialogueOption("[Fight] Your words are hollow, undead fiend. Prepare for destruction!", commanderFail, false, 10, "", null, "")
             });
             EditorUtility.SetDirty(commanderIntro);
             assetCount++;
@@ -870,8 +870,8 @@ namespace CastleOfTheD20.Editor
             // 7. Boss 2: Shadow Mage Malakor Dialogue (Siipi 2: Kirjasto)
             DialogueNodeSO malakorSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Success.asset");
             malakorSuccess.Initialize(
-                speaker: "Varjomaagi Malakor",
-                text: "Mitä?! Mistä tiedät tuon loitsun purkukaavan?! Harhakuva hajoaa!",
+                speaker: "Shadow Mage Malakor",
+                text: "What?! How do you know the dispel formula for that incantation?! The phantom reflection shatters!",
                 portrait: null,
                 isExit: true
             );
@@ -881,8 +881,8 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO malakorFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Fail.asset");
             malakorFail.Initialize(
-                speaker: "Varjomaagi Malakor",
-                text: "Sokea typerys! Et koskaan erota varjoa totuudesta peilieni salissa!",
+                speaker: "Shadow Mage Malakor",
+                text: "Blind fool! You shall never discern shadow from truth in my hall of mirrors!",
                 portrait: null,
                 isExit: true
             );
@@ -892,15 +892,15 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO malakorIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Intro.asset");
             malakorIntro.Initialize(
-                speaker: "Varjomaagi Malakor",
-                text: "Tervetuloa arkaaniseen tutkimuskammiooni, kuolevainen. Etsitkö salaisuuksia? Vai vain omaa kuolemaasi peilieni labyrintissa?",
+                speaker: "Shadow Mage Malakor",
+                text: "Welcome to my arcane sanctum, mortal. Do you seek ancient secrets? Or merely your doom within my labyrinth of mirrors?",
                 portrait: null,
                 isExit: false
             );
             malakorIntro.SetOptions(new List<DialogueOption>
             {
                 new DialogueOption(
-                    "[DC 14 Arkaaninen herja] Harhasi ovat alkeellisia. Tunnen peiliheijastuksesi taitteen!",
+                    "[DC 14 Arcane Rebuke] Your phantoms are rudimentary. I see through the refraction of your mirrors!",
                     malakorSuccess,
                     true,
                     14,
@@ -908,7 +908,7 @@ namespace CastleOfTheD20.Editor
                     malakorFail,
                     "ArcaneHeresy"
                 ),
-                new DialogueOption("[Taistelu] Harhat särkyvät teräksen voimalla!", malakorFail, false, 10, "", null, "")
+                new DialogueOption("[Fight] Illusions shatter before cold steel!", malakorFail, false, 10, "", null, "")
             });
             EditorUtility.SetDirty(malakorIntro);
             assetCount++;
@@ -916,8 +916,8 @@ namespace CastleOfTheD20.Editor
             // 8. Boss 3: Gargoyle King Dialogue (Siipi 3: Kruununsali)
             DialogueNodeSO gargoyleSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Success.asset");
             gargoyleSuccess.Initialize(
-                speaker: "Kivettymiskuningas",
-                text: "K-kivettymä... vanki?! Grraaaagh! Kivinen sydämeni järkkyy!",
+                speaker: "The Gargoyle King",
+                text: "P-petrified... prisoner?! Grraaaagh! My stony heart trembles!",
                 portrait: null,
                 isExit: true
             );
@@ -927,8 +927,8 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO gargoyleFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Fail.asset");
             gargoyleFail.Initialize(
-                speaker: "Kivettymiskuningas",
-                text: "Pikkusieluinen madonruoka! Kallio ja kivivyöryt murskaavat sinut!",
+                speaker: "The Gargoyle King",
+                text: "Insolent worm! The mountain stone and rockslides will crush you to dust!",
                 portrait: null,
                 isExit: true
             );
@@ -938,15 +938,15 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO gargoyleIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Intro.asset");
             gargoyleIntro.Initialize(
-                speaker: "Kivettymiskuningas",
-                text: "Kruununi on ikuista kiveä! Tämä valtakunta ei koskaan murene! Polvistu kiven herran edessä tai muutu osaksi linnoituksen lattiaa!",
+                speaker: "The Gargoyle King",
+                text: "My crown is eternal stone! This realm shall never crumble! Kneel before the Lord of Stone or become part of the fortress floor!",
                 portrait: null,
                 isExit: false
             );
             gargoyleIntro.SetOptions(new List<DialogueOption>
             {
                 new DialogueOption(
-                    "[DC 16 Pelottelu] Sinä et ole kuningas, vaan kivettynyt vanki omassa haudassasi! Aikasi on ohi!",
+                    "[DC 16 Intimidation] You are no king, but a petrified prisoner in your own tomb! Your reign ends now!",
                     gargoyleSuccess,
                     true,
                     16,
@@ -954,7 +954,7 @@ namespace CastleOfTheD20.Editor
                     gargoyleFail,
                     "GargoyleKingIntimidated"
                 ),
-                new DialogueOption("[Taistelu] Hakkaan kivisen kruunusi sirpaleiksi!", gargoyleFail, false, 10, "", null, "")
+                new DialogueOption("[Fight] I shall smash your stone crown to pieces!", gargoyleFail, false, 10, "", null, "")
             });
             EditorUtility.SetDirty(gargoyleIntro);
             assetCount++;

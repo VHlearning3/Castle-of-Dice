@@ -210,6 +210,14 @@ namespace CastleOfTheD20.Combat
             currentHP = Mathf.Min(maxHP, currentHP + amount);
             Debug.Log($"[CombatUnit] {unitName} healed for {amount} HP. Current HP: {currentHP}/{maxHP}");
 
+            NotifyHealthChanged();
+        }
+
+        /// <summary>
+        /// Invokes the OnHealthChanged event with current and max health values.
+        /// </summary>
+        public void NotifyHealthChanged()
+        {
             OnHealthChanged?.Invoke(currentHP, maxHP);
         }
 
