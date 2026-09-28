@@ -1210,6 +1210,7 @@ namespace CastleOfTheD20.UI
                 var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
                 if (reachable.Contains(tile))
                 {
+                    activePlayer.FaceTowards(tile.transform.position);
                     activePlayer.MoveToTile(tile);
                     activePlayer.HasMovedThisTurn = true;
                     RefreshAbilityBar();

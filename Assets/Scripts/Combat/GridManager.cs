@@ -252,6 +252,7 @@ namespace CastleOfTheD20.Combat
                         if (h.CompareTag("Player") || h.CompareTag("Enemy")) continue;
                         if (h.GetComponent<CombatUnit>() != null) continue;
                         if (h.transform.IsChildOf(tileObj.transform) || h.gameObject == tileObj) continue;
+                        if (h.GetComponentInParent<GridTile>() != null) continue; // other grid tiles are floor, not obstacles
 
                         // Found a solid structural collider (pillar/wall)
                         isWalkable = false;
@@ -346,9 +347,13 @@ namespace CastleOfTheD20.Combat
                     }
                     else
                     {
+                        // Destroy() is deferred to the end of the frame: deactivate first so the old
+                        // tile colliders cannot block the obstacle checks of a grid regenerated this frame
+                        obj.SetActive(false);
                         Destroy(obj);
                     }
 #else
+                    obj.SetActive(false);
                     Destroy(obj);
 #endif
                 }

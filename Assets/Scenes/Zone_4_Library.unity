@@ -1992,9 +1992,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8cc5fde7b6d38d84f868cb3d9e3f091f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Combat.EnemyUnit
-  unitName: Combatant
-  maxHP: 20
-  currentHP: 20
+  unitName: Shadow Decoy
+  maxHP: 18
+  currentHP: 18
   armorClass: 12
   movementRange: 3
   statusEffects: {fileID: 0}

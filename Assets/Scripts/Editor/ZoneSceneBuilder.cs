@@ -318,7 +318,7 @@ namespace CastleOfTheD20.Editor
             GameObject enemiesRoot = new GameObject("Enemies");
             List<GameObject> enemyList = new List<GameObject>();
 
-            GameObject skel = CreateEnemyUnit("Courtyard_Skeleton", new Vector3(-6f, 0.9f, 12f), woodMat, metalMat, enemiesRoot.transform, 20, 12, 4);
+            GameObject skel = CreateEnemyUnit("Courtyard_Skeleton", "Armored Skeleton Guard", new Vector3(-6f, 0.9f, 12f), woodMat, metalMat, enemiesRoot.transform, 20, 12, 4);
             skel.SetActive(false);
             enemyList.Add(skel);
 
@@ -432,7 +432,7 @@ namespace CastleOfTheD20.Editor
             GameObject enemiesRoot = new GameObject("Enemies");
             List<GameObject> enemyList = new List<GameObject>();
 
-            GameObject decoy = CreateEnemyUnit("Shadow_Decoy", new Vector3(6f, 0.9f, 12f), wallMat, metalMat, enemiesRoot.transform, 18, 12, 4);
+            GameObject decoy = CreateEnemyUnit("Shadow_Decoy", "Shadow Decoy", new Vector3(6f, 0.9f, 12f), wallMat, metalMat, enemiesRoot.transform, 18, 12, 4);
             decoy.SetActive(false);
             enemyList.Add(decoy);
 
@@ -951,7 +951,7 @@ namespace CastleOfTheD20.Editor
             return lightObj;
         }
 
-        private static GameObject CreateEnemyUnit(string name, Vector3 pos, Material bodyMat, Material eyeMat, Transform parent, int hp, int ac, int dmg)
+        private static GameObject CreateEnemyUnit(string name, string displayName, Vector3 pos, Material bodyMat, Material eyeMat, Transform parent, int hp, int ac, int dmg)
         {
             GameObject enemyObj = new GameObject(name);
             if (parent != null) enemyObj.transform.SetParent(parent, false);
@@ -965,6 +965,16 @@ namespace CastleOfTheD20.Editor
             if (bodyMat != null) body.GetComponent<Renderer>().sharedMaterial = bodyMat;
 
             EnemyUnit enemy = enemyObj.AddComponent<EnemyUnit>();
+
+            // Apply the requested combat profile (previously ignored, leaving "Combatant" with default stats)
+            SerializedObject so = new SerializedObject(enemy);
+            so.FindProperty("unitName").stringValue = displayName;
+            so.FindProperty("maxHP").intValue = hp;
+            so.FindProperty("currentHP").intValue = hp;
+            so.FindProperty("armorClass").intValue = ac;
+            so.FindProperty("attackDamage").intValue = dmg;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
             CapsuleCollider col = enemyObj.AddComponent<CapsuleCollider>();
             col.height = 1.8f;
             col.radius = 0.5f;

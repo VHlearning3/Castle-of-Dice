@@ -206,9 +206,9 @@ namespace CastleOfTheD20.Editor
                 }
 
                 Transform barrier = cellar.transform.Find("Cellar_Exit_Barrier");
-                if (barrier != null && (barrier.localPosition - new Vector3(0f, 2.0f, -7.5f)).sqrMagnitude > 0.001f)
+                if (barrier != null && (barrier.localPosition - new Vector3(0f, 0.6f, -7.5f)).sqrMagnitude > 0.001f)
                 {
-                    barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
+                    barrier.localPosition = new Vector3(0f, 0.6f, -7.5f);
                     modified = true;
                 }
 
@@ -353,7 +353,7 @@ namespace CastleOfTheD20.Editor
             if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -5.0f);
 
             Transform barrier = cellar.transform.Find("Cellar_Exit_Barrier");
-            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
+            if (barrier != null) barrier.localPosition = new Vector3(0f, 0.6f, -7.5f);
 
             Transform chest = cellar.transform.Find("Cellar_Reward_Chest");
             if (chest != null)
@@ -578,7 +578,7 @@ namespace CastleOfTheD20.Editor
             // D. ENCOUNTER BARRIERS & GATES
             // ==========================================
             // Iron cellar portcullis that locks down over the ladder exit during combat
-            GameObject exitBarrier = CreateCube("Cellar_Exit_Barrier", new Vector3(0f, 2.0f, -7.5f), new Vector3(3.2f, 4.0f, 0.3f), metalMat, cellarRoot.transform);
+            GameObject exitBarrier = CreateCube("Cellar_Exit_Barrier", new Vector3(0f, 0.6f, -7.5f), new Vector3(3.2f, 1.2f, 0.3f), metalMat, cellarRoot.transform);
             // Inactive by default
             exitBarrier.SetActive(false);
 
@@ -756,6 +756,104 @@ namespace CastleOfTheD20.Editor
             return cube;
         }
 
+        private const string RatVisualRootName = "Rat_Visual";
+        private const float RatColliderHalfHeight = 0.35f;
+
+        /// <summary>
+        /// Rebuilds the low-poly giant rat model (grey fur body, snout, ears, glowing eyes, tail) on every
+        /// Cellar_Pest in the active scene. The old placeholder used wooden cubes and read as crates.
+        /// </summary>
+        [MenuItem("CastleOfDice/Rebuild Cellar Rat Visuals")]
+        public static void RebuildCellarRatVisuals()
+        {
+            int rebuilt = 0;
+            foreach (EnemyUnit enemy in Object.FindObjectsByType<EnemyUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (!enemy.name.StartsWith("Cellar_Pest")) continue;
+
+                for (int i = enemy.transform.childCount - 1; i >= 0; i--)
+                {
+                    Transform child = enemy.transform.GetChild(i);
+                    if (child.name == "Body" || child.name == "Head" || child.name.StartsWith("Eye_") || child.name == RatVisualRootName)
+                    {
+                        Undo.DestroyObjectImmediate(child.gameObject);
+                    }
+                }
+
+                BuildRatVisual(enemy.transform);
+                EditorSceneManager.MarkSceneDirty(enemy.gameObject.scene);
+                rebuilt++;
+            }
+            Debug.Log($"[BuildCellarEditor] Rebuilt rat visuals on {rebuilt} cellar pests (save the scene to keep).");
+        }
+
+        private static void BuildRatVisual(Transform ratRoot)
+        {
+            Material fur = GetOrCreateMaterial("Assets/Characters/Materials/M_Rat_Fur.mat", new Color(0.36f, 0.33f, 0.30f), 0.15f, Color.black);
+            Material skin = GetOrCreateMaterial("Assets/Characters/Materials/M_Rat_Skin.mat", new Color(0.78f, 0.55f, 0.55f), 0.3f, Color.black);
+            Material eye = GetOrCreateMaterial("Assets/Characters/Materials/M_Rat_Eye.mat", new Color(0.9f, 0.05f, 0.05f), 0.8f, new Color(1.5f, 0.1f, 0.1f));
+
+            GameObject root = new GameObject(RatVisualRootName);
+            root.transform.SetParent(ratRoot, false);
+            // CombatUnit.MoveToTile lifts the unit by its collider half-height, so the collider is centred on
+            // the root and the model is lowered by that half-height to put the feet on the tile.
+            root.transform.localPosition = new Vector3(0f, -RatColliderHalfHeight, 0f);
+
+            BoxCollider col = ratRoot.GetComponent<BoxCollider>();
+            if (col != null)
+            {
+                col.center = new Vector3(0f, 0f, 0.1f);
+                col.size = new Vector3(0.9f, RatColliderHalfHeight * 2f, 1.9f);
+            }
+
+            RatPart(PrimitiveType.Sphere, "Body", new Vector3(0f, 0.28f, 0f), new Vector3(0.75f, 0.5f, 1.15f), Vector3.zero, fur, root.transform);
+            RatPart(PrimitiveType.Sphere, "Head", new Vector3(0f, 0.36f, 0.62f), new Vector3(0.45f, 0.38f, 0.5f), Vector3.zero, fur, root.transform);
+            RatPart(PrimitiveType.Sphere, "Snout", new Vector3(0f, 0.3f, 0.9f), new Vector3(0.18f, 0.16f, 0.2f), Vector3.zero, skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Ear_L", new Vector3(-0.17f, 0.58f, 0.52f), new Vector3(0.2f, 0.22f, 0.06f), new Vector3(0f, 25f, 0f), skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Ear_R", new Vector3(0.17f, 0.58f, 0.52f), new Vector3(0.2f, 0.22f, 0.06f), new Vector3(0f, -25f, 0f), skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Eye_L", new Vector3(-0.12f, 0.44f, 0.82f), new Vector3(0.07f, 0.07f, 0.07f), Vector3.zero, eye, root.transform);
+            RatPart(PrimitiveType.Sphere, "Eye_R", new Vector3(0.12f, 0.44f, 0.82f), new Vector3(0.07f, 0.07f, 0.07f), Vector3.zero, eye, root.transform);
+            RatPart(PrimitiveType.Cylinder, "Tail", new Vector3(0f, 0.16f, -0.95f), new Vector3(0.06f, 0.45f, 0.06f), new Vector3(70f, 0f, 0f), skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Foot_FL", new Vector3(-0.22f, 0.05f, 0.35f), new Vector3(0.14f, 0.1f, 0.18f), Vector3.zero, skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Foot_FR", new Vector3(0.22f, 0.05f, 0.35f), new Vector3(0.14f, 0.1f, 0.18f), Vector3.zero, skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Foot_BL", new Vector3(-0.25f, 0.05f, -0.3f), new Vector3(0.16f, 0.1f, 0.22f), Vector3.zero, skin, root.transform);
+            RatPart(PrimitiveType.Sphere, "Foot_BR", new Vector3(0.25f, 0.05f, -0.3f), new Vector3(0.16f, 0.1f, 0.22f), Vector3.zero, skin, root.transform);
+        }
+
+        private static void RatPart(PrimitiveType type, string name, Vector3 localPos, Vector3 localScale, Vector3 localEuler, Material mat, Transform parent)
+        {
+            GameObject part = GameObject.CreatePrimitive(type);
+            part.name = name;
+            part.transform.SetParent(parent, false);
+            part.transform.localPosition = localPos;
+            part.transform.localScale = localScale;
+            part.transform.localEulerAngles = localEuler;
+            part.GetComponent<Renderer>().sharedMaterial = mat;
+
+            // The rat root owns the single combat collider; primitive colliders would block the grid
+            Collider col = part.GetComponent<Collider>();
+            if (col != null) Object.DestroyImmediate(col);
+        }
+
+        private static Material GetOrCreateMaterial(string path, Color color, float smoothness, Color emission)
+        {
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat != null) return mat;
+
+            Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+            mat = new Material(shader) { name = System.IO.Path.GetFileNameWithoutExtension(path) };
+            mat.SetColor("_BaseColor", color);
+            mat.color = color;
+            mat.SetFloat("_Smoothness", smoothness);
+            if (emission.maxColorComponent > 0.01f)
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", emission);
+            }
+            AssetDatabase.CreateAsset(mat, path);
+            return mat;
+        }
+
         private static GameObject CreateRatEnemy(string name, Vector3 localPos, Material bodyMat, Material eyeMat, Transform parent)
         {
             GameObject rat = new GameObject(name);
@@ -763,18 +861,9 @@ namespace CastleOfTheD20.Editor
             rat.transform.localPosition = localPos;
             rat.tag = "Enemy";
 
-            // Rat body (low poly cube)
-            GameObject body = CreateCube("Body", new Vector3(0f, 0f, 0f), new Vector3(0.9f, 0.6f, 1.3f), bodyMat, rat.transform);
-            // Rat head
-            GameObject head = CreateCube("Head", new Vector3(0f, 0.1f, 0.75f), new Vector3(0.5f, 0.4f, 0.5f), bodyMat, rat.transform);
-            // Glowing red eyes
-            GameObject eyeL = CreateCube("Eye_L", new Vector3(-0.16f, 0.22f, 0.95f), new Vector3(0.08f, 0.08f, 0.08f), eyeMat, rat.transform);
-            GameObject eyeR = CreateCube("Eye_R", new Vector3(0.16f, 0.22f, 0.95f), new Vector3(0.08f, 0.08f, 0.08f), eyeMat, rat.transform);
-
-            // Combat Unit Setup
-            BoxCollider col = rat.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, 0.3f, 0.2f);
-            col.size = new Vector3(1.0f, 0.8f, 1.6f);
+            // Combat Unit Setup (collider first: BuildRatVisual sizes it)
+            rat.AddComponent<BoxCollider>();
+            BuildRatVisual(rat.transform);
 
             EnemyUnit enemy = rat.AddComponent<EnemyUnit>();
             // Use reflection or serialized property assignments for profile

@@ -154,6 +154,58 @@ namespace CastleOfTheD20.World
             }
         }
 
+        private void OnEnable()
+        {
+            DungeonRoomController.OnRoomCombatStarted += HandleRoomCombatStarted;
+        }
+
+        private void OnDisable()
+        {
+            DungeonRoomController.OnRoomCombatStarted -= HandleRoomCombatStarted;
+        }
+
+        /// <summary>
+        /// Turns the camera to look from the hero towards the room's hostiles when an encounter starts,
+        /// so the enemies are on screen instead of behind the camera (e.g. after climbing down the cellar ladder).
+        /// </summary>
+        private void HandleRoomCombatStarted(DungeonRoomController room)
+        {
+            if (room == null || target == null || room.roomEnemies == null) return;
+
+            Vector3 enemyCenter = Vector3.zero;
+            int count = 0;
+            for (int i = 0; i < room.roomEnemies.Count; i++)
+            {
+                GameObject enemy = room.roomEnemies[i];
+                if (enemy != null && enemy.activeInHierarchy)
+                {
+                    enemyCenter += enemy.transform.position;
+                    count++;
+                }
+            }
+            if (count == 0) return;
+
+            Vector3 toEnemies = enemyCenter / count - target.position;
+            toEnemies.y = 0f;
+            if (toEnemies.sqrMagnitude < 0.01f) return;
+
+            FaceDirection(toEnemies);
+        }
+
+        /// <summary>
+        /// Instantly orients the camera so it looks along <paramref name="worldDirection"/> behind the target.
+        /// </summary>
+        public void FaceDirection(Vector3 worldDirection)
+        {
+            worldDirection.y = 0f;
+            if (worldDirection.sqrMagnitude < 0.0001f) return;
+
+            currentYaw = Mathf.Atan2(worldDirection.x, worldDirection.z) * Mathf.Rad2Deg;
+            targetYaw = currentYaw;
+            currentYawVelocity = 0f;
+            SnapToTarget();
+        }
+
         private const float PlayerSearchInterval = 0.5f;
         private float nextPlayerSearchTime;
 

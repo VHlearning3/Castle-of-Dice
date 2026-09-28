@@ -330,16 +330,26 @@ namespace CastleOfTheD20.World
             // Guarantee Combat UI is active and displaying
             CastleOfTheD20.UI.CombatUIController.Instance?.EnsureActiveAndReady(true);
 
-            // 4. Initialize the turn-based combat via TurnManager
-            if (TurnManager.Instance != null)
+            // 4. Initialize the turn-based combat via TurnManager (created on demand)
+            TurnManager turnManager = TurnManager.EnsureInstance();
+            if (turnManager != null)
             {
                 if (activeParticipants.Count > 0)
                 {
-                    TurnManager.Instance.StartCombat(activeParticipants);
+                    turnManager.StartCombat(activeParticipants);
                 }
                 else
                 {
-                    TurnManager.Instance.StartCombat();
+                    turnManager.StartCombat();
+                }
+            }
+
+            // Hostiles square up to the hero instead of keeping their authored facing
+            if (player != null)
+            {
+                foreach (CombatUnit unit in activeParticipants)
+                {
+                    if (unit is EnemyUnit) unit.FaceTowards(player.transform.position);
                 }
             }
 
@@ -539,7 +549,7 @@ namespace CastleOfTheD20.World
             if (spawn != null) spawn.localPosition = new Vector3(0f, 0.2f, -5.0f);
 
             Transform barrier = root.Find("Cellar_Exit_Barrier");
-            if (barrier != null) barrier.localPosition = new Vector3(0f, 2.0f, -7.5f);
+            if (barrier != null) barrier.localPosition = new Vector3(0f, 0.6f, -7.5f); // low sill: keeps the ladder blocked without hiding the hero from the camera
 
             Transform chest = root.Find("Cellar_Reward_Chest");
             if (chest != null)

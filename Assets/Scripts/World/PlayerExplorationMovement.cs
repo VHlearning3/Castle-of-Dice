@@ -46,6 +46,8 @@ namespace CastleOfTheD20.World
         [Tooltip("Animator driving character movement locomotion.")]
         [SerializeField] private Animator animator;
 
+        private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
+
         #endregion
 
         #region Private State
@@ -191,6 +193,12 @@ namespace CastleOfTheD20.World
                     Debug.Log("[PlayerExplorationMovement] WASD input ignored outside Exploration mode.");
                 }
 
+                // Stop the run cycle too, otherwise the knight keeps running through combat/dialogue
+                if (animator != null && animator.GetBool(IsMovingHash))
+                {
+                    animator.SetBool(IsMovingHash, false);
+                }
+
                 if (IsMoving)
                 {
                     IsMoving = false;
@@ -274,7 +282,7 @@ namespace CastleOfTheD20.World
                 }
 
                 IsMoving = true;
-                if (animator != null) animator.SetBool("IsMoving", true);
+                if (animator != null) animator.SetBool(IsMovingHash, true);
 
                 if (!wasMoving && debugLogging)
                 {
@@ -285,7 +293,7 @@ namespace CastleOfTheD20.World
             {
                 IsMoving = false;
                 CurrentMoveDirection = Vector3.zero;
-                if (animator != null) animator.SetBool("IsMoving", false);
+                if (animator != null) animator.SetBool(IsMovingHash, false);
 
                 if (wasMoving && debugLogging)
                 {

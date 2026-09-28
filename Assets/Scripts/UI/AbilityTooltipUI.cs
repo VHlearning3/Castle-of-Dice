@@ -150,7 +150,7 @@ namespace CastleOfTheD20.UI
             // 4. Attack Check & Damage / Potency Formula
             if (formulaText != null)
             {
-                string checkStr = ability.RequiresCheck ? "d20 + Bonus ≥ Enemy AC" : "Automatic Success";
+                string checkStr = ability.RequiresCheck ? "d20 + Bonus >= Enemy AC" : "Automatic Success";
                 string dmgStr;
 
                 if (ability.BaseValue > 0)

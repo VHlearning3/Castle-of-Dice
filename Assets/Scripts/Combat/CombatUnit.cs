@@ -250,6 +250,17 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Turns the unit on the horizontal plane to look at <paramref name="worldPoint"/>.
+        /// </summary>
+        public void FaceTowards(Vector3 worldPoint)
+        {
+            Vector3 dir = worldPoint - transform.position;
+            dir.y = 0f;
+            if (dir.sqrMagnitude < 0.0001f) return;
+            transform.rotation = Quaternion.LookRotation(dir.normalized, Vector3.up);
+        }
+
+        /// <summary>
         /// Brings a fallen unit back for an encounter retry: reactivates it, restores full HP,
         /// clears lingering status effects and re-registers it on the grid.
         /// </summary>

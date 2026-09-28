@@ -19,6 +19,35 @@ namespace CastleOfTheD20.Combat
 
         public static TurnManager Instance { get; private set; }
 
+        /// <summary>
+        /// Returns the scene's TurnManager, creating the combat systems (TurnManager + AbilityExecutor)
+        /// on demand. The zone scenes do not ship these components, so without this no encounter
+        /// could ever start combat.
+        /// </summary>
+        public static TurnManager EnsureInstance()
+        {
+            if (Instance == null)
+            {
+                TurnManager existing = FindAnyObjectByType<TurnManager>();
+                if (existing != null)
+                {
+                    Instance = existing;
+                }
+                else
+                {
+                    GameObject systems = new GameObject("CombatSystems");
+                    systems.AddComponent<TurnManager>(); // Awake registers Instance
+                }
+            }
+
+            if (AbilityExecutor.Instance == null && FindAnyObjectByType<AbilityExecutor>() == null && Instance != null)
+            {
+                Instance.gameObject.AddComponent<AbilityExecutor>();
+            }
+
+            return Instance;
+        }
+
         #endregion
 
         #region Serialized Fields

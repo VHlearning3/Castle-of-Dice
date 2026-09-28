@@ -86,6 +86,8 @@ namespace CastleOfTheD20.Combat
                 distance = gridManager.GetDistance(gridPosition, target.GridPosition);
             }
 
+            FaceTowards(target.transform.position);
+
             // 3. If now in range, execute attack
             if (distance <= attackRange)
             {

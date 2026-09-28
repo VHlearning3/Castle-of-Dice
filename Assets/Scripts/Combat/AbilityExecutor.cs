@@ -76,6 +76,12 @@ namespace CastleOfTheD20.Combat
             // Identify special named abilities by ID or fallback to standard profile
             string id = ability.AbilityID.ToLowerInvariant();
 
+            // Face the target before the swing/cast
+            if (ability.TargetType != AbilityTargetType.Self && targetGridPos != caster.GridPosition)
+            {
+                caster.FaceTowards(grid.GetWorldPosition(targetGridPos));
+            }
+
             // Trigger animation on caster
             if (caster.UnitAnimator != null)
             {
