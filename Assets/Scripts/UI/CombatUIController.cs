@@ -319,9 +319,80 @@ namespace CastleOfTheD20.UI
             rt.offsetMin = new Vector2(-90f, -24f); // past the bar edges and down to the bottom of the screen
             rt.offsetMax = new Vector2(90f, 45f);
 
+            // Visible action tray: the same riveted dark slate + gold frame plate as the HUD cards.
+            // It is the first sibling of the bar, so every ability / End Turn button renders on top of it.
             Image img = shield.GetComponent<Image>();
-            img.color = new Color(0f, 0f, 0f, 0f);
-            img.raycastTarget = true;
+            if (panelDarkSprite != null)
+            {
+                img.sprite = panelDarkSprite;
+                img.type = Image.Type.Sliced;
+                img.color = new Color(1f, 1f, 1f, 0.93f);
+            }
+            else
+            {
+                img.sprite = null;
+                img.color = UITheme.PanelSlate;
+            }
+            img.raycastTarget = true; // this is what swallows clicks that miss a button
+
+            // Gold filigree along the top edge, above the buttons (tray top sits 45px over the bar)
+            Image trim = EnsureTrayDecoration(shield.transform, "Tray_TopTrim", dividerGoldSprite, UITheme.GoldAccent);
+            if (trim != null)
+            {
+                RectTransform trimRect = trim.rectTransform;
+                trimRect.anchorMin = new Vector2(0f, 1f);
+                trimRect.anchorMax = new Vector2(1f, 1f);
+                trimRect.pivot = new Vector2(0.5f, 0.5f);
+                trimRect.offsetMin = new Vector2(60f, -9f);
+                trimRect.offsetMax = new Vector2(-60f, 9f);
+            }
+
+            // Soft inner shade so the buttons read as sitting in a recessed tray
+            Image shade = EnsureTrayDecoration(shield.transform, "Tray_InnerShade", null, new Color(0f, 0f, 0f, 0.28f));
+            if (shade != null)
+            {
+                RectTransform shadeRect = shade.rectTransform;
+                shadeRect.anchorMin = Vector2.zero;
+                shadeRect.anchorMax = Vector2.one;
+                shadeRect.pivot = new Vector2(0.5f, 0.5f);
+                shadeRect.offsetMin = new Vector2(70f, 14f);
+                shadeRect.offsetMax = new Vector2(-80f, -34f); // ability row ends 10px short of the bar edge; keep equal margins
+                shade.transform.SetAsFirstSibling();
+            }
+
+            // Gold rivet caps at both ends of the tray
+            PlaceTrayCap(shield.transform, "Tray_Cap_Left", new Vector2(0f, 0.5f), new Vector2(34f, 8f));
+            PlaceTrayCap(shield.transform, "Tray_Cap_Right", new Vector2(1f, 0.5f), new Vector2(-34f, 8f));
+        }
+
+        private Image EnsureTrayDecoration(Transform tray, string name, Sprite sprite, Color color)
+        {
+            Transform existing = tray.Find(name);
+            GameObject go = existing != null
+                ? existing.gameObject
+                : new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            go.transform.SetParent(tray, false);
+
+            Image image = go.GetComponent<Image>();
+            image.sprite = sprite;
+            image.type = sprite != null ? Image.Type.Sliced : Image.Type.Simple;
+            image.color = color;
+            image.raycastTarget = false; // the tray itself handles click blocking
+            return image;
+        }
+
+        private void PlaceTrayCap(Transform tray, string name, Vector2 anchor, Vector2 offset)
+        {
+            Sprite capSprite = UITheme.Active != null && UITheme.Active.pillBadge != null ? UITheme.Active.pillBadge : slotFrameSprite;
+            Image cap = EnsureTrayDecoration(tray, name, capSprite, UITheme.GoldAccent);
+            RectTransform capRect = cap.rectTransform;
+            capRect.anchorMin = anchor;
+            capRect.anchorMax = anchor;
+            capRect.pivot = new Vector2(0.5f, 0.5f);
+            capRect.anchoredPosition = offset;
+            // The pill sprite is horizontal; rotate it to stand as a vertical gold end cap
+            capRect.sizeDelta = new Vector2(46f, 16f);
+            capRect.localEulerAngles = new Vector3(0f, 0f, 90f);
         }
 
         public void EnsureStyledHierarchy()
