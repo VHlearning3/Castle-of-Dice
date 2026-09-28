@@ -18,7 +18,7 @@ MonoBehaviour:
     secret passageways better than anyone.
   baseMaxHealth: 25
   baseArmorClass: 13
-  baseMovementRange: 4
+  baseMovementRange: 5
   primaryAttributeBonus: 4
   startingAbilities:
   - {fileID: 11400000, guid: aa5ca85fff9dd2b4bbb47c49494dad9d, type: 2}

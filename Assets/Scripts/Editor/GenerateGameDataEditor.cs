@@ -333,9 +333,9 @@ namespace CastleOfTheD20.Editor
                 type: CharacterClassType.Warrior,
                 name: "Sir Roland",
                 lore: "Veteran of the royal guard who donned his ancestral plate armor to purge his fallen castle of undead abominations.",
-                maxHp: 35,
-                ac: 15,
-                move: 3,
+                maxHp: 30,
+                ac: 14,
+                move: 4,
                 bonus: 3,
                 abilities: new List<AbilitySO> { warriorSlash, warriorShield, warriorWarCry, warriorIronWill }
             );
@@ -349,7 +349,7 @@ namespace CastleOfTheD20.Editor
                 name: "Scholar Elira",
                 lore: "Academy arcanist seeking to unravel the ancient curses and retrieve lost grimoires hidden in the castle's depths.",
                 maxHp: 20,
-                ac: 11,
+                ac: 12,
                 move: 3,
                 bonus: 4,
                 abilities: new List<AbilitySO> { mageFireball, mageFrostbite, mageManaShield, mageBlink }
@@ -365,7 +365,7 @@ namespace CastleOfTheD20.Editor
                 lore: "Tavern-bred opportunist and lockpick specialist who knows the castle's secret passageways better than anyone.",
                 maxHp: 25,
                 ac: 13,
-                move: 4,
+                move: 5,
                 bonus: 4,
                 abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueLockpicking }
             );

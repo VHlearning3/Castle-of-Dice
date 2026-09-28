@@ -280,7 +280,7 @@ namespace CastleOfTheD20.Editor
                 if (at != null)
                 {
                     so.FindProperty("heroACText").objectReferenceValue = at;
-                    at.text = "AC 16";
+                    at.text = "AC --";
                     at.fontSize = 11.5f;
                     at.fontStyle = FontStyles.Bold;
                 }

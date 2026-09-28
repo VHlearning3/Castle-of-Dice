@@ -60,7 +60,7 @@ namespace CastleOfTheD20.UI
         [Tooltip("Text display for Hero Class & Level (e.g. 'Warrior • Level 1').")]
         [SerializeField] private TMP_Text heroClassText;
 
-        [Tooltip("Text display for Armor Class badge (e.g. 'AC 16').")]
+        [Tooltip("Text display for Armor Class badge (e.g. 'AC 14').")]
         [SerializeField] private TMP_Text heroACText;
 
         [Tooltip("Image display for Hero Class Crest emblem.")]
@@ -493,7 +493,7 @@ namespace CastleOfTheD20.UI
             GameObject acTxtObj = acTxtTr != null ? acTxtTr.gameObject : new GameObject("Hero_AC_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             acTxtObj.transform.SetParent(acBadgeObj.transform, false);
             heroACText = acTxtObj.GetComponent<TMP_Text>();
-            heroACText.text = "AC 16";
+            heroACText.text = "AC --";
             heroACText.fontSize = 11.5f;
             heroACText.fontStyle = FontStyles.Bold;
             heroACText.alignment = TextAlignmentOptions.Center;

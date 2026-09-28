@@ -17,7 +17,7 @@ MonoBehaviour:
   backgroundLore: Academy arcanist seeking to unravel the ancient curses and retrieve
     lost grimoires hidden in the castle's depths.
   baseMaxHealth: 20
-  baseArmorClass: 11
+  baseArmorClass: 12
   baseMovementRange: 3
   primaryAttributeBonus: 4
   startingAbilities:

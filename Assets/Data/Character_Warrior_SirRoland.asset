@@ -16,9 +16,9 @@ MonoBehaviour:
   characterName: Sir Roland
   backgroundLore: Veteran of the royal guard who donned his ancestral plate armor
     to purge his fallen castle of undead abominations.
-  baseMaxHealth: 35
-  baseArmorClass: 15
-  baseMovementRange: 3
+  baseMaxHealth: 30
+  baseArmorClass: 14
+  baseMovementRange: 4
   primaryAttributeBonus: 3
   startingAbilities:
   - {fileID: 11400000, guid: e8dbbecd07e4f6649ad292f01b3e192d, type: 2}
