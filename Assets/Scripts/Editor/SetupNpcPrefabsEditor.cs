@@ -88,8 +88,12 @@ namespace CastleOfTheD20.Editor
             GameObject mirabelPrefab = CreateNpcPrefab("NPC_Mirabel_3dmodel", MIRABEL_FBX, mirabelMat, mirabelController,
                 "Mirabel", isBlacksmith: false, mirabelDialogue, "Talk to Mirabel the Herbalist", isSkeletal: false);
 
+            // 4b. Barnaby, Mirabel and Othelia use rigged FBX models with their own animations now
+            SetupRiggedNpcsEditor.SetupPrefabsOnly();
+
             // 5. Update Scene Instances in Zone 1
             UpdateSceneInstances(baldurPrefab, barnabyPrefab, otheliaPrefab, mirabelPrefab);
+            SetupRiggedNpcsEditor.PlaceRiggedNpcsInZone1();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
