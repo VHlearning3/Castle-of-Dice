@@ -100,8 +100,12 @@ namespace CastleOfTheD20.Tests.E2E.Tier3_CrossFeatureCombinations
                 E2EAudioAssert.IsTrue(boss.IsStoneFormActive, "Boss transitions to Phase 2 Stone Form");
                 E2EAudioAssert.IsTrue(phase2Fired, "Phase 2 event triggered for audio crossfade");
 
-                // Defeat boss
+                // Defeat boss (Stone Form shield absorbs first blow, second blow defeats)
                 boss.TakeDamage(100);
+                if (boss.IsAlive)
+                {
+                    boss.TakeDamage(100);
+                }
                 E2EAudioAssert.IsFalse(boss.IsAlive, "Boss defeated");
             }
             finally

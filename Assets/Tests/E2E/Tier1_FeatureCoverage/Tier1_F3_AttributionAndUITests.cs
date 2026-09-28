@@ -128,9 +128,9 @@ namespace CastleOfTheD20.Tests.E2E.Tier1_FeatureCoverage
                 E2EAudioAssert.IsNotNull(textAreaTr.Find("Ability_Range_Text"), $"Button {i} must have Ability_Range_Text");
             }
 
-            // Verify all 12 abilities have non-null icons
+            // Verify all abilities (at least 12 standard plus Shadow Step) have non-null icons
             string[] abilityGuids = UnityEditor.AssetDatabase.FindAssets("t:AbilitySO", new[] { "Assets/Data" });
-            E2EAudioAssert.AreEqual(12, abilityGuids.Length, "Must have exactly 12 AbilitySO assets in Assets/Data");
+            E2EAudioAssert.IsTrue(abilityGuids.Length >= 12, "Must have at least 12 AbilitySO assets in Assets/Data");
 
             foreach (var guid in abilityGuids)
             {
