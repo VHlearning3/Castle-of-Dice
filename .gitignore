@@ -89,3 +89,4 @@ CombinedProjectScripts.txt
 
 # unity-cli test run artifacts
 .unity/
+unity-cli.exe
