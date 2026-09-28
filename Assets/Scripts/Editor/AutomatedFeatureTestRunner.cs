@@ -11,6 +11,12 @@ namespace CastleOfTheD20.Editor
 {
     public static class AutomatedFeatureTestRunner
     {
+        [MenuItem("CastleOfDice/Build Zone Scenes Runner")]
+        public static void BuildZoneScenesRunner()
+        {
+            ZoneSceneBuilder.BuildAll7ZoneScenes();
+        }
+
         [MenuItem("CastleOfDice/Run Feature Test Suite")]
         public static void RunAllFeatureTests()
         {
@@ -23,7 +29,8 @@ namespace CastleOfTheD20.Editor
                 typeof(CastleOfTheD20.Tests.MilestoneLevelUpTests),
                 typeof(CastleOfTheD20.Tests.QuestHUDTrackerTests),
                 typeof(CastleOfTheD20.Tests.CombatScrapDropTests),
-                typeof(CastleOfTheD20.Tests.CombatRefactorTests)
+                typeof(CastleOfTheD20.Tests.CombatRefactorTests),
+                typeof(CastleOfTheD20.Tests.ZoneTransitionTests)
             };
 
             int totalTests = 0;

@@ -82,6 +82,10 @@ namespace CastleOfTheD20.Core
         [Tooltip("2_Combat_GargoyleKing_music.mp3 - Wing 3 Final Boss Phase 2 (Stone Form)")]
         [SerializeField] private AudioClip gargoyleKingPhase2Clip;
 
+        [Header("Zone Music Configuration")]
+        [Tooltip("Optional ZoneMusicSO asset configuring zone exploration and combat music tracks.")]
+        [SerializeField] private CastleOfTheD20.Data.ZoneMusicSO zoneMusicConfig;
+
         #endregion
 
         #region Private State
@@ -585,6 +589,7 @@ namespace CastleOfTheD20.Core
             DungeonRoomController.OnRoomCombatStarted += HandleCombatStarted;
             GargoyleKingBoss.OnStoneFormActivated += HandleStoneFormActivated;
             TurnManager.OnCombatEnded += HandleCombatEnded;
+            TurnManager.OnTurnStateChanged += HandleTurnStateChanged;
         }
 
         private void UnsubscribeFromEvents()
@@ -593,19 +598,29 @@ namespace CastleOfTheD20.Core
             DungeonRoomController.OnRoomCombatStarted -= HandleCombatStarted;
             GargoyleKingBoss.OnStoneFormActivated -= HandleStoneFormActivated;
             TurnManager.OnCombatEnded -= HandleCombatEnded;
+            TurnManager.OnTurnStateChanged -= HandleTurnStateChanged;
         }
 
         public void HandleLocationChanged(GameLocation newLocation)
         {
+            if (zoneMusicConfig != null)
+            {
+                MusicTrackType mapped = zoneMusicConfig.GetTrackForLocation(newLocation);
+                PlayTrack(mapped, DEFAULT_FADE_DURATION);
+                return;
+            }
+
             switch (newLocation)
             {
                 case GameLocation.Village:
                     PlayTrack(MusicTrackType.Village, DEFAULT_FADE_DURATION);
                     break;
+                case GameLocation.Forest:
+                case GameLocation.CastleHall:
+                case GameLocation.Tower:
                 case GameLocation.Courtyard:
                 case GameLocation.Library:
                 case GameLocation.CrownHall:
-                case GameLocation.Forest:
                 default:
                     // Castle adventure exploration theme for zones outside Village
                     PlayTrack(MusicTrackType.CastleAdventure, DEFAULT_FADE_DURATION);
@@ -616,6 +631,12 @@ namespace CastleOfTheD20.Core
         public void HandleCombatStarted(DungeonRoomController room)
         {
             if (room == null) return;
+            if (zoneMusicConfig != null)
+            {
+                MusicTrackType combatTrack = zoneMusicConfig.GetCombatTrack(room.bossIdentifier, room.roomLocation);
+                PlayTrack(combatTrack, DEFAULT_FADE_DURATION);
+                return;
+            }
             PlayCombatMusicForBoss(room.bossIdentifier, room.roomLocation);
         }
 
@@ -627,6 +648,14 @@ namespace CastleOfTheD20.Core
         public void HandleCombatEnded(bool isVictory)
         {
             RestoreExplorationMusic(1.5f);
+        }
+
+        public void HandleTurnStateChanged(TurnState newState)
+        {
+            if (newState == TurnState.Victory || newState == TurnState.Defeat)
+            {
+                RestoreExplorationMusic(1.5f);
+            }
         }
 
         #endregion

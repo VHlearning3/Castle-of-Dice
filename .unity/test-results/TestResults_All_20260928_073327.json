@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-09-28T07:33:31.5844353Z",
+  "runStartedAt": "2026-09-28T07:33:31.3349581Z",
+  "durationSeconds": 0.0058945,
+  "testMode": "All",
+  "totalTests": 0,
+  "passed": 1,
+  "failed": 0,
+  "skipped": 0,
+  "inconclusive": 0,
+  "status": "passed",
+  "failures": [],
+  "tests": [
+    {
+      "name": "My project",
+      "fullName": "My project",
+      "status": "Passed",
+      "duration": 0.0058945,
+      "message": null,
+      "stackTrace": null,
+      "output": ""
+    }
+  ]
+}

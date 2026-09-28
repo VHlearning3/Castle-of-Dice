@@ -152,7 +152,7 @@ namespace CastleOfTheD20.World
                 hiddenPathObject.SetActive(true);
                 Debug.Log("[LockpickInteraction] A secret passage has been revealed!");
 
-                if (PlayerProgressionManager.Instance != null && player != null && player.CharacterClass != null && player.CharacterClass.ClassType == CharacterClassType.Rogue)
+                if (PlayerProgressionManager.Instance != null)
                 {
                     PlayerProgressionManager.Instance.NotifySecretPathOpened();
                 }

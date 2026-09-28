@@ -150,6 +150,14 @@ namespace CastleOfTheD20.UI
             }
 
             instance = this;
+            if (transform.root != null)
+            {
+                DontDestroyOnLoad(transform.root.gameObject);
+            }
+            else
+            {
+                DontDestroyOnLoad(gameObject);
+            }
 
             LoadThemeSpritesIfMissing();
             AutoLocateComponents();
@@ -1159,6 +1167,18 @@ namespace CastleOfTheD20.UI
                 case GameLocation.CrownHall:
                     zoneTitleText.text = "The Throne Room";
                     if (zoneSubtitleText != null) zoneSubtitleText.text = "Wing 3 • Gargoyle King's Lair";
+                    break;
+                case GameLocation.CastleHall:
+                    zoneTitleText.text = "The Great Hall";
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Safe Haven Hub • Runestone Shrine";
+                    break;
+                case GameLocation.Tower:
+                    zoneTitleText.text = "Treasure Tower";
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Ancient Spire of Relics";
+                    break;
+                case GameLocation.Cellar:
+                    zoneTitleText.text = "Village Wine Cellar";
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Ruins Beneath Oakhaven";
                     break;
                 default:
                     zoneTitleText.text = "Castle of Dice";

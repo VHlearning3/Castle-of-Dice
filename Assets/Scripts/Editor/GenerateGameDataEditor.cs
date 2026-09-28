@@ -19,7 +19,12 @@ namespace CastleOfTheD20.Editor
         private const string DataFolderPath = "Assets/Data";
 
         [MenuItem("CastleOfDice/Generate All Game Assets", false, 1)]
-        public static void GenerateAllGameAssets()
+        public static void GenerateAllGameAssetsMenu()
+        {
+            GenerateAllGameAssets(true);
+        }
+
+        public static void GenerateAllGameAssets(bool showDialog = false)
         {
             EnsureDataFolderExists();
 
@@ -387,16 +392,19 @@ namespace CastleOfTheD20.Editor
             AssetDatabase.Refresh();
 
             Debug.Log($"[GenerateGameDataEditor] Successfully generated and configured {assetCount} game data assets in '{DataFolderPath}'!");
-            EditorUtility.DisplayDialog(
-                "Castle of the D20",
-                $"Successfully generated {assetCount} game data assets in '{DataFolderPath}'!\n\n" +
-                "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
-                "- 12 Abilities (4 per class)\n" +
-                "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
-                "- 4 Quests (Cellar Pests, Cellar Rats, Lost Signet Ring, Swamp Herbs)\n" +
-                "- 7 Village Dialogue Nodes (Baldur and Barnaby trees with Persuasion checks)",
-                "OK"
-            );
+            if (showDialog)
+            {
+                EditorUtility.DisplayDialog(
+                    "Castle of the D20",
+                    $"Successfully generated {assetCount} game data assets in '{DataFolderPath}'!\n\n" +
+                    "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
+                    "- 12 Abilities (4 per class)\n" +
+                    "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
+                    "- 4 Quests (Cellar Pests, Cellar Rats, Lost Signet Ring, Swamp Herbs)\n" +
+                    "- 7 Village Dialogue Nodes (Baldur and Barnaby trees with Persuasion checks)",
+                    "OK"
+                );
+            }
         }
 
         [MenuItem("CastleOfDice/Generate Village Dialogues and Quests", false, 2)]
@@ -414,14 +422,6 @@ namespace CastleOfTheD20.Editor
             AssetDatabase.Refresh();
 
             Debug.Log($"[GenerateGameDataEditor] Generated {count} village dialogue and quest assets in Assets/Data/!");
-            EditorUtility.DisplayDialog(
-                "Castle of the D20",
-                $"Successfully generated {count} village dialogue and quest assets!\n\n" +
-                "- Quest_CellarPests.asset in Assets/Data/Quests/\n" +
-                "- Baldur_Intro, Baldur_Rumor in Assets/Data/Dialogues/\n" +
-                "- Barnaby_Intro, Barnaby_Negotiation_Success/Fail, Barnaby_Accepted, Barnaby_Declined in Assets/Data/Dialogues/",
-                "OK"
-            );
         }
 
         private static void GenerateVillageDialoguesAndQuestsInternal(ItemSO potionHealth, ref int assetCount)

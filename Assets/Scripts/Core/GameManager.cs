@@ -23,7 +23,19 @@ namespace CastleOfTheD20.Core
         CrownHall,
 
         /// <summary>The Dark Forest entrance and approach to Castle of Dice.</summary>
-        Forest = 4
+        Forest = 4,
+
+        /// <summary>Central Hall / HALL: Safe Haven Hub with Rune Shrine.</summary>
+        CastleHall = 5,
+
+        /// <summary>Hidden Treasure Tower containing Signet Ring and Giant Elixir.</summary>
+        Tower = 6,
+
+        /// <summary>Underground wine cellar beneath Oakhaven village.</summary>
+        Cellar = 7,
+
+        /// <summary>Alias for CrownHall (Wing 3 Final Boss Chamber).</summary>
+        ThroneRoom = CrownHall
     }
 
     /// <summary>

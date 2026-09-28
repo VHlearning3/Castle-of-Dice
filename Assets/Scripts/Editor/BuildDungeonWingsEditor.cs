@@ -26,15 +26,7 @@ namespace CastleOfTheD20.Editor
             var activeScene = EditorSceneManager.GetActiveScene();
             if (activeScene.name != "StartVillage")
             {
-                if (EditorUtility.DisplayDialog("Open StartVillage Scene?",
-                    "StartVillage scene is required to build the castle dungeon wings. Open it now?", "Open", "Cancel"))
-                {
-                    activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-                }
-                else
-                {
-                    return;
-                }
+                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
             }
 
             // Ensure data assets exist

@@ -131,6 +131,14 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// Returns true if valid save data exists in PlayerPrefs.
+        /// </summary>
+        public static bool HasSavedGame()
+        {
+            return PlayerPrefs.HasKey(SaveKey);
+        }
+
+        /// <summary>
         /// Clears saved game data from PlayerPrefs.
         /// </summary>
         public static void ClearSave()

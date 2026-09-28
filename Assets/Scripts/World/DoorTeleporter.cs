@@ -21,8 +21,15 @@ namespace CastleOfTheD20.World
         [SerializeField] private Vector3 fallbackDestination = Vector3.zero;
 
         [Header("Zone Synchronization")]
-        [Tooltip("Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest).")]
+        [Tooltip("Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest, CastleHall, Tower, Cellar).")]
         [SerializeField] private string destinationZone = string.Empty;
+
+        [Header("Async Scene Transition (Optional)")]
+        [Tooltip("If set, transitioning through this door loads a new Unity scene asynchronously via SceneLoader.")]
+        [SerializeField] private string targetSceneName = string.Empty;
+
+        [Tooltip("Optional spawn point or landing object name in the destination scene.")]
+        [SerializeField] private string targetSpawnPointName = string.Empty;
 
         [Header("Trigger Behavior")]
         [Tooltip("If true, entering the trigger volume automatically teleports the player without requiring a click.")]
@@ -59,11 +66,25 @@ namespace CastleOfTheD20.World
             set => fallbackDestination = value;
         }
 
-        /// <summary>Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest).</summary>
+        /// <summary>Optional target zone identifier (Village, Courtyard, Library, CrownHall, Forest, CastleHall, Tower, Cellar).</summary>
         public string DestinationZone
         {
             get => destinationZone;
             set => destinationZone = value;
+        }
+
+        /// <summary>Target scene name for cross-scene async transitions.</summary>
+        public string TargetSceneName
+        {
+            get => targetSceneName;
+            set => targetSceneName = value;
+        }
+
+        /// <summary>Target spawn point name in destination scene.</summary>
+        public string TargetSpawnPointName
+        {
+            get => targetSpawnPointName;
+            set => targetSpawnPointName = value;
         }
 
         /// <summary>Whether walking into the trigger automatically teleports the player.</summary>
@@ -73,12 +94,32 @@ namespace CastleOfTheD20.World
             set => triggerOnWalk = value;
         }
 
+        /// <summary>Cooldown duration between teleports.</summary>
+        public float TeleportCooldown
+        {
+            get => teleportCooldown;
+            set => teleportCooldown = value;
+        }
+
         /// <summary>
         /// Configures destination and prompt parameters programmatically.
         /// </summary>
         public void InitializeTeleporter(Transform destTarget, string prompt, float radius = 3.5f, bool walkTrigger = false)
         {
             destination = destTarget;
+            promptMessage = prompt;
+            interactionRadius = radius;
+            triggerOnWalk = walkTrigger;
+        }
+
+        /// <summary>
+        /// Configures cross-scene teleporter programmatically.
+        /// </summary>
+        public void InitializeSceneTeleporter(string sceneName, string spawnName, string destZone, string prompt, float radius = 3.5f, bool walkTrigger = false)
+        {
+            targetSceneName = sceneName;
+            targetSpawnPointName = spawnName;
+            destinationZone = destZone;
             promptMessage = prompt;
             interactionRadius = radius;
             triggerOnWalk = walkTrigger;
@@ -146,6 +187,37 @@ namespace CastleOfTheD20.World
             }
             s_lastGlobalTeleportTime = Time.time;
 
+            // Optional audio playback
+            if (teleportSound != null)
+            {
+                AudioSource.PlayClipAtPoint(teleportSound, playerObj.transform.position);
+            }
+
+            // 1. Cross-Scene Async Transition
+            if (!string.IsNullOrEmpty(targetSceneName))
+            {
+                if (!string.IsNullOrEmpty(DestinationZone) && GameManager.Instance != null)
+                {
+                    if (Enum.TryParse<GameLocation>(DestinationZone, true, out GameLocation loc))
+                    {
+                        GameManager.Instance.SetLocation(loc);
+                    }
+                }
+
+                Debug.Log($"[DoorTeleporter] '{name}' initiating async load of scene '{targetSceneName}' (target spawn: '{targetSpawnPointName}').");
+
+                if (SceneLoader.Instance != null)
+                {
+                    SceneLoader.Instance.LoadScene(targetSceneName, targetSpawnPointName);
+                }
+                else
+                {
+                    UnityEngine.SceneManagement.SceneManager.LoadScene(targetSceneName);
+                }
+                return;
+            }
+
+            // 2. Intra-Scene Transform Teleport
             Vector3 targetPosition = destination != null ? destination.position : fallbackDestination;
             Quaternion targetRotation = destination != null ? destination.rotation : playerObj.transform.rotation;
 
