@@ -10,25 +10,22 @@ EditorBuildSettings:
     guid: bde66c657fbbb5749b7622ca4603567c
   - enabled: 1
     path: Assets/Scenes/Zone_2_ForestPath.unity
-    guid: 00000000000000000000000000000000
+    guid: 38bfc326edc2f5a41b2f1d11a08d9c47
   - enabled: 1
     path: Assets/Scenes/Zone_3_CastleCourtyard.unity
-    guid: 00000000000000000000000000000000
+    guid: 7cacf413a47771c4a90f803f5dba694f
   - enabled: 1
     path: Assets/Scenes/Zone_4_Library.unity
-    guid: 00000000000000000000000000000000
+    guid: 835d0af3009a362408fde1f448a5a96a
   - enabled: 1
     path: Assets/Scenes/Zone_5_CastleHall.unity
-    guid: 00000000000000000000000000000000
+    guid: 8b7ef905b0daaac4bb216f71defbcfca
   - enabled: 1
     path: Assets/Scenes/Zone_6_Tower.unity
-    guid: 00000000000000000000000000000000
+    guid: 1f32ebf9c41face4cba83aaf6a869aec
   - enabled: 1
     path: Assets/Scenes/Zone_7_ThroneRoom.unity
-    guid: 00000000000000000000000000000000
-  - enabled: 1
-    path: Assets/Scenes/StartVillage.unity
-    guid: a77bedb6b7b56af4a91238cd585dd792
+    guid: 9e5173df707ec3f4ba0d6d5eea5b2fa5
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: cfe9e009cdc7de0468d34c7f9bec323c, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

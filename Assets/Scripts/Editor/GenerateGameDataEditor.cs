@@ -18,10 +18,41 @@ namespace CastleOfTheD20.Editor
     {
         private const string DataFolderPath = "Assets/Data";
 
-        [MenuItem("CastleOfDice/Generate All Game Assets", false, 1)]
+        // Assets created during the current run. Existing assets keep their (possibly hand-tuned) values
+        // unless s_resetExisting is set by the explicit "Reset" menu command.
+        private static readonly HashSet<UnityEngine.Object> s_createdThisRun = new HashSet<UnityEngine.Object>();
+        private static bool s_resetExisting;
+
+        [MenuItem("CastleOfDice/Generate Missing Game Assets", false, 1)]
         public static void GenerateAllGameAssetsMenu()
         {
             GenerateAllGameAssets(true);
+        }
+
+        [MenuItem("CastleOfDice/Reset All Game Assets To Defaults", false, 2)]
+        public static void ResetAllGameAssetsMenu()
+        {
+            if (!EditorUtility.DisplayDialog("Reset game data",
+                "Overwrite every generated asset in Assets/Data with the default values from GenerateGameDataEditor? Manual Inspector edits will be lost.",
+                "Reset", "Cancel"))
+            {
+                return;
+            }
+
+            s_resetExisting = true;
+            try
+            {
+                GenerateAllGameAssets(true);
+            }
+            finally
+            {
+                s_resetExisting = false;
+            }
+        }
+
+        private static bool ShouldInitialize(UnityEngine.Object asset)
+        {
+            return s_resetExisting || s_createdThisRun.Contains(asset);
         }
 
         public static void GenerateAllGameAssets(bool showDialog = false)
@@ -32,7 +63,7 @@ namespace CastleOfTheD20.Editor
 
             // 1. Generate Items
             ItemSO potionHealth = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_Potion_Health.asset");
-            potionHealth.Initialize(
+            if (ShouldInitialize(potionHealth)) potionHealth.Initialize(
                 id: "potion_health_small",
                 name: "Small Health Potion",
                 desc: "Restores 15 hit points when consumed during exploration or combat.",
@@ -46,7 +77,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO sharpenedBlade = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SharpenedBlade.asset");
-            sharpenedBlade.Initialize(
+            if (ShouldInitialize(sharpenedBlade)) sharpenedBlade.Initialize(
                 id: "upgrade_sharpened_blade",
                 name: "Sharpened Blade",
                 desc: "Finely honed weapon forged by Blacksmith Baldur. Permanently adds +1 to all attack damage.",
@@ -60,7 +91,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO runicArmor = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_RunicArmor.asset");
-            runicArmor.Initialize(
+            if (ShouldInitialize(runicArmor)) runicArmor.Initialize(
                 id: "upgrade_runic_armor",
                 name: "Runic Armor",
                 desc: "Reinforced armor inscribed with protective runes. Permanently increases Armor Class by +1.",
@@ -74,7 +105,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO scrapMetal = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_ScrapMetal.asset");
-            scrapMetal.Initialize(
+            if (ShouldInitialize(scrapMetal)) scrapMetal.Initialize(
                 id: "mat_scrap_metal",
                 name: "Scrap Metal",
                 desc: "Salvaged scrap ore gathered from dungeon ruins. Can be sold to Blacksmith Baldur for 10 gold.",
@@ -90,7 +121,7 @@ namespace CastleOfTheD20.Editor
             // 2. Generate Abilities (12 total: 4 Warrior, 4 Mage, 4 Rogue)
             // --- Warrior Abilities ---
             AbilitySO warriorSlash = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Warrior_SwordSlash.asset");
-            warriorSlash.Initialize(
+            if (ShouldInitialize(warriorSlash)) warriorSlash.Initialize(
                 id: "warrior_sword_slash",
                 name: "Sword Slash",
                 desc: "Standard melee strike dealing heavy slashing damage to an adjacent enemy.",
@@ -107,7 +138,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO warriorShield = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Warrior_ShieldBlock.asset");
-            warriorShield.Initialize(
+            if (ShouldInitialize(warriorShield)) warriorShield.Initialize(
                 id: "warrior_shield_block",
                 name: "Shield Block",
                 desc: "Raise shield defensively, granting +3 Armor Class and damage mitigation until next turn.",
@@ -124,7 +155,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO warriorWarCry = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Warrior_WarCry.asset");
-            warriorWarCry.Initialize(
+            if (ShouldInitialize(warriorWarCry)) warriorWarCry.Initialize(
                 id: "warrior_war_cry",
                 name: "War Cry",
                 desc: "Unleash an intimidating shout that knocks back surrounding foes and bolsters resolve.",
@@ -141,7 +172,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO warriorIronWill = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Warrior_IronWill.asset");
-            warriorIronWill.Initialize(
+            if (ShouldInitialize(warriorIronWill)) warriorIronWill.Initialize(
                 id: "warrior_iron_will",
                 name: "Iron Will",
                 desc: "Channel inner fortitude to immediately restore 30% of maximum hit points.",
@@ -159,7 +190,7 @@ namespace CastleOfTheD20.Editor
 
             // --- Mage Abilities ---
             AbilitySO mageFireball = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Mage_Fireball.asset");
-            mageFireball.Initialize(
+            if (ShouldInitialize(mageFireball)) mageFireball.Initialize(
                 id: "mage_fireball",
                 name: "Fireball",
                 desc: "Hurl an explosive sphere of arcane flame, dealing area damage across a 3x3 grid zone.",
@@ -176,7 +207,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO mageFrostbite = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Mage_Frostbite.asset");
-            mageFrostbite.Initialize(
+            if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
                 desc: "Blast a target with chilling frost, inflicting frostbite and halving movement for 2 turns.",
@@ -193,7 +224,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO mageManaShield = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Mage_ManaShield.asset");
-            mageManaShield.Initialize(
+            if (ShouldInitialize(mageManaShield)) mageManaShield.Initialize(
                 id: "mage_mana_shield",
                 name: "Mana Shield",
                 desc: "Conjure a protective barrier of pure arcane energy that absorbs incoming attacks.",
@@ -210,7 +241,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO mageBlink = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Mage_Blink.asset");
-            mageBlink.Initialize(
+            if (ShouldInitialize(mageBlink)) mageBlink.Initialize(
                 id: "mage_blink",
                 name: "Blink",
                 desc: "Instantly teleport to an unoccupied grid tile up to 5 tiles away without provoking attacks.",
@@ -228,7 +259,7 @@ namespace CastleOfTheD20.Editor
 
             // --- Rogue Abilities ---
             AbilitySO rogueBackstab = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_Backstab.asset");
-            rogueBackstab.Initialize(
+            if (ShouldInitialize(rogueBackstab)) rogueBackstab.Initialize(
                 id: "rogue_backstab",
                 name: "Backstab",
                 desc: "Strike from the shadows for devastating critical puncture damage.",
@@ -245,7 +276,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO rogueSmokeBomb = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_SmokeBomb.asset");
-            rogueSmokeBomb.Initialize(
+            if (ShouldInitialize(rogueSmokeBomb)) rogueSmokeBomb.Initialize(
                 id: "rogue_smoke_bomb",
                 name: "Smoke Bomb",
                 desc: "Toss a dense smoke canister, blinding all targets in a 3x3 area for 1 turn.",
@@ -262,7 +293,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO roguePoisonDagger = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_PoisonDagger.asset");
-            roguePoisonDagger.Initialize(
+            if (ShouldInitialize(roguePoisonDagger)) roguePoisonDagger.Initialize(
                 id: "rogue_poison_dagger",
                 name: "Poison Dagger",
                 desc: "Slash with an envenomed blade, dealing light damage and poisoning the victim for 3 turns.",
@@ -279,7 +310,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             AbilitySO rogueLockpicking = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_Lockpicking.asset");
-            rogueLockpicking.Initialize(
+            if (ShouldInitialize(rogueLockpicking)) rogueLockpicking.Initialize(
                 id: "rogue_lockpick",
                 name: "Lockpicking",
                 desc: "Use nimble lockpicks to bypass locks on dungeon doors and treasure chests.",
@@ -298,7 +329,7 @@ namespace CastleOfTheD20.Editor
             // 3. Generate 3 CharacterClasses and assign respective 4 abilities
             // --- Warrior: Sir Roland ---
             CharacterClassSO warriorClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Warrior_SirRoland.asset");
-            warriorClass.Initialize(
+            if (ShouldInitialize(warriorClass)) warriorClass.Initialize(
                 type: CharacterClassType.Warrior,
                 name: "Sir Roland",
                 lore: "Veteran of the royal guard who donned his ancestral plate armor to purge his fallen castle of undead abominations.",
@@ -313,7 +344,7 @@ namespace CastleOfTheD20.Editor
 
             // --- Mage: Scholar Elira ---
             CharacterClassSO mageClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Mage_Elira.asset");
-            mageClass.Initialize(
+            if (ShouldInitialize(mageClass)) mageClass.Initialize(
                 type: CharacterClassType.Mage,
                 name: "Scholar Elira",
                 lore: "Academy arcanist seeking to unravel the ancient curses and retrieve lost grimoires hidden in the castle's depths.",
@@ -328,7 +359,7 @@ namespace CastleOfTheD20.Editor
 
             // --- Rogue: Shadow-Corvo ---
             CharacterClassSO rogueClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Rogue_Corvo.asset");
-            rogueClass.Initialize(
+            if (ShouldInitialize(rogueClass)) rogueClass.Initialize(
                 type: CharacterClassType.Rogue,
                 name: "Shadow-Corvo",
                 lore: "Tavern-bred opportunist and lockpick specialist who knows the castle's secret passageways better than anyone.",
@@ -343,7 +374,7 @@ namespace CastleOfTheD20.Editor
 
             // 4. Generate 3 Quests
             QuestSO cellarRats = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_CellarRats.asset");
-            cellarRats.Initialize(
+            if (ShouldInitialize(cellarRats)) cellarRats.Initialize(
                 id: "CellarRats",
                 title: "Cellar Infestation",
                 desc: "Clear 3 giant cellar rats infesting the wine cellar beneath Barnaby's tavern.",
@@ -357,7 +388,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             QuestSO lostSignet = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_LostSignetRing.asset");
-            lostSignet.Initialize(
+            if (ShouldInitialize(lostSignet)) lostSignet.Initialize(
                 id: "LostSignetRing",
                 title: "The Lost Signet Ring",
                 desc: "Search the courtyard ruins and recover the ancestral signet ring for Elder Othelia.",
@@ -371,7 +402,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             QuestSO swampHerbs = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_SwampHerbs.asset");
-            swampHerbs.Initialize(
+            if (ShouldInitialize(swampHerbs)) swampHerbs.Initialize(
                 id: "SwampHerbs",
                 title: "Herbs for Mirabel",
                 desc: "Gather 3 marsh swamp herbs from the castle moat for herbalist Mirabel.",
@@ -435,7 +466,7 @@ namespace CastleOfTheD20.Editor
 
             // 1. Quest: Cellar Pests
             QuestSO cellarPests = GetOrCreateAsset<QuestSO>($"{questFolder}/Quest_CellarPests.asset");
-            cellarPests.Initialize(
+            if (ShouldInitialize(cellarPests)) cellarPests.Initialize(
                 id: "quest_cellar_pests",
                 title: "Cellar Pests",
                 desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's cellar casks.",
@@ -451,7 +482,7 @@ namespace CastleOfTheD20.Editor
             // 2. Quest: Scrap for the Forge
             ItemSO sharpenedBlade = AssetDatabase.LoadAssetAtPath<ItemSO>($"{DataFolderPath}/Item_SharpenedBlade.asset");
             QuestSO scrapQuest = GetOrCreateAsset<QuestSO>($"{questFolder}/Quest_ScrapMetal.asset");
-            scrapQuest.Initialize(
+            if (ShouldInitialize(scrapQuest)) scrapQuest.Initialize(
                 id: "quest_scrap_metal",
                 title: "Scrap for the Forge",
                 desc: "Collect 5 pieces of scrap metal from the castle ruins for Blacksmith Baldur.",
@@ -470,7 +501,7 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO baldurQuests = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_QuestsNode.asset");
 
             // Lore Node
-            baldurLore.Initialize(
+            if (ShouldInitialize(baldurLore)) baldurLore.Initialize(
                 speaker: "Baldur the Smith",
                 text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for first 2 rounds)",
                 portrait: null,
@@ -486,7 +517,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             // Quests Node
-            baldurQuests.Initialize(
+            if (ShouldInitialize(baldurQuests)) baldurQuests.Initialize(
                 speaker: "Baldur the Smith",
                 text: "The forge fires are starving for quality ore. The old watchtowers and courtyard are full of scrap metal from fallen sentries. Gather 5 pieces of Scrap Metal and bring them to me, and I'll pay you in gold and tempered steel!",
                 portrait: null,
@@ -503,7 +534,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             // Start Node (Initial Greeting with 4 distinct options)
-            baldurStart.Initialize(
+            if (ShouldInitialize(baldurStart)) baldurStart.Initialize(
                 speaker: "Baldur the Smith",
                 text: "Greetings, traveler. You'd be a fool to face the castle's terrors with dull iron. Bring me salvage scrap from the ruins, and I'll temper steel that cuts bone. What do you need?",
                 portrait: null,
@@ -521,18 +552,18 @@ namespace CastleOfTheD20.Editor
 
             // Backward compatibility aliases
             DialogueNodeSO baldurIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Intro.asset");
-            baldurIntro.Initialize(baldurStart.SpeakerName, baldurStart.DialogueText, baldurStart.SpeakerPortrait, baldurStart.IsExitNode);
+            if (ShouldInitialize(baldurIntro)) baldurIntro.Initialize(baldurStart.SpeakerName, baldurStart.DialogueText, baldurStart.SpeakerPortrait, baldurStart.IsExitNode);
             baldurIntro.SetOptions(new List<DialogueOption>(baldurStart.Options));
             EditorUtility.SetDirty(baldurIntro);
 
             DialogueNodeSO baldurRumor = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Rumor.asset");
-            baldurRumor.Initialize(baldurLore.SpeakerName, baldurLore.DialogueText, baldurLore.SpeakerPortrait, baldurLore.IsExitNode);
+            if (ShouldInitialize(baldurRumor)) baldurRumor.Initialize(baldurLore.SpeakerName, baldurLore.DialogueText, baldurLore.SpeakerPortrait, baldurLore.IsExitNode);
             baldurRumor.SetOptions(new List<DialogueOption>(baldurLore.Options));
             EditorUtility.SetDirty(baldurRumor);
 
             // 3. Innkeeper Barnaby Dialogue Tree
             DialogueNodeSO barnabyAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Accepted.asset");
-            barnabyAccepted.Initialize(
+            if (ShouldInitialize(barnabyAccepted)) barnabyAccepted.Initialize(
                 speaker: "Innkeeper Barnaby",
                 text: "Bless you! The cellar hatch is right behind the counter. Watch your step, mind the teeth, and don't break the wine bottles!",
                 portrait: null,
@@ -546,7 +577,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO barnabyDeclined = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Declined.asset");
-            barnabyDeclined.Initialize(
+            if (ShouldInitialize(barnabyDeclined)) barnabyDeclined.Initialize(
                 speaker: "Innkeeper Barnaby",
                 text: "Rats beneath you? Well, if my cellar collapses under rat tunnels, don't expect a warm hearth or cheap ale next time you visit!",
                 portrait: null,
@@ -557,7 +588,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO barnabyNegotiationSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Negotiation_Success.asset");
-            barnabyNegotiationSuccess.Initialize(
+            if (ShouldInitialize(barnabyNegotiationSuccess)) barnabyNegotiationSuccess.Initialize(
                 speaker: "Innkeeper Barnaby",
                 text: "Fine, fine! If it saves my vintage reserve, I'll pay 45 gold instead of 30! Just get down there and crush those vermin!",
                 portrait: null,
@@ -572,7 +603,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO barnabyNegotiationFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Negotiation_Fail.asset");
-            barnabyNegotiationFail.Initialize(
+            if (ShouldInitialize(barnabyNegotiationFail)) barnabyNegotiationFail.Initialize(
                 speaker: "Innkeeper Barnaby",
                 text: "You drive a hard bargain, stranger, but thirty gold and two healing draughts is every copper I can spare. Take it or leave my cellar to the rats!",
                 portrait: null,
@@ -587,7 +618,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO barnabyIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Intro.asset");
-            barnabyIntro.Initialize(
+            if (ShouldInitialize(barnabyIntro)) barnabyIntro.Initialize(
                 speaker: "Innkeeper Barnaby",
                 text: "Thank the gods, an adventurer! Dreadful screeching echoes from my cellar—giant rats are ruining my finest wine casks! Will you clear them out before the whole village dies of thirst?",
                 portrait: null,
@@ -612,7 +643,7 @@ namespace CastleOfTheD20.Editor
 
             // 4. Elder Othelia Items & Dialogue Tree (Kadonnut perintökalleus)
             ItemSO itemSignetRing = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SignetRing.asset");
-            itemSignetRing.Initialize(
+            if (ShouldInitialize(itemSignetRing)) itemSignetRing.Initialize(
                 id: "item_signet_ring",
                 name: "Othelia's Signet Ring",
                 desc: "Ancient golden seal bearing the noble crest of Othelia's ancestors. Lost in the castle courtyard.",
@@ -626,7 +657,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO itemRerollRune = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_RerollRuneStone.asset");
-            itemRerollRune.Initialize(
+            if (ShouldInitialize(itemRerollRune)) itemRerollRune.Initialize(
                 id: "item_reroll_rune",
                 name: "Rune of Fate (D20 Reroll)",
                 desc: "Mystical rune stone of Oakhaven. Allows the bearer to invoke a critical D20 reroll.",
@@ -640,7 +671,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             QuestSO questSignetRing = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_LostSignetRing.asset");
-            questSignetRing.Initialize(
+            if (ShouldInitialize(questSignetRing)) questSignetRing.Initialize(
                 id: "quest_lost_signet_ring",
                 title: "The Lost Signet Ring",
                 desc: "Search for Elder Othelia's ancestral signet ring in the courtyard ruins.",
@@ -654,7 +685,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO otheliaAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Accepted.asset");
-            otheliaAccepted.Initialize(
+            if (ShouldInitialize(otheliaAccepted)) otheliaAccepted.Initialize(
                 speaker: "Elder Othelia",
                 text: "Thank you, brave adventurer! My family's signet ring was lost in the lower courtyards when the guards fell. Beware the skeletons among the ruins!",
                 portrait: null,
@@ -668,7 +699,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO otheliaLore = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Lore.asset");
-            otheliaLore.Initialize(
+            if (ShouldInitialize(otheliaLore)) otheliaLore.Initialize(
                 speaker: "Elder Othelia",
                 text: "Before the curse, the Petrified King ruled these lands justly. But he sought immortality from the deep crags... and his heart turned to stone. Shadows consumed the fortress from within.",
                 portrait: null,
@@ -683,7 +714,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO otheliaIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Intro.asset");
-            otheliaIntro.Initialize(
+            if (ShouldInitialize(otheliaIntro)) otheliaIntro.Initialize(
                 speaker: "Elder Othelia",
                 text: "Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace until the ancient stone castle stirred with evil. If you venture to the castle gates, could you search for my family's lost signet ring?",
                 portrait: null,
@@ -700,7 +731,7 @@ namespace CastleOfTheD20.Editor
 
             // 5. Herbalist Mirabel Items & Dialogue Tree (Yrttejä parantajalle)
             ItemSO itemSwampHerb = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SwampHerb.asset");
-            itemSwampHerb.Initialize(
+            if (ShouldInitialize(itemSwampHerb)) itemSwampHerb.Initialize(
                 id: "item_swamp_herb",
                 name: "Castle Moat Blossom",
                 desc: "Rare swamp flower that blooms only near the castle moat.",
@@ -714,7 +745,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO itemPoisonVial = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_PoisonVial.asset");
-            itemPoisonVial.Initialize(
+            if (ShouldInitialize(itemPoisonVial)) itemPoisonVial.Initialize(
                 id: "item_poison_vial",
                 name: "Poison Vial",
                 desc: "Potent herbal extract that adds +5 bonus damage in the next combat encounter.",
@@ -728,7 +759,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             ItemSO itemGreaterPotion = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_GreaterPotion.asset");
-            itemGreaterPotion.Initialize(
+            if (ShouldInitialize(itemGreaterPotion)) itemGreaterPotion.Initialize(
                 id: "item_greater_potion",
                 name: "Greater Health Potion",
                 desc: "Concentrated healing draught. Restores 35 Hit Points.",
@@ -742,7 +773,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             QuestSO questSwampHerbs = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quests/Quest_SwampHerbs.asset");
-            questSwampHerbs.Initialize(
+            if (ShouldInitialize(questSwampHerbs)) questSwampHerbs.Initialize(
                 id: "quest_swamp_herbs",
                 title: "Herbs for the Healer",
                 desc: "Gather 3 swamp flowers near the moat for Mirabel.",
@@ -756,7 +787,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO mirabelAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Accepted.asset");
-            mirabelAccepted.Initialize(
+            if (ShouldInitialize(mirabelAccepted)) mirabelAccepted.Initialize(
                 speaker: "Mirabel the Herbalist",
                 text: "Splendid! Rare blue blossoms thrive along the moat. Three flowers will suffice for a potent brew. Beware the shadows lurking near the moat!",
                 portrait: null,
@@ -770,7 +801,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO mirabelCheckSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Success.asset");
-            mirabelCheckSuccess.Initialize(
+            if (ShouldInitialize(mirabelCheckSuccess)) mirabelCheckSuccess.Initialize(
                 speaker: "Mirabel the Herbalist",
                 text: "You truly understand marsh flora! Since you possess such deep knowledge of nature, I shall brew you a Greater Health Potion instead of ordinary poison as your reward!",
                 portrait: null,
@@ -784,7 +815,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO mirabelCheckFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_NatureCheck_Fail.asset");
-            mirabelCheckFail.Initialize(
+            if (ShouldInitialize(mirabelCheckFail)) mirabelCheckFail.Initialize(
                 speaker: "Mirabel the Herbalist",
                 text: "Your herb lore needs practice, but steel is steel. You'll receive a poison vial, provided you return the blossoms undamaged.",
                 portrait: null,
@@ -798,7 +829,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO mirabelIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Intro.asset");
-            mirabelIntro.Initialize(
+            if (ShouldInitialize(mirabelIntro)) mirabelIntro.Initialize(
                 speaker: "Mirabel the Herbalist",
                 text: "Hush... be quiet. Do you smell the bitter moss of the moat? I am Mirabel, herbalist of Oakhaven. I desperately need three swamp flowers from near the moat for my remedies, but the undead sentries make foraging far too perilous.",
                 portrait: null,
@@ -823,7 +854,7 @@ namespace CastleOfTheD20.Editor
 
             // 6. Boss 1: Cursed Commander Dialogue (Siipi 1: Alapiha)
             DialogueNodeSO commanderSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Success.asset");
-            commanderSuccess.Initialize(
+            if (ShouldInitialize(commanderSuccess)) commanderSuccess.Initialize(
                 speaker: "Cursed Commander",
                 text: "An oath...? It echoes across centuries in my mind... A moment of hesitation! My armor splinters!",
                 portrait: null,
@@ -834,7 +865,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO commanderFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Fail.asset");
-            commanderFail.Initialize(
+            if (ShouldInitialize(commanderFail)) commanderFail.Initialize(
                 speaker: "Cursed Commander",
                 text: "Honor is dead, as am I! My blade shall taste your blood!",
                 portrait: null,
@@ -845,7 +876,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO commanderIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Intro.asset");
-            commanderIntro.Initialize(
+            if (ShouldInitialize(commanderIntro)) commanderIntro.Initialize(
                 speaker: "Cursed Commander",
                 text: "Who dares desecrate the castle watchtower? My blade has lain in the grave for centuries, but today it hungers for living blood once more!",
                 portrait: null,
@@ -869,7 +900,7 @@ namespace CastleOfTheD20.Editor
 
             // 7. Boss 2: Shadow Mage Malakor Dialogue (Siipi 2: Kirjasto)
             DialogueNodeSO malakorSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Success.asset");
-            malakorSuccess.Initialize(
+            if (ShouldInitialize(malakorSuccess)) malakorSuccess.Initialize(
                 speaker: "Shadow Mage Malakor",
                 text: "What?! How do you know the dispel formula for that incantation?! The phantom reflection shatters!",
                 portrait: null,
@@ -880,7 +911,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO malakorFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Fail.asset");
-            malakorFail.Initialize(
+            if (ShouldInitialize(malakorFail)) malakorFail.Initialize(
                 speaker: "Shadow Mage Malakor",
                 text: "Blind fool! You shall never discern shadow from truth in my hall of mirrors!",
                 portrait: null,
@@ -891,7 +922,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO malakorIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Intro.asset");
-            malakorIntro.Initialize(
+            if (ShouldInitialize(malakorIntro)) malakorIntro.Initialize(
                 speaker: "Shadow Mage Malakor",
                 text: "Welcome to my arcane sanctum, mortal. Do you seek ancient secrets? Or merely your doom within my labyrinth of mirrors?",
                 portrait: null,
@@ -915,7 +946,7 @@ namespace CastleOfTheD20.Editor
 
             // 8. Boss 3: Gargoyle King Dialogue (Siipi 3: Kruununsali)
             DialogueNodeSO gargoyleSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Success.asset");
-            gargoyleSuccess.Initialize(
+            if (ShouldInitialize(gargoyleSuccess)) gargoyleSuccess.Initialize(
                 speaker: "The Gargoyle King",
                 text: "P-petrified... prisoner?! Grraaaagh! My stony heart trembles!",
                 portrait: null,
@@ -926,7 +957,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO gargoyleFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Check_Fail.asset");
-            gargoyleFail.Initialize(
+            if (ShouldInitialize(gargoyleFail)) gargoyleFail.Initialize(
                 speaker: "The Gargoyle King",
                 text: "Insolent worm! The mountain stone and rockslides will crush you to dust!",
                 portrait: null,
@@ -937,7 +968,7 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             DialogueNodeSO gargoyleIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/GargoyleKing_Intro.asset");
-            gargoyleIntro.Initialize(
+            if (ShouldInitialize(gargoyleIntro)) gargoyleIntro.Initialize(
                 speaker: "The Gargoyle King",
                 text: "My crown is eternal stone! This realm shall never crumble! Kneel before the Lord of Stone or become part of the fortress floor!",
                 portrait: null,
@@ -991,6 +1022,7 @@ namespace CastleOfTheD20.Editor
             {
                 asset = ScriptableObject.CreateInstance<T>();
                 AssetDatabase.CreateAsset(asset, assetPath);
+                s_createdThisRun.Add(asset);
             }
             return asset;
         }

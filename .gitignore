@@ -83,3 +83,6 @@ crashlytics-build.properties
 # End of https://www.toptal.com/developers/gitignore/api/unity
 
 
+
+# NotebookLM export (CastleOfDice/Export NotebookLM Context)
+CombinedProjectScripts.txt

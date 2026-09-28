@@ -12,21 +12,16 @@ using CastleOfTheD20.World;
 namespace CastleOfTheD20.Editor
 {
     /// <summary>
-    /// Editor tool to build, style, and serialize the professional tabletop D&D HUD hierarchy in StartVillage.unity.
+    /// Editor tool to build, style, and serialize the professional tabletop D&D HUD hierarchy in the active scene.
     /// Strictly adheres to the rule that the user's authentic CoinIcon.png and HealthPotionIcon.png
     /// are preserved and wired directly with preserveAspect = true.
     /// </summary>
     public static class BuildHUDEditor
     {
         [MenuItem("CastleOfDice/Rebuild and Style Professional HUD", false, 25)]
-        [MenuItem("Tools/Castle of Dice/Rebuild and Style Professional HUD", false, 25)]
         public static void RebuildAndStyleHUD()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
             // 1. Ensure Theme Sprites exist
             if (!System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png"))
@@ -369,23 +364,17 @@ namespace CastleOfTheD20.Editor
 
             EditorUtility.SetDirty(hud.gameObject);
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
 
-            Debug.Log("[BuildHUDEditor] Tabletop D&D HUD & Progression successfully rebuilt, styled, and saved into StartVillage.unity!");
+            Debug.Log("[BuildHUDEditor] Tabletop D&D HUD & Progression successfully rebuilt, styled, in the active scene (save to keep).");
 
             // Rebuild and style Combat HUD in tandem
             RebuildAndStyleCombatHUD();
         }
 
         [MenuItem("CastleOfDice/Rebuild and Style Combat HUD", false, 26)]
-        [MenuItem("Tools/Castle of Dice/Rebuild and Style Combat HUD", false, 26)]
         public static void RebuildAndStyleCombatHUD()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
             CombatUIController combatUI = Object.FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
             if (combatUI == null)
@@ -477,9 +466,8 @@ namespace CastleOfTheD20.Editor
 
             EditorUtility.SetDirty(combatUI.gameObject);
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
 
-            Debug.Log("[BuildHUDEditor] Combat HUD successfully rebuilt, styled, and saved into StartVillage.unity!");
+            Debug.Log("[BuildHUDEditor] Combat HUD successfully rebuilt, styled, in the active scene (save to keep).");
         }
 
         public static void AssignAbilityIconsToScriptableObjects()
@@ -518,14 +506,9 @@ namespace CastleOfTheD20.Editor
         }
 
         [MenuItem("CastleOfDice/Setup Rune of Reroll Dice Modal", false, 28)]
-        [MenuItem("Tools/Castle of Dice/Setup Rune of Reroll Dice Modal", false, 28)]
         public static void SetupRuneOfRerollDiceModal()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
             Canvas canvas = Object.FindAnyObjectByType<Canvas>(FindObjectsInactive.Include);
             if (canvas == null)
@@ -596,9 +579,8 @@ namespace CastleOfTheD20.Editor
 
             EditorUtility.SetDirty(diceModalTr.gameObject);
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
 
-            Debug.Log("[BuildHUDEditor] Rune of Reroll Dice Modal successfully configured and saved into StartVillage.unity!");
+            Debug.Log("[BuildHUDEditor] Rune of Reroll Dice Modal successfully configured in the active scene (save to keep).");
         }
     }
 }

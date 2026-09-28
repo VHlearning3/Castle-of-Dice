@@ -10,21 +10,16 @@ namespace CastleOfTheD20.Editor
 {
     /// <summary>
     /// Editor tool to build, style, and serialize the tabletop D&D NPC Dialogue Panels and
-    /// Blacksmith Baldur's Shop interface in StartVillage.unity.
+    /// Blacksmith Baldur's Shop interface in the active scene.
     /// Strictly adheres to the rule that authentic CoinIcon.png and HealthPotionIcon.png
     /// are preserved and wired with preserveAspect = true.
     /// </summary>
     public static class BuildDialogueAndShopEditor
     {
         [MenuItem("CastleOfDice/Rebuild and Style Dialogue and Shop Panels", false, 26)]
-        [MenuItem("Tools/Castle of Dice/Rebuild and Style Dialogue and Shop Panels", false, 26)]
         public static void RebuildAndStyleDialogueAndShop()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
             // 1. Ensure Theme Sprites exist
             Sprite panelDark = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
@@ -256,9 +251,8 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(dialogueUI.gameObject);
             EditorUtility.SetDirty(shopObj);
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
 
-            Debug.Log("[BuildDialogueAndShopEditor] Successfully rebuilt, styled, and saved Dialogue and Baldur Shop panels into StartVillage.unity!");
+            Debug.Log("[BuildDialogueAndShopEditor] Successfully rebuilt, styled Dialogue and Baldur Shop panels in the active scene (save to keep).");
         }
     }
 }

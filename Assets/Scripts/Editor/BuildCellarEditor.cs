@@ -15,29 +15,24 @@ namespace CastleOfTheD20.Editor
     /// </summary>
     public static class BuildCellarEditor
     {
-        [InitializeOnLoadMethod]
-        private static void OnEditorLoad()
-        {
-            EditorApplication.delayCall += CheckAndBuild;
-            EditorSceneManager.sceneOpened += (scene, mode) =>
-            {
-                EditorApplication.delayCall += CheckAndBuild;
-            };
-        }
-
-        private static void CheckAndBuild()
+        /// <summary>
+        /// Manually validates and repairs the cellar setup in the active scene. Previously ran automatically
+        /// on every scene open, which silently overwrote hand edits and re-saved the scene.
+        /// </summary>
+        [MenuItem("CastleOfDice/Validate and Repair Cellar Setup")]
+        public static void ValidateAndRepairCellar()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
 
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.IsValid() && activeScene.name == "StartVillage")
+            if (activeScene.IsValid())
             {
                 EnsureStartSpawnConfigured();
 
                 GameObject cellar = GameObject.Find("Cellar_Chamber");
                 if (cellar == null)
                 {
-                    Debug.Log("[BuildCellarEditor] StartVillage active and Cellar_Chamber not found. Auto-generating Cellar and Door...");
+                    Debug.Log("[BuildCellarEditor] Cellar_Chamber not found in the active scene. Generating Cellar and Door...");
                     BuildCellarAndDoor(false);
                     EnsureStartSpawnConfigured();
                 }
@@ -114,11 +109,7 @@ namespace CastleOfTheD20.Editor
                 spawnObj.AddComponent<StartSpawnPoint>();
 
                 EditorSceneManager.MarkSceneDirty(spawnObj.scene);
-                if (!EditorApplication.isPlayingOrWillChangePlaymode)
-                {
-                    EditorSceneManager.SaveScene(spawnObj.scene);
-                }
-                Debug.Log("[BuildCellarEditor] Created StartSpawn cube in StartVillage scene.");
+                Debug.Log("[BuildCellarEditor] Created StartSpawn cube in the active scene.");
             }
             else
             {
@@ -153,8 +144,7 @@ namespace CastleOfTheD20.Editor
                 Undo.RecordObject(ui.gameObject, "Activate CombatActionBar");
                 ui.gameObject.SetActive(true);
                 EditorSceneManager.MarkSceneDirty(ui.gameObject.scene);
-                EditorSceneManager.SaveScene(ui.gameObject.scene);
-                Debug.Log("[BuildCellarEditor] Auto-activated CombatActionBar GameObject in StartVillage scene.");
+                Debug.Log("[BuildCellarEditor] Auto-activated CombatActionBar GameObject in the active scene.");
             }
         }
 
@@ -195,8 +185,7 @@ namespace CastleOfTheD20.Editor
                     if (modified)
                     {
                         EditorSceneManager.MarkSceneDirty(chest.gameObject.scene);
-                        EditorSceneManager.SaveScene(chest.gameObject.scene);
-                        Debug.Log("[BuildCellarEditor] Auto-configured Cellar_Reward_Chest with BoxCollider and ChestRewardInteraction (30 gold) and saved scene.");
+                        Debug.Log("[BuildCellarEditor] Auto-configured Cellar_Reward_Chest with BoxCollider and ChestRewardInteraction (30 gold).");
                     }
                 }
             }
@@ -225,7 +214,6 @@ namespace CastleOfTheD20.Editor
                 if (modified)
                 {
                     EditorSceneManager.MarkSceneDirty(cellar.scene);
-                    EditorSceneManager.SaveScene(cellar.scene);
                     Debug.Log("[BuildCellarEditor] Auto-aligned Cellar_PlayerSpawnPoint and Cellar_Exit_Barrier to prevent combat spawn blockage.");
                 }
             }
@@ -252,10 +240,6 @@ namespace CastleOfTheD20.Editor
                     if (modified)
                     {
                         EditorSceneManager.MarkSceneDirty(cellar.scene);
-                        if (!EditorApplication.isPlayingOrWillChangePlaymode)
-                        {
-                            EditorSceneManager.SaveScene(cellar.scene);
-                        }
                         Debug.Log("[BuildCellarEditor] Auto-deactivated Cellar_Enemies so they wait for Cellar_Encounter_Trigger.");
                     }
                 }
@@ -273,10 +257,6 @@ namespace CastleOfTheD20.Editor
                     Undo.RecordObject(dt, "Set Hatch Click to Interact");
                     dt.TriggerOnWalk = false;
                     EditorSceneManager.MarkSceneDirty(hatch.scene);
-                    if (!EditorApplication.isPlayingOrWillChangePlaymode)
-                    {
-                        EditorSceneManager.SaveScene(hatch.scene);
-                    }
                     Debug.Log("[BuildCellarEditor] Configured Village_Cellar_Hatch to require click interaction (triggerOnWalk = false).");
                 }
             }
@@ -425,10 +405,6 @@ namespace CastleOfTheD20.Editor
         public static void BuildCellarAndDoor(bool interactive = false)
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (!activeScene.IsValid() || activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
             Undo.SetCurrentGroupName("Build Cellar and Door");
             int undoGroup = Undo.GetCurrentGroup();
@@ -713,7 +689,6 @@ namespace CastleOfTheD20.Editor
 
             // Mark scene dirty and save
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
 
             Undo.CollapseUndoOperations(undoGroup);
             Debug.Log("[BuildCellarEditor] Successfully built Cellar_Chamber under village_ground and Village_Cellar_Hatch next to NPC_Barnaby!");

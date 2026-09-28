@@ -71,8 +71,11 @@ namespace CastleOfTheD20.Editor
         {
             Debug.Log("[ZoneSceneBuilder] Building Zone 1: Village and Cellar...");
 
-            // Load or create StartVillage as baseline
-            Scene scene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
+            // Rebuild on top of the existing Zone 1 scene (or an empty scene on first run)
+            const string zone1Path = "Assets/Scenes/Zone_1_VillageAndCellar.unity";
+            Scene scene = System.IO.File.Exists(zone1Path)
+                ? EditorSceneManager.OpenScene(zone1Path, OpenSceneMode.Single)
+                : EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
             // Ensure complete village layout & cellar
             BuildVillageEditor.BuildCompleteVillage();
@@ -85,25 +88,6 @@ namespace CastleOfTheD20.Editor
             MainMenuController.EnsureEventSystem();
             Canvas canvas = Object.FindAnyObjectByType<Canvas>(FindObjectsInactive.Include);
             if (canvas != null) MainMenuController.EnsureGraphicRaycaster(canvas);
-
-            // Clean up old Castle_Wings if present in Zone 1 (since wings 2-7 are separated into their own scenes)
-            GameObject oldWings = GameObject.Find("Castle_Wings");
-            if (oldWings != null)
-            {
-                Object.DestroyImmediate(oldWings);
-            }
-            GameObject oldForest = GameObject.Find("Forest");
-            if (oldForest != null) Object.DestroyImmediate(oldForest);
-            GameObject oldForest1 = GameObject.Find("Forest (1)");
-            if (oldForest1 != null) Object.DestroyImmediate(oldForest1);
-            GameObject oldCourtyard = GameObject.Find("CourtYard");
-            if (oldCourtyard != null) Object.DestroyImmediate(oldCourtyard);
-            GameObject oldLibrary = GameObject.Find("Library");
-            if (oldLibrary != null) Object.DestroyImmediate(oldLibrary);
-            GameObject oldLobby = GameObject.Find("CastleLobby");
-            if (oldLobby != null) Object.DestroyImmediate(oldLobby);
-            GameObject oldThrone = GameObject.Find("ThroneRoom");
-            if (oldThrone != null) Object.DestroyImmediate(oldThrone);
 
             // Materials & Prefabs
             Material wallMat = LoadMaterial("Assets/LowPolyVillageAll/Omat Materials/M_Ruined_walls.mat");
@@ -143,7 +127,7 @@ namespace CastleOfTheD20.Editor
 
             // Save as Zone_1_VillageAndCellar.unity
             EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, "Assets/Scenes/Zone_1_VillageAndCellar.unity");
+            EditorSceneManager.SaveScene(scene, zone1Path);
             Debug.Log("[ZoneSceneBuilder] Zone 1 saved as Assets/Scenes/Zone_1_VillageAndCellar.unity");
         }
 
@@ -1081,14 +1065,14 @@ namespace CastleOfTheD20.Editor
                 "Assets/Scenes/Zone_4_Library.unity",
                 "Assets/Scenes/Zone_5_CastleHall.unity",
                 "Assets/Scenes/Zone_6_Tower.unity",
-                "Assets/Scenes/Zone_7_ThroneRoom.unity",
-                "Assets/Scenes/StartVillage.unity"
+                "Assets/Scenes/Zone_7_ThroneRoom.unity"
             };
 
             EditorBuildSettingsScene[] buildSettings = new EditorBuildSettingsScene[scenesToRegister.Length];
             for (int i = 0; i < scenesToRegister.Length; i++)
             {
-                buildSettings[i] = new EditorBuildSettingsScene(scenesToRegister[i], true);
+                GUID sceneGuid = new GUID(AssetDatabase.AssetPathToGUID(scenesToRegister[i]));
+                buildSettings[i] = new EditorBuildSettingsScene(sceneGuid, true);
             }
 
             EditorBuildSettings.scenes = buildSettings;

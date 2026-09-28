@@ -3,49 +3,53 @@ using UnityEditor;
 using System.IO;
 using System.Text;
 
-public class CodeExporter : MonoBehaviour
+namespace CastleOfTheD20.Editor
 {
-    [MenuItem("Tools/Export NotebookLM Context")]
-    public static void ExportAllScripts()
+    /// <summary>
+    /// Exports all runtime scripts into a single text file for NotebookLM context.
+    /// Writes to the project root (outside Assets/) so the export is not imported as a TextAsset.
+    /// </summary>
+    public static class CodeExporter
     {
-        string[] scriptGuids = AssetDatabase.FindAssets("t:MonoScript");
-        StringBuilder stringBuilder = new StringBuilder();
-        int exportedCount = 0;
+        private const string ExportFileName = "CombinedProjectScripts.txt";
 
-        foreach (string guid in scriptGuids)
+        [MenuItem("CastleOfDice/Export NotebookLM Context")]
+        public static void ExportAllScripts()
         {
-            string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+            string[] scriptGuids = AssetDatabase.FindAssets("t:MonoScript", new[] { "Assets" });
+            StringBuilder stringBuilder = new StringBuilder();
+            int exportedCount = 0;
 
-            // Skip Unity packages completely
-            if (assetPath.StartsWith("Packages/"))
+            foreach (string guid in scriptGuids)
             {
-                continue;
+                string assetPath = AssetDatabase.GUIDToAssetPath(guid);
+
+                // Skip editor-only scripts, tests and Unity's recovery backups
+                if (assetPath.Contains("/Editor/") || assetPath.Contains("/editor/") ||
+                    assetPath.StartsWith("Assets/Tests/") || assetPath.StartsWith("Assets/_Recovery/"))
+                {
+                    continue;
+                }
+
+                string fileName = Path.GetFileName(assetPath);
+                string fileContent = File.ReadAllText(assetPath);
+
+                stringBuilder.AppendLine("// ==========================================");
+                stringBuilder.AppendLine($"// File: {fileName}");
+                stringBuilder.AppendLine($"// Path: {assetPath}");
+                stringBuilder.AppendLine("// ==========================================");
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine(fileContent);
+                stringBuilder.AppendLine();
+
+                exportedCount++;
             }
 
-            // Skip any script located in an Editor folder (case-insensitive check for common naming)
-            if (assetPath.Contains("/Editor/") || assetPath.Contains("/editor/"))
-            {
-                continue;
-            }
+            string projectRoot = Path.GetDirectoryName(Application.dataPath);
+            string exportPath = Path.Combine(projectRoot, ExportFileName);
+            File.WriteAllText(exportPath, stringBuilder.ToString(), Encoding.UTF8);
 
-            string fileName = Path.GetFileName(assetPath);
-            string fileContent = File.ReadAllText(assetPath);
-
-            stringBuilder.AppendLine($"// ==========================================");
-            stringBuilder.AppendLine($"// File: {fileName}");
-            stringBuilder.AppendLine($"// Path: {assetPath}");
-            stringBuilder.AppendLine($"// ==========================================");
-            stringBuilder.AppendLine();
-            stringBuilder.AppendLine(fileContent);
-            stringBuilder.AppendLine();
-
-            exportedCount++;
+            Debug.Log($"[CodeExporter] Exported {exportedCount} scripts to: {exportPath}");
         }
-
-        string exportPath = Path.Combine(Application.dataPath, "CombinedProjectScripts.txt");
-        File.WriteAllText(exportPath, stringBuilder.ToString(), Encoding.UTF8);
-
-        Debug.Log($"Successfully exported {exportedCount} scripts to: {exportPath}");
-        AssetDatabase.Refresh();
     }
 }

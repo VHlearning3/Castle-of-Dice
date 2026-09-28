@@ -19,13 +19,12 @@ namespace CastleOfTheD20.Editor
         public static void BuildCompleteVillage()
         {
             var activeScene = EditorSceneManager.GetActiveScene();
-            if (activeScene.name != "StartVillage")
-            {
-                activeScene = EditorSceneManager.OpenScene("Assets/Scenes/StartVillage.unity", OpenSceneMode.Single);
-            }
 
-            // 1. Ensure game data assets exist (Othelia, Mirabel, Quests, Items)
-            GenerateGameDataEditor.GenerateAllGameAssets();
+            // 1. Ensure game data assets exist (Othelia, Mirabel, Quests, Items) when run standalone
+            if (!AssetDatabase.IsValidFolder("Assets/Data"))
+            {
+                GenerateGameDataEditor.GenerateAllGameAssets();
+            }
 
             Undo.SetCurrentGroupName("Build Complete Village Layout");
             int undoGroup = Undo.GetCurrentGroup();
@@ -277,10 +276,9 @@ namespace CastleOfTheD20.Editor
             EnsureManagersInScene();
 
             EditorSceneManager.MarkSceneDirty(activeScene);
-            EditorSceneManager.SaveScene(activeScene);
             Undo.CollapseUndoOperations(undoGroup);
 
-            Debug.Log("[BuildVillageEditor] Complete village layout successfully created and saved in StartVillage.unity!");
+            Debug.Log("[BuildVillageEditor] Complete village layout built in the active scene (save to keep).");
         }
 
         private static void EnsureMirabelNPC(Transform parent)

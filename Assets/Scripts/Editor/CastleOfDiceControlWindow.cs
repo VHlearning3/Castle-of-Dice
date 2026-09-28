@@ -4,108 +4,85 @@ using UnityEditor;
 namespace CastleOfTheD20.Editor
 {
     /// <summary>
-    /// Interactive editor window providing visual controls to trigger Castle of Dice
-    /// builders and display live status of village, rooms, planes, and bosses.
+    /// Editor window with the Castle of Dice build controls. The 7 zone scenes are built by
+    /// <see cref="ZoneSceneBuilder"/>; the individual steps operate on the currently open scene
+    /// and only mark it dirty, so nothing is saved without the user's say-so.
     /// </summary>
     public class CastleOfDiceControlWindow : EditorWindow
     {
         [MenuItem("CastleOfDice/Open Control Panel", false, 0)]
-        [MenuItem("Tools/Castle of Dice/Open Control Panel", false, 0)]
-        [MenuItem("Window/Castle of Dice Control Panel", false, 200)]
         public static void ShowWindow()
         {
             var window = GetWindow<CastleOfDiceControlWindow>("Castle of Dice");
-            window.minSize = new Vector2(400, 520);
+            window.minSize = new Vector2(400, 420);
             window.Show();
         }
 
         private void OnGUI()
         {
             GUILayout.Space(10);
-            GUILayout.Label("Castle of Dice - Setup & Build Controls", EditorStyles.boldLabel);
-            GUILayout.Label("One-click builders for Village, Planes (CourtYard, Forest, Library, ThroneRoom), Doors & Bosses.", EditorStyles.wordWrappedMiniLabel);
+            GUILayout.Label("Castle of Dice - Build Controls", EditorStyles.boldLabel);
+            GUILayout.Label("Builds and registers the 7 zone scenes (Zone_1 ... Zone_7).", EditorStyles.wordWrappedMiniLabel);
             GUILayout.Space(12);
 
-            GUI.backgroundColor = new Color(0.2f, 0.75f, 1.0f);
-            if (GUILayout.Button("Build Walls, Doors & Place Bosses on Planes", GUILayout.Height(40)))
-            {
-                BuildDungeonWingsEditor.BuildAllDungeonWings();
-            }
-            GUI.backgroundColor = Color.white;
-
-            GUILayout.Space(8);
             GUI.backgroundColor = new Color(0.3f, 0.85f, 0.4f);
-            if (GUILayout.Button("Run Complete Game Setup (Assets + Village + Boss Rooms)", GUILayout.Height(35)))
+            if (GUILayout.Button("Build All 7 Zone Scenes", GUILayout.Height(40)))
             {
-                AutoSetupGameEditor.RunCompleteGameSetup();
+                ZoneSceneBuilder.BuildAll7ZoneScenes();
             }
             GUI.backgroundColor = Color.white;
 
             GUILayout.Space(15);
-            GUILayout.Label("Individual Steps:", EditorStyles.boldLabel);
+            GUILayout.Label("Game Data:", EditorStyles.boldLabel);
 
-            if (GUILayout.Button("1. Generate Game Assets & Dialogues", GUILayout.Height(28)))
+            if (GUILayout.Button("Generate Missing Game Assets", GUILayout.Height(28)))
             {
-                GenerateGameDataEditor.GenerateAllGameAssets();
+                GenerateGameDataEditor.GenerateAllGameAssets(true);
             }
 
-            if (GUILayout.Button("2. Build Oakhaven Village & NPCs (Othelia, Mirabel)", GUILayout.Height(28)))
+            if (GUILayout.Button("Reset All Game Assets To Defaults", GUILayout.Height(28)))
+            {
+                GenerateGameDataEditor.ResetAllGameAssetsMenu();
+            }
+
+            GUILayout.Space(15);
+            GUILayout.Label("Active Scene Steps (marks scene dirty, save manually):", EditorStyles.boldLabel);
+
+            if (GUILayout.Button("Build Oakhaven Village & NPCs", GUILayout.Height(28)))
             {
                 BuildVillageEditor.BuildCompleteVillage();
             }
 
-            if (GUILayout.Button("3. Setup MusicManager & Assign 7 Audio Tracks", GUILayout.Height(28)))
+            if (GUILayout.Button("Setup MusicManager & Assign 7 Audio Tracks", GUILayout.Height(28)))
             {
                 BuildVillageEditor.EnsureMusicManager();
             }
 
-            if (GUILayout.Button("4. Rebuild & Style Professional D&D HUD", GUILayout.Height(28)))
+            if (GUILayout.Button("Validate and Repair Cellar Setup", GUILayout.Height(28)))
+            {
+                BuildCellarEditor.ValidateAndRepairCellar();
+            }
+
+            if (GUILayout.Button("Rebuild & Style D&D HUD", GUILayout.Height(28)))
             {
                 BuildHUDEditor.RebuildAndStyleHUD();
             }
 
-            if (GUILayout.Button("5. Rebuild & Style Dialogue & Baldur Shop Panels", GUILayout.Height(28)))
+            if (GUILayout.Button("Rebuild & Style Dialogue & Baldur Shop Panels", GUILayout.Height(28)))
             {
                 BuildDialogueAndShopEditor.RebuildAndStyleDialogueAndShop();
             }
 
             GUILayout.Space(15);
-            GUILayout.Label("Planes & Room Status:", EditorStyles.boldLabel);
-            bool hasCourtyard = GameObject.Find("CourtYard") != null;
-            bool hasForest = GameObject.Find("Forest") != null;
-            bool hasLibrary = GameObject.Find("Library") != null;
-            bool hasThroneRoom = GameObject.Find("ThroneRoom") != null;
-            bool hasDoors = GameObject.Find("Doors_And_Passages") != null;
+            GUILayout.Label("Active Scene Status:", EditorStyles.boldLabel);
 
-            EditorGUILayout.LabelField("CourtYard Plane:", hasCourtyard ? "[OK] Detected" : "[MISSING]");
-            EditorGUILayout.LabelField("Forest Plane:", hasForest ? "[OK] Detected" : "[MISSING]");
-            EditorGUILayout.LabelField("Library Plane:", hasLibrary ? "[OK] Detected" : "[MISSING]");
-            EditorGUILayout.LabelField("ThroneRoom Plane:", hasThroneRoom ? "[OK] Detected" : "[MISSING]");
-            EditorGUILayout.LabelField("Walls & Connecting Doors:", hasDoors ? "[OK] Built" : "[MISSING] Not built yet");
-
-            GUILayout.Space(10);
-            GUILayout.Label("Boss & NPC Status:", EditorStyles.boldLabel);
-            bool hasCmdr = GameObject.Find("Boss_CursedCommander") != null || GameObject.Find("NPC_CursedCommander") != null;
-            bool hasMalakor = GameObject.Find("Boss_ShadowMageMalakor") != null || GameObject.Find("NPC_Malakor") != null;
-            bool hasGargoyle = GameObject.Find("Boss_GargoyleKing") != null || GameObject.Find("NPC_GargoyleKing") != null;
-            bool hasVillage = GameObject.Find("Village_Layout") != null;
-
-            EditorGUILayout.LabelField("Oakhaven Village & NPCs:", hasVillage ? "[OK] Present" : "[MISSING]");
-            EditorGUILayout.LabelField("Cursed Commander (Courtyard):", hasCmdr ? "[OK] Placed" : "[MISSING]");
-            EditorGUILayout.LabelField("Shadow Mage Malakor (Library):", hasMalakor ? "[OK] Placed" : "[MISSING]");
-            EditorGUILayout.LabelField("The Gargoyle King (ThroneRoom):", hasGargoyle ? "[OK] Placed" : "[MISSING]");
-
-            GUILayout.Space(10);
-            GUILayout.Label("Audio & Music Status:", EditorStyles.boldLabel);
             var musicManager = Object.FindAnyObjectByType<CastleOfTheD20.Core.MusicManager>();
             bool hasMM = musicManager != null;
             bool clipsAssigned = hasMM && musicManager.VillageSongClip != null && musicManager.GargoyleKingPhase2Clip != null;
             EditorGUILayout.LabelField("MusicManager Component:", hasMM ? "[OK] Present" : "[MISSING]");
-            EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "[OK] Configured (7 MP3s)" : "[MISSING] Incomplete");
+            EditorGUILayout.LabelField("All 7 Audio Tracks Assigned:", clipsAssigned ? "[OK] Configured" : "[MISSING] Incomplete");
 
-            GUILayout.Space(10);
-            GUILayout.Label("HUD & Interface Status:", EditorStyles.boldLabel);
-            var hud = Object.FindAnyObjectByType<CastleOfTheD20.UI.PlayerHUD>();
+            var hud = Object.FindAnyObjectByType<CastleOfTheD20.UI.PlayerHUD>(FindObjectsInactive.Include);
             bool hasHUD = hud != null;
             bool hasHeroCard = hasHUD && hud.transform.Find("Hero_Status_Card") != null;
             EditorGUILayout.LabelField("PlayerHUD Component:", hasHUD ? "[OK] Present" : "[MISSING]");

@@ -124851,8 +124851,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "<color=#facc15>\u25CF Current Location</color>    <color=#4ade80>\u25CF
-    Cleared</color>    <color=#f87171>\u25CF Boss / Combat</color>    <color=#38bdf8>\u25CF
+  m_text: "<color=#facc15>[*] Current Location</color>    <color=#4ade80>[*]
+    Cleared</color>    <color=#f87171>[*] Boss / Combat</color>    <color=#38bdf8>[*]
     Secret Route (Rogue Lockpick)</color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -130128,7 +130128,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "<color=#38bdf8>\u25C0 [SECRET NATURE ROUTE]\n(Rogue Bypass) \u25B6</color>"
+  m_text: "<color=#38bdf8>[SECRET NATURE ROUTE]\n(Rogue Bypass)</color>"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
