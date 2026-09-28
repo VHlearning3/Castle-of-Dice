@@ -1,0 +1,21 @@
+{
+    "name": "CastleOfTheD20.Editor",
+    "rootNamespace": "CastleOfTheD20.Editor",
+    "references": [
+        "CastleOfTheD20.Runtime",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

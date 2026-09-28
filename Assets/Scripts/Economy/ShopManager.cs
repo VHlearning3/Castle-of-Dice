@@ -149,7 +149,7 @@ namespace CastleOfTheD20.Economy
             int price = item.BuyPriceGold;
             if (!inventory.RemoveGold(price))
             {
-                Debug.LogWarning($"[ShopManager] Cannot buy {item.ItemName}: Not enough gold (Requires {price} Gold).");
+                Debug.Log($"[ShopManager] Cannot buy {item.ItemName}: Not enough gold (Requires {price} Gold).");
                 return false;
             }
 

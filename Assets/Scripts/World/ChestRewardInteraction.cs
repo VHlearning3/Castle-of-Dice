@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CastleOfTheD20.Audio;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Economy;
@@ -131,7 +132,7 @@ namespace CastleOfTheD20.World
             // Audio feedback
             if (openSound != null)
             {
-                AudioSource.PlayClipAtPoint(openSound, transform.position);
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(openSound, transform.position);
             }
 
             // Distribute gold reward

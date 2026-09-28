@@ -811,6 +811,30 @@ namespace CastleOfTheD20.Editor
             if (managersObj.GetComponent<PlayerProgressionManager>() == null) managersObj.AddComponent<PlayerProgressionManager>();
             if (managersObj.GetComponent<QuestManager>() == null) managersObj.AddComponent<QuestManager>();
             if (managersObj.GetComponent<FloatingCombatText>() == null) managersObj.AddComponent<FloatingCombatText>();
+
+            AssignQuestDatabase(managersObj.GetComponent<QuestManager>());
+        }
+
+        /// <summary>
+        /// Serializes every QuestSO into the QuestManager so quests exist in player builds
+        /// (AssetDatabase is editor-only).
+        /// </summary>
+        private static void AssignQuestDatabase(QuestManager questManager)
+        {
+            if (questManager == null) return;
+
+            string[] guids = AssetDatabase.FindAssets("t:QuestSO", new[] { "Assets/Data" });
+            SerializedObject so = new SerializedObject(questManager);
+            SerializedProperty list = so.FindProperty("questDatabase");
+            list.ClearArray();
+            for (int i = 0; i < guids.Length; i++)
+            {
+                QuestSO quest = AssetDatabase.LoadAssetAtPath<QuestSO>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (quest == null) continue;
+                list.InsertArrayElementAtIndex(list.arraySize);
+                list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = quest;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static GameObject CreateSceneDoorway(string name, Vector3 pos, Quaternion rot,

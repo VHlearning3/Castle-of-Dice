@@ -176,10 +176,10 @@ namespace CastleOfTheD20.World
             {
                 // If the player attempts to move during Combat or Dialogue, log diagnostic warning
                 Vector3 attemptedInput = PollRawInput();
-                if (attemptedInput.sqrMagnitude > 0.001f && (Time.time - lastBlockedInputLogTime > 2.0f))
+                if (debugLogging && attemptedInput.sqrMagnitude > 0.001f && (Time.time - lastBlockedInputLogTime > 2.0f))
                 {
                     lastBlockedInputLogTime = Time.time;
-                    Debug.LogWarning($"[PlayerExplorationMovement] WASD input ignored: CurrentMode is '{GameManager.Instance.CurrentMode}' (Exploration required).");
+                    Debug.Log("[PlayerExplorationMovement] WASD input ignored outside Exploration mode.");
                 }
 
                 if (IsMoving)

@@ -154,12 +154,17 @@ namespace CastleOfTheD20.World
             }
         }
 
+        private const float PlayerSearchInterval = 0.5f;
+        private float nextPlayerSearchTime;
+
         private void LateUpdate()
         {
             if (target == null)
             {
-                if (autoFindPlayer)
+                // Scene-wide searches are expensive; retry on a short interval instead of every frame
+                if (autoFindPlayer && Time.unscaledTime >= nextPlayerSearchTime)
                 {
+                    nextPlayerSearchTime = Time.unscaledTime + PlayerSearchInterval;
                     FindPlayerTarget();
                 }
 

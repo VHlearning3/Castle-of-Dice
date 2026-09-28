@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using CastleOfTheD20.Audio;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Core;
 
@@ -190,7 +191,7 @@ namespace CastleOfTheD20.World
             // Optional audio playback
             if (teleportSound != null)
             {
-                AudioSource.PlayClipAtPoint(teleportSound, playerObj.transform.position);
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(teleportSound, playerObj.transform.position);
             }
 
             // 1. Cross-Scene Async Transition
@@ -257,7 +258,7 @@ namespace CastleOfTheD20.World
             // Optional audio playback
             if (teleportSound != null)
             {
-                AudioSource.PlayClipAtPoint(teleportSound, targetPosition);
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(teleportSound, targetPosition);
             }
         }
 

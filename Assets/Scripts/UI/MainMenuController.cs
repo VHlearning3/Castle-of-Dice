@@ -5,6 +5,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using TMPro;
 using CastleOfTheD20.Core;
+using CastleOfTheD20.Audio;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Data;
 
@@ -194,9 +195,50 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        /// <summary>
+        /// "Continue": restores the hero class recorded in the save (progression itself is loaded by
+        /// PlayerProgressionManager on startup) and resumes play.
+        /// </summary>
+        public void ContinueGame()
+        {
+            CharacterClassSO savedClass = null;
+            PlayerSaveData save = SaveSystem.PeekSave();
+            if (save != null && save.characterClass >= 0)
+            {
+                LoadClassAssetsIfMissing();
+                switch ((CharacterClassType)save.characterClass)
+                {
+                    case CharacterClassType.Warrior: savedClass = warriorClass; break;
+                    case CharacterClassType.Mage: savedClass = mageClass; break;
+                    case CharacterClassType.Rogue: savedClass = rogueClass; break;
+                }
+            }
+
+            if (savedClass != null)
+            {
+                PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+                if (player != null)
+                {
+                    player.SetCharacterClass(savedClass);
+                }
+                else
+                {
+                    PlayerDataSO.Session.SelectedClass = savedClass;
+                }
+
+                CombatUIController combatUI = FindAnyObjectByType<CombatUIController>();
+                if (combatUI != null)
+                {
+                    combatUI.RefreshAbilityBar();
+                }
+            }
+
+            HideMainMenu();
+        }
+
         public void OpenClassSelection()
         {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             if (classSelectionPanel != null)
             {
                 classSelectionPanel.SetActive(true);
@@ -208,7 +250,7 @@ namespace CastleOfTheD20.UI
 
         public void CloseClassSelection()
         {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             if (classSelectionPanel != null) classSelectionPanel.SetActive(false);
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -216,7 +258,7 @@ namespace CastleOfTheD20.UI
 
         public void OpenRules()
         {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             if (rulesPanel != null)
             {
                 rulesPanel.SetActive(true);
@@ -228,7 +270,7 @@ namespace CastleOfTheD20.UI
 
         public void CloseRules()
         {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             if (rulesPanel != null) rulesPanel.SetActive(false);
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -236,7 +278,7 @@ namespace CastleOfTheD20.UI
 
         public void OpenScottishHarpCredit()
         {
-            if (AudioManager.Instance != null) AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+            if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             Application.OpenURL(SCOTTISH_HARP_ATTRIBUTION_URL);
         }
 
@@ -248,16 +290,29 @@ namespace CastleOfTheD20.UI
                 return;
             }
 
-            if (AudioManager.Instance != null)
+            if (SFXManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX(SoundType.CriticalSuccess);
+                SFXManager.Instance.PlaySFX(SFXClipType.CriticalSuccess);
+            }
+
+            // A new adventure starts from level 1 without the previous run's upgrades
+            if (PlayerProgressionManager.Instance != null)
+            {
+                PlayerProgressionManager.Instance.ResetForNewGame();
+            }
+            else
+            {
+                PlayerDataSO.Session.ResetData();
             }
 
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             if (player != null)
             {
                 player.SetCharacterClass(chosenClass);
-                player.InitializeUnit();
+            }
+            else
+            {
+                PlayerDataSO.Session.SelectedClass = chosenClass;
             }
 
             CombatUIController combatUI = FindAnyObjectByType<CombatUIController>();
@@ -397,7 +452,7 @@ namespace CastleOfTheD20.UI
             newGameBtn.onClick.AddListener(OpenClassSelection);
 
             Button continueBtn = CreateMenuButton(btnContainer.transform, "Continue_Btn", "Continue", new Vector2(0f, 10f), new Color(0.25f, 0.4f, 0.6f));
-            continueBtn.onClick.AddListener(HideMainMenu);
+            continueBtn.onClick.AddListener(ContinueGame);
 
             Button rulesBtn = CreateMenuButton(btnContainer.transform, "Rules_Btn", "Rules & D20 Guide", new Vector2(0f, -50f), new Color(0.45f, 0.35f, 0.25f));
             rulesBtn.onClick.AddListener(OpenRules);
@@ -460,7 +515,8 @@ namespace CastleOfTheD20.UI
                     {
                         btn.interactable = true;
                         btn.onClick.RemoveListener(HideMainMenu);
-                        btn.onClick.AddListener(HideMainMenu);
+                        btn.onClick.RemoveListener(ContinueGame);
+                        btn.onClick.AddListener(ContinueGame);
                     }
                 }
 

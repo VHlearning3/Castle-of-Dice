@@ -47,7 +47,7 @@ namespace CastleOfTheD20.Combat
         public int CurrentHP => currentHP;
 
         /// <summary>Armor Class determining attack DC for attackers.</summary>
-        public virtual int ArmorClass => armorClass;
+        public virtual int ArmorClass => armorClass + (StatusEffects != null ? StatusEffects.GetArmorClassBonus() : 0);
 
         /// <summary>
         /// Movement distance in grid tiles per turn, modified by status effects like Frostbite.
@@ -221,6 +221,42 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[CombatUnit] {unitName} healed for {amount} HP. Current HP: {currentHP}/{maxHP}");
 
             NotifyHealthChanged();
+        }
+
+        /// <summary>
+        /// Brings a fallen unit back for an encounter retry: reactivates it, restores full HP,
+        /// clears lingering status effects and re-registers it on the grid.
+        /// </summary>
+        public virtual void Revive()
+        {
+            if (!gameObject.activeSelf)
+            {
+                gameObject.SetActive(true);
+            }
+
+            isDead = false;
+            currentHP = maxHP;
+            if (StatusEffects != null) StatusEffects.ClearAllEffects();
+            currentTile = null;
+            EnsureTilePosition();
+            NotifyHealthChanged();
+        }
+
+        /// <summary>
+        /// Called after an attacker resolves a melee attack against this unit. With Shield Wall active,
+        /// strikes back at an adjacent attacker for 1d6 (+ permanent weapon bonus for heroes).
+        /// </summary>
+        public virtual void ResolveCounterAttack(CombatUnit attacker)
+        {
+            if (!IsAlive || attacker == null || !attacker.IsAlive || StatusEffects == null) return;
+            if (!StatusEffects.HasEffect(StatusEffectType.ShieldWall)) return;
+
+            GridManager grid = GridManager.Instance;
+            if (grid != null && grid.GetDistance(gridPosition, attacker.GridPosition) > 1) return;
+
+            int counterDamage = DiceSystem.RollD6() + (this is PlayerUnit hero ? hero.WeaponDamageBonus : 0);
+            Debug.Log($"[CombatUnit] {unitName} counterattacks {attacker.UnitName} from behind the Shield Wall for {counterDamage} damage!");
+            attacker.TakeDamage(counterDamage);
         }
 
         /// <summary>

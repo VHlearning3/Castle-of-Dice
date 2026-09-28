@@ -40,8 +40,8 @@ namespace CastleOfTheD20.Core
         /// <summary>Current hero milestone level (1, 2, or 3).</summary>
         public int CurrentLevel => currentLevel;
 
-        /// <summary>Progression ScriptableObject reference.</summary>
-        public PlayerDataSO PlayerData => playerData;
+        /// <summary>Progression store shared across scenes (the assigned asset, or the session instance).</summary>
+        public PlayerDataSO PlayerData => PlayerDataSO.Session;
 
         #endregion
 
@@ -64,6 +64,11 @@ namespace CastleOfTheD20.Core
 
             Instance = this;
             DontDestroyOnLoad(gameObject);
+
+            if (playerData != null)
+            {
+                PlayerDataSO.Session = playerData;
+            }
 
             LoadProgression();
         }
@@ -141,7 +146,8 @@ namespace CastleOfTheD20.Core
                 LockpickInteraction[] locks = FindObjectsByType<LockpickInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None);
                 foreach (var lk in locks)
                 {
-                    if (!lk.IsLocked && lk.name.ToLowerInvariant().Contains("nature") || lk.name.ToLowerInvariant().Contains("secret") || lk.name.ToLowerInvariant().Contains("path"))
+                    string lockName = lk.name.ToLowerInvariant();
+                    if (!lk.IsLocked && (lockName.Contains("nature") || lockName.Contains("secret") || lockName.Contains("path")))
                     {
                         AdvanceToMilestone(2, "Forest Path Secret Route Unlocked (Rogue)");
                         break;
@@ -183,10 +189,7 @@ namespace CastleOfTheD20.Core
                 player.Level = currentLevel;
             }
 
-            if (playerData != null)
-            {
-                playerData.CurrentLevel = currentLevel;
-            }
+            PlayerData.CurrentLevel = currentLevel;
 
             OnMilestoneReached?.Invoke(oldLevel, currentLevel);
 
@@ -215,25 +218,24 @@ namespace CastleOfTheD20.Core
 
         public void LoadProgression()
         {
-            if (playerData == null)
-            {
-                playerData = Resources.Load<PlayerDataSO>("PlayerData");
-            }
-
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
-            PlayerSaveData save = SaveSystem.LoadGame(playerData, player);
+            PlayerSaveData save = SaveSystem.LoadGame(PlayerData, player);
+            currentLevel = save != null ? save.currentLevel : PlayerData.CurrentLevel;
+        }
 
-            if (save != null)
+        /// <summary>
+        /// Starts a fresh adventure: clears session progression (the persisted save is overwritten on the next save).
+        /// </summary>
+        public void ResetForNewGame()
+        {
+            CharacterClassSO keepClass = PlayerData.SelectedClass;
+            PlayerData.ResetData();
+            PlayerData.SelectedClass = keepClass;
+            currentLevel = 1;
+
+            if (Economy.InventoryManager.Instance != null)
             {
-                currentLevel = save.currentLevel;
-            }
-            else if (playerData != null)
-            {
-                currentLevel = playerData.CurrentLevel;
-            }
-            else
-            {
-                currentLevel = 1;
+                Economy.InventoryManager.Instance.ResetToStartingValues();
             }
         }
 
@@ -242,11 +244,7 @@ namespace CastleOfTheD20.Core
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             if (player != null)
             {
-                player.Level = currentLevel;
-                if (playerData != null)
-                {
-                    playerData.ApplyToPlayer(player);
-                }
+                PlayerData.ApplyToPlayer(player);
             }
         }
 

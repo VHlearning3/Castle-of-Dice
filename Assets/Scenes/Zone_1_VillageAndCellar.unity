@@ -37070,7 +37070,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 593134711}
-  - component: {fileID: 593134710}
   - component: {fileID: 593134709}
   - component: {fileID: 593134708}
   - component: {fileID: 593134712}
@@ -37123,34 +37122,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2efae037c505204bb800d765a86af99, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueActionTrigger
---- !u!114 &593134710
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 593134707}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e09d634472d870d44ab55ac0738d5ed8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Core.AudioManager
-  bgmSource: {fileID: 0}
-  sfxSource: {fileID: 0}
-  masterVolume: 0.8
-  bgmVolume: 0.6
-  sfxVolume: 0.9
-  villageBgmClip: {fileID: 0}
-  dungeonBgmClip: {fileID: 0}
-  combatBgmClip: {fileID: 0}
-  diceRollClip: {fileID: 0}
-  critSuccessClip: {fileID: 0}
-  critFailClip: {fileID: 0}
-  swordSlashClip: {fileID: 0}
-  spellCastClip: {fileID: 0}
-  potionClip: {fileID: 0}
-  buttonClickClip: {fileID: 0}
-  questCompleteClip: {fileID: 0}
 --- !u!4 &593134711
 Transform:
   m_ObjectHideFlags: 0
@@ -37209,7 +37180,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e32ecb541370b4c941a88f34c48316, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestManager
-  questDatabase: []
+  questDatabase:
+  - {fileID: 11400000, guid: b1a2c3d4e5f60718293a4b5c6d7e8f01, type: 2}
+  - {fileID: 11400000, guid: 9092411e830a2b94a9843166a5520ad0, type: 2}
+  - {fileID: 11400000, guid: c72833161b39297428fa279a343ecd4d, type: 2}
+  - {fileID: 11400000, guid: 07a234d195670eb43a40a2a273b631f0, type: 2}
 --- !u!114 &593134715
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -127317,7 +127292,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e32ecb541370b4c941a88f34c48316, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestManager
-  questDatabase: []
+  questDatabase:
+  - {fileID: 11400000, guid: b1a2c3d4e5f60718293a4b5c6d7e8f01, type: 2}
+  - {fileID: 11400000, guid: 9092411e830a2b94a9843166a5520ad0, type: 2}
+  - {fileID: 11400000, guid: c72833161b39297428fa279a343ecd4d, type: 2}
+  - {fileID: 11400000, guid: 07a234d195670eb43a40a2a273b631f0, type: 2}
 --- !u!4 &1938936134
 Transform:
   m_ObjectHideFlags: 0

@@ -197,12 +197,6 @@ namespace CastleOfTheD20.Core
 
             InitializeAudioSources();
             AudioListener.pause = false;
-
-            // Two-way handshake: silence legacy AudioManager BGM if already active
-            if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.StopBGM();
-            }
         }
 
         private void Start()

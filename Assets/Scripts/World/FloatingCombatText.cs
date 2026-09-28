@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -7,6 +8,7 @@ namespace CastleOfTheD20.World
     /// <summary>
     /// Spawns floating combat numbers and milestone text banners (e.g. 'LEVEL UP!', '+5 HP', 'MISS')
     /// in 3D world space that float upward, scale gently, and fade out.
+    /// Text objects are pooled (WebGL zero-GC rule): no Instantiate/Destroy per damage number.
     /// </summary>
     public class FloatingCombatText : MonoBehaviour
     {
@@ -22,6 +24,16 @@ namespace CastleOfTheD20.World
         [SerializeField] private float floatSpeed = 1.6f;
         [SerializeField] private float lifetime = 1.4f;
 
+        [Header("Pooling")]
+        [Tooltip("Text objects created up front; the pool grows only if more popups are visible at once.")]
+        [SerializeField] private int initialPoolSize = 12;
+
+        #endregion
+
+        #region Private State
+
+        private readonly Stack<TextMeshPro> pool = new Stack<TextMeshPro>();
+
         #endregion
 
         #region Unity Lifecycle
@@ -35,6 +47,19 @@ namespace CastleOfTheD20.World
             }
 
             Instance = this;
+
+            for (int i = 0; i < initialPoolSize; i++)
+            {
+                pool.Push(CreatePooledText());
+            }
+        }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+            {
+                Instance = null;
+            }
         }
 
         #endregion
@@ -49,23 +74,39 @@ namespace CastleOfTheD20.World
             StartCoroutine(AnimateText(worldPosition, text, color));
         }
 
-        private IEnumerator AnimateText(Vector3 worldPosition, string text, Color color)
+        #endregion
+
+        #region Pooling & Animation
+
+        private TextMeshPro CreatePooledText()
         {
             GameObject textObj = new GameObject("FloatingTextInstance");
-            textObj.transform.position = worldPosition + Vector3.up * 1.5f;
+            textObj.transform.SetParent(transform, false);
 
             TextMeshPro tmp = textObj.AddComponent<TextMeshPro>();
-            tmp.text = text;
             tmp.fontSize = 6.5f;
             tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = color;
             tmp.fontStyle = FontStyles.Bold;
             tmp.outlineColor = Color.black;
             tmp.outlineWidth = 0.25f;
 
+            textObj.SetActive(false);
+            return tmp;
+        }
+
+        private IEnumerator AnimateText(Vector3 worldPosition, string text, Color color)
+        {
+            TextMeshPro tmp = pool.Count > 0 ? pool.Pop() : CreatePooledText();
+            Transform textTransform = tmp.transform;
+
+            tmp.text = text;
+            tmp.color = color;
+            textTransform.position = worldPosition + Vector3.up * 1.5f;
+            tmp.gameObject.SetActive(true);
+
             Camera mainCam = Camera.main;
             float elapsed = 0f;
-            Vector3 startPos = textObj.transform.position;
+            Vector3 startPos = textTransform.position;
 
             while (elapsed < lifetime)
             {
@@ -76,10 +117,10 @@ namespace CastleOfTheD20.World
                 if (mainCam != null)
                 {
                     // Face camera billboard style
-                    textObj.transform.rotation = Quaternion.LookRotation(textObj.transform.position - mainCam.transform.position);
+                    textTransform.rotation = Quaternion.LookRotation(textTransform.position - mainCam.transform.position);
                 }
 
-                textObj.transform.position = startPos + Vector3.up * (progress * floatSpeed);
+                textTransform.position = startPos + Vector3.up * (progress * floatSpeed);
 
                 // Fade out towards the end
                 if (progress > 0.5f)
@@ -93,7 +134,8 @@ namespace CastleOfTheD20.World
                 yield return null;
             }
 
-            Destroy(textObj);
+            tmp.gameObject.SetActive(false);
+            pool.Push(tmp);
         }
 
         #endregion

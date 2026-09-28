@@ -106,7 +106,7 @@ namespace CastleOfTheD20.World
 
             if (communeSound != null)
             {
-                AudioSource.PlayClipAtPoint(communeSound, transform.position);
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(communeSound, transform.position);
             }
             else if (SFXManager.Instance != null)
             {

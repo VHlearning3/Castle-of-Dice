@@ -97,6 +97,11 @@ namespace CastleOfTheD20.Economy
 
         #endregion
 
+        // Serialized starting purse, captured in Awake for New Adventure resets
+        private int startingGold;
+        private int startingScrap;
+        private int startingRerollScrolls;
+
         #region Unity Lifecycle
 
         private void Awake()
@@ -108,6 +113,9 @@ namespace CastleOfTheD20.Economy
             }
 
             instance = this;
+            startingGold = currentGold;
+            startingScrap = scrapMetalCount;
+            startingRerollScrolls = rerollScrollCount;
 
             if (persistAcrossScenes)
             {
@@ -155,7 +163,7 @@ namespace CastleOfTheD20.Economy
                 return true;
             }
 
-            Debug.LogWarning($"[InventoryManager] Insufficient Gold! Required: {amount}, Current: {currentGold}");
+            Debug.Log($"[InventoryManager] Insufficient Gold! Required: {amount}, Current: {currentGold}");
             return false;
         }
 
@@ -194,6 +202,31 @@ namespace CastleOfTheD20.Economy
         #region Reroll Scroll Operations
 
         /// <summary>
+        /// Sets currencies to absolute values when a save is loaded. Unlike AddGold/AddScrapMetal this
+        /// can also lower the totals (e.g. a save with less gold than the starting purse).
+        /// </summary>
+        public void RestoreFromSave(int gold, int scrapMetal, int rerollScrolls)
+        {
+            currentGold = Mathf.Max(0, gold);
+            scrapMetalCount = Mathf.Max(0, scrapMetal);
+            rerollScrollCount = Mathf.Max(0, rerollScrolls);
+
+            OnGoldChanged?.Invoke(currentGold);
+            OnScrapMetalChanged?.Invoke(scrapMetalCount);
+            OnRerollScrollsChanged?.Invoke(rerollScrollCount);
+            OnInventoryChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Resets currencies and items to the values this manager started with (New Adventure).
+        /// </summary>
+        public void ResetToStartingValues()
+        {
+            items.Clear();
+            RestoreFromSave(startingGold, startingScrap, startingRerollScrolls);
+        }
+
+        /// <summary>
         /// Adds Rune of Reroll scrolls to the player's inventory.
         /// </summary>
         public void AddRerollScroll(int amount = 1)
@@ -220,7 +253,7 @@ namespace CastleOfTheD20.Economy
                 return true;
             }
 
-            Debug.LogWarning("[InventoryManager] Cannot consume Reroll Scroll: Count is zero.");
+            Debug.Log("[InventoryManager] Cannot consume Reroll Scroll: Count is zero.");
             return false;
         }
 

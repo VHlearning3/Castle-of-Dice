@@ -13,8 +13,6 @@ namespace CastleOfTheD20.Tests
     {
         private GameObject sfxGo;
         private SFXManager sfxManager;
-        private GameObject audioGo;
-        private AudioManager audioManager;
 
         [SetUp]
         public void SetUp()
@@ -23,18 +21,12 @@ namespace CastleOfTheD20.Tests
             sfxManager = sfxGo.AddComponent<SFXManager>();
             sfxManager.InitializeAudioSources(12);
             SFXManager.SetInstanceForTesting(sfxManager);
-
-            audioGo = new GameObject("Test_AudioManager");
-            audioManager = audioGo.AddComponent<AudioManager>();
-            AudioManager.SetInstanceForTesting(audioManager);
         }
 
         [TearDown]
         public void TearDown()
         {
             SFXManager.SetInstanceForTesting(null);
-            AudioManager.SetInstanceForTesting(null);
-            if (audioGo != null) Object.DestroyImmediate(audioGo);
             if (sfxGo != null) Object.DestroyImmediate(sfxGo);
         }
 
@@ -78,18 +70,6 @@ namespace CastleOfTheD20.Tests
                 "Spatial blend must be set to 0.35f when world position is provided.");
             Assert.AreEqual(worldPos, usedSource.transform.position,
                 "Source transform position must match the provided sound origin.");
-        }
-
-        [Test]
-        public void AudioManager_DelegatesSFXToSFXManagerPool()
-        {
-            int preIndex = sfxManager.CurrentSourceIndex;
-
-            audioManager.PlaySFX(SoundType.DiceRoll);
-
-            int postIndex = sfxManager.CurrentSourceIndex;
-            Assert.AreEqual((preIndex + 1) % 12, postIndex,
-                "AudioManager.PlaySFX must delegate to SFXManager and advance the 12-channel pool.");
         }
     }
 }

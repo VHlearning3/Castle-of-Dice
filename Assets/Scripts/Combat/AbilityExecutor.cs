@@ -69,7 +69,7 @@ namespace CastleOfTheD20.Combat
             int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
             if (ability.TargetType != AbilityTargetType.Self && distance > ability.Range)
             {
-                Debug.LogWarning($"[AbilityExecutor] Target out of range! Distance: {distance}, Max Range: {ability.Range}");
+                Debug.Log($"[AbilityExecutor] Target out of range! Distance: {distance}, Max Range: {ability.Range}");
                 return false;
             }
 
@@ -133,10 +133,9 @@ namespace CastleOfTheD20.Combat
 
         private bool ExecuteShieldBlock(CombatUnit caster, AbilitySO ability)
         {
-            // Warrior Shield Block: raises defense (+3 AC) for next turn
-            Debug.Log($"[AbilityExecutor] {caster.UnitName} uses Shield Block! Gaining +3 temporary AC defense.");
-            // Apply ManaShield or temporary protection condition
-            caster.StatusEffects?.ApplyEffect(StatusEffectType.ManaShield, durationTurns: 1);
+            // Warrior Shield Wall: +4 AC and counterattack against adjacent attackers until the next turn
+            Debug.Log($"[AbilityExecutor] {caster.UnitName} raises a Shield Wall! +{StatusEffectController.ShieldWallArmorBonus} AC and counterattacks until next turn.");
+            caster.StatusEffects?.ApplyEffect(StatusEffectType.ShieldWall, durationTurns: Mathf.Max(1, ability.EffectDurationTurns));
             return true;
         }
 
@@ -194,14 +193,14 @@ namespace CastleOfTheD20.Combat
             GridTile targetTile = grid.GetTileAt(targetGridPos);
             if (targetTile == null || !targetTile.IsWalkable || targetTile.IsOccupied)
             {
-                Debug.LogWarning($"[AbilityExecutor] Blink failed: Tile at {targetGridPos} is obstructed or invalid.");
+                Debug.Log($"[AbilityExecutor] Blink failed: Tile at {targetGridPos} is obstructed or invalid.");
                 return false;
             }
 
             int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
             if (distance > 6)
             {
-                Debug.LogWarning($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range 6.");
+                Debug.Log($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range 6.");
                 return false;
             }
 
@@ -266,8 +265,7 @@ namespace CastleOfTheD20.Combat
                         target = unit;
                         if (targetTile != null)
                         {
-                            targetTile.OccupyingUnit = target;
-                            targetTile.IsOccupied = true;
+                            target.EnsureTilePosition(); // unit re-registers its own tile
                         }
                         break;
                     }
@@ -276,20 +274,21 @@ namespace CastleOfTheD20.Combat
 
             if (target == null)
             {
-                Debug.LogWarning("[AbilityExecutor] Backstab requires a living target unit at the selected position.");
+                Debug.Log("[AbilityExecutor] Backstab requires a living target unit at the selected position.");
                 return false;
             }
             int bonus = GetCasterAttributeBonus(caster);
 
-            // Backstab grants Advantage or 2x bonus modifier
-            DiceResult hitCheck = DiceSystem.RollD20(bonus * 2, target.ArmorClass, AdvantageType.Advantage);
+            // Backstab (spec): attack roll with Advantage, and a hit deals double damage.
+            // A natural 20 doubles it again, like every other critical hit.
+            DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass, AdvantageType.Advantage);
             caster.StatusEffects?.ConsumeAdvantageNextAttack();
             Debug.Log($"[AbilityExecutor] {caster.UnitName} executes Backstab on {target.UnitName}: {hitCheck}");
 
             if (hitCheck.isSuccess)
             {
                 int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus : 0;
-                int damage = ability.BaseValue + weaponBonus;
+                int damage = (ability.BaseValue + weaponBonus) * 2;
 
                 if (hitCheck.isCriticalSuccess)
                 {
@@ -331,14 +330,14 @@ namespace CastleOfTheD20.Combat
             GridTile targetTile = grid.GetTileAt(targetGridPos);
             if (targetTile == null || !targetTile.IsWalkable || targetTile.IsOccupied)
             {
-                Debug.LogWarning($"[AbilityExecutor] Shadow Step failed: Tile at {targetGridPos} is obstructed or invalid.");
+                Debug.Log($"[AbilityExecutor] Shadow Step failed: Tile at {targetGridPos} is obstructed or invalid.");
                 return false;
             }
 
             int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
             if (distance > 3)
             {
-                Debug.LogWarning($"[AbilityExecutor] Shadow Step distance ({distance}) exceeds maximum range 3.");
+                Debug.Log($"[AbilityExecutor] Shadow Step distance ({distance}) exceeds maximum range 3.");
                 return false;
             }
 
@@ -365,8 +364,7 @@ namespace CastleOfTheD20.Combat
                         target = unit;
                         if (targetTile != null)
                         {
-                            targetTile.OccupyingUnit = target;
-                            targetTile.IsOccupied = true;
+                            target.EnsureTilePosition(); // unit re-registers its own tile
                         }
                         break;
                     }
@@ -375,7 +373,7 @@ namespace CastleOfTheD20.Combat
 
             if (target == null)
             {
-                Debug.LogWarning($"[AbilityExecutor] Ability {ability.AbilityName} requires a living target unit at {targetGridPos}.");
+                Debug.Log($"[AbilityExecutor] Ability {ability.AbilityName} requires a living target unit at {targetGridPos}.");
                 return false;
             }
             int bonus = GetCasterAttributeBonus(caster);

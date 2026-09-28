@@ -178,7 +178,7 @@ namespace CastleOfTheD20.World
                     else
                     {
                         float dist = Vector3.Distance(activePlayer.transform.position, interactable.transform.position);
-                        Debug.LogWarning($"[PlayerInteractionRaycaster] Out of range! Cannot interact with '{interactable.name}' ({interactable.PromptMessage}). Distance: {dist:F1}m > Radius: {interactable.InteractionRadius:F1}m. Walk closer!");
+                        Debug.Log($"[PlayerInteractionRaycaster] Out of range! Cannot interact with '{interactable.name}' ({interactable.PromptMessage}). Distance: {dist:F1}m > Radius: {interactable.InteractionRadius:F1}m. Walk closer!");
                     }
                 }
                 else

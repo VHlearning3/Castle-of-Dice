@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using CastleOfTheD20.Core;
+using CastleOfTheD20.Audio;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.World;
 
@@ -109,9 +110,9 @@ namespace CastleOfTheD20.UI
                     : customMessage;
             }
 
-            if (AudioManager.Instance != null)
+            if (SFXManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX(SoundType.Defeat);
+                SFXManager.Instance.PlaySFX(SFXClipType.Defeat);
             }
         }
 
@@ -137,17 +138,18 @@ namespace CastleOfTheD20.UI
 
         private void OnRetryClicked()
         {
-            if (AudioManager.Instance != null)
+            if (SFXManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+                SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             }
 
             Hide();
 
-            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+            // The fallen hero is deactivated by CombatUnit.Die(), so include inactive objects in the search
+            PlayerUnit player = FindAnyObjectByType<PlayerUnit>(FindObjectsInactive.Include);
             if (player != null)
             {
-                player.Heal(player.MaxHP);
+                player.Revive();
                 player.HasActedThisTurn = false;
                 player.HasMovedThisTurn = false;
             }
@@ -156,18 +158,21 @@ namespace CastleOfTheD20.UI
             DungeonRoomController room = FindAnyObjectByType<DungeonRoomController>();
             if (room != null && TurnManager.Instance != null)
             {
-                // Reset enemy health
+                // Revive and fully heal the room's enemies (Heal() ignores dead units)
                 if (room.roomEnemies != null)
                 {
                     foreach (var enemyObj in room.roomEnemies)
                     {
                         if (enemyObj != null)
                         {
-                            enemyObj.SetActive(true);
                             EnemyUnit enemy = enemyObj.GetComponent<EnemyUnit>();
                             if (enemy != null)
                             {
-                                enemy.Heal(enemy.MaxHP);
+                                enemy.Revive();
+                            }
+                            else
+                            {
+                                enemyObj.SetActive(true);
                             }
                         }
                     }
@@ -183,18 +188,18 @@ namespace CastleOfTheD20.UI
 
         private void OnReturnToVillageClicked()
         {
-            if (AudioManager.Instance != null)
+            if (SFXManager.Instance != null)
             {
-                AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
+                SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             }
 
             Hide();
 
-            // End combat mode and restore player health
-            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+            // End combat mode and bring the fallen hero back at full health
+            PlayerUnit player = FindAnyObjectByType<PlayerUnit>(FindObjectsInactive.Include);
             if (player != null)
             {
-                player.Heal(player.MaxHP);
+                player.Revive();
             }
 
             if (TurnManager.Instance != null)

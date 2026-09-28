@@ -164,6 +164,8 @@ namespace CastleOfTheD20.Bosses
             {
                 Debug.Log($"[GargoyleKing] The Gargoyle King's strike crashes into the stone floor, missing {target.UnitName}!");
             }
+
+            target.ResolveCounterAttack(this);
         }
 
         #endregion

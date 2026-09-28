@@ -35,6 +35,118 @@ namespace CastleOfTheD20.Combat
         private bool hasActedThisTurn = false;
         private bool hasMovedThisTurn = false;
 
+        // Class baseline captured by InitializeUnit; progression bonuses are stored relative to it
+        private int baseMaxHP;
+        private int baseAttributeBonus;
+        private bool hasBaseline;
+        private bool isApplyingProgression;
+
+        #endregion
+
+        #region Progression Data
+
+        /// <summary>
+        /// Session progression store. The hero pulls its class and saved bonuses from it on
+        /// initialization and pushes every upgrade back, so scene loads and saves never stack bonuses.
+        /// </summary>
+        public static PlayerDataSO ProgressionData
+        {
+            get => PlayerDataSO.Session;
+            set => PlayerDataSO.Session = value;
+        }
+
+        /// <summary>Max HP gained above the class baseline (Hero's Resilience, Giant Elixir).</summary>
+        public int MaxHPBonus => hasBaseline ? Mathf.Max(0, maxHP - baseMaxHP) : 0;
+
+        /// <summary>Primary attribute points gained above the class baseline.</summary>
+        public int AttributeBonusModifier => hasBaseline ? Mathf.Max(0, primaryAttributeBonus - baseAttributeBonus) : 0;
+
+        /// <summary>
+        /// Fills <paramref name="buffer"/> with the ability slots that are upgraded to Rank 2.
+        /// </summary>
+        public void GetUpgradedAbilitySlots(List<int> buffer)
+        {
+            buffer.Clear();
+            for (int i = 0; i < activeAbilities.Count; i++)
+            {
+                if (IsRank2(activeAbilities[i]))
+                {
+                    buffer.Add(i);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Sets progression to absolute values on top of the class baseline. Idempotent: applying the
+        /// same data twice (scene load + save load) yields the same stats.
+        /// </summary>
+        public void ApplyProgression(int savedLevel, int maxHpBonus, int attributeBonus, int weaponBonus, int armorBonus, IReadOnlyList<int> upgradedSlots)
+        {
+            if (!hasBaseline)
+            {
+                CaptureBaseline();
+            }
+
+            isApplyingProgression = true;
+            try
+            {
+                Level = savedLevel;
+
+                int oldMax = maxHP;
+                maxHP = baseMaxHP + Mathf.Max(0, maxHpBonus);
+                currentHP = Mathf.Clamp(currentHP + (maxHP - oldMax), 1, maxHP);
+
+                primaryAttributeBonus = baseAttributeBonus + Mathf.Max(0, attributeBonus);
+                permanentWeaponDamageBonus = Mathf.Max(0, weaponBonus);
+                permanentArmorClassBonus = Mathf.Max(0, armorBonus);
+
+                if (upgradedSlots != null)
+                {
+                    for (int i = 0; i < upgradedSlots.Count; i++)
+                    {
+                        int slot = upgradedSlots[i];
+                        if (slot >= 0 && slot < activeAbilities.Count && !IsRank2(activeAbilities[slot]))
+                        {
+                            UpgradeAbilityToRank2(slot);
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                isApplyingProgression = false;
+            }
+
+            NotifyHealthChanged();
+        }
+
+        private void CaptureBaseline()
+        {
+            // Without a class asset the serialized stats are the baseline; capture them only once so
+            // re-initialization after bonuses were applied does not fold the bonuses into the baseline.
+            if (characterClass == null && hasBaseline) return;
+
+            baseMaxHP = characterClass != null ? characterClass.BaseMaxHealth : maxHP;
+            baseAttributeBonus = characterClass != null ? characterClass.PrimaryAttributeBonus : primaryAttributeBonus;
+            hasBaseline = true;
+        }
+
+        private void PushProgressionToData()
+        {
+            if (isApplyingProgression) return;
+
+            PlayerDataSO data = ProgressionData;
+            if (data != null)
+            {
+                data.SyncFromPlayer(this);
+            }
+        }
+
+        private static bool IsRank2(AbilitySO ability)
+        {
+            return ability != null && ability.AbilityID.EndsWith("_rank2", StringComparison.Ordinal);
+        }
+
         #endregion
 
         #region Public Properties
@@ -79,6 +191,13 @@ namespace CastleOfTheD20.Combat
 
         public override void InitializeUnit()
         {
+            // Each zone scene has its own hero prefab: adopt the class chosen for this adventure
+            PlayerDataSO session = ProgressionData;
+            if (session != null && session.SelectedClass != null)
+            {
+                characterClass = session.SelectedClass;
+            }
+
             if (characterClass != null)
             {
                 unitName = characterClass.CharacterName;
@@ -106,8 +225,15 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
+            CaptureBaseline();
             ResetTurnFlags();
             base.InitializeUnit();
+
+            // Pull persisted bonuses (absolute, so re-initialization never stacks them)
+            if (session != null)
+            {
+                session.ApplyToPlayer(this);
+            }
         }
 
         /// <summary>
@@ -116,6 +242,10 @@ namespace CastleOfTheD20.Combat
         public void SetCharacterClass(CharacterClassSO newClass)
         {
             characterClass = newClass;
+            if (ProgressionData != null)
+            {
+                ProgressionData.SelectedClass = newClass;
+            }
             InitializeUnit();
         }
 
@@ -147,6 +277,7 @@ namespace CastleOfTheD20.Combat
             Heal(maxHP);
 
             Debug.Log($"[PlayerUnit] Hero's Resilience chosen! Max HP increased by {hpIncrease} to {maxHP}.");
+            PushProgressionToData();
         }
         /// <summary>
         /// Attribute Bonus Growth: Adds permanent bonus (+1) to primary attribute (d20 checks & damage).
@@ -155,6 +286,7 @@ namespace CastleOfTheD20.Combat
         {
             primaryAttributeBonus += amount;
             Debug.Log($"[PlayerUnit] Primary Attribute Bonus increased by {amount}. New bonus: +{primaryAttributeBonus}");
+            PushProgressionToData();
         }
 
         /// <summary>
@@ -194,6 +326,7 @@ namespace CastleOfTheD20.Combat
 
             activeAbilities[slotIndex] = rank2;
             Debug.Log($"[PlayerUnit] Upgraded slot {slotIndex} ({rank2.AbilityName}) to Rank 2! New BaseValue: {rank2.BaseValue}");
+            PushProgressionToData();
             return true;
         }
 
@@ -208,6 +341,7 @@ namespace CastleOfTheD20.Combat
         {
             permanentWeaponDamageBonus += amount;
             Debug.Log($"[PlayerUnit] Weapon damage bonus increased by {amount}. Total bonus: +{permanentWeaponDamageBonus}");
+            PushProgressionToData();
         }
 
         /// <summary>
@@ -217,6 +351,7 @@ namespace CastleOfTheD20.Combat
         {
             permanentArmorClassBonus += amount;
             Debug.Log($"[PlayerUnit] Armor Class bonus increased by {amount}. Total AC: {ArmorClass}");
+            PushProgressionToData();
         }
 
         #endregion
@@ -251,7 +386,7 @@ namespace CastleOfTheD20.Combat
         {
             if (!CanUseAbility(slotIndex))
             {
-                Debug.LogWarning($"[PlayerUnit] Cannot use ability in slot {slotIndex}. Action already taken or slot empty.");
+                Debug.Log($"[PlayerUnit] Cannot use ability in slot {slotIndex}. Action already taken or slot empty.");
                 return false;
             }
 

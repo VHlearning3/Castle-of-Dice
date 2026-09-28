@@ -187,12 +187,7 @@ namespace CastleOfTheD20.Bosses
             skeleton.MoveToTile(tile);
 
             // Register with TurnManager if combat is actively running
-            TurnManager turnMgr = TurnManager.Instance;
-            if (turnMgr != null && turnMgr.IsCombatActive)
-            {
-                List<CombatUnit> currentRoster = new List<CombatUnit>(turnMgr.ActiveUnits) { skeleton };
-                turnMgr.StartCombat(currentRoster);
-            }
+            TurnManager.Instance?.AddCombatant(skeleton);
         }
 
         #endregion

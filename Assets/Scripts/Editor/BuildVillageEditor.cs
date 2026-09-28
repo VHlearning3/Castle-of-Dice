@@ -357,11 +357,6 @@ namespace CastleOfTheD20.Editor
                 Undo.RegisterCreatedObjectUndo(managers, "Create Managers");
             }
 
-            if (managers.GetComponent<AudioManager>() == null && Object.FindAnyObjectByType<AudioManager>() == null)
-            {
-                managers.AddComponent<AudioManager>();
-            }
-
             if (managers.GetComponent<DialogueActionTrigger>() == null && Object.FindAnyObjectByType<DialogueActionTrigger>() == null)
             {
                 managers.AddComponent<DialogueActionTrigger>();

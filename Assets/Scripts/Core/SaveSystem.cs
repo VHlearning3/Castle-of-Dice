@@ -13,6 +13,10 @@ namespace CastleOfTheD20.Core
     [Serializable]
     public class PlayerSaveData
     {
+        /// <summary>Current save format. Version 1 saves (no field) load with defaults for new fields.</summary>
+        public const int CurrentVersion = 2;
+
+        public int saveVersion = CurrentVersion;
         public int currentLevel = 1;
         public int maxHPBonus = 0;
         public int attributeBonusModifier = 0;
@@ -21,11 +25,16 @@ namespace CastleOfTheD20.Core
         public List<int> upgradedAbilityIndices = new List<int>();
         public int gold = 0;
         public int scrapMetal = 0;
+        public int rerollScrolls = 1;
+        /// <summary>Chosen hero class (-1 = not recorded, e.g. version 1 saves).</summary>
+        public int characterClass = -1;
     }
 
     /// <summary>
     /// Persistent Save System utilizing PlayerPrefs JSON serialization.
     /// Zero file-system IO ensures complete reliability across WebGL, Windows Standalone, and Editor.
+    /// Progression is stored as bonuses relative to the class baseline and applied absolutely,
+    /// so saving and loading repeatedly never stacks upgrades.
     /// </summary>
     public static class SaveSystem
     {
@@ -36,15 +45,20 @@ namespace CastleOfTheD20.Core
         /// </summary>
         public static void SaveGame(PlayerDataSO dataSO = null, PlayerUnit player = null)
         {
+            if (dataSO == null)
+            {
+                dataSO = PlayerUnit.ProgressionData;
+            }
+
+            // The live hero is the source of truth; refresh the data store from it first
+            if (dataSO != null && player != null)
+            {
+                dataSO.SyncFromPlayer(player);
+            }
+
             PlayerSaveData save = new PlayerSaveData();
 
-            if (player != null)
-            {
-                save.currentLevel = player.Level;
-                save.permanentWeaponDamageBonus = player.WeaponDamageBonus;
-                save.permanentArmorClassBonus = player.ArmorClassBonus;
-            }
-            else if (dataSO != null)
+            if (dataSO != null)
             {
                 save.currentLevel = dataSO.CurrentLevel;
                 save.maxHPBonus = dataSO.MaxHPBonus;
@@ -53,18 +67,26 @@ namespace CastleOfTheD20.Core
                 save.permanentArmorClassBonus = dataSO.ArmorClassBonus;
                 save.upgradedAbilityIndices = new List<int>(dataSO.UpgradedAbilityIndices);
             }
-
-            if (dataSO != null)
+            else if (player != null)
             {
-                save.maxHPBonus = dataSO.MaxHPBonus;
-                save.attributeBonusModifier = dataSO.AttributeBonusModifier;
-                save.upgradedAbilityIndices = new List<int>(dataSO.UpgradedAbilityIndices);
+                save.currentLevel = player.Level;
+                save.maxHPBonus = player.MaxHPBonus;
+                save.attributeBonusModifier = player.AttributeBonusModifier;
+                save.permanentWeaponDamageBonus = player.WeaponDamageBonus;
+                save.permanentArmorClassBonus = player.ArmorClassBonus;
+                player.GetUpgradedAbilitySlots(save.upgradedAbilityIndices);
+            }
+
+            if (player != null && player.CharacterClass != null)
+            {
+                save.characterClass = (int)player.CharacterClass.ClassType;
             }
 
             if (InventoryManager.Instance != null)
             {
                 save.gold = InventoryManager.Instance.CurrentGold;
                 save.scrapMetal = InventoryManager.Instance.ScrapMetalCount;
+                save.rerollScrolls = InventoryManager.Instance.RerollScrollCount;
             }
 
             string json = JsonUtility.ToJson(save, true);
@@ -74,24 +96,26 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
-        /// Loads saved progression and populates PlayerDataSO or PlayerUnit.
+        /// Loads saved progression into the PlayerDataSO and applies it (absolutely) to the hero and inventory.
+        /// Returns null when no save exists.
         /// </summary>
         public static PlayerSaveData LoadGame(PlayerDataSO targetSO = null, PlayerUnit targetPlayer = null)
         {
-            if (!PlayerPrefs.HasKey(SaveKey))
+            PlayerSaveData save = PeekSave();
+            if (save == null)
             {
                 Debug.Log("[SaveSystem] No existing save data found.");
                 return null;
             }
 
-            string json = PlayerPrefs.GetString(SaveKey);
-            if (string.IsNullOrEmpty(json)) return null;
-
-            PlayerSaveData save = JsonUtility.FromJson<PlayerSaveData>(json);
-            if (save == null) return null;
+            if (targetSO == null)
+            {
+                targetSO = PlayerUnit.ProgressionData;
+            }
 
             if (targetSO != null)
             {
+                targetSO.ResetData();
                 targetSO.CurrentLevel = save.currentLevel;
                 targetSO.MaxHPBonus = save.maxHPBonus;
                 targetSO.AttributeBonusModifier = save.attributeBonusModifier;
@@ -104,29 +128,57 @@ namespace CastleOfTheD20.Core
                 {
                     targetSO.RegisterUpgradedAbility(slot);
                 }
-            }
 
-            if (targetPlayer != null)
-            {
-                targetPlayer.Level = save.currentLevel;
-                if (save.maxHPBonus > 0) targetPlayer.ApplyHeroResilience(save.maxHPBonus);
-                if (save.attributeBonusModifier > 0) targetPlayer.AddAttributeBonus(save.attributeBonusModifier);
-                if (save.permanentWeaponDamageBonus > 0) targetPlayer.AddWeaponDamageBonus(save.permanentWeaponDamageBonus);
-                if (save.permanentArmorClassBonus > 0) targetPlayer.AddArmorClassBonus(save.permanentArmorClassBonus);
-
-                foreach (int slot in save.upgradedAbilityIndices)
+                if (targetPlayer != null)
                 {
-                    targetPlayer.UpgradeAbilityToRank2(slot);
+                    targetSO.ApplyToPlayer(targetPlayer);
                 }
+            }
+            else if (targetPlayer != null)
+            {
+                targetPlayer.ApplyProgression(save.currentLevel, save.maxHPBonus, save.attributeBonusModifier,
+                    save.permanentWeaponDamageBonus, save.permanentArmorClassBonus, save.upgradedAbilityIndices);
             }
 
             if (InventoryManager.Instance != null)
             {
-                InventoryManager.Instance.AddGold(save.gold - InventoryManager.Instance.CurrentGold);
-                InventoryManager.Instance.AddScrapMetal(save.scrapMetal - InventoryManager.Instance.ScrapMetalCount);
+                InventoryManager.Instance.RestoreFromSave(save.gold, save.scrapMetal, save.rerollScrolls);
             }
 
             Debug.Log($"[SaveSystem] Game loaded successfully! Level: {save.currentLevel}");
+            return save;
+        }
+
+        /// <summary>
+        /// Reads and migrates the stored save without applying it. Returns null if none exists or it is corrupt.
+        /// </summary>
+        public static PlayerSaveData PeekSave()
+        {
+            if (!PlayerPrefs.HasKey(SaveKey)) return null;
+
+            string json = PlayerPrefs.GetString(SaveKey);
+            if (string.IsNullOrEmpty(json)) return null;
+
+            PlayerSaveData save;
+            try
+            {
+                save = JsonUtility.FromJson<PlayerSaveData>(json);
+            }
+            catch (ArgumentException e)
+            {
+                Debug.LogError($"[SaveSystem] Save data is corrupt and was ignored: {e.Message}");
+                return null;
+            }
+            if (save == null) return null;
+
+            if (save.saveVersion < 2 || json.IndexOf("\"saveVersion\"", StringComparison.Ordinal) < 0)
+            {
+                // Version 1 saves predate the reroll scroll / class fields
+                save.saveVersion = 1;
+                save.rerollScrolls = Mathf.Max(save.rerollScrolls, 1);
+                save.characterClass = -1;
+            }
+
             return save;
         }
 

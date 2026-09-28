@@ -766,6 +766,11 @@ namespace CastleOfTheD20.UI
 
         private GridTile lastHoveredTile;
         private Camera combatCamera;
+
+        // Zero-GC per-frame hover raycast buffers (see HandleCombatTileRaycast / IsPointerOverUI)
+        private readonly RaycastHit[] tileRaycastHits = new RaycastHit[32];
+        private UnityEngine.EventSystems.PointerEventData cachedPointerData;
+        private UnityEngine.EventSystems.EventSystem cachedPointerEventSystem;
         private readonly List<UnityEngine.EventSystems.RaycastResult> uiRaycastList = new List<UnityEngine.EventSystems.RaycastResult>();
         private int lastClickFrame = -1;
         private GridTile lastClickTile = null;
@@ -798,8 +803,7 @@ namespace CastleOfTheD20.UI
                 {
                     if (unit != null && unit.IsAlive && unit is EnemyUnit && unit.GridPosition == tile.GridPosition)
                     {
-                        tile.OccupyingUnit = unit;
-                        tile.IsOccupied = true;
+                        unit.EnsureTilePosition(); // unit re-registers its own tile
                         return true;
                     }
                 }
@@ -834,15 +838,26 @@ namespace CastleOfTheD20.UI
             Ray ray = combatCamera.ScreenPointToRay(GameInput.GetMousePosition());
             GridTile targetTile = null;
 
-            // Use RaycastAll to pierce through trigger colliders (e.g. Cellar_Encounter_Trigger BoxCollider)
-            RaycastHit[] hits = Physics.RaycastAll(ray, 250f, ~0, QueryTriggerInteraction.Ignore);
-            if (hits != null && hits.Length > 0)
+            // Non-allocating multi-hit raycast (ignores trigger colliders such as Cellar_Encounter_Trigger)
+            RaycastHit[] hits = tileRaycastHits;
+            int hitCount = Physics.RaycastNonAlloc(ray, hits, 250f, ~0, QueryTriggerInteraction.Ignore);
+            if (hitCount > 0)
             {
-                // Sort by distance so nearest physical hit is prioritized
-                System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+                // Insertion sort by distance (tiny N, no comparer allocation) so the nearest hit wins
+                for (int i = 1; i < hitCount; i++)
+                {
+                    RaycastHit key = hits[i];
+                    int j = i - 1;
+                    while (j >= 0 && hits[j].distance > key.distance)
+                    {
+                        hits[j + 1] = hits[j];
+                        j--;
+                    }
+                    hits[j + 1] = key;
+                }
 
                 // Priority 1: Direct GridTile hit
-                for (int i = 0; i < hits.Length; i++)
+                for (int i = 0; i < hitCount; i++)
                 {
                     GridTile directTile = hits[i].collider.GetComponentInParent<GridTile>();
                     if (directTile != null)
@@ -855,7 +870,7 @@ namespace CastleOfTheD20.UI
                 // Priority 2: Direct CombatUnit hit -> resolve unit's tile
                 if (targetTile == null)
                 {
-                    for (int i = 0; i < hits.Length; i++)
+                    for (int i = 0; i < hitCount; i++)
                     {
                         CombatUnit hitUnit = hits[i].collider.GetComponentInParent<CombatUnit>();
                         if (hitUnit != null)
@@ -864,8 +879,6 @@ namespace CastleOfTheD20.UI
                             targetTile = hitUnit.CurrentTile ?? (GridManager.Instance != null ? GridManager.Instance.GetTileAt(hitUnit.GridPosition) : null);
                             if (targetTile != null)
                             {
-                                targetTile.OccupyingUnit = hitUnit;
-                                targetTile.IsOccupied = true;
                                 break;
                             }
                         }
@@ -875,7 +888,7 @@ namespace CastleOfTheD20.UI
                 // Priority 3: Hit floor or ground surface -> project point onto grid coordinates
                 if (targetTile == null && GridManager.Instance != null)
                 {
-                    for (int i = 0; i < hits.Length; i++)
+                    for (int i = 0; i < hitCount; i++)
                     {
                         RaycastHit h = hits[i];
                         if (h.collider != null && !h.collider.isTrigger)
@@ -931,10 +944,15 @@ namespace CastleOfTheD20.UI
             if (UnityEngine.EventSystems.EventSystem.current == null) return false;
             if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return false;
 
-            var pointerData = new UnityEngine.EventSystems.PointerEventData(UnityEngine.EventSystems.EventSystem.current)
+            UnityEngine.EventSystems.EventSystem eventSystem = UnityEngine.EventSystems.EventSystem.current;
+            if (cachedPointerData == null || cachedPointerEventSystem != eventSystem)
             {
-                position = GameInput.GetMousePosition()
-            };
+                cachedPointerData = new UnityEngine.EventSystems.PointerEventData(eventSystem);
+                cachedPointerEventSystem = eventSystem;
+            }
+            UnityEngine.EventSystems.PointerEventData pointerData = cachedPointerData;
+            pointerData.Reset();
+            pointerData.position = GameInput.GetMousePosition();
 
             uiRaycastList.Clear();
             UnityEngine.EventSystems.EventSystem.current.RaycastAll(pointerData, uiRaycastList);
@@ -951,8 +969,12 @@ namespace CastleOfTheD20.UI
                     return true;
                 }
 
-                string n = obj.name.ToLowerInvariant();
-                if (n.Contains("dialogue") || n.Contains("shop") || n.Contains("modal") || n.Contains("popup") || n.Contains("button"))
+                string n = obj.name; // case-insensitive search without allocating a lowered copy
+                if (n.IndexOf("dialogue", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("shop", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("modal", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("popup", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                    n.IndexOf("button", StringComparison.OrdinalIgnoreCase) >= 0)
                 {
                     return true;
                 }
@@ -1155,8 +1177,7 @@ namespace CastleOfTheD20.UI
                     if (unit != null && unit.IsAlive && unit is EnemyUnit && unit.GridPosition == tile.GridPosition)
                     {
                         occupyingUnit = unit;
-                        tile.OccupyingUnit = unit;
-                        tile.IsOccupied = true;
+                        unit.EnsureTilePosition(); // unit re-registers its own tile
                         break;
                     }
                 }
@@ -1246,8 +1267,7 @@ namespace CastleOfTheD20.UI
                     if (unit != null && unit.IsAlive && unit.GridPosition == targetPos)
                     {
                         targetOccupant = unit;
-                        targetTile.OccupyingUnit = unit;
-                        targetTile.IsOccupied = true;
+                        unit.EnsureTilePosition(); // unit re-registers its own tile
                         break;
                     }
                 }

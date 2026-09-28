@@ -167,7 +167,7 @@ namespace CastleOfTheD20.World
 
             if (hasTrap && trapDamage > 0)
             {
-                Debug.LogWarning($"[LockpickInteraction] TRAP TRIGGERED! Dart trap deals {trapDamage} damage to {player.UnitName}!");
+                Debug.Log($"[LockpickInteraction] TRAP TRIGGERED! Dart trap deals {trapDamage} damage to {player.UnitName}!");
                 player.TakeDamage(trapDamage);
                 OnTrapSprung?.Invoke(trapDamage);
             }

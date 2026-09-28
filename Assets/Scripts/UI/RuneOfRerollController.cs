@@ -310,7 +310,7 @@ namespace CastleOfTheD20.UI
         {
             if (!HasRerollScrollAvailable)
             {
-                Debug.LogWarning("[RuneOfRerollController] Cannot reroll: No reroll scrolls available.");
+                Debug.Log("[RuneOfRerollController] Cannot reroll: No reroll scrolls available.");
                 return;
             }
 

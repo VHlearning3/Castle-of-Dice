@@ -34,15 +34,10 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void BuildAll7ZoneScenes_CreatesAll7ScenesAndRegistersInBuildSettings()
+        public void All7ZoneScenes_ExistAndAreRegisteredInBuildSettings()
         {
-            // Invoke ZoneSceneBuilder.BuildAll7ZoneScenes via reflection from Editor assembly
-            Type builderType = Type.GetType("CastleOfTheD20.Editor.ZoneSceneBuilder, Assembly-CSharp-Editor");
-            Assert.IsNotNull(builderType, "ZoneSceneBuilder type could not be loaded from Assembly-CSharp-Editor.");
-            MethodInfo buildMethod = builderType.GetMethod("BuildAll7ZoneScenes", BindingFlags.Public | BindingFlags.Static);
-            Assert.IsNotNull(buildMethod, "BuildAll7ZoneScenes method not found on ZoneSceneBuilder.");
-            buildMethod.Invoke(null, null);
-
+            // Read-only check: running ZoneSceneBuilder here would rebuild and overwrite every zone scene
+            // on each test run. Rebuild via CastleOfDice/Build Zone Scenes when the layout changes.
             string[] expectedScenes = new string[]
             {
                 "Assets/Scenes/Zone_1_VillageAndCellar.unity",

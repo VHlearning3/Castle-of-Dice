@@ -114,15 +114,12 @@ namespace CastleOfTheD20.Economy
                 }
             }
 
-#if UNITY_EDITOR
-            string[] guids = UnityEditor.AssetDatabase.FindAssets("t:QuestSO");
-            foreach (var g in guids)
+            if (registeredQuests.Count == 0)
             {
-                string p = UnityEditor.AssetDatabase.GUIDToAssetPath(g);
-                QuestSO q = UnityEditor.AssetDatabase.LoadAssetAtPath<QuestSO>(p);
-                if (q != null) RegisterQuest(q);
+                // Player builds can only see quests serialized into questDatabase; flag the misconfiguration
+                // instead of silently papering over it with an editor-only AssetDatabase scan.
+                Debug.LogError("[QuestManager] questDatabase is empty. Assign the QuestSO assets (ZoneSceneBuilder does this automatically).");
             }
-#endif
         }
 
         /// <summary>
@@ -234,6 +231,12 @@ namespace CastleOfTheD20.Economy
             if (questStates[questID] == QuestState.Completed)
             {
                 Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' is already completed.");
+                return false;
+            }
+
+            if (questStates[questID] != QuestState.InProgress)
+            {
+                Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' has not been accepted yet; cannot complete it.");
                 return false;
             }
 

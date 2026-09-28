@@ -352,11 +352,11 @@ namespace CastleOfTheD20.Core
         {
             if (playerData == null)
             {
-                playerData = Resources.Load<PlayerDataSO>("PlayerData");
-                if (playerData == null && PlayerProgressionManager.Instance != null)
-                {
-                    playerData = PlayerProgressionManager.Instance.PlayerData;
-                }
+                playerData = PlayerDataSO.Session;
+            }
+            else if (playerData != PlayerDataSO.Session)
+            {
+                PlayerDataSO.Session = playerData;
             }
         }
 

@@ -20,8 +20,16 @@ namespace CastleOfTheD20.Combat
         // Tracks active effect -> remaining turns
         private readonly Dictionary<StatusEffectType, int> activeEffects = new Dictionary<StatusEffectType, int>();
 
-        // Mana shield charges (default 1 charge per application)
+        // Mana shield charges (one absorbed hit per application)
         private int manaShieldCharges = 0;
+
+        // Effects the owner applied during its own turn. They skip that turn's end-of-turn countdown,
+        // so a 1-turn buff (Shadow Step, Shield Wall, Mana Shield) lasts until the owner's next turn.
+        private readonly HashSet<StatusEffectType> appliedDuringOwnTurn = new HashSet<StatusEffectType>();
+        private readonly List<StatusEffectType> effectKeyBuffer = new List<StatusEffectType>();
+
+        /// <summary>Armor Class bonus granted by Shield Wall.</summary>
+        public const int ShieldWallArmorBonus = 4;
 
         #endregion
 
@@ -58,7 +66,12 @@ namespace CastleOfTheD20.Combat
 
             if (type == StatusEffectType.ManaShield)
             {
-                manaShieldCharges = Mathf.Max(1, manaShieldCharges + 1);
+                manaShieldCharges = 1;
+            }
+
+            if (TurnManager.Instance != null && TurnManager.Instance.CurrentActiveUnit == ownerUnit)
+            {
+                appliedDuringOwnTurn.Add(type);
             }
 
             if (activeEffects.ContainsKey(type))
@@ -96,6 +109,7 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public void RemoveEffect(StatusEffectType type)
         {
+            appliedDuringOwnTurn.Remove(type);
             if (activeEffects.Remove(type))
             {
                 if (type == StatusEffectType.ManaShield)
@@ -113,12 +127,14 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public void ClearAllEffects()
         {
-            var keys = new List<StatusEffectType>(activeEffects.Keys);
-            foreach (var key in keys)
+            effectKeyBuffer.Clear();
+            effectKeyBuffer.AddRange(activeEffects.Keys);
+            foreach (var key in effectKeyBuffer)
             {
                 RemoveEffect(key);
             }
             manaShieldCharges = 0;
+            appliedDuringOwnTurn.Clear();
         }
 
         #endregion
@@ -147,22 +163,24 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public void ProcessTurnEndEffects()
         {
-            List<StatusEffectType> expired = new List<StatusEffectType>();
-
-            var keys = new List<StatusEffectType>(activeEffects.Keys);
-            foreach (var key in keys)
+            effectKeyBuffer.Clear();
+            effectKeyBuffer.AddRange(activeEffects.Keys);
+            for (int i = 0; i < effectKeyBuffer.Count; i++)
             {
+                StatusEffectType key = effectKeyBuffer[i];
+                if (appliedDuringOwnTurn.Contains(key))
+                {
+                    continue; // freshly self-applied this turn: starts counting down next turn
+                }
+
                 activeEffects[key]--;
                 if (activeEffects[key] <= 0)
                 {
-                    expired.Add(key);
+                    RemoveEffect(key);
                 }
             }
 
-            foreach (var key in expired)
-            {
-                RemoveEffect(key);
-            }
+            appliedDuringOwnTurn.Clear();
         }
 
         #endregion
@@ -179,6 +197,14 @@ namespace CastleOfTheD20.Combat
                 return Mathf.Max(1, baseMovement / 2);
             }
             return baseMovement;
+        }
+
+        /// <summary>
+        /// Returns the temporary Armor Class bonus from active effects (Shield Wall).
+        /// </summary>
+        public int GetArmorClassBonus()
+        {
+            return HasEffect(StatusEffectType.ShieldWall) ? ShieldWallArmorBonus : 0;
         }
 
         /// <summary>

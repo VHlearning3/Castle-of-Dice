@@ -703,10 +703,6 @@ namespace CastleOfTheD20.UI
             {
                 SFXManager.Instance.PlaySFX(clipType);
             }
-            else if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlaySFX(SoundType.ButtonClick);
-            }
         }
 
         #endregion

@@ -177,6 +177,8 @@ namespace CastleOfTheD20.Combat
             {
                 Debug.Log($"[EnemyUnit] {unitName}'s attack missed {target.UnitName}!");
             }
+
+            target.ResolveCounterAttack(this);
         }
 
         #endregion

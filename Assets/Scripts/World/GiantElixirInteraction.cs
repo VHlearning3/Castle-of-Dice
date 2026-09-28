@@ -109,7 +109,7 @@ namespace CastleOfTheD20.World
 
             if (drinkSound != null)
             {
-                AudioSource.PlayClipAtPoint(drinkSound, transform.position);
+                if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(drinkSound, transform.position);
             }
             else if (SFXManager.Instance != null)
             {

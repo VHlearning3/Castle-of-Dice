@@ -208,12 +208,7 @@ namespace CastleOfTheD20.Bosses
             decoyUnit.MoveToTile(tile);
             activeDecoys.Add(decoyUnit);
 
-            TurnManager turnMgr = TurnManager.Instance;
-            if (turnMgr != null && turnMgr.IsCombatActive)
-            {
-                List<CombatUnit> roster = new List<CombatUnit>(turnMgr.ActiveUnits) { decoyUnit };
-                turnMgr.StartCombat(roster);
-            }
+            TurnManager.Instance?.AddCombatant(decoyUnit);
         }
 
         #endregion

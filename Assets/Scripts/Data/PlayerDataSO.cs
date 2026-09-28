@@ -12,7 +12,42 @@ namespace CastleOfTheD20.Data
     [CreateAssetMenu(fileName = "PlayerData", menuName = "CastleOfDice/Data/PlayerData", order = 15)]
     public class PlayerDataSO : ScriptableObject
     {
+        #region Session Instance
+
+        private static PlayerDataSO s_session;
+
+        /// <summary>
+        /// The progression store shared by every scene in this play session. Uses Resources/PlayerData
+        /// when such an asset exists, otherwise a runtime-only instance (never written back to disk).
+        /// Every zone scene spawns its own hero prefab, so this is what carries the chosen class and
+        /// upgrades across scene loads.
+        /// </summary>
+        public static PlayerDataSO Session
+        {
+            get
+            {
+                if (s_session == null)
+                {
+                    s_session = Resources.Load<PlayerDataSO>("PlayerData");
+                    if (s_session == null)
+                    {
+                        s_session = CreateInstance<PlayerDataSO>();
+                        s_session.name = "PlayerData (Session)";
+                        s_session.hideFlags = HideFlags.DontSave;
+                    }
+                }
+                return s_session;
+            }
+            set => s_session = value;
+        }
+
+        #endregion
+
         #region Progression Data
+
+        [Header("Hero")]
+        [Tooltip("Class chosen in the main menu; applied to the hero prefab in every zone scene.")]
+        [SerializeField] private CharacterClassSO selectedClass;
 
         [Header("Milestone Progression")]
         [Range(1, 3)]
@@ -34,6 +69,13 @@ namespace CastleOfTheD20.Data
         #endregion
 
         #region Public Properties
+
+        /// <summary>Hero class chosen for this adventure (null = keep the scene prefab's class).</summary>
+        public CharacterClassSO SelectedClass
+        {
+            get => selectedClass;
+            set => selectedClass = value;
+        }
 
         public int CurrentLevel
         {
@@ -116,44 +158,24 @@ namespace CastleOfTheD20.Data
         {
             if (player == null) return;
 
-            player.Level = currentLevel;
-
-            if (maxHPBonus > 0)
-            {
-                player.ApplyHeroResilience(maxHPBonus);
-            }
-
-            if (attributeBonusModifier > 0)
-            {
-                player.AddAttributeBonus(attributeBonusModifier);
-            }
-
-            if (permanentWeaponDamageBonus > 0)
-            {
-                player.AddWeaponDamageBonus(permanentWeaponDamageBonus);
-            }
-
-            if (permanentArmorClassBonus > 0)
-            {
-                player.AddArmorClassBonus(permanentArmorClassBonus);
-            }
-
-            foreach (int slot in upgradedAbilityIndices)
-            {
-                player.UpgradeAbilityToRank2(slot);
-            }
+            // Absolute (base + bonus) application: safe to call on every scene load and after loading a save
+            player.ApplyProgression(currentLevel, maxHPBonus, attributeBonusModifier,
+                permanentWeaponDamageBonus, permanentArmorClassBonus, upgradedAbilityIndices);
         }
 
         /// <summary>
-        /// Synchronizes data from active PlayerUnit into this ScriptableObject.
+        /// Synchronizes all progression data from the active PlayerUnit into this ScriptableObject.
         /// </summary>
         public void SyncFromPlayer(PlayerUnit player)
         {
             if (player == null) return;
 
             currentLevel = player.Level;
+            maxHPBonus = player.MaxHPBonus;
+            attributeBonusModifier = player.AttributeBonusModifier;
             permanentWeaponDamageBonus = player.WeaponDamageBonus;
             permanentArmorClassBonus = player.ArmorClassBonus;
+            player.GetUpgradedAbilitySlots(upgradedAbilityIndices);
         }
 
         #endregion

@@ -519,7 +519,22 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Returns all tiles within a specified Manhattan radius from a center tile.
+        /// True when a diagonal step would cut between two blocked orthogonal neighbours
+        /// (e.g. squeezing through the corner gap of two walls).
+        /// </summary>
+        private bool IsDiagonalSqueeze(Vector2Int from, Vector2Int dir)
+        {
+            if (dir.x == 0 || dir.y == 0) return false;
+
+            GridTile sideA = GetTileAt(new Vector2Int(from.x + dir.x, from.y));
+            GridTile sideB = GetTileAt(new Vector2Int(from.x, from.y + dir.y));
+            bool blockedA = sideA == null || !sideA.IsWalkable;
+            bool blockedB = sideB == null || !sideB.IsWalkable;
+            return blockedA && blockedB;
+        }
+
+        /// <summary>
+        /// Returns all tiles within a square (Chebyshev) radius from a center tile.
         /// </summary>
         public List<GridTile> GetTilesInRadius(Vector2Int center, int radius)
         {
@@ -606,6 +621,7 @@ namespace CastleOfTheD20.Combat
 
                     GridTile tile = GetTileAt(nextPos);
                     if (tile == null || !tile.IsWalkable) continue;
+                    if (IsDiagonalSqueeze(currentPos, dir)) continue;
 
                     visited.Add(nextPos);
 
@@ -720,6 +736,7 @@ namespace CastleOfTheD20.Combat
 
                     GridTile tile = GetTileAt(next);
                     if (tile == null || !tile.IsWalkable) continue;
+                    if (IsDiagonalSqueeze(current, dir)) continue;
 
                     // Allow passing through only if unoccupied or if it's the target tile
                     if (tile.IsOccupied && next != targetPos) continue;

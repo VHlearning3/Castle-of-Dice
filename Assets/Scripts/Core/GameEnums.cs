@@ -98,7 +98,10 @@ namespace CastleOfTheD20.Core
         ManaShield,
 
         /// <summary>Grants 2d20 Advantage on the next attack roll (e.g. from Shadow Step).</summary>
-        AdvantageNextAttack
+        AdvantageNextAttack,
+
+        /// <summary>Warrior Shield Wall: +4 Armor Class and a counterattack against adjacent melee attackers.</summary>
+        ShieldWall
     }
 
     /// <summary>

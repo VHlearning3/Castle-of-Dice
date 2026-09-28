@@ -236,13 +236,7 @@ namespace CastleOfTheD20.UI
                 cachedPlayerUnit.ApplyHeroResilience(5);
             }
 
-            // Record in PlayerDataSO if present
-            PlayerDataSO dataSO = Resources.Load<PlayerDataSO>("PlayerData");
-            if (dataSO != null)
-            {
-                dataSO.CurrentLevel = pendingMilestoneLevel;
-                dataSO.MaxHPBonus += 5;
-            }
+            // PlayerUnit pushes the new bonus into the session progression store itself
 
             FinalizeLevelUpChoice("HERO'S RESILIENCE! +5 MAX HP");
         }
@@ -257,12 +251,6 @@ namespace CastleOfTheD20.UI
                 cachedPlayerUnit.AddAttributeBonus(1);
             }
 
-            PlayerDataSO dataSO = Resources.Load<PlayerDataSO>("PlayerData");
-            if (dataSO != null)
-            {
-                dataSO.CurrentLevel = pendingMilestoneLevel;
-                dataSO.AttributeBonusModifier += 1;
-            }
 
             FinalizeLevelUpChoice("ATTRIBUTE BONUS +1! (D20 & DAMAGE)");
         }
@@ -325,13 +313,6 @@ namespace CastleOfTheD20.UI
 
             if (success)
             {
-                PlayerDataSO dataSO = Resources.Load<PlayerDataSO>("PlayerData");
-                if (dataSO != null)
-                {
-                    dataSO.CurrentLevel = pendingMilestoneLevel;
-                    dataSO.RegisterUpgradedAbility(slotIndex);
-                }
-
                 FinalizeLevelUpChoice($"{upgradedName} -> RANK 2!");
             }
         }
@@ -345,10 +326,6 @@ namespace CastleOfTheD20.UI
             {
                 SFXManager.Instance.PlaySFX(SFXClipType.LevelUp, playerPos);
             }
-            else if (AudioManager.Instance != null)
-            {
-                AudioManager.Instance.PlaySFX(SoundType.Victory);
-            }
 
             // 2. Show 3D Floating text banner
             if (FloatingCombatText.Instance != null)
@@ -357,7 +334,7 @@ namespace CastleOfTheD20.UI
             }
 
             // 3. Save Game State
-            SaveSystem.SaveGame(Resources.Load<PlayerDataSO>("PlayerData"), cachedPlayerUnit);
+            SaveSystem.SaveGame(PlayerDataSO.Session, cachedPlayerUnit);
 
             // 4. Refresh HUD
             if (PlayerHUD.Instance != null)

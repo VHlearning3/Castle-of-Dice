@@ -96,7 +96,7 @@ namespace CastleOfTheD20.World
             else
             {
                 float distance = Vector3.Distance(transform.position, player.transform.position);
-                Debug.LogWarning($"[Interactable] Too far away to interact with '{promptMessage}' ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
+                Debug.Log($"[Interactable] Too far away to interact with '{promptMessage}' ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
             }
         }
 
@@ -122,7 +122,7 @@ namespace CastleOfTheD20.World
             if (!CanInteract(player))
             {
                 float dist = player != null ? Vector3.Distance(transform.position, player.transform.position) : -1f;
-                Debug.LogWarning($"[Interactable] Cannot interact with '{promptMessage}': Out of range ({dist:F1}m > {interactionRadius:F1}m) or inactive.");
+                Debug.Log($"[Interactable] Cannot interact with '{promptMessage}': Out of range ({dist:F1}m > {interactionRadius:F1}m) or inactive.");
                 return;
             }
 

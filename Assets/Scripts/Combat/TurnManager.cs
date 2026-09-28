@@ -45,7 +45,7 @@ namespace CastleOfTheD20.Combat
         private readonly List<CombatUnit> activeUnits = new List<CombatUnit>();
         private int currentUnitIndex = -1;
         private CombatUnit currentActiveUnit;
-        private int turnCounter = 1;
+        private int turnCounter = 0;
         private bool isCombatActive = false;
 
         #endregion
@@ -116,6 +116,8 @@ namespace CastleOfTheD20.Combat
 
         private void OnDestroy()
         {
+            UnsubscribeFromUnitDeaths();
+
             if (Instance == this)
             {
                 Instance = null;
@@ -199,15 +201,27 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public void EndCombat(bool isVictory)
         {
-            isCombatActive = false;
-            SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
-            GridManager.Instance?.ClearAllHighlights();
-            if (isVictory)
+            // Combat may already have been concluded by CheckCombatEndConditions (e.g. the Defeat modal
+            // calling EndCombat(false) afterwards). Only restore exploration mode in that case so the
+            // Victory/Defeat events, loot and modals do not fire twice.
+            if (isCombatActive)
             {
-                AwardCombatVictoryScrap();
+                ConcludeCombat(isVictory);
             }
-            OnCombatEnded?.Invoke(isVictory);
             GameManager.Instance?.SetMode(GamePlayMode.Exploration);
+        }
+
+        /// <summary>
+        /// Adds a unit (e.g. a boss summon) to the running battle without restarting the turn order.
+        /// The new unit acts when the queue reaches it.
+        /// </summary>
+        public void AddCombatant(CombatUnit unit)
+        {
+            if (!isCombatActive || unit == null || !unit.IsAlive || activeUnits.Contains(unit)) return;
+
+            activeUnits.Add(unit);
+            unit.OnUnitDied += HandleUnitDied;
+            Debug.Log($"[TurnManager] {unit.UnitName} joined the battle.");
         }
 
         /// <summary>
@@ -215,12 +229,14 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public void StartCombat(List<CombatUnit> units)
         {
+            UnsubscribeFromUnitDeaths();
             activeUnits.Clear();
             foreach (var unit in units)
             {
-                if (unit != null && unit.IsAlive)
+                if (unit != null && unit.IsAlive && !activeUnits.Contains(unit))
                 {
                     activeUnits.Add(unit);
+                    unit.OnUnitDied += HandleUnitDied;
                 }
             }
 
@@ -263,7 +279,7 @@ namespace CastleOfTheD20.Combat
             }
 
             isCombatActive = true;
-            turnCounter = 1;
+            turnCounter = 0; // becomes 1 when the first unit in the queue starts its turn
             currentUnitIndex = -1;
 
             // Ensure all units are synchronized to their grid positions if on the same floor
@@ -380,7 +396,7 @@ namespace CastleOfTheD20.Combat
         {
             if (currentState != TurnState.PlayerTurn)
             {
-                Debug.LogWarning("[TurnManager] Cannot end player turn: Not currently in PlayerTurn state.");
+                Debug.Log("[TurnManager] Cannot end player turn: Not currently in PlayerTurn state.");
                 return;
             }
 
@@ -425,28 +441,59 @@ namespace CastleOfTheD20.Combat
 
             if (livingPlayers == 0)
             {
-                // All heroes defeated
-                isCombatActive = false;
-                SetTurnState(TurnState.Defeat);
-                GridManager.Instance?.ClearAllHighlights();
                 Debug.Log("[TurnManager] DEFEAT! All party members have fallen.");
-                OnCombatEnded?.Invoke(false);
+                ConcludeCombat(false);
                 return true;
             }
 
             if (livingEnemies == 0)
             {
-                // All enemies defeated
-                isCombatActive = false;
-                SetTurnState(TurnState.Victory);
-                GridManager.Instance?.ClearAllHighlights();
                 Debug.Log("[TurnManager] VICTORY! All enemies have been vanquished.");
-                AwardCombatVictoryScrap();
-                OnCombatEnded?.Invoke(true);
+                ConcludeCombat(true);
                 return true;
             }
 
             return false;
+        }
+
+        private void ConcludeCombat(bool isVictory)
+        {
+            isCombatActive = false;
+            UnsubscribeFromUnitDeaths();
+            SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
+            GridManager.Instance?.ClearAllHighlights();
+            if (isVictory)
+            {
+                AwardCombatVictoryScrap();
+            }
+            OnCombatEnded?.Invoke(isVictory);
+        }
+
+        /// <summary>
+        /// Resolves victory/defeat the moment a combatant falls, instead of waiting for End Turn.
+        /// </summary>
+        private void HandleUnitDied(CombatUnit unit)
+        {
+            if (unit != null)
+            {
+                unit.OnUnitDied -= HandleUnitDied;
+            }
+
+            if (isCombatActive)
+            {
+                CheckCombatEndConditions();
+            }
+        }
+
+        private void UnsubscribeFromUnitDeaths()
+        {
+            for (int i = 0; i < activeUnits.Count; i++)
+            {
+                if (activeUnits[i] != null)
+                {
+                    activeUnits[i].OnUnitDied -= HandleUnitDied;
+                }
+            }
         }
 
         /// <summary>
@@ -504,9 +551,9 @@ namespace CastleOfTheD20.Combat
                     {
                         if (u != null && u.IsAlive && u is EnemyUnit && u.GridPosition == tile.GridPosition)
                         {
+                            // Let the unit re-register its own tile instead of patching occupancy here
+                            u.EnsureTilePosition();
                             targetUnit = u;
-                            tile.OccupyingUnit = u;
-                            tile.IsOccupied = true;
                             break;
                         }
                     }
