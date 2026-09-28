@@ -295,6 +295,35 @@ namespace CastleOfTheD20.UI
         /// 2. 9-sliced fantasy End Turn button with hourglass icon and gold typography (replaces neon yellow).
         /// 3. 4 tabletop ability cards with 9-sliced buttons, framed ability icon slots, bold titles, and range labels.
         /// </summary>
+        private const string ClickShieldName = "ActionBar_ClickShield";
+
+        /// <summary>
+        /// Invisible raycast target covering the whole action bar strip (including the gaps between buttons
+        /// and the margin down to the screen edge), so a click that misses a button never moves the hero.
+        /// </summary>
+        private void EnsureClickShield()
+        {
+            if (combatActionBar == null) return;
+
+            Transform existing = combatActionBar.transform.Find(ClickShieldName);
+            GameObject shield = existing != null
+                ? existing.gameObject
+                : new GameObject(ClickShieldName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            shield.transform.SetParent(combatActionBar.transform, false);
+            shield.transform.SetAsFirstSibling(); // behind the buttons so they still receive clicks
+
+            RectTransform rt = shield.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.offsetMin = new Vector2(-90f, -24f); // past the bar edges and down to the bottom of the screen
+            rt.offsetMax = new Vector2(90f, 45f);
+
+            Image img = shield.GetComponent<Image>();
+            img.color = new Color(0f, 0f, 0f, 0f);
+            img.raycastTarget = true;
+        }
+
         public void EnsureStyledHierarchy()
         {
             LoadThemeSpritesIfMissing();
@@ -313,6 +342,8 @@ namespace CastleOfTheD20.UI
                 barRect.sizeDelta = new Vector2(1080f, 76f);
                 barRect.localScale = Vector3.one;
             }
+
+            EnsureClickShield();
 
             // 2. Style End Turn Button
             if (endTurnButton != null)
@@ -959,6 +990,12 @@ namespace CastleOfTheD20.UI
             {
                 GameObject obj = uiRaycastList[i].gameObject;
                 if (obj == null) continue;
+
+                // Anything on the action bar strip (buttons, gaps, click shield) blocks tile clicks
+                if (combatActionBar != null && obj.transform.IsChildOf(combatActionBar.transform))
+                {
+                    return true;
+                }
 
                 if (obj.GetComponentInParent<Selectable>() != null ||
                     obj.GetComponentInParent<Button>() != null ||
