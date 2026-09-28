@@ -124,8 +124,17 @@ Projektin juurihakemistossa on suoritettava työkalu `.\unity-cli.exe`, jolla on
 ## Agent Directives for Unity Control:
 1. **Virheiden tarkistus koodauksen jälkeen:**
    - Aina kun luot tai muokkaat C#-skriptejä, tarkista Unityn konsoli ajamalla terminaalissa:
-     `.\unity-cli.exe raw read_console_logs`
+     `.\unity-cli.exe tool call read_console`
    - Jos lokissa on virheitä (`error`), korjaa ne välittömästi.
-2. **Skenen ja peliobjektien tarkastus:**
-   - Tarkista aktiivisen skenen rakenne komennolla:
-     `.\unity-cli.exe raw get_scene_hierarchy`
+2. **Komponenttien ja skenen tarkastus (TÄRKEÄ SÄÄNTÖ):**
+   - ÄLÄ KOSKAAN käytä vanhentunutta `raw get_scene_hierarchy` -komentoa (se tuottaa `UNKNOWN_COMMAND` -virheen).
+   - Käytä AINA työkalua `find_by_component` tai `get_hierarchy`.
+   - **PowerShell-parametrien invariantti:** Älä koskaan syötä monimutkaista JSONia suoraan `--json`-parametrina komentorivillä, sillä PowerShell rikkoo lainausmerkit. Kirjoita parametrit aina väliaikaistiedostoon ja käytä `--params-file`:
+     ```powershell
+     Set-Content -Path "test_param.json" -Value '{"componentType": "QuestHUDUIController"}'
+     .\unity-cli.exe tool call find_by_component --params-file "test_param.json"
+     ```
+3. **Testien ja editoritilan hallinta:**
+   - Työkalulista: `.\unity-cli.exe tool list`
+   - Testit: `.\unity-cli.exe tool call run_tests`
+   - Resurssipäivitys: `.\unity-cli.exe tool call refresh_assets`

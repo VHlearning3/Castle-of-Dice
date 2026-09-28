@@ -998,6 +998,14 @@ namespace CastleOfTheD20.UI
                 if (i < abilities.Count && abilities[i] != null)
                 {
                     AbilitySO ability = abilities[i];
+
+                    // Rogue ability rework: Lockpick is an exploration passive, excluded from combat action bar
+                    if (ability.AbilityID.IndexOf("lockpick", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        abilityButtons[i].gameObject.SetActive(false);
+                        continue;
+                    }
+
                     abilityButtons[i].gameObject.SetActive(true);
 
                     if (abilityNames.Count > i && abilityNames[i] != null)

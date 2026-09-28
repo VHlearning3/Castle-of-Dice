@@ -95,6 +95,11 @@ namespace CastleOfTheD20.Combat
                     {
                         if (ability != null)
                         {
+                            // Rogue rework: Lockpick is an exploration passive, not a combat ability
+                            if (ability.AbilityID.IndexOf("lockpick", StringComparison.OrdinalIgnoreCase) >= 0)
+                            {
+                                continue;
+                            }
                             activeAbilities.Add(ability);
                         }
                     }

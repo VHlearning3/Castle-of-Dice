@@ -59,13 +59,13 @@ namespace CastleOfTheD20.World
         public Vector3 gridCenterOffset = Vector3.zero;
 
         [Tooltip("Grid column count.")]
-        public int gridWidth = 8;
+        public int gridWidth = 12;
 
         [Tooltip("Grid row count.")]
-        public int gridHeight = 8;
+        public int gridHeight = 12;
 
         [Tooltip("Size of each grid tile in world units.")]
-        public float gridTileSize = 2.0f;
+        public float gridTileSize = 1.6f;
 
         [Tooltip("If true, clears the generated grid tiles once the encounter is cleared.")]
         public bool clearGridOnCombatResolved = true;
@@ -258,31 +258,60 @@ namespace CastleOfTheD20.World
 
             if (roomEnemies != null)
             {
+                bool isRegularEncounter = string.IsNullOrEmpty(bossIdentifier);
+                int maxAllowedEnemies = isRegularEncounter ? 2 : int.MaxValue;
+
+                if (isRegularEncounter)
+                {
+                    // Check if any enemy is elite (MaxHP >= 25 or AttackDamage >= 5)
+                    foreach (var enemyObj in roomEnemies)
+                    {
+                        if (enemyObj != null)
+                        {
+                            EnemyUnit eu = enemyObj.GetComponent<EnemyUnit>();
+                            if (eu != null && (eu.MaxHP >= 25 || eu.AttackDamage >= 5))
+                            {
+                                maxAllowedEnemies = 1; // Solo hero pacing: 1 elite max
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                int activeEnemyCount = 0;
                 foreach (var enemyObj in roomEnemies)
                 {
                     if (enemyObj != null)
                     {
-                        enemyObj.SetActive(true);
-
-                        EnemyUnit enemyUnit = enemyObj.GetComponent<EnemyUnit>();
-                        if (enemyUnit != null && enemyUnit.IsAlive)
+                        if (activeEnemyCount < maxAllowedEnemies)
                         {
-                            activeParticipants.Add(enemyUnit);
+                            enemyObj.SetActive(true);
 
-                            // Snap enemy to its nearest newly generated grid tile
-                            if (grid != null)
+                            EnemyUnit enemyUnit = enemyObj.GetComponent<EnemyUnit>();
+                            if (enemyUnit != null && enemyUnit.IsAlive)
                             {
-                                Vector2Int enemyTilePos = grid.GetGridPosition(enemyUnit.transform.position);
-                                GridTile tile = grid.GetTileAt(enemyTilePos);
-                                if (tile == null || !tile.IsWalkable || tile.IsOccupied)
+                                activeParticipants.Add(enemyUnit);
+                                activeEnemyCount++;
+
+                                // Snap enemy to its nearest newly generated grid tile
+                                if (grid != null)
                                 {
-                                    tile = FindClosestWalkableTile(grid, enemyUnit.transform.position);
-                                }
-                                if (tile != null)
-                                {
-                                    enemyUnit.MoveToTile(tile);
+                                    Vector2Int enemyTilePos = grid.GetGridPosition(enemyUnit.transform.position);
+                                    GridTile tile = grid.GetTileAt(enemyTilePos);
+                                    if (tile == null || !tile.IsWalkable || tile.IsOccupied)
+                                    {
+                                        tile = FindClosestWalkableTile(grid, enemyUnit.transform.position);
+                                    }
+                                    if (tile != null)
+                                    {
+                                        enemyUnit.MoveToTile(tile);
+                                    }
                                 }
                             }
+                        }
+                        else
+                        {
+                            enemyObj.SetActive(false);
                         }
                     }
                 }

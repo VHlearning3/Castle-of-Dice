@@ -105,6 +105,9 @@ namespace CastleOfTheD20.Core
         /// <summary>Whether the Crown Hall boss (The Gargoyle King) has been defeated.</summary>
         public bool IsGargoyleKingDefeated => defeatedBosses.Contains("GargoyleKing");
 
+        /// <summary>Whether a specific dungeon wing or location has been cleared of hostiles.</summary>
+        public bool IsWingCleared(GameLocation location) => clearedLocations.Contains(location);
+
         #endregion
 
         #region Events

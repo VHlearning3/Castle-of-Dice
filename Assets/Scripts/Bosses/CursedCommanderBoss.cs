@@ -21,6 +21,9 @@ namespace CastleOfTheD20.Bosses
         [Tooltip("Prefab instantiated when skeleton reinforcements are summoned at 50% HP.")]
         [SerializeField] private GameObject skeletonAddPrefab;
 
+        [Tooltip("Number of skeleton adds summoned (reduced to 1 for solo hero encounter balance).")]
+        [SerializeField] private int skeletonCount = 1;
+
         [Header("Dialogue Debuff Hook")]
         [Tooltip("Dialogue debuff tag checked at encounter start.")]
         [SerializeField] private string dialogueDebuffTag = "CommanderArmorWeakened";
@@ -133,12 +136,12 @@ namespace CastleOfTheD20.Bosses
         #region Reinforcements
 
         /// <summary>
-        /// Spawns 2 Skeleton minions on adjacent grid cells.
+        /// Spawns Skeleton minion on adjacent grid cells (reduced to 1 for solo hero encounter balance).
         /// </summary>
         public void SpawnSkeletonReinforcements()
         {
             hasSpawnedAdds = true;
-            Debug.Log("[CursedCommander] \"Arise, guardians of the gate!\" The Commander summons 2 Skeleton adds!");
+            Debug.Log($"[CursedCommander] \"Arise, guardian of the gate!\" The Commander summons {skeletonCount} Skeleton add!");
 
             GridManager grid = GridManager.Instance;
             if (grid == null) return;
@@ -152,7 +155,7 @@ namespace CastleOfTheD20.Bosses
                 {
                     SpawnSingleSkeleton(tile);
                     spawnedCount++;
-                    if (spawnedCount >= 2) break;
+                    if (spawnedCount >= skeletonCount) break;
                 }
             }
 

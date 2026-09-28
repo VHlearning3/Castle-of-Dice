@@ -182,15 +182,34 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Determines if attack rolls suffer Disadvantage due to conditions like Blindness.
+        /// Determines if attack rolls benefit from Advantage (e.g. Shadow Step) or suffer Disadvantage (Blindness).
         /// </summary>
         public AdvantageType GetAttackRollAdvantageModifier()
         {
+            if (HasEffect(StatusEffectType.AdvantageNextAttack))
+            {
+                return AdvantageType.Advantage;
+            }
             if (HasEffect(StatusEffectType.Blind))
             {
                 return AdvantageType.Disadvantage;
             }
             return AdvantageType.None;
+        }
+
+        /// <summary>
+        /// Consumes the AdvantageNextAttack status effect (if active) after an attack roll is resolved.
+        /// Returns true if the effect was active and consumed.
+        /// </summary>
+        public bool ConsumeAdvantageNextAttack()
+        {
+            if (HasEffect(StatusEffectType.AdvantageNextAttack))
+            {
+                RemoveEffect(StatusEffectType.AdvantageNextAttack);
+                Debug.Log($"[StatusEffect] Advantage on next attack consumed for {ownerUnit?.UnitName ?? name}.");
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

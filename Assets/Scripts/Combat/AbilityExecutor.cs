@@ -113,6 +113,10 @@ namespace CastleOfTheD20.Combat
             {
                 return ExecuteSmokeBomb(caster, ability, targetGridPos, grid);
             }
+            if (id.Contains("shadow_step") || id.Contains("shadowstep"))
+            {
+                return ExecuteShadowStep(caster, targetGridPos, grid);
+            }
 
             // --- Standard / Fallback Execution (Single Target, Self, etc.) ---
             if (ability.TargetType == AbilityTargetType.Self)
@@ -195,9 +199,9 @@ namespace CastleOfTheD20.Combat
             }
 
             int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
-            if (distance > 5)
+            if (distance > 6)
             {
-                Debug.LogWarning($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range 5.");
+                Debug.LogWarning($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range 6.");
                 return false;
             }
 
@@ -279,6 +283,7 @@ namespace CastleOfTheD20.Combat
 
             // Backstab grants Advantage or 2x bonus modifier
             DiceResult hitCheck = DiceSystem.RollD20(bonus * 2, target.ArmorClass, AdvantageType.Advantage);
+            caster.StatusEffects?.ConsumeAdvantageNextAttack();
             Debug.Log($"[AbilityExecutor] {caster.UnitName} executes Backstab on {target.UnitName}: {hitCheck}");
 
             if (hitCheck.isSuccess)
@@ -311,6 +316,35 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
+            return true;
+        }
+
+        /// <summary>
+        /// Executes the Rogue's Shadow Step ability:
+        /// Teleports the Rogue up to 3 tiles to an unoccupied walkable tile without triggering opportunity attacks,
+        /// and applies a 1-turn AdvantageNextAttack status effect.
+        /// </summary>
+        public bool ExecuteShadowStep(CombatUnit caster, Vector2Int targetGridPos, GridManager grid)
+        {
+            if (caster == null || grid == null) return false;
+
+            GridTile targetTile = grid.GetTileAt(targetGridPos);
+            if (targetTile == null || !targetTile.IsWalkable || targetTile.IsOccupied)
+            {
+                Debug.LogWarning($"[AbilityExecutor] Shadow Step failed: Tile at {targetGridPos} is obstructed or invalid.");
+                return false;
+            }
+
+            int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
+            if (distance > 3)
+            {
+                Debug.LogWarning($"[AbilityExecutor] Shadow Step distance ({distance}) exceeds maximum range 3.");
+                return false;
+            }
+
+            Debug.Log($"[AbilityExecutor] {caster.UnitName} melts into shadows and emerges at {targetGridPos}! (Advantage applied to next attack)");
+            caster.MoveToTile(targetTile);
+            caster.StatusEffects?.ApplyEffect(StatusEffectType.AdvantageNextAttack, durationTurns: 1);
             return true;
         }
 
@@ -350,6 +384,7 @@ namespace CastleOfTheD20.Combat
             if (ability.RequiresCheck)
             {
                 DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass, advantage);
+                caster.StatusEffects?.ConsumeAdvantageNextAttack();
                 Debug.Log($"[AbilityExecutor] {caster.UnitName} casts {ability.AbilityName} on {target.UnitName}: {hitCheck}");
 
                 if (hitCheck.isSuccess)

@@ -303,6 +303,51 @@ namespace CastleOfTheD20.Editor
             }
             levelUpCtrl.EnsureUIHierarchy();
 
+            // 9. Ensure DungeonMapUIController exists on Canvas / Scene
+            DungeonMapUIController mapCtrl = canvas.GetComponentInChildren<DungeonMapUIController>(true);
+            if (mapCtrl == null)
+            {
+                GameObject mapObj = new GameObject("DungeonMapUIController", typeof(DungeonMapUIController));
+                mapObj.transform.SetParent(canvas.transform, false);
+                mapCtrl = mapObj.GetComponent<DungeonMapUIController>();
+            }
+            mapCtrl.EnsureUIHierarchy();
+
+            // 10. Map Toggle Button on Player HUD (Top-right near Quest Tracker)
+            Transform mapBtnTr = hud.transform.Find("Button_Map_Toggle");
+            if (mapBtnTr == null)
+            {
+                GameObject mapBtnObj = new GameObject("Button_Map_Toggle", typeof(RectTransform), typeof(Image), typeof(Button));
+                mapBtnObj.transform.SetParent(hud.transform, false);
+                RectTransform mbRt = mapBtnObj.GetComponent<RectTransform>();
+                mbRt.anchorMin = new Vector2(1f, 1f);
+                mbRt.anchorMax = new Vector2(1f, 1f);
+                mbRt.sizeDelta = new Vector2(110f, 32f);
+                mbRt.anchoredPosition = new Vector2(-410f, -22f);
+
+                Image mbImg = mapBtnObj.GetComponent<Image>();
+                mbImg.sprite = slotFrame ?? panelDark;
+                mbImg.type = Image.Type.Sliced;
+                mbImg.color = new Color(1f, 0.95f, 0.7f);
+
+                Button mbBtn = mapBtnObj.GetComponent<Button>();
+                UnityEditor.Events.UnityEventTools.AddVoidPersistentListener(mbBtn.onClick, mapCtrl.ToggleMap);
+
+                GameObject mbTxtObj = new GameObject("Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+                mbTxtObj.transform.SetParent(mapBtnObj.transform, false);
+                RectTransform mbtRt = mbTxtObj.GetComponent<RectTransform>();
+                mbtRt.anchorMin = Vector2.zero;
+                mbtRt.anchorMax = Vector2.one;
+                mbtRt.sizeDelta = Vector2.zero;
+
+                TMP_Text mbLbl = mbTxtObj.GetComponent<TextMeshProUGUI>();
+                mbLbl.text = "MAP (M)";
+                mbLbl.fontSize = 11.5f;
+                mbLbl.fontStyle = FontStyles.Bold;
+                mbLbl.alignment = TextAlignmentOptions.Center;
+                mbLbl.color = Color.white;
+            }
+
             PlayerProgressionManager progManager = Object.FindAnyObjectByType<PlayerProgressionManager>(FindObjectsInactive.Include);
             if (progManager == null)
             {

@@ -35,7 +35,8 @@ namespace CastleOfTheD20.Tests
         [Test]
         public void AwardCombatVictoryScrap_DropsBetween2And10Inclusive()
         {
-            int startingScrap = inventoryManager.ScrapMetalCount;
+            InventoryManager activeInventory = InventoryManager.Instance != null ? InventoryManager.Instance : inventoryManager;
+            int startingScrap = activeInventory.ScrapMetalCount;
             int lastAwardedEventScrap = -1;
             TurnManager.OnCombatVictoryScrapAwarded += (amt) => lastAwardedEventScrap = amt;
 
@@ -47,7 +48,7 @@ namespace CastleOfTheD20.Tests
                 Assert.AreEqual(dropped, lastAwardedEventScrap, "OnCombatVictoryScrapAwarded event must broadcast exact dropped scrap amount.");
             }
 
-            Assert.Greater(inventoryManager.ScrapMetalCount, startingScrap, "InventoryManager must accumulate dropped scrap.");
+            Assert.Greater(activeInventory.ScrapMetalCount, startingScrap, "InventoryManager must accumulate dropped scrap.");
         }
     }
 }

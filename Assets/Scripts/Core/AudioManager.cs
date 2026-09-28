@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using CastleOfTheD20.Core;
+using CastleOfTheD20.Audio;
 
 namespace CastleOfTheD20.Core
 {
@@ -32,6 +33,11 @@ namespace CastleOfTheD20.Core
         #region Singleton
 
         public static AudioManager Instance { get; private set; }
+
+        public static void SetInstanceForTesting(AudioManager instance)
+        {
+            Instance = instance;
+        }
 
         #endregion
 
@@ -236,9 +242,17 @@ namespace CastleOfTheD20.Core
 
         /// <summary>
         /// Plays a sound effect from an assigned clip or falls back to procedural synthesis.
+        /// Automatically delegates to the 12-channel SFXManager pool when active.
         /// </summary>
         public void PlaySFX(SoundType sound, float volumeScale = 1.0f)
         {
+            if (SFXManager.Instance != null)
+            {
+                SFXClipType mappedClip = MapSoundTypeToSFXClip(sound);
+                SFXManager.Instance.PlaySFX(mappedClip, default, masterVolume * sfxVolume * Mathf.Clamp01(volumeScale));
+                return;
+            }
+
             AudioClip clipToPlay = GetClipForSoundType(sound);
             if (clipToPlay == null)
             {
@@ -253,12 +267,41 @@ namespace CastleOfTheD20.Core
 
         /// <summary>
         /// Plays an explicit AudioClip through the SFX channel.
+        /// Automatically delegates to the 12-channel SFXManager pool when active.
         /// </summary>
         public void PlaySFX(AudioClip clip, float volumeScale = 1.0f)
         {
-            if (clip != null && sfxSource != null)
+            if (clip == null) return;
+
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlaySFX(clip, default, masterVolume * sfxVolume * Mathf.Clamp01(volumeScale));
+                return;
+            }
+
+            if (sfxSource != null)
             {
                 sfxSource.PlayOneShot(clip, masterVolume * sfxVolume * Mathf.Clamp01(volumeScale));
+            }
+        }
+
+        private SFXClipType MapSoundTypeToSFXClip(SoundType sound)
+        {
+            switch (sound)
+            {
+                case SoundType.DiceRoll: return SFXClipType.DiceRoll;
+                case SoundType.CriticalSuccess: return SFXClipType.CriticalSuccess;
+                case SoundType.CriticalFailure: return SFXClipType.CriticalFailure;
+                case SoundType.SwordHit: return SFXClipType.SwordHit;
+                case SoundType.SpellCast: return SFXClipType.SpellCast;
+                case SoundType.DamageTaken: return SFXClipType.DamageTaken;
+                case SoundType.PotionDrink: return SFXClipType.PotionDrink;
+                case SoundType.ButtonClick: return SFXClipType.ButtonClick;
+                case SoundType.QuestComplete: return SFXClipType.QuestComplete;
+                case SoundType.DoorOpen: return SFXClipType.DoorOpen;
+                case SoundType.Victory: return SFXClipType.Victory;
+                case SoundType.Defeat: return SFXClipType.Defeat;
+                default: return SFXClipType.ButtonClick;
             }
         }
 
@@ -275,6 +318,11 @@ namespace CastleOfTheD20.Core
             if (MusicManager.Instance != null)
             {
                 MusicManager.Instance.SetVolume(masterVolume, bgmVolume);
+            }
+
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.SFXVolume = masterVolume * sfxVolume;
             }
         }
 

@@ -141,6 +141,29 @@ namespace CastleOfTheD20.Combat
 
             if (players.Count > 0 && enemies.Count > 0)
             {
+                // Solo Hero pacing: Limit regular encounters to 1 elite or max 2 weaker enemies
+                if (players.Count == 1 && enemies.Count > 2)
+                {
+                    bool hasBoss = enemies.Exists(e => e is Bosses.CursedCommanderBoss ||
+                                                       e is Bosses.ShadowMageMalakorBoss ||
+                                                       (e.name.IndexOf("Boss", StringComparison.OrdinalIgnoreCase) >= 0));
+                    if (!hasBoss)
+                    {
+                        bool hasElite = enemies.Exists(e => e.MaxHP >= 25 || e.AttackDamage >= 5);
+                        int maxAllowed = hasElite ? 1 : 2;
+
+                        PlayerUnit p = players[0];
+                        enemies.Sort((a, b) => Vector3.Distance(a.transform.position, p.transform.position)
+                            .CompareTo(Vector3.Distance(b.transform.position, p.transform.position)));
+
+                        for (int i = maxAllowed; i < enemies.Count; i++)
+                        {
+                            enemies[i].gameObject.SetActive(false);
+                        }
+                        enemies.RemoveRange(maxAllowed, enemies.Count - maxAllowed);
+                    }
+                }
+
                 List<CombatUnit> allUnits = new List<CombatUnit>();
                 allUnits.AddRange(players);
                 allUnits.AddRange(enemies);
@@ -222,8 +245,8 @@ namespace CastleOfTheD20.Combat
                 foreach (var u in activeUnits) combatCenter += u.transform.position;
                 combatCenter /= activeUnits.Count;
 
-                GridManager.Instance.GenerateGridAt(combatCenter, 8, 8, 2.0f);
-                Debug.Log($"[TurnManager] Auto-generated 8x8 combat grid around combatants centered at {combatCenter}.");
+                GridManager.Instance.GenerateGridAt(combatCenter, 12, 12, 1.6f);
+                Debug.Log($"[TurnManager] Auto-generated 12x12 combat grid around combatants centered at {combatCenter}.");
 
                 foreach (var u in activeUnits)
                 {

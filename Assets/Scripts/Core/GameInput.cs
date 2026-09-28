@@ -353,6 +353,26 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// True during the frame the Map toggle hotkey [M] was pressed.
+        /// </summary>
+        public static bool IsMapHotkeyPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            try
+            {
+                return Input.GetKeyDown(KeyCode.M);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// True during the frame any user input (key press or mouse click) occurred.
         /// Used for audio autoplay unmuting and wake-from-idle checks.
         /// </summary>

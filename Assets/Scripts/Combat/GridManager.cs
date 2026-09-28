@@ -20,9 +20,9 @@ namespace CastleOfTheD20.Combat
         #region Serialized Fields
 
         [Header("Grid Dimensions")]
-        [SerializeField] private int width = 10;
-        [SerializeField] private int height = 10;
-        [SerializeField] private float tileSize = 2.0f;
+        [SerializeField] private int width = 12;
+        [SerializeField] private int height = 12;
+        [SerializeField] private float tileSize = 1.6f;
         [SerializeField] private Vector3 originWorldPosition = Vector3.zero;
 
         [Header("Transform Alignment & Scaling")]
@@ -141,9 +141,9 @@ namespace CastleOfTheD20.Combat
         /// Generates or centers the tactical combat grid around a specific center position (such as a dungeon room or cellar).
         /// Automatically performs vertical surface raycasting to prevent Z-fighting with floors and detects solid obstacles (pillars, walls).
         /// </summary>
-        public void GenerateGridAt(Vector3 centerPosition, int gridWidth, int gridHeight, float newTileSize = 2.0f, GameObject customPrefab = null)
+        public void GenerateGridAt(Vector3 centerPosition, int gridWidth, int gridHeight, float newTileSize = 1.6f, GameObject customPrefab = null)
         {
-            tileSize = newTileSize > 0.1f ? newTileSize : 2.0f;
+            tileSize = newTileSize > 0.1f ? newTileSize : 1.6f;
             width = gridWidth;
             height = gridHeight;
 

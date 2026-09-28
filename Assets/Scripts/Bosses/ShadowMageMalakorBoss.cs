@@ -21,8 +21,8 @@ namespace CastleOfTheD20.Bosses
         [Tooltip("Prefab instantiated for decoy illusions.")]
         [SerializeField] private GameObject illusionPrefab;
 
-        [Tooltip("Number of illusion decoys summoned.")]
-        [SerializeField] private int decoyCount = 2;
+        [Tooltip("Number of illusion decoys summoned (reduced to 1 for solo hero pacing).")]
+        [SerializeField] private int decoyCount = 1;
 
         [Header("Dialogue Hook")]
         [Tooltip("Tag identifying successful Arcane Heresy dialogue check.")]

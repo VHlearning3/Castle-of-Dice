@@ -95,7 +95,10 @@ namespace CastleOfTheD20.Core
         Blind,
 
         /// <summary>Magical barrier absorbing incoming damage charges before health is impacted.</summary>
-        ManaShield
+        ManaShield,
+
+        /// <summary>Grants 2d20 Advantage on the next attack roll (e.g. from Shadow Step).</summary>
+        AdvantageNextAttack
     }
 
     /// <summary>

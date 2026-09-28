@@ -74,7 +74,17 @@ namespace CastleOfTheD20.Combat
         public bool IsAlive => !isDead && currentHP > 0;
 
         /// <summary>Reference to the attached StatusEffectController component.</summary>
-        public StatusEffectController StatusEffects => statusEffects;
+        public StatusEffectController StatusEffects
+        {
+            get
+            {
+                if (statusEffects == null)
+                {
+                    statusEffects = GetComponent<StatusEffectController>();
+                }
+                return statusEffects;
+            }
+        }
 
         #endregion
 
