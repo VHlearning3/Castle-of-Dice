@@ -456,7 +456,7 @@ namespace CastleOfTheD20.UI
             bcRect.anchoredPosition = new Vector2(0f, -40f);
             bcRect.sizeDelta = new Vector2(280f, 220f);
 
-            Button newGameBtn = CreateMenuButton(btnContainer.transform, "NewGame_Btn", "New Adventure", new Vector2(0f, 70f), new Color(0.2f, 0.55f, 0.3f));
+            Button newGameBtn = CreateMenuButton(btnContainer.transform, "NewGame_Btn", "New Adventure", new Vector2(0f, 70f), UITheme.ActionGreen);
             newGameBtn.onClick.AddListener(OpenClassSelection);
 
             Button continueBtn = CreateMenuButton(btnContainer.transform, "Continue_Btn", "Continue", new Vector2(0f, 10f), new Color(0.25f, 0.4f, 0.6f));
@@ -641,7 +641,7 @@ namespace CastleOfTheD20.UI
             cg.blocksRaycasts = true;
 
             Image bg = csPanel.AddComponent<Image>();
-            bg.color = new Color(0.04f, 0.05f, 0.08f, 0.98f);
+            bg.color = UITheme.PanelAbyss;
             bg.raycastTarget = true;
 
             // Title
@@ -679,7 +679,7 @@ namespace CastleOfTheD20.UI
             rect.sizeDelta = new Vector2(250f, 300f);
 
             Image img = card.AddComponent<Image>();
-            img.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+            img.color = UITheme.PanelSlate;
             img.raycastTarget = true;
 
             // Make the entire card clickable
@@ -741,7 +741,7 @@ namespace CastleOfTheD20.UI
             dt.raycastTarget = false;
 
             // Choose button (secondary, still present for visual affordance)
-            Button chooseBtn = CreateMenuButton(card.transform, "SelectBtn", "Select", new Vector2(0f, -100f), new Color(0.2f, 0.55f, 0.3f));
+            Button chooseBtn = CreateMenuButton(card.transform, "SelectBtn", "Select", new Vector2(0f, -100f), UITheme.ActionGreen);
             chooseBtn.GetComponent<RectTransform>().sizeDelta = new Vector2(180f, 40f);
             chooseBtn.onClick.AddListener(onSelect);
         }
@@ -763,7 +763,7 @@ namespace CastleOfTheD20.UI
             cg.blocksRaycasts = true;
 
             Image bg = rPanel.AddComponent<Image>();
-            bg.color = new Color(0.04f, 0.05f, 0.08f, 0.98f);
+            bg.color = UITheme.PanelAbyss;
             bg.raycastTarget = true;
 
             GameObject box = new GameObject("Rules_Box");
@@ -772,7 +772,7 @@ namespace CastleOfTheD20.UI
             bRect.sizeDelta = new Vector2(640f, 450f);
 
             Image bImg = box.AddComponent<Image>();
-            bImg.color = new Color(0.12f, 0.14f, 0.18f, 0.95f);
+            bImg.color = UITheme.PanelSlate;
             bImg.raycastTarget = true;
 
             Outline o = box.AddComponent<Outline>();

@@ -469,7 +469,7 @@ namespace CastleOfTheD20.UI
 
                 speakerNameText.fontSize = 20f;
                 speakerNameText.fontStyle = FontStyles.Bold;
-                speakerNameText.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                speakerNameText.color = UITheme.GoldAccent; // #F6D578
                 speakerNameText.alignment = TextAlignmentOptions.TopLeft;
                 speakerNameText.enableAutoSizing = false;
                 speakerNameText.raycastTarget = false;
@@ -511,7 +511,7 @@ namespace CastleOfTheD20.UI
                 bodyRect.offsetMax = new Vector2(0f, -44f);
 
                 dialogueBodyText.fontSize = 15.5f;
-                dialogueBodyText.color = new Color(0.93f, 0.90f, 0.85f, 1f); // #EDE6D8
+                dialogueBodyText.color = UITheme.ParchmentText; // #EDE6D8
                 dialogueBodyText.alignment = TextAlignmentOptions.TopLeft;
                 dialogueBodyText.enableAutoSizing = false;
                 dialogueBodyText.lineSpacing = 2f;
@@ -547,7 +547,7 @@ namespace CastleOfTheD20.UI
                     contTxt.text = "Continue >";
                     contTxt.fontSize = 14.5f;
                     contTxt.fontStyle = FontStyles.Bold;
-                    contTxt.color = new Color(0.965f, 0.835f, 0.47f, 1f);
+                    contTxt.color = UITheme.GoldAccent;
                     contTxt.alignment = TextAlignmentOptions.Center;
                     contTxt.enableAutoSizing = false;
                     contTxt.raycastTarget = false;

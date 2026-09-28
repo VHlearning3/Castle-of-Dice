@@ -328,7 +328,7 @@ namespace CastleOfTheD20.UI
             // 2. Show 3D Floating text banner
             if (FloatingCombatText.Instance != null)
             {
-                FloatingCombatText.Instance.ShowText(playerPos, "LEVEL UP!\n" + floatingFeedback, new Color(1f, 0.84f, 0f, 1f));
+                FloatingCombatText.Instance.ShowText(playerPos, "LEVEL UP!\n" + floatingFeedback, UITheme.CoinGold);
             }
 
             // 3. Save Game State
@@ -428,7 +428,7 @@ namespace CastleOfTheD20.UI
             milestoneSubtitleText.text = "Milestone: Castle Veteran\nChoose one permanent hero upgrade:";
             milestoneSubtitleText.fontSize = 15f;
             milestoneSubtitleText.alignment = TextAlignmentOptions.Center;
-            milestoneSubtitleText.color = new Color(0.85f, 0.88f, 0.92f, 1f);
+            milestoneSubtitleText.color = UITheme.SoftText;
 
             // 3 Choice Cards Layout
             // Card 1: Hero's Resilience

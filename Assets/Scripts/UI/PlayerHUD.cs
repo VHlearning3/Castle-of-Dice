@@ -826,7 +826,7 @@ namespace CastleOfTheD20.UI
                 scrapCounterText.alignment = TextAlignmentOptions.MidlineLeft;
                 scrapCounterText.fontSize = 13f;
                 scrapCounterText.fontStyle = FontStyles.Bold;
-                scrapCounterText.color = new Color(0.85f, 0.88f, 0.92f, 1f); // Metallic silver
+                scrapCounterText.color = UITheme.SoftText; // Metallic silver
                 scrapCounterText.raycastTarget = false;
                 RectTransform sctRect = scrapCounterText.GetComponent<RectTransform>();
                 sctRect.anchorMin = new Vector2(0f, 0f);

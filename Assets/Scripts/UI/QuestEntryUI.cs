@@ -99,7 +99,7 @@ namespace CastleOfTheD20.UI
                 else
                 {
                     titleText.text = $"• {quest.QuestTitle}";
-                    titleText.color = new Color(1.0f, 0.96f, 0.85f, 1f); // Warm ivory gold
+                    titleText.color = UITheme.CreamText; // Warm ivory gold
                 }
             }
 
@@ -145,7 +145,7 @@ namespace CastleOfTheD20.UI
             if (titleText != null)
             {
                 titleText.text = $"• {title}";
-                titleText.color = new Color(1.0f, 0.96f, 0.85f, 1f);
+                titleText.color = UITheme.CreamText;
             }
 
             if (counterText != null)

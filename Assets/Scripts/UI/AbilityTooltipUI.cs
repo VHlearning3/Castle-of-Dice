@@ -372,7 +372,7 @@ namespace CastleOfTheD20.UI
             titleText = titleObj.GetComponent<TextMeshProUGUI>();
             titleText.fontSize = 18f;
             titleText.fontStyle = FontStyles.Bold;
-            titleText.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+            titleText.color = UITheme.GoldAccent; // #F6D578
             titleText.alignment = TextAlignmentOptions.TopLeft;
             titleText.enableAutoSizing = false;
             titleText.raycastTarget = false;
@@ -418,7 +418,7 @@ namespace CastleOfTheD20.UI
             typeObj.transform.SetParent(statsObj.transform, false);
             typeAndRangeText = typeObj.GetComponent<TextMeshProUGUI>();
             typeAndRangeText.fontSize = 12.5f;
-            typeAndRangeText.color = new Color(0.85f, 0.88f, 0.92f, 1f);
+            typeAndRangeText.color = UITheme.SoftText;
             typeAndRangeText.enableAutoSizing = false;
             typeAndRangeText.raycastTarget = false;
 
@@ -436,7 +436,7 @@ namespace CastleOfTheD20.UI
             descObj.transform.SetParent(overlay.transform, false);
             descriptionText = descObj.GetComponent<TextMeshProUGUI>();
             descriptionText.fontSize = 12.5f;
-            descriptionText.color = new Color(0.93f, 0.90f, 0.85f, 1f); // #EDE6D8
+            descriptionText.color = UITheme.ParchmentText; // #EDE6D8
             descriptionText.lineSpacing = 2f;
             descriptionText.textWrappingMode = TextWrappingModes.Normal;
             descriptionText.enableAutoSizing = false;

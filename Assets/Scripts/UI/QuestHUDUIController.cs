@@ -317,7 +317,7 @@ namespace CastleOfTheD20.UI
             titleTMP.fontSize = 12f;
             titleTMP.fontStyle = FontStyles.Bold;
             titleTMP.alignment = TextAlignmentOptions.TopLeft;
-            titleTMP.color = new Color(1.0f, 0.96f, 0.85f, 1f);
+            titleTMP.color = UITheme.CreamText;
             titleTMP.raycastTarget = false;
 
             // Objective Text

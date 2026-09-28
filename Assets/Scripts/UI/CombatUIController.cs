@@ -387,7 +387,7 @@ namespace CastleOfTheD20.UI
                     endText.text = "End Turn";
                     endText.fontSize = 15.5f;
                     endText.fontStyle = FontStyles.Bold;
-                    endText.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                    endText.color = UITheme.GoldAccent; // #F6D578
                     endText.alignment = TextAlignmentOptions.Center;
                     endText.enableAutoSizing = false;
                     endText.raycastTarget = false;
@@ -554,7 +554,7 @@ namespace CastleOfTheD20.UI
                 {
                     nameTxt.fontSize = 14f;
                     nameTxt.fontStyle = FontStyles.Bold;
-                    nameTxt.color = new Color(0.965f, 0.835f, 0.47f, 1f); // #F6D578
+                    nameTxt.color = UITheme.GoldAccent; // #F6D578
                     nameTxt.alignment = TextAlignmentOptions.MidlineLeft;
                     nameTxt.enableAutoSizing = false;
                     nameTxt.raycastTarget = false;

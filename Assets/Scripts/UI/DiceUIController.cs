@@ -38,7 +38,7 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Image glowBorderImage;
 
         [SerializeField] private Color normalColor = new Color(0.2f, 0.7f, 1f, 1f); // Cyan
-        [SerializeField] private Color criticalSuccessColor = new Color(1f, 0.84f, 0f, 1f); // Gold
+        [SerializeField] private Color criticalSuccessColor = UITheme.CoinGold; // Gold
         [SerializeField] private Color criticalFailColor = new Color(1f, 0.2f, 0.2f, 1f); // Crimson
         [SerializeField] private Color standardSuccessColor = new Color(0.2f, 0.9f, 0.3f, 1f); // Green
         [SerializeField] private Color standardFailColor = new Color(0.8f, 0.3f, 0.3f, 1f); // Soft Red

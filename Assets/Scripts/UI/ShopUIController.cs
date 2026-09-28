@@ -420,7 +420,7 @@ namespace CastleOfTheD20.UI
                 tText.text = "BALDUR'S FORGE & WARES";
                 tText.fontSize = 22f;
                 tText.fontStyle = FontStyles.Bold;
-                tText.color = new Color(0.965f, 0.835f, 0.47f, 1f);
+                tText.color = UITheme.GoldAccent;
                 tText.alignment = TextAlignmentOptions.Center;
                 tText.enableAutoSizing = false;
                 tText.raycastTarget = false;
@@ -512,7 +512,7 @@ namespace CastleOfTheD20.UI
                 xText.text = "X";
                 xText.fontSize = 15f;
                 xText.fontStyle = FontStyles.Bold;
-                xText.color = new Color(0.965f, 0.835f, 0.47f, 1f);
+                xText.color = UITheme.GoldAccent;
                 xText.alignment = TextAlignmentOptions.Center;
                 xText.enableAutoSizing = false;
                 xText.raycastTarget = false;
@@ -615,7 +615,7 @@ namespace CastleOfTheD20.UI
 
                 goldBalanceText.fontSize = 13.5f;
                 goldBalanceText.fontStyle = FontStyles.Bold;
-                goldBalanceText.color = new Color(1f, 0.84f, 0f, 1f); // #FFD700
+                goldBalanceText.color = UITheme.CoinGold; // #FFD700
                 goldBalanceText.alignment = TextAlignmentOptions.MidlineLeft;
                 goldBalanceText.enableAutoSizing = false;
                 goldBalanceText.raycastTarget = false;
@@ -814,7 +814,7 @@ namespace CastleOfTheD20.UI
                     exTxt.text = "Leave Shop";
                     exTxt.fontSize = 15f;
                     exTxt.fontStyle = FontStyles.Bold;
-                    exTxt.color = new Color(0.93f, 0.90f, 0.85f, 1f);
+                    exTxt.color = UITheme.ParchmentText;
                     exTxt.alignment = TextAlignmentOptions.Center;
                     exTxt.enableAutoSizing = false;
                     exTxt.raycastTarget = false;
@@ -929,7 +929,7 @@ namespace CastleOfTheD20.UI
                 titleTxt.text = title;
                 titleTxt.fontSize = 14.5f;
                 titleTxt.fontStyle = FontStyles.Bold;
-                titleTxt.color = new Color(0.93f, 0.90f, 0.85f, 1f);
+                titleTxt.color = UITheme.ParchmentText;
                 titleTxt.alignment = TextAlignmentOptions.TopLeft;
                 titleTxt.enableAutoSizing = false;
                 titleTxt.raycastTarget = false;
