@@ -43,6 +43,7 @@ namespace CastleOfTheD20.Editor
                     EnsureCombatUIConfigured();
                     EnsureCellarEnemiesConfigured();
                     EnsureVillageHatchConfigured();
+                    EnsureSingleExitPoint();
 
                     // Check if children are misaligned (e.g. user dragged geometry separately)
                     Transform geo = cellar.transform.Find("Cellar_Geometry");
@@ -262,6 +263,35 @@ namespace CastleOfTheD20.Editor
             }
         }
 
+        private static void EnsureSingleExitPoint()
+        {
+            var allObjects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            GameObject keeper = null;
+            int removed = 0;
+            foreach (var go in allObjects)
+            {
+                if (go != null && go.name == "Village_PlayerExitPoint")
+                {
+                    if (keeper == null)
+                    {
+                        keeper = go;
+                    }
+                    else
+                    {
+                        Undo.DestroyObjectImmediate(go);
+                        removed++;
+                    }
+                }
+            }
+
+            if (removed > 0)
+            {
+                var activeScene = EditorSceneManager.GetActiveScene();
+                if (activeScene.IsValid()) EditorSceneManager.MarkSceneDirty(activeScene);
+                Debug.Log($"[BuildCellarEditor] Cleaned up {removed} duplicate Village_PlayerExitPoint objects (retained 1).");
+            }
+        }
+
         [MenuItem("CastleOfDice/Re-align Cellar Pieces")]
         public static void RealignCellarPiecesMenu()
         {
@@ -430,6 +460,15 @@ namespace CastleOfTheD20.Editor
             if (existingHatch != null)
             {
                 Undo.DestroyObjectImmediate(existingHatch);
+            }
+            // Clean up all existing Village_PlayerExitPoint objects to prevent duplicates
+            GameObject[] allObjects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            foreach (var ep in allObjects)
+            {
+                if (ep != null && ep.name == "Village_PlayerExitPoint")
+                {
+                    Undo.DestroyObjectImmediate(ep);
+                }
             }
             GameObject legacyController = GameObject.Find("DungeonRoomController");
             if (legacyController != null && legacyController.transform.parent == null)
