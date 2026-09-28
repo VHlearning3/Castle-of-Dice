@@ -1594,6 +1594,17 @@ MonoBehaviour:
   scrapMetalCount: 5
   rerollScrollCount: 1
   persistAcrossScenes: 1
+  itemCatalog:
+  - {fileID: 11400000, guid: 9a781b43d2c14092b76e81f1295c5201, type: 2}
+  - {fileID: 11400000, guid: a86f225b9266fe5499fe470cf8113a67, type: 2}
+  - {fileID: 11400000, guid: 9746e69eeef23ad4f8d1ab9ac0cd62ea, type: 2}
+  - {fileID: 11400000, guid: 45c342be3e3b68e4f90742f55236d846, type: 2}
+  - {fileID: 11400000, guid: ebb93952c35701c4cb4d17cae1d0f5af, type: 2}
+  - {fileID: 11400000, guid: 1439c55bed160784780ba9ca9f666677, type: 2}
+  - {fileID: 11400000, guid: f078b79d21bd45544a3c9a2f85c64d3d, type: 2}
+  - {fileID: 11400000, guid: d077db9c6874e4a48a9a2be4e9557e8f, type: 2}
+  - {fileID: 11400000, guid: 8406208b4a12b3844b9e7722af463c80, type: 2}
+  - {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
 --- !u!114 &714089553
 MonoBehaviour:
   m_ObjectHideFlags: 0

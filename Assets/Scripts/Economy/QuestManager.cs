@@ -281,6 +281,65 @@ namespace CastleOfTheD20.Economy
 
         #endregion
 
+        #region Save Support
+
+        /// <summary>
+        /// Writes every quest that has left its NotStarted state as parallel lists for the save file.
+        /// </summary>
+        public void CaptureState(List<string> questIds, List<int> states, List<int> progress)
+        {
+            questIds.Clear();
+            states.Clear();
+            progress.Clear();
+            foreach (KeyValuePair<string, QuestState> entry in questStates)
+            {
+                if (entry.Value == QuestState.NotStarted) continue;
+                questIds.Add(entry.Key);
+                states.Add((int)entry.Value);
+                progress.Add(GetQuestProgress(entry.Key));
+            }
+        }
+
+        /// <summary>
+        /// Restores saved quest states and progress. Works before or after the quests are registered:
+        /// RegisterQuest keeps an existing state instead of resetting it to the default.
+        /// </summary>
+        public void RestoreState(IReadOnlyList<string> questIds, IReadOnlyList<int> states, IReadOnlyList<int> progress)
+        {
+            if (questIds == null || states == null) return;
+
+            int count = Mathf.Min(questIds.Count, states.Count);
+            for (int i = 0; i < count; i++)
+            {
+                string id = questIds[i];
+                if (string.IsNullOrEmpty(id)) continue;
+
+                questStates[id] = (QuestState)states[i];
+                questProgress[id] = progress != null && i < progress.Count ? progress[i] : 0;
+                OnQuestStateUpdated?.Invoke(id, questStates[id]);
+            }
+
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
+        }
+
+        /// <summary>
+        /// Resets every registered quest to its default state (New Adventure).
+        /// </summary>
+        public void ResetAllQuests()
+        {
+            questStates.Clear();
+            questProgress.Clear();
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                questStates[entry.Key] = entry.Value.DefaultState;
+                questProgress[entry.Key] = 0;
+            }
+
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
+        }
+
+        #endregion
+
         #region Queries
 
         /// <summary>

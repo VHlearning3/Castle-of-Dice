@@ -234,6 +234,14 @@ namespace CastleOfTheD20.UI
             }
 
             HideMainMenu();
+
+            // Resume in the zone where the game was saved (e.g. the Castle Hall rune shrine)
+            string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (save != null && !string.IsNullOrEmpty(save.sceneName) && save.sceneName != currentScene &&
+                SceneLoader.Instance != null && Application.CanStreamedLevelBeLoaded(save.sceneName))
+            {
+                SceneLoader.Instance.LoadScene(save.sceneName);
+            }
         }
 
         public void OpenClassSelection()

@@ -813,6 +813,28 @@ namespace CastleOfTheD20.Editor
             if (managersObj.GetComponent<FloatingCombatText>() == null) managersObj.AddComponent<FloatingCombatText>();
 
             AssignQuestDatabase(managersObj.GetComponent<QuestManager>());
+            AssignItemCatalog(managersObj.GetComponent<InventoryManager>());
+        }
+
+        /// <summary>
+        /// Serializes every ItemSO into the InventoryManager so saved item IDs resolve in player builds.
+        /// </summary>
+        private static void AssignItemCatalog(InventoryManager inventory)
+        {
+            if (inventory == null) return;
+
+            string[] guids = AssetDatabase.FindAssets("t:ItemSO", new[] { "Assets/Data" });
+            SerializedObject so = new SerializedObject(inventory);
+            SerializedProperty list = so.FindProperty("itemCatalog");
+            list.ClearArray();
+            for (int i = 0; i < guids.Length; i++)
+            {
+                ItemSO item = AssetDatabase.LoadAssetAtPath<ItemSO>(AssetDatabase.GUIDToAssetPath(guids[i]));
+                if (item == null) continue;
+                list.InsertArrayElementAtIndex(list.arraySize);
+                list.GetArrayElementAtIndex(list.arraySize - 1).objectReferenceValue = item;
+            }
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         /// <summary>

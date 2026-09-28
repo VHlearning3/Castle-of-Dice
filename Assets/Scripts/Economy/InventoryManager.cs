@@ -54,11 +54,78 @@ namespace CastleOfTheD20.Economy
         [Tooltip("If true, retains instance across Unity scene transitions.")]
         [SerializeField] private bool persistAcrossScenes = true;
 
+        [Tooltip("Every ItemSO the player can own, used to resolve saved item IDs (filled by ZoneSceneBuilder).")]
+        [SerializeField] private List<ItemSO> itemCatalog = new List<ItemSO>();
+
         #endregion
 
         #region Private State
 
         private readonly Dictionary<ItemSO, int> items = new Dictionary<ItemSO, int>();
+
+        #endregion
+
+        #region Save Support
+
+        /// <summary>
+        /// Writes the owned items as parallel ID/count lists for the save file.
+        /// </summary>
+        public void CaptureItems(List<string> itemIds, List<int> itemCounts)
+        {
+            itemIds.Clear();
+            itemCounts.Clear();
+            foreach (KeyValuePair<ItemSO, int> entry in items)
+            {
+                if (entry.Key == null || entry.Value <= 0 || string.IsNullOrEmpty(entry.Key.ItemID)) continue;
+                itemIds.Add(entry.Key.ItemID);
+                itemCounts.Add(entry.Value);
+            }
+        }
+
+        /// <summary>
+        /// Replaces the owned items with the saved ID/count lists. Unknown IDs are skipped with a warning.
+        /// </summary>
+        public void RestoreItems(IReadOnlyList<string> itemIds, IReadOnlyList<int> itemCounts)
+        {
+            items.Clear();
+            if (itemIds != null && itemCounts != null)
+            {
+                int count = Mathf.Min(itemIds.Count, itemCounts.Count);
+                for (int i = 0; i < count; i++)
+                {
+                    ItemSO item = FindItemByID(itemIds[i]);
+                    if (item == null)
+                    {
+                        Debug.LogWarning($"[InventoryManager] Saved item '{itemIds[i]}' is not in the item catalog and was skipped.");
+                        continue;
+                    }
+                    if (itemCounts[i] > 0)
+                    {
+                        items[item] = itemCounts[i];
+                    }
+                }
+            }
+
+            OnInventoryChanged?.Invoke();
+        }
+
+        /// <summary>
+        /// Resolves an item by its ItemID from the serialized catalog.
+        /// </summary>
+        public ItemSO FindItemByID(string itemId)
+        {
+            if (string.IsNullOrEmpty(itemId)) return null;
+
+            for (int i = 0; i < itemCatalog.Count; i++)
+            {
+                ItemSO candidate = itemCatalog[i];
+                if (candidate != null && string.Equals(candidate.ItemID, itemId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate;
+                }
+            }
+            return null;
+        }
 
         #endregion
 

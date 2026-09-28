@@ -237,6 +237,16 @@ namespace CastleOfTheD20.Core
             {
                 Economy.InventoryManager.Instance.ResetToStartingValues();
             }
+
+            if (Economy.QuestManager.Instance != null)
+            {
+                Economy.QuestManager.Instance.ResetAllQuests();
+            }
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.RestoreCampaignProgress(null, null);
+            }
         }
 
         public void ApplyProgressionToCurrentPlayer()

@@ -231,6 +231,59 @@ namespace CastleOfTheD20.Tests
             Assert.AreEqual(0, inventory.RerollScrollCount);
         }
 
+        [Test]
+        public void SaveAndLoad_RoundTripsItemsQuestsAndBosses()
+        {
+            const string saveKey = "CastleOfDice_SaveData";
+            string backup = PlayerPrefs.HasKey(saveKey) ? PlayerPrefs.GetString(saveKey) : null;
+
+            ItemSO potion = ScriptableObject.CreateInstance<ItemSO>();
+            potion.Initialize("potion_test", "Test Potion", "", ItemType.Consumable, 25, 10, 0, true);
+            try
+            {
+                InventoryManager inventory = CreateUnit<InventoryManager>("Inventory", runAwake: false);
+                SetField(inventory, "itemCatalog", new List<ItemSO> { potion });
+                QuestManager quests = CreateUnit<QuestManager>("Quests", runAwake: false);
+                GameManager game = CreateUnit<GameManager>("Game", runAwake: false);
+
+                // Pin the singletons so the save system talks to these test instances
+                SetStaticProperty(typeof(InventoryManager), "Instance", inventory);
+                SetStaticProperty(typeof(QuestManager), "Instance", quests);
+                SetStaticProperty(typeof(GameManager), "Instance", game);
+
+                inventory.AddItem(potion, 2);
+                quests.RestoreState(new List<string> { "quest_test" }, new List<int> { (int)QuestState.InProgress }, new List<int> { 3 });
+                game.RestoreCampaignProgress(new List<string> { "CursedCommander" }, null);
+
+                SaveSystem.SaveGame(sessionData, null);
+
+                // Wipe everything, then load
+                inventory.RestoreItems(null, null);
+                quests.ResetAllQuests();
+                game.RestoreCampaignProgress(null, null);
+                Assert.AreEqual(0, inventory.GetItemCount(potion));
+
+                PlayerSaveData save = SaveSystem.LoadGame(sessionData, null);
+
+                Assert.IsNotNull(save);
+                Assert.AreEqual(PlayerSaveData.CurrentVersion, save.saveVersion);
+                Assert.AreEqual(2, inventory.GetItemCount(potion));
+                Assert.AreEqual(QuestState.InProgress, quests.GetQuestState("quest_test"));
+                Assert.AreEqual(3, quests.GetQuestProgress("quest_test"));
+                Assert.IsTrue(game.IsCommanderDefeated);
+            }
+            finally
+            {
+                Object.DestroyImmediate(potion);
+                SetStaticProperty(typeof(InventoryManager), "Instance", null);
+                SetStaticProperty(typeof(QuestManager), "Instance", null);
+                SetStaticProperty(typeof(GameManager), "Instance", null);
+                if (backup != null) PlayerPrefs.SetString(saveKey, backup);
+                else PlayerPrefs.DeleteKey(saveKey);
+                PlayerPrefs.Save();
+            }
+        }
+
         #endregion
 
         #region Helpers

@@ -14,7 +14,7 @@ namespace CastleOfTheD20.Core
     public class PlayerSaveData
     {
         /// <summary>Current save format. Version 1 saves (no field) load with defaults for new fields.</summary>
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
 
         public int saveVersion = CurrentVersion;
         public int currentLevel = 1;
@@ -28,6 +28,17 @@ namespace CastleOfTheD20.Core
         public int rerollScrolls = 1;
         /// <summary>Chosen hero class (-1 = not recorded, e.g. version 1 saves).</summary>
         public int characterClass = -1;
+
+        // Version 3: inventory items, quests, campaign progress and location
+        public List<string> itemIds = new List<string>();
+        public List<int> itemCounts = new List<int>();
+        public List<string> questIds = new List<string>();
+        public List<int> questStates = new List<int>();
+        public List<int> questProgress = new List<int>();
+        public List<string> defeatedBosses = new List<string>();
+        public List<int> clearedWings = new List<int>();
+        /// <summary>Zone scene the save was made in (empty = unknown).</summary>
+        public string sceneName = "";
     }
 
     /// <summary>
@@ -87,7 +98,20 @@ namespace CastleOfTheD20.Core
                 save.gold = InventoryManager.Instance.CurrentGold;
                 save.scrapMetal = InventoryManager.Instance.ScrapMetalCount;
                 save.rerollScrolls = InventoryManager.Instance.RerollScrollCount;
+                InventoryManager.Instance.CaptureItems(save.itemIds, save.itemCounts);
             }
+
+            if (QuestManager.Instance != null)
+            {
+                QuestManager.Instance.CaptureState(save.questIds, save.questStates, save.questProgress);
+            }
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.CaptureCampaignProgress(save.defeatedBosses, save.clearedWings);
+            }
+
+            save.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
 
             string json = JsonUtility.ToJson(save, true);
             PlayerPrefs.SetString(SaveKey, json);
@@ -143,6 +167,17 @@ namespace CastleOfTheD20.Core
             if (InventoryManager.Instance != null)
             {
                 InventoryManager.Instance.RestoreFromSave(save.gold, save.scrapMetal, save.rerollScrolls);
+                InventoryManager.Instance.RestoreItems(save.itemIds, save.itemCounts);
+            }
+
+            if (QuestManager.Instance != null)
+            {
+                QuestManager.Instance.RestoreState(save.questIds, save.questStates, save.questProgress);
+            }
+
+            if (GameManager.Instance != null)
+            {
+                GameManager.Instance.RestoreCampaignProgress(save.defeatedBosses, save.clearedWings);
             }
 
             Debug.Log($"[SaveSystem] Game loaded successfully! Level: {save.currentLevel}");
@@ -178,6 +213,16 @@ namespace CastleOfTheD20.Core
                 save.rerollScrolls = Mathf.Max(save.rerollScrolls, 1);
                 save.characterClass = -1;
             }
+
+            // Version 1-2 saves have no v3 lists; JsonUtility leaves them null or empty
+            if (save.itemIds == null) save.itemIds = new List<string>();
+            if (save.itemCounts == null) save.itemCounts = new List<int>();
+            if (save.questIds == null) save.questIds = new List<string>();
+            if (save.questStates == null) save.questStates = new List<int>();
+            if (save.questProgress == null) save.questProgress = new List<int>();
+            if (save.defeatedBosses == null) save.defeatedBosses = new List<string>();
+            if (save.clearedWings == null) save.clearedWings = new List<int>();
+            if (save.sceneName == null) save.sceneName = "";
 
             return save;
         }

@@ -249,6 +249,45 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// Writes defeated bosses and cleared wings for the save file.
+        /// </summary>
+        public void CaptureCampaignProgress(List<string> bosses, List<int> clearedWings)
+        {
+            bosses.Clear();
+            bosses.AddRange(defeatedBosses);
+            clearedWings.Clear();
+            foreach (GameLocation location in clearedLocations)
+            {
+                clearedWings.Add((int)location);
+            }
+        }
+
+        /// <summary>
+        /// Restores defeated bosses and cleared wings from a save without re-firing defeat/victory events.
+        /// </summary>
+        public void RestoreCampaignProgress(IReadOnlyList<string> bosses, IReadOnlyList<int> clearedWings)
+        {
+            defeatedBosses.Clear();
+            clearedLocations.Clear();
+
+            if (bosses != null)
+            {
+                for (int i = 0; i < bosses.Count; i++)
+                {
+                    if (!string.IsNullOrWhiteSpace(bosses[i])) defeatedBosses.Add(bosses[i]);
+                }
+            }
+
+            if (clearedWings != null)
+            {
+                for (int i = 0; i < clearedWings.Count; i++)
+                {
+                    clearedLocations.Add((GameLocation)clearedWings[i]);
+                }
+            }
+        }
+
+        /// <summary>
         /// Records the defeat of a major boss and triggers game victory if it is the Gargoyle King.
         /// </summary>
         public void NotifyBossDefeated(string bossID)
