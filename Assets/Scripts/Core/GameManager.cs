@@ -63,6 +63,20 @@ namespace CastleOfTheD20.Core
     public class GameManager : MonoBehaviour
     {
         private static GameManager _instance;
+        private static bool s_isQuitting;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetQuitFlag()
+        {
+            s_isQuitting = false;
+            Application.quitting -= MarkQuitting;
+            Application.quitting += MarkQuitting;
+        }
+
+        private static void MarkQuitting()
+        {
+            s_isQuitting = true;
+        }
 
         public static GameManager Instance
         {
@@ -71,7 +85,8 @@ namespace CastleOfTheD20.Core
                 if (_instance == null)
                 {
                     _instance = FindAnyObjectByType<GameManager>();
-                    if (_instance == null)
+                    // Never spawn a new manager while the application is shutting down (OnDestroy callers)
+                    if (_instance == null && !s_isQuitting)
                     {
                         GameObject managersObj = GameObject.Find("Managers") ?? new GameObject("Managers");
                         _instance = managersObj.AddComponent<GameManager>();

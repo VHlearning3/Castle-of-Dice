@@ -77,12 +77,19 @@ namespace CastleOfTheD20.World
 
         #region Mouse Interaction
 
+        private static PlayerUnit s_cachedPlayer;
+
         protected virtual void OnMouseDown()
         {
             if (!isInteractable) return;
             if (!GameInput.GetLeftMouseButtonDown()) return;
 
-            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+            // Shared cache: one scene search per hero instance instead of one per click on every interactable
+            if (s_cachedPlayer == null)
+            {
+                s_cachedPlayer = FindAnyObjectByType<PlayerUnit>();
+            }
+            PlayerUnit player = s_cachedPlayer;
             if (player == null)
             {
                 Debug.LogWarning("[Interactable] No PlayerUnit found in scene to perform interaction.");

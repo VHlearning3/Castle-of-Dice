@@ -796,48 +796,7 @@ namespace CastleOfTheD20.UI
 
         private Button CreateMenuButton(Transform parent, string name, string label, Vector2 pos, Color color)
         {
-            GameObject btnObj = new GameObject(name);
-            btnObj.transform.SetParent(parent, false);
-            RectTransform rect = btnObj.AddComponent<RectTransform>();
-            rect.sizeDelta = new Vector2(240f, 44f);
-            rect.anchoredPosition = pos;
-
-            Image img = btnObj.AddComponent<Image>();
-            img.color = color;
-            img.raycastTarget = true;
-
-            Button btn = btnObj.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.interactable = true;
-            Navigation nav = btn.navigation;
-            nav.mode = Navigation.Mode.None;
-            btn.navigation = nav;
-
-            ColorBlock cb = btn.colors;
-            cb.normalColor = color;
-            cb.highlightedColor = color * 1.3f;
-            cb.pressedColor = color * 0.8f;
-            cb.selectedColor = color * 1.2f;
-            cb.disabledColor = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-            cb.colorMultiplier = 1f;
-            cb.fadeDuration = 0.1f;
-            btn.colors = cb;
-
-            GameObject textObj = new GameObject("Text");
-            textObj.transform.SetParent(btnObj.transform, false);
-            RectTransform textRect = textObj.AddComponent<RectTransform>();
-            textRect.anchorMin = Vector2.zero;
-            textRect.anchorMax = Vector2.one;
-            textRect.sizeDelta = Vector2.zero;
-            TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
-            tmp.text = label;
-            tmp.fontSize = 17f;
-            tmp.fontStyle = FontStyles.Bold;
-            tmp.alignment = TextAlignmentOptions.Center;
-            tmp.color = Color.white;
-            tmp.raycastTarget = false;
-
-            return btn;
+            return UIFactory.CreateTextButton(parent, name, label, pos, new Vector2(240f, 44f), color);
         }
 
         #endregion

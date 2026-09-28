@@ -86,3 +86,6 @@ crashlytics-build.properties
 
 # NotebookLM export (CastleOfDice/Export NotebookLM Context)
 CombinedProjectScripts.txt
+
+# unity-cli test run artifacts
+.unity/
