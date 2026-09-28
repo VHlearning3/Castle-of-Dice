@@ -111,14 +111,12 @@ namespace CastleOfTheD20.UI
 
         private void LoadThemeSpritesIfMissing()
         {
-#if UNITY_EDITOR
             if (panelDarkSprite == null)
-                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+                panelDarkSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             if (slotFrameSprite == null)
-                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+                slotFrameSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
             if (buttonNormalSprite == null)
-                buttonNormalSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
-#endif
+                buttonNormalSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
         }
 
         private void WireListeners()

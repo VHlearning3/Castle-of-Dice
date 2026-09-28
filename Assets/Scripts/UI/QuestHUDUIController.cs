@@ -566,16 +566,14 @@ namespace CastleOfTheD20.UI
 
         public void LoadThemeSpritesIfMissing()
         {
-#if UNITY_EDITOR
             if (panelDarkSprite == null)
             {
-                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+                panelDarkSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             }
             if (dividerGoldSprite == null)
             {
-                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+                dividerGoldSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
             }
-#endif
         }
 
         #endregion

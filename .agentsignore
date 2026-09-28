@@ -1,0 +1,8 @@
+_archive_docs/
+scratch/
+ProfilerCaptures/
+Logs/
+TestResults_E2E.*
+Library/
+Temp/
+obj/

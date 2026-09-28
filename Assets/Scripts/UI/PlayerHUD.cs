@@ -261,31 +261,31 @@ namespace CastleOfTheD20.UI
 
         public void LoadThemeSpritesIfMissing()
         {
-#if UNITY_EDITOR
             if (panelDarkSprite == null)
-                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+                panelDarkSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             if (slotFrameSprite == null)
-                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+                slotFrameSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
             if (barTrackSprite == null)
-                barTrackSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Bar_Track.png");
+                barTrackSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Bar_Track.png");
             if (barFillRubySprite == null)
-                barFillRubySprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Bar_Fill_Ruby.png");
+                barFillRubySprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Bar_Fill_Ruby.png");
             if (pillBadgeSprite == null)
-                pillBadgeSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Pill_Badge.png");
+                pillBadgeSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Pill_Badge.png");
             if (dividerGoldSprite == null)
-                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+                dividerGoldSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
             if (crestPlateSprite == null)
-                crestPlateSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Plate.png");
+                crestPlateSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Crest_Plate.png");
             if (crestWarriorSprite == null)
-                crestWarriorSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Warrior.png");
+                crestWarriorSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Crest_Warrior.png");
             if (crestMageSprite == null)
-                crestMageSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Mage.png");
+                crestMageSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Crest_Mage.png");
             if (crestRogueSprite == null)
-                crestRogueSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Crest_Rogue.png");
+                crestRogueSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Crest_Rogue.png");
 
             if (scrapOreSprite == null)
-                scrapOreSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
+                scrapOreSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
 
+#if UNITY_EDITOR
             if (healthPotionItem == null)
                 healthPotionItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset");
 #endif

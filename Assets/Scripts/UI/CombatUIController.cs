@@ -164,24 +164,22 @@ namespace CastleOfTheD20.UI
 
         public void LoadThemeSpritesIfMissing()
         {
-#if UNITY_EDITOR
             if (panelDarkSprite == null)
-                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+                panelDarkSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             if (slotFrameSprite == null)
-                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+                slotFrameSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
             if (dividerGoldSprite == null)
-                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+                dividerGoldSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
             if (buttonNormalSprite == null)
-                buttonNormalSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
+                buttonNormalSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
             if (buttonHoverSprite == null)
-                buttonHoverSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
+                buttonHoverSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
             if (buttonPressedSprite == null)
-                buttonPressedSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
+                buttonPressedSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
             if (hourglassIconSprite == null)
-                hourglassIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Hourglass.png");
+                hourglassIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_Hourglass.png");
             if (defaultAbilityIconSprite == null)
-                defaultAbilityIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Sword.png");
-#endif
+                defaultAbilityIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_Sword.png");
         }
 
         public void AutoLocateComponents()

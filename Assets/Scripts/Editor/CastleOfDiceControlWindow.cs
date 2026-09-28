@@ -45,6 +45,11 @@ namespace CastleOfTheD20.Editor
                 GenerateGameDataEditor.ResetAllGameAssetsMenu();
             }
 
+            if (GUILayout.Button("Generate / Refresh UI Theme Asset", GUILayout.Height(28)))
+            {
+                GenerateUIThemeEditor.GenerateUITheme();
+            }
+
             GUILayout.Space(15);
             GUILayout.Label("Active Scene Steps (marks scene dirty, save manually):", EditorStyles.boldLabel);
 
@@ -87,6 +92,10 @@ namespace CastleOfTheD20.Editor
             bool hasHeroCard = hasHUD && hud.transform.Find("Hero_Status_Card") != null;
             EditorGUILayout.LabelField("PlayerHUD Component:", hasHUD ? "[OK] Present" : "[MISSING]");
             EditorGUILayout.LabelField("Tabletop D&D Styling:", hasHeroCard ? "[OK] Configured & Styled" : "[MISSING] Needs Rebuilding");
+
+            var theme = Resources.Load<CastleOfTheD20.UI.UITheme>("UITheme");
+            bool hasTheme = theme != null && theme.panelDark != null;
+            EditorGUILayout.LabelField("UITheme Resource Asset:", hasTheme ? "[OK] Generated & Configured" : "[MISSING] Run Generate UI Theme");
 
             GUILayout.Space(12);
             if (GUILayout.Button("Refresh Status", GUILayout.Height(26)))

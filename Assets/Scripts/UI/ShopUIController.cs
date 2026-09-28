@@ -195,33 +195,33 @@ namespace CastleOfTheD20.UI
 
         public void LoadThemeSpritesIfMissing()
         {
-#if UNITY_EDITOR
             if (panelDarkSprite == null)
-                panelDarkSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
+                panelDarkSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             if (slotFrameSprite == null)
-                slotFrameSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
+                slotFrameSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
             if (dividerGoldSprite == null)
-                dividerGoldSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
+                dividerGoldSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png");
             if (pillBadgeSprite == null)
-                pillBadgeSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Pill_Badge.png");
+                pillBadgeSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Pill_Badge.png");
             if (buttonNormalSprite == null)
-                buttonNormalSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
+                buttonNormalSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Normal.png");
             if (buttonHoverSprite == null)
-                buttonHoverSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
+                buttonHoverSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Hover.png");
             if (buttonPressedSprite == null)
-                buttonPressedSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
+                buttonPressedSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png");
 
             if (coinSprite == null)
-                coinSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/ICONSART/CoinIcon.png");
+                coinSprite = UITheme.GetSprite("Assets/ICONSART/CoinIcon.png");
             if (potionSprite == null)
-                potionSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/ICONSART/HealthPotionIcon.png");
+                potionSprite = UITheme.GetSprite("Assets/ICONSART/HealthPotionIcon.png");
             if (swordIconSprite == null)
-                swordIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Sword.png");
+                swordIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_Sword.png");
             if (shieldIconSprite == null)
-                shieldIconSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_Shield.png");
+                shieldIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_Shield.png");
             if (scrapOreSprite == null)
-                scrapOreSprite = UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
+                scrapOreSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
 
+#if UNITY_EDITOR
             if (healthPotionItem == null)
                 healthPotionItem = UnityEditor.AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset");
 #endif

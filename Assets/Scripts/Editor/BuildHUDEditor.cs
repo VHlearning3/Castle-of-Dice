@@ -23,11 +23,12 @@ namespace CastleOfTheD20.Editor
         {
             var activeScene = EditorSceneManager.GetActiveScene();
 
-            // 1. Ensure Theme Sprites exist
+            // 1. Ensure Theme Sprites and UITheme asset exist
             if (!System.IO.File.Exists("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png"))
             {
                 GenerateFantasyUISpritesEditor.GenerateAllSprites();
             }
+            GenerateUIThemeEditor.GenerateUITheme();
 
             Sprite panelDark = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png");
             Sprite slotFrame = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/UI/Sprites/UI_Fantasy_Slot_Frame.png");
