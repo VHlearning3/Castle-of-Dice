@@ -1825,6 +1825,7 @@ MonoBehaviour:
   armorClass: 12
   movementRange: 3
   statusEffects: {fileID: 0}
+  unitAnimator: {fileID: 0}
   attackDamage: 4
   attackBonus: 2
   attackRange: 1
@@ -2191,6 +2192,7 @@ MonoBehaviour:
   armorClass: 12
   movementRange: 3
   statusEffects: {fileID: 0}
+  unitAnimator: {fileID: 0}
   attackDamage: 4
   attackBonus: 2
   attackRange: 1
@@ -3486,6 +3488,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.FloatingCombatText
   floatSpeed: 1.6
   lifetime: 1.4
+  initialPoolSize: 12
 --- !u!114 &1774730723
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1918,6 +1918,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.FloatingCombatText
   floatSpeed: 1.6
   lifetime: 1.4
+  initialPoolSize: 12
 --- !u!114 &611935452
 MonoBehaviour:
   m_ObjectHideFlags: 0

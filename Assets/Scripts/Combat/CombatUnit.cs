@@ -24,6 +24,7 @@ namespace CastleOfTheD20.Combat
 
         [Header("Components")]
         [SerializeField] protected StatusEffectController statusEffects;
+        [SerializeField] protected Animator unitAnimator;
 
         #endregion
 
@@ -84,6 +85,20 @@ namespace CastleOfTheD20.Combat
                 }
                 return statusEffects;
             }
+        }
+
+        /// <summary>Cached Animator component controlling unit animations.</summary>
+        public Animator UnitAnimator
+        {
+            get
+            {
+                if (unitAnimator == null)
+                {
+                    unitAnimator = GetComponentInChildren<Animator>();
+                }
+                return unitAnimator;
+            }
+            set => unitAnimator = value;
         }
 
         #endregion
@@ -205,7 +220,18 @@ namespace CastleOfTheD20.Combat
 
             if (currentHP <= 0)
             {
+                if (UnitAnimator != null)
+                {
+                    UnitAnimator.SetTrigger("Die");
+                }
                 Die();
+            }
+            else
+            {
+                if (UnitAnimator != null)
+                {
+                    UnitAnimator.SetTrigger("TakeHit");
+                }
             }
         }
 

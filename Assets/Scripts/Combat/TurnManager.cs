@@ -465,6 +465,13 @@ namespace CastleOfTheD20.Combat
             if (isVictory)
             {
                 AwardCombatVictoryScrap();
+                foreach (var unit in activeUnits)
+                {
+                    if (unit is PlayerUnit player && player.IsAlive && player.UnitAnimator != null)
+                    {
+                        player.UnitAnimator.SetTrigger("Victory");
+                    }
+                }
             }
             OnCombatEnded?.Invoke(isVictory);
         }

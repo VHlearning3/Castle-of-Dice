@@ -42,6 +42,10 @@ namespace CastleOfTheD20.World
         [Tooltip("Enables verbose runtime diagnostic logging for input and component states.")]
         [SerializeField] private bool debugLogging = true;
 
+        [Header("Animation")]
+        [Tooltip("Animator driving character movement locomotion.")]
+        [SerializeField] private Animator animator;
+
         #endregion
 
         #region Private State
@@ -125,6 +129,11 @@ namespace CastleOfTheD20.World
         private void Start()
         {
             EnsureCameraReference();
+
+            if (animator == null)
+            {
+                animator = GetComponentInChildren<Animator>();
+            }
 
             // Guarantee exploration input is active and not suspended
             GameInput.SetExplorationInputEnabled(true);
@@ -265,6 +274,7 @@ namespace CastleOfTheD20.World
                 }
 
                 IsMoving = true;
+                if (animator != null) animator.SetBool("IsMoving", true);
 
                 if (!wasMoving && debugLogging)
                 {
@@ -275,6 +285,7 @@ namespace CastleOfTheD20.World
             {
                 IsMoving = false;
                 CurrentMoveDirection = Vector3.zero;
+                if (animator != null) animator.SetBool("IsMoving", false);
 
                 if (wasMoving && debugLogging)
                 {

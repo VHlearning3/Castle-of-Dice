@@ -76,6 +76,19 @@ namespace CastleOfTheD20.Combat
             // Identify special named abilities by ID or fallback to standard profile
             string id = ability.AbilityID.ToLowerInvariant();
 
+            // Trigger animation on caster
+            if (caster.UnitAnimator != null)
+            {
+                if (ability.TargetType == AbilityTargetType.Self || id.Contains("cast") || id.Contains("spell") || id.Contains("fireball") || id.Contains("frost") || id.Contains("shield") || id.Contains("blink") || id.Contains("mana"))
+                {
+                    caster.UnitAnimator.SetTrigger("CastSpell");
+                }
+                else
+                {
+                    caster.UnitAnimator.SetTrigger("Attack");
+                }
+            }
+
             // --- Warrior Class Abilities ---
             if (id.Contains("shield_block"))
             {
