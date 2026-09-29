@@ -115,9 +115,9 @@ namespace CastleOfTheD20.Bosses
             }
         }
 
-        public override void ExecuteTurnAction(GridManager gridManager, AbilityExecutor abilityExecutor = null)
+        protected override void OnTurnActionFinished()
         {
-            base.ExecuteTurnAction(gridManager, abilityExecutor);
+            base.OnTurnActionFinished();
 
             // Decrement dialogue AC debuff after each boss action round
             roundsTracked++;

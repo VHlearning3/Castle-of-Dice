@@ -194,7 +194,9 @@ namespace CastleOfTheD20.World
                 }
 
                 // Stop the run cycle too, otherwise the knight keeps running through combat/dialogue
-                if (animator != null && animator.GetBool(IsMovingHash))
+                // (but not while the hero walks between combat grid tiles, which drives IsMoving itself)
+                bool walkingOnGrid = playerUnit != null && playerUnit.IsWalking;
+                if (!walkingOnGrid && animator != null && animator.GetBool(IsMovingHash))
                 {
                     animator.SetBool(IsMovingHash, false);
                 }

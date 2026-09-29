@@ -411,15 +411,31 @@ namespace CastleOfTheD20.Combat
         {
             yield return new WaitForSeconds(enemyTurnDelay);
 
+            // Let a hero who ended the turn mid-walk finish walking first
+            while (IsAnyUnitWalking()) yield return null;
+
             if (enemy != null && enemy.IsAlive && isCombatActive)
             {
                 enemy.ExecuteTurnAction(GridManager.Instance, AbilityExecutor.Instance);
+
+                // The enemy walks tile by tile and attacks when it arrives
+                while (enemy != null && enemy.IsWalking) yield return null;
             }
 
             yield return new WaitForSeconds(0.3f);
 
             // Conclude enemy turn
             EndActiveUnitTurn();
+        }
+
+        private bool IsAnyUnitWalking()
+        {
+            for (int i = 0; i < activeUnits.Count; i++)
+            {
+                CombatUnit unit = activeUnits[i];
+                if (unit != null && unit.IsWalking) return true;
+            }
+            return false;
         }
 
         /// <summary>
