@@ -253,6 +253,7 @@ namespace CastleOfTheD20.Bosses
                 decoyUnit.SetDisplayName(DecoyDisplayName);
             }
 
+            decoyUnit.DropsLoot = false; // illusions leave no gold behind
             decoyUnit.InitializeUnit();
             decoyUnit.MoveToTile(tile);
             activeDecoys.Add(decoyUnit);

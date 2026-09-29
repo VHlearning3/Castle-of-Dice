@@ -143,8 +143,9 @@ namespace CastleOfTheD20.World
                 if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(openSound, transform.position);
             }
 
-            // Distribute gold reward
-            if (goldReward > 0)
+            // Gold (and maybe a healing potion) pops out as collectible pickups; without a loot table it is paid directly
+            bool dropped = LootDrops.DropForChest(this, goldReward);
+            if (goldReward > 0 && !dropped)
             {
                 InventoryManager inventory = InventoryManager.Instance;
                 if (inventory != null)

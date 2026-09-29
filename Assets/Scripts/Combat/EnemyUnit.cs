@@ -212,6 +212,7 @@ namespace CastleOfTheD20.Combat
             }
 
             // Standard basic attack
+            PlayAttackAnimation();
             AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
             DiceResult hitCheck = DiceSystem.RollD20(attackBonus, target.ArmorClass, advantage);
 
@@ -230,6 +231,74 @@ namespace CastleOfTheD20.Combat
                 // Shield Wall (spec): the defender strikes back only when the attack misses
                 target.ResolveCounterAttack(this);
             }
+        }
+
+        #endregion
+
+        #region Death
+
+        private static readonly int AttackTriggerHash = Animator.StringToHash("Attack");
+        private static readonly int DieStateHash = Animator.StringToHash("Die");
+
+        /// <summary>Rigged enemies swing their attack clip as the D20 attack roll resolves.</summary>
+        protected void PlayAttackAnimation()
+        {
+            Animator animator = UnitAnimator;
+            if (animator != null && animator.isActiveAndEnabled && animator.runtimeAnimatorController != null)
+            {
+                animator.SetTrigger(AttackTriggerHash);
+            }
+        }
+
+        [Header("Death")]
+        [Tooltip("Seconds the death clip plays before a rigged enemy is removed from the battlefield.")]
+        [SerializeField] private float deathClipDuration = 2.2f;
+
+        [Tooltip("Drops collectible gold (and maybe a potion) on death. Off for illusions and village brawlers.")]
+        [SerializeField] private bool dropsLoot = true;
+
+        /// <summary>Whether this enemy drops coin / potion pickups when it dies.</summary>
+        public bool DropsLoot
+        {
+            get => dropsLoot;
+            set => dropsLoot = value;
+        }
+
+        /// <summary>Raised when a loot-dropping enemy dies in play (World.LootDrops spawns the pickups).</summary>
+        public static event Action<EnemyUnit> OnLootDropped;
+
+        public override void Die()
+        {
+            bool wasAlive = !isDead;
+            base.Die();
+            if (wasAlive && dropsLoot && Application.isPlaying) OnLootDropped?.Invoke(this);
+        }
+
+        /// <summary>
+        /// Rigged enemies with a Die clip stay visible while it plays; everyone else vanishes at once.
+        /// </summary>
+        protected override void HideOnDeath()
+        {
+            Animator animator = UnitAnimator;
+            bool hasDeathClip = animator != null && animator.isActiveAndEnabled
+                && animator.runtimeAnimatorController != null && animator.HasState(0, DieStateHash);
+
+            if (!hasDeathClip || !isActiveAndEnabled || !Application.isPlaying)
+            {
+                base.HideOnDeath();
+                return;
+            }
+
+            // The corpse must not block clicks or grid raycasts while it falls
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.enabled = false;
+            StartCoroutine(HideAfterDeathClip());
+        }
+
+        private System.Collections.IEnumerator HideAfterDeathClip()
+        {
+            yield return new WaitForSeconds(deathClipDuration);
+            base.HideOnDeath();
         }
 
         #endregion

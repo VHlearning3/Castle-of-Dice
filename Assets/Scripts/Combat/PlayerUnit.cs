@@ -225,6 +225,13 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
+            // Show Sir Roland, Elira or Corvo to match the class
+            if (characterClass != null)
+            {
+                HeroClassModels models = GetComponent<HeroClassModels>();
+                if (models != null) models.Apply(characterClass.ClassType);
+            }
+
             CaptureBaseline();
             ResetTurnFlags();
             base.InitializeUnit();

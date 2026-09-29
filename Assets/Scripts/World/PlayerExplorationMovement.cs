@@ -65,6 +65,13 @@ namespace CastleOfTheD20.World
         /// <summary>Whether the player is currently actively moving via input.</summary>
         public bool IsMoving { get; private set; }
 
+        /// <summary>Drives locomotion on a different model (the hero's class model was swapped).</summary>
+        public void SetAnimator(Animator newAnimator)
+        {
+            animator = newAnimator;
+            if (animator != null) animator.SetBool(IsMovingHash, IsMoving);
+        }
+
         /// <summary>Current normalized world-space horizontal movement direction.</summary>
         public Vector3 CurrentMoveDirection { get; private set; } = Vector3.zero;
 
