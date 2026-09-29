@@ -14,13 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: warrior_iron_will
   abilityName: Iron Will
-  description: Channel inner fortitude to immediately restore 30% of maximum hit
-    points.
+  description: Restore 30% of your maximum hit points and shake off poison, frostbite and blindness.
   abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000013, type: 3}
   targetType: 2
   range: 0
   areaOfEffectRadius: 0
-  baseValue: 10
+  baseValue: 0
+  damageDiceCount: 0
+  damageDiceSides: 0
+  addsAttributeToDamage: 0
   requiresCheck: 0
   appliedEffect: 0
   effectDurationTurns: 0

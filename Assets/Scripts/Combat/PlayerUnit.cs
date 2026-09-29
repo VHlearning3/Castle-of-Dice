@@ -321,7 +321,10 @@ namespace CastleOfTheD20.Combat
                 original.AppliedEffect,
                 original.EffectDurationTurns,
                 original.AnimationTriggerName,
-                original.AbilityIcon
+                original.AbilityIcon,
+                original.DamageDiceCount,
+                original.DamageDiceSides,
+                original.AddsAttributeToDamage
             );
 
             activeAbilities[slotIndex] = rank2;

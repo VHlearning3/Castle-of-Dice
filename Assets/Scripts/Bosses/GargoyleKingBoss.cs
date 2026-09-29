@@ -163,9 +163,10 @@ namespace CastleOfTheD20.Bosses
             else
             {
                 Debug.Log($"[GargoyleKing] The Gargoyle King's strike crashes into the stone floor, missing {target.UnitName}!");
-            }
 
-            target.ResolveCounterAttack(this);
+                // Shield Wall (spec): the defender strikes back only when the attack misses
+                target.ResolveCounterAttack(this);
+            }
         }
 
         #endregion

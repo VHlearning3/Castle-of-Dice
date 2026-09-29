@@ -277,7 +277,7 @@ namespace CastleOfTheD20.UI
                         {
                             abilitySlotTexts[i].text = isAlreadyRank2
                                 ? $"{ab.AbilityName}\n<color=#a1a1aa>(Already Rank 2)</color>"
-                                : $"<b>{ab.AbilityName}</b>\nBase Power: {ab.BaseValue} -> <color=#4ade80><b>{ab.BaseValue + 3} (Rank 2)</b></color>";
+                                : $"<b>{ab.AbilityName}</b>\n<color=#4ade80><b>Potency +3 (Rank 2)</b></color>";
                         }
                     }
                     else

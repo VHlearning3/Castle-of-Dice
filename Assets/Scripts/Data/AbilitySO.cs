@@ -44,6 +44,17 @@ namespace CastleOfTheD20.Data
         [Tooltip("Base numeric potency of the ability (e.g., base damage dealt, health restored, or shield charges).")]
         [SerializeField] private int baseValue = 5;
 
+        [Tooltip("Damage dice rolled on a hit, e.g. 1 for \"1d8\". 0 = the ability deals only its flat Base Value.")]
+        [Min(0)]
+        [SerializeField] private int damageDiceCount = 0;
+
+        [Tooltip("Sides of each damage die, e.g. 8 for \"1d8\".")]
+        [Min(0)]
+        [SerializeField] private int damageDiceSides = 0;
+
+        [Tooltip("Adds the caster's primary attribute bonus (STR/INT/AGI) to damage, as in \"1d8 + 3\".")]
+        [SerializeField] private bool addsAttributeToDamage = false;
+
         [Tooltip("If true, requires a D20 attack/spell roll (d20 + attribute bonus) against the target's Armor Class (AC).")]
         [SerializeField] private bool requiresCheck = true;
 
@@ -86,6 +97,20 @@ namespace CastleOfTheD20.Data
         /// <summary>Base damage, heal, or shield value.</summary>
         public int BaseValue => baseValue;
 
+        /// <summary>Number of damage dice rolled on a hit (0 = flat damage only).</summary>
+        public int DamageDiceCount => damageDiceCount;
+
+        /// <summary>Sides of each damage die.</summary>
+        public int DamageDiceSides => damageDiceSides;
+
+        /// <summary>Whether the caster's primary attribute bonus is added to damage.</summary>
+        public bool AddsAttributeToDamage => addsAttributeToDamage;
+
+        /// <summary>Whether a hit with this ability deals any damage.</summary>
+        public bool DealsDamage => baseValue > 0 || HasDamageDice;
+
+        private bool HasDamageDice => damageDiceCount > 0 && damageDiceSides > 0;
+
         /// <summary>Whether an attack roll vs target AC is required.</summary>
         public bool RequiresCheck => requiresCheck;
 
@@ -117,7 +142,10 @@ namespace CastleOfTheD20.Data
             StatusEffectType effect,
             int duration,
             string animTrigger,
-            Sprite icon = null)
+            Sprite icon = null,
+            int diceCount = 0,
+            int diceSides = 0,
+            bool addAttribute = false)
         {
             abilityID = id;
             abilityName = name;
@@ -131,6 +159,44 @@ namespace CastleOfTheD20.Data
             effectDurationTurns = duration;
             animationTriggerName = animTrigger;
             abilityIcon = icon;
+            damageDiceCount = Mathf.Max(0, diceCount);
+            damageDiceSides = Mathf.Max(0, diceSides);
+            addsAttributeToDamage = addAttribute;
+        }
+
+        /// <summary>
+        /// Rolls this ability's damage: damage dice + Base Value (+ attribute bonus when the ability uses it)
+        /// + any flat bonus such as the blacksmith's weapon upgrade. Criticals are doubled by the caller.
+        /// </summary>
+        public int RollDamage(int attributeBonus, int flatBonus = 0)
+        {
+            int total = baseValue + flatBonus;
+            if (HasDamageDice)
+            {
+                total += DiceSystem.RollDamage(damageDiceCount, damageDiceSides);
+            }
+            if (addsAttributeToDamage)
+            {
+                total += attributeBonus;
+            }
+            return Mathf.Max(0, total);
+        }
+
+        /// <summary>
+        /// Human-readable damage formula for tooltips, e.g. "1d8 + 4" for a +3 attribute and +1 weapon bonus.
+        /// </summary>
+        public string GetDamageFormula(int attributeBonus, int flatBonus = 0)
+        {
+            int flat = baseValue + flatBonus + (addsAttributeToDamage ? attributeBonus : 0);
+            if (!HasDamageDice)
+            {
+                return flat.ToString();
+            }
+
+            string dice = damageDiceCount + "d" + damageDiceSides;
+            if (flat > 0) return dice + " + " + flat;
+            if (flat < 0) return dice + " - " + (-flat);
+            return dice;
         }
 
         #endregion

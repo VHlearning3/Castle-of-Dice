@@ -202,9 +202,10 @@ namespace CastleOfTheD20.Combat
             else
             {
                 Debug.Log($"[EnemyUnit] {unitName}'s attack missed {target.UnitName}!");
-            }
 
-            target.ResolveCounterAttack(this);
+                // Shield Wall (spec): the defender strikes back only when the attack misses
+                target.ResolveCounterAttack(this);
+            }
         }
 
         #endregion

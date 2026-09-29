@@ -14,13 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: rogue_smoke_bomb
   abilityName: Smoke Bomb
-  description: Toss a dense smoke canister, blinding all targets in a 3x3 area for
-    1 turn.
+  description: Toss a smoke canister up to 3 tiles, blinding everything in a 3x3 area for 1 turn (Disadvantage on attacks).
   abilityIcon: {fileID: 21300000, guid: a11a11a110010001000100000000001b, type: 3}
   targetType: 1
-  range: 4
+  range: 3
   areaOfEffectRadius: 1
   baseValue: 0
+  damageDiceCount: 0
+  damageDiceSides: 0
+  addsAttributeToDamage: 0
   requiresCheck: 0
   appliedEffect: 3
   effectDurationTurns: 1
