@@ -58,6 +58,13 @@ namespace CastleOfTheD20.UI
         [Tooltip("Width and height of the die in canvas pixels.")]
         [SerializeField] private float dieSize = 160f;
 
+        [Header("Placement")]
+        [Tooltip("Dock the roll to the left edge of the screen so it doesn't cover the combat animations.")]
+        [SerializeField] private bool dockToLeftEdge = true;
+
+        [Tooltip("Show the solid coloured panel behind the roll. Off: only the die and outlined text are drawn, and the outcome colour tints the verdict text instead.")]
+        [SerializeField] private bool showPanelBackground = false;
+
         [Tooltip("Optional button allowing the player to tap/click to dismiss early.")]
         [SerializeField] private Button dismissButton;
 
@@ -147,6 +154,7 @@ namespace CastleOfTheD20.UI
 
             AutoLocateComponents();
             ClampToMaxSequence(ref rollAnimationDuration, ref autoDismissDelay);
+            ApplyLeftEdgeLayout();
             EnsureDieGraphic();
 
             // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
@@ -367,6 +375,88 @@ namespace CastleOfTheD20.UI
         {
             rollDuration = Mathf.Clamp(rollDuration, 0.3f, MaxRollSequenceSeconds);
             holdDuration = Mathf.Clamp(holdDuration, 0f, MaxRollSequenceSeconds - rollDuration);
+        }
+
+        /// <summary>
+        /// Moves the roll into a compact column at the left edge of the screen (below the hero card,
+        /// above the action bar) and drops the solid panel so the centre of the battlefield stays visible.
+        /// </summary>
+        private void ApplyLeftEdgeLayout()
+        {
+            if (diceModalPanel == null) return;
+
+            if (!showPanelBackground)
+            {
+                Image background = diceModalPanel.GetComponent<Image>();
+                if (background != null) background.enabled = false;
+                if (glowBorderImage != null) glowBorderImage.enabled = false;
+
+                AddReadableOutline(headerText, UITheme.CreamText);
+                AddReadableOutline(formulaText, UITheme.SoftText);
+                AddReadableOutline(outcomeText, UITheme.CreamText);
+                AddReadableOutline(rollValueText, RollTextColor);
+            }
+
+            if (!dockToLeftEdge) return;
+
+            RectTransform panel = diceModalPanel.transform as RectTransform;
+            if (panel == null) return;
+
+            panel.anchorMin = new Vector2(0f, 0.5f);
+            panel.anchorMax = new Vector2(0f, 0.5f);
+            panel.pivot = new Vector2(0f, 0.5f);
+            panel.anchoredPosition = new Vector2(24f, 20f);
+            panel.sizeDelta = new Vector2(320f, 440f);
+
+            PlaceInColumn(headerText, 185f, 300f, 44f);
+            PlaceInColumn(formulaText, 140f, 300f, 48f);
+            PlaceInColumn(rollValueText, 30f, 180f, 120f);
+            PlaceInColumn(outcomeText, -85f, 300f, 56f);
+
+            // Continue / Rune of Reroll buttons stack at the bottom of the column
+            Button[] buttons = diceModalPanel.GetComponentsInChildren<Button>(true);
+            for (int i = 0; i < buttons.Length; i++)
+            {
+                RectTransform rt = buttons[i].transform as RectTransform;
+                if (rt == null || rt.parent != panel) continue;
+                rt.anchorMin = new Vector2(0.5f, 0f);
+                rt.anchorMax = new Vector2(0.5f, 0f);
+                rt.pivot = new Vector2(0.5f, 0f);
+                rt.anchoredPosition = new Vector2(0f, 16f + i * 50f);
+                rt.sizeDelta = new Vector2(260f, 42f);
+            }
+        }
+
+        private static void PlaceInColumn(TMP_Text text, float y, float width, float height)
+        {
+            if (text == null) return;
+            RectTransform rt = text.rectTransform;
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = new Vector2(0f, y);
+            rt.sizeDelta = new Vector2(width, height);
+        }
+
+        // Without the panel the text sits on the 3D scene, so it gets a dark outline (one material instance, set once).
+        private static void AddReadableOutline(TMP_Text text, Color color)
+        {
+            if (text == null) return;
+            text.color = color;
+            text.outlineWidth = 0.22f;
+            text.outlineColor = new Color32(0, 0, 0, 255);
+        }
+
+        private void SetOutcomeColor(Color color)
+        {
+            if (showPanelBackground)
+            {
+                if (glowBorderImage != null) glowBorderImage.color = color;
+            }
+            else if (outcomeText != null)
+            {
+                outcomeText.color = color;
+            }
         }
 
         /// <summary>
@@ -605,7 +695,7 @@ namespace CastleOfTheD20.UI
             }
 
             if (outcomeText != null) outcomeText.text = "";
-            if (glowBorderImage != null) glowBorderImage.color = normalColor;
+            SetOutcomeColor(normalColor);
 
             yield return TumbleDieRoutine();
 
@@ -636,22 +726,22 @@ namespace CastleOfTheD20.UI
             if (result.isCriticalSuccess)
             {
                 if (outcomeText != null) outcomeText.text = "NATURAL 20 - CRITICAL SUCCESS!";
-                if (glowBorderImage != null) glowBorderImage.color = criticalSuccessColor;
+                SetOutcomeColor(criticalSuccessColor);
             }
             else if (result.isCriticalFail)
             {
                 if (outcomeText != null) outcomeText.text = "NATURAL 1 - CRITICAL FAILURE!";
-                if (glowBorderImage != null) glowBorderImage.color = criticalFailColor;
+                SetOutcomeColor(criticalFailColor);
             }
             else if (result.isSuccess)
             {
                 if (outcomeText != null) outcomeText.text = "SUCCESS!";
-                if (glowBorderImage != null) glowBorderImage.color = standardSuccessColor;
+                SetOutcomeColor(standardSuccessColor);
             }
             else
             {
                 if (outcomeText != null) outcomeText.text = "FAILURE";
-                if (glowBorderImage != null) glowBorderImage.color = standardFailColor;
+                SetOutcomeColor(standardFailColor);
             }
 
             // Landing punch: number pops, die flashes (counts toward the hold time)
