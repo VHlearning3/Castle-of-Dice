@@ -1358,7 +1358,7 @@ namespace CastleOfTheD20.UI
         private void OnAbilitySlotClicked(int slotIndex)
         {
             LocatePlayer();
-            if (activePlayer == null || activePlayer.HasActedThisTurn) return;
+            if (activePlayer == null || activePlayer.HasActedThisTurn || activePlayer.IsWalking) return;
             activePlayer.EnsureTilePosition();
             moveModeActive = false;
 
@@ -1447,6 +1447,9 @@ namespace CastleOfTheD20.UI
 
             LocatePlayer();
             if (activePlayer == null) return;
+
+            // Ignore clicks until the hero has finished walking to their tile
+            if (activePlayer.IsWalking) return;
             activePlayer.EnsureTilePosition();
 
             // Find if there is an occupying unit, with fallback across active combatants
@@ -1495,8 +1498,7 @@ namespace CastleOfTheD20.UI
                 var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
                 if (reachable.Contains(tile))
                 {
-                    activePlayer.FaceTowards(tile.transform.position);
-                    activePlayer.MoveToTile(tile);
+                    activePlayer.WalkToTile(tile);
                     activePlayer.HasMovedThisTurn = true;
                     moveModeActive = false;
                     RefreshAbilityBar();
@@ -1587,15 +1589,24 @@ namespace CastleOfTheD20.UI
                 GridTile bestTile = grid.FindBestReachableTileToTarget(casterPos, activePlayer.MovementRange, targetPos, ability.Range);
                 if (bestTile != null && bestTile != activePlayer.CurrentTile)
                 {
-                    activePlayer.MoveToTile(bestTile);
-                    activePlayer.HasMovedThisTurn = true;
-                    LogCombatMessage($"{activePlayer.UnitName} moved to ({bestTile.GridPosition.x}, {bestTile.GridPosition.y}) to use {ability.AbilityName}.");
-
-                    // Immediately execute the ability from the new position
-                    bool success = activePlayer.UseAbility(slotIndex, targetPos, AbilityExecutor.Instance);
+                    PlayerUnit walker = activePlayer;
+                    walker.WalkToTile(bestTile);
+                    walker.HasMovedThisTurn = true;
+                    LogCombatMessage($"{walker.UnitName} moved to ({bestTile.GridPosition.x}, {bestTile.GridPosition.y}) to use {ability.AbilityName}.");
                     selectedAbilitySlot = -1;
                     RefreshAbilityBar();
                     UpdateMovementHighlights();
+
+                    // Use the ability from the new position once the hero gets there
+                    walker.WhenWalkFinished(() =>
+                    {
+                        if (walker == null || !walker.IsAlive) return;
+                        if (TurnManager.Instance != null && TurnManager.Instance.CurrentState != TurnState.PlayerTurn) return;
+
+                        walker.UseAbility(slotIndex, targetPos, AbilityExecutor.Instance);
+                        RefreshAbilityBar();
+                        UpdateMovementHighlights();
+                    });
                     return;
                 }
                 else

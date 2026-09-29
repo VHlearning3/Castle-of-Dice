@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
 
@@ -26,6 +28,12 @@ namespace CastleOfTheD20.Combat
         [SerializeField] protected StatusEffectController statusEffects;
         [SerializeField] protected Animator unitAnimator;
 
+        [Header("Grid Walking")]
+        [Tooltip("World units per second while walking tile by tile on the combat grid.")]
+        [SerializeField] protected float gridWalkSpeed = 4.0f;
+        [Tooltip("Degrees per second the unit turns toward the next tile while walking.")]
+        [SerializeField] protected float gridWalkTurnSpeed = 720f;
+
         #endregion
 
         #region Protected / Private State
@@ -33,6 +41,12 @@ namespace CastleOfTheD20.Combat
         protected Vector2Int gridPosition;
         protected GridTile currentTile;
         protected bool isDead = false;
+
+        private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
+        private readonly List<Vector3> walkWaypoints = new List<Vector3>(8);
+        private Coroutine walkRoutine;
+        private Action walkArrivedCallback;
+        private bool walkDisabledCharacterController;
 
         #endregion
 
@@ -70,6 +84,9 @@ namespace CastleOfTheD20.Combat
 
         /// <summary>Reference to the GridTile currently occupied by this unit.</summary>
         public GridTile CurrentTile => currentTile;
+
+        /// <summary>True while the unit is visibly walking along the grid toward its (already occupied) tile.</summary>
+        public bool IsWalking => walkRoutine != null;
 
         /// <summary>Whether the unit is alive and able to participate in combat.</summary>
         public bool IsAlive => !isDead && currentHP > 0;
@@ -133,6 +150,19 @@ namespace CastleOfTheD20.Combat
             InitializeUnit();
         }
 
+        protected virtual void OnDisable()
+        {
+            // A unit hidden or knocked out mid-walk lands on its tile instead of freezing between tiles
+            if (walkRoutine != null)
+            {
+                walkRoutine = null;
+                walkArrivedCallback = null;
+                SetWalkAnimation(false);
+                RestoreWalkCharacterController();
+                SnapToTile(currentTile);
+            }
+        }
+
         #endregion
 
         #region Combat Lifecycle
@@ -175,6 +205,9 @@ namespace CastleOfTheD20.Combat
             // Do not snap across different floor elevations (e.g. surface village at Y=1 vs cellar at Y=-15)
             float gridY = GridManager.Instance.transform.position.y;
             if (Mathf.Abs(transform.position.y - gridY) > 3.5f) return;
+
+            // Mid-walk the transform lags behind the tile the unit already occupies
+            if (IsWalking) return;
 
             Vector2Int currentPosOnGrid = GridManager.Instance.GetGridPosition(transform.position);
             if (currentTile == null || !currentTile.gameObject.activeInHierarchy || gridPosition != currentPosOnGrid)
@@ -325,6 +358,8 @@ namespace CastleOfTheD20.Combat
         {
             if (tile == null) return;
 
+            StopWalking();
+
             // Release previous tile
             if (currentTile != null && currentTile.OccupyingUnit == this)
             {
@@ -338,36 +373,189 @@ namespace CastleOfTheD20.Combat
             currentTile.IsOccupied = true;
             gridPosition = tile.GridPosition;
 
-            // Update physical transform safely if CharacterController is present
+            SnapToTile(tile);
+        }
+
+        /// <summary>
+        /// Occupies <paramref name="tile"/> right away (so game logic sees the move instantly) and then
+        /// walks there tile by tile with the IsMoving animation, instead of teleporting.
+        /// <paramref name="onArrived"/> runs once the unit reaches the tile; outside Play Mode the unit
+        /// snaps and the callback runs immediately.
+        /// </summary>
+        public virtual void WalkToTile(GridTile tile, Action onArrived = null)
+        {
+            if (tile == null) return;
+
+            Vector3 startWorldPos = transform.position;
+            Vector2Int startGridPos = gridPosition;
+            GridManager grid = GridManager.Instance;
+
+            // Plan the route before occupancy changes, while the start tile is still ours
+            List<GridTile> path = grid != null ? grid.FindPath(startGridPos, tile.GridPosition) : null;
+
+            MoveToTile(tile);
+
+            if (!Application.isPlaying || !isActiveAndEnabled || grid == null)
+            {
+                onArrived?.Invoke();
+                return;
+            }
+
+            // MoveToTile placed us at the standing height for the destination; keep that height offset on every waypoint
+            Vector3 finalWorldPos = transform.position;
+            float standingOffsetY = finalWorldPos.y - grid.GetWorldPosition(tile.GridPosition).y;
+
+            walkWaypoints.Clear();
+            if (path != null)
+            {
+                for (int i = 0; i < path.Count - 1; i++)
+                {
+                    if (path[i] == null) continue;
+                    Vector3 waypoint = grid.GetWorldPosition(path[i].GridPosition);
+                    waypoint.y += standingOffsetY;
+                    walkWaypoints.Add(waypoint);
+                }
+            }
+            walkWaypoints.Add(finalWorldPos);
+
+            SetTransformPosition(startWorldPos);
+            walkArrivedCallback = onArrived;
+            walkRoutine = StartCoroutine(WalkAlongWaypoints());
+        }
+
+        private IEnumerator WalkAlongWaypoints()
+        {
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null && cc.enabled)
+            {
+                cc.enabled = false;
+                walkDisabledCharacterController = true;
+            }
+
+            SetWalkAnimation(true);
+
+            for (int i = 0; i < walkWaypoints.Count; i++)
+            {
+                Vector3 waypoint = walkWaypoints[i];
+                while (true)
+                {
+                    Vector3 toWaypoint = waypoint - transform.position;
+                    toWaypoint.y = 0f;
+                    if (toWaypoint.sqrMagnitude > 0.0001f)
+                    {
+                        Quaternion look = Quaternion.LookRotation(toWaypoint.normalized, Vector3.up);
+                        transform.rotation = Quaternion.RotateTowards(transform.rotation, look, gridWalkTurnSpeed * Time.deltaTime);
+                    }
+
+                    transform.position = Vector3.MoveTowards(transform.position, waypoint, gridWalkSpeed * Time.deltaTime);
+                    if ((transform.position - waypoint).sqrMagnitude < 0.0001f) break;
+                    yield return null;
+                }
+            }
+
+            SetWalkAnimation(false);
+            Physics.SyncTransforms();
+            RestoreWalkCharacterController();
+
+            walkRoutine = null;
+            Action arrived = walkArrivedCallback;
+            walkArrivedCallback = null;
+            arrived?.Invoke();
+        }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> when the current walk ends, or right away if the unit is not walking.
+        /// Dropped if the walk is cancelled.
+        /// </summary>
+        public void WhenWalkFinished(Action action)
+        {
+            if (action == null) return;
+            if (walkRoutine == null)
+            {
+                action();
+                return;
+            }
+            walkArrivedCallback += action;
+        }
+
+        /// <summary>Cancels an in-progress walk and lands the unit on the tile it already occupies.</summary>
+        public void StopWalking()
+        {
+            if (walkRoutine == null) return;
+
+            StopCoroutine(walkRoutine);
+            walkRoutine = null;
+            walkArrivedCallback = null;
+            SetWalkAnimation(false);
+            RestoreWalkCharacterController();
+        }
+
+        private void RestoreWalkCharacterController()
+        {
+            if (!walkDisabledCharacterController) return;
+            walkDisabledCharacterController = false;
+
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null) cc.enabled = true;
+        }
+
+        private void SetWalkAnimation(bool moving)
+        {
+            Animator animator = UnitAnimator;
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+
+            AnimatorControllerParameter[] parameters = animator.parameters;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].nameHash == IsMovingHash && parameters[i].type == AnimatorControllerParameterType.Bool)
+                {
+                    animator.SetBool(IsMovingHash, moving);
+                    return;
+                }
+            }
+        }
+
+        /// <summary>Places the unit's transform standing on top of <paramref name="tile"/>.</summary>
+        private void SnapToTile(GridTile tile)
+        {
+            if (tile == null) return;
+
+            Vector3 targetWorldPos = GridManager.Instance != null
+                ? GridManager.Instance.GetWorldPosition(tile.GridPosition)
+                : tile.transform.position;
+
+            // Adjust vertical position so the unit stands cleanly on top of the tile surface
+            CharacterController cc = GetComponent<CharacterController>();
+            if (cc != null)
+            {
+                float bottomOffset = (cc.height * 0.5f) - cc.center.y;
+                if (bottomOffset > 0f)
+                {
+                    targetWorldPos.y += bottomOffset;
+                }
+            }
+            else
+            {
+                Collider col = GetComponent<Collider>();
+                if (col != null)
+                {
+                    targetWorldPos.y += col.bounds.extents.y;
+                }
+            }
+
+            SetTransformPosition(targetWorldPos);
+        }
+
+        /// <summary>Moves the transform safely even when a CharacterController is present.</summary>
+        private void SetTransformPosition(Vector3 worldPos)
+        {
             CharacterController cc = GetComponent<CharacterController>();
             bool ccWasEnabled = cc != null && cc.enabled;
             if (ccWasEnabled) cc.enabled = false;
 
             try
             {
-                Vector3 targetWorldPos = GridManager.Instance != null
-                    ? GridManager.Instance.GetWorldPosition(gridPosition)
-                    : tile.transform.position;
-
-                // Adjust vertical position so the unit stands cleanly on top of the tile surface
-                if (cc != null)
-                {
-                    float bottomOffset = (cc.height * 0.5f) - cc.center.y;
-                    if (bottomOffset > 0f)
-                    {
-                        targetWorldPos.y += bottomOffset;
-                    }
-                }
-                else
-                {
-                    Collider col = GetComponent<Collider>();
-                    if (col != null)
-                    {
-                        targetWorldPos.y += col.bounds.extents.y;
-                    }
-                }
-
-                transform.position = targetWorldPos;
+                transform.position = worldPos;
                 Physics.SyncTransforms();
             }
             finally

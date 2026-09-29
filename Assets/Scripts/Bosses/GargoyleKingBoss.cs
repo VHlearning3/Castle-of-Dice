@@ -133,8 +133,13 @@ namespace CastleOfTheD20.Bosses
             ExecuteGroundStomp(gridManager);
 
             base.ExecuteTurnAction(gridManager, abilityExecutor);
+        }
 
-            // Decrement intimidation debuff countdown
+        protected override void OnTurnActionFinished()
+        {
+            base.OnTurnActionFinished();
+
+            // Decrement intimidation debuff countdown (after the attack, which may walk first)
             if (remainingIntimidationTurns > 0)
             {
                 remainingIntimidationTurns--;

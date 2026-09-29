@@ -75,12 +75,17 @@ namespace CastleOfTheD20.Combat
         /// <summary>
         /// Executes the enemy's automated tactical turn:
         /// 1. Scans battlefield for closest living PlayerUnit.
-        /// 2. If out of range, traverses grid towards the target using BFS pathfinding.
-        /// 3. If within attack range, executes a D20 attack roll against the target's Armor Class.
+        /// 2. If out of range, walks along the grid towards the target using BFS pathfinding.
+        /// 3. Once the walk finishes, if within attack range, executes a D20 attack roll against the target's Armor Class.
+        /// In Play Mode the attack waits for the walk (<see cref="CombatUnit.IsWalking"/>); callers wait on that too.
         /// </summary>
         public virtual void ExecuteTurnAction(GridManager gridManager, AbilityExecutor abilityExecutor = null)
         {
-            if (!IsAlive) return;
+            if (!IsAlive)
+            {
+                OnTurnActionFinished();
+                return;
+            }
 
             if (gridManager == null)
             {
@@ -90,6 +95,7 @@ namespace CastleOfTheD20.Combat
             if (gridManager == null)
             {
                 Debug.LogWarning($"[EnemyUnit] {unitName} cannot act: GridManager not found.");
+                OnTurnActionFinished();
                 return;
             }
 
@@ -98,25 +104,43 @@ namespace CastleOfTheD20.Combat
             if (target == null || !target.IsAlive)
             {
                 Debug.Log($"[EnemyUnit] {unitName} found no valid player target.");
+                OnTurnActionFinished();
                 return;
             }
 
             int distance = gridManager.GetDistance(gridPosition, target.GridPosition);
 
-            // 2. If not within attack range, move along path
+            // 2. If not within attack range, walk along path
             if (distance > attackRange)
             {
                 MoveTowardsTarget(target.GridPosition, gridManager);
-                distance = gridManager.GetDistance(gridPosition, target.GridPosition);
             }
 
-            FaceTowards(target.transform.position);
+            // 3. Attack once the unit has arrived (immediately when it did not walk)
+            WhenWalkFinished(() => FinishTurnAction(target, gridManager, abilityExecutor));
+        }
 
-            // 3. If now in range, execute attack
-            if (distance <= attackRange)
+        private void FinishTurnAction(PlayerUnit target, GridManager gridManager, AbilityExecutor abilityExecutor)
+        {
+            if (IsAlive && target != null && target.IsAlive)
             {
-                PerformAttack(target, abilityExecutor);
+                FaceTowards(target.transform.position);
+
+                if (gridManager.GetDistance(gridPosition, target.GridPosition) <= attackRange)
+                {
+                    PerformAttack(target, abilityExecutor);
+                }
             }
+
+            OnTurnActionFinished();
+        }
+
+        /// <summary>
+        /// Runs at the end of this enemy's turn action, after any walk and attack have resolved.
+        /// Bosses tick their per-round countdowns here.
+        /// </summary>
+        protected virtual void OnTurnActionFinished()
+        {
         }
 
         /// <summary>
@@ -168,8 +192,8 @@ namespace CastleOfTheD20.Combat
 
             if (destinationTile != null && destinationTile != currentTile)
             {
-                Debug.Log($"[EnemyUnit] {unitName} moved from {gridPosition} to {destinationTile.GridPosition}.");
-                MoveToTile(destinationTile);
+                Debug.Log($"[EnemyUnit] {unitName} walks from {gridPosition} to {destinationTile.GridPosition}.");
+                WalkToTile(destinationTile);
             }
         }
 
