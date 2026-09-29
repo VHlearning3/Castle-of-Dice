@@ -31,6 +31,40 @@ namespace CastleOfTheD20.World
         [Tooltip("Starting dialogue node triggered when the player interacts with this NPC.")]
         [SerializeField] private DialogueNodeSO startingDialogueNode;
 
+        [Header("Brawl")]
+        [Tooltip("If checked, this NPC's dialogue offers a [Fight] choice that starts combat on the spot. Only offered in the starting village.")]
+        [SerializeField] private bool offerFightOption = true;
+
+        [Tooltip("Hit points the NPC fights with.")]
+        [SerializeField] private int brawlMaxHP = 16;
+
+        [Tooltip("Armor Class the NPC fights with.")]
+        [SerializeField] private int brawlArmorClass = 11;
+
+        [Tooltip("Bonus added to the NPC's D20 attack rolls.")]
+        [SerializeField] private int brawlAttackBonus = 2;
+
+        [Tooltip("Damage dealt by the NPC's punches on a hit.")]
+        [SerializeField] private int brawlDamage = 3;
+
+        #endregion
+
+        #region Constants
+
+        /// <summary>Scene of the starting village, the only place villagers can be fought.</summary>
+        public const string StartingVillageSceneName = "Zone_1_VillageAndCellar";
+
+        /// <summary>Action tag carried by the [Fight] dialogue choice.</summary>
+        public const string FightActionTag = "[ACTION_START_FIGHT]";
+
+        #endregion
+
+        #region Private State
+
+        private DialogueOption fightOption;
+        private PlayerUnit conversationPlayer;
+        private bool isListeningForFight;
+
         #endregion
 
         #region Public Properties
@@ -58,6 +92,28 @@ namespace CastleOfTheD20.World
             get => startingDialogueNode;
             set => startingDialogueNode = value;
         }
+
+        /// <summary>Whether this NPC's dialogue offers the [Fight] choice.</summary>
+        public bool OfferFightOption
+        {
+            get => offerFightOption;
+            set => offerFightOption = value;
+        }
+
+        /// <summary>Whether the [Fight] choice is shown right now (enabled and standing in the starting village).</summary>
+        public bool OffersFight => CanOfferFight(offerFightOption, gameObject.scene.name);
+
+        /// <summary>Hit points the NPC fights with.</summary>
+        public int BrawlMaxHP => brawlMaxHP;
+
+        /// <summary>Armor Class the NPC fights with.</summary>
+        public int BrawlArmorClass => brawlArmorClass;
+
+        /// <summary>Attack roll bonus the NPC fights with.</summary>
+        public int BrawlAttackBonus => brawlAttackBonus;
+
+        /// <summary>Damage per hit the NPC fights with.</summary>
+        public int BrawlDamage => brawlDamage;
 
         #endregion
 
@@ -137,7 +193,24 @@ namespace CastleOfTheD20.World
                 startingDialogueNode = ResolveFallbackDialogueTree();
             }
 
-            controller.StartDialogue(startingDialogueNode, player);
+            List<DialogueOption> extraOptions = null;
+            if (OffersFight)
+            {
+                if (fightOption == null)
+                {
+                    fightOption = CreateFightOption();
+                }
+                extraOptions = new List<DialogueOption> { fightOption };
+                conversationPlayer = player;
+                StartListeningForFight();
+            }
+
+            controller.StartDialogue(startingDialogueNode, player, extraOptions);
+        }
+
+        private void OnDisable()
+        {
+            StopListeningForFight();
         }
 
         [ContextMenu("Open Shop Directly")]
@@ -231,6 +304,62 @@ namespace CastleOfTheD20.World
             });
 
             return startNode;
+        }
+
+        #endregion
+
+        #region Fight Option
+
+        /// <summary>
+        /// Villagers can be fought only in the starting village; boss challengers elsewhere reuse this component.
+        /// </summary>
+        public static bool CanOfferFight(bool offerFightOption, string sceneName)
+        {
+            return offerFightOption && string.Equals(sceneName, StartingVillageSceneName, StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Builds the [Fight] dialogue choice. It needs no skill check and ends the conversation.
+        /// </summary>
+        public static DialogueOption CreateFightOption()
+        {
+            return new DialogueOption("[Fight] Enough talk. Put up your fists!", null, false, 10, "", null, FightActionTag);
+        }
+
+        private void StartListeningForFight()
+        {
+            if (isListeningForFight) return;
+            DialogueController.OnOptionSelected += HandleOptionSelected;
+            DialogueController.OnDialogueEnded += StopListeningForFight;
+            isListeningForFight = true;
+        }
+
+        private void StopListeningForFight()
+        {
+            if (!isListeningForFight) return;
+            DialogueController.OnOptionSelected -= HandleOptionSelected;
+            DialogueController.OnDialogueEnded -= StopListeningForFight;
+            isListeningForFight = false;
+        }
+
+        private void HandleOptionSelected(DialogueOption option)
+        {
+            if (option == null || option != fightOption) return;
+
+            PlayerUnit player = conversationPlayer != null ? conversationPlayer : FindAnyObjectByType<PlayerUnit>();
+            StopListeningForFight();
+            conversationPlayer = null;
+
+            DialogueController.Instance?.EndDialogue();
+            StartFight(player);
+        }
+
+        /// <summary>
+        /// Starts turn-based combat against this NPC where they stand.
+        /// </summary>
+        public NpcBrawlerUnit StartFight(PlayerUnit player)
+        {
+            return NpcBrawlerUnit.Begin(this, player);
         }
 
         #endregion

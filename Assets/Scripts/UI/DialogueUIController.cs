@@ -698,7 +698,8 @@ namespace CastleOfTheD20.UI
                 optionsContainer.gameObject.SetActive(true);
             }
 
-            IReadOnlyList<DialogueOption> options = node.Options;
+            DialogueController dialogueController = DialogueController.Instance;
+            IReadOnlyList<DialogueOption> options = DialogueController.ComposeOptions(node, dialogueController != null ? dialogueController.SessionOptions : null);
 
             if (options != null && options.Count > 0)
             {
@@ -765,6 +766,10 @@ namespace CastleOfTheD20.UI
                     else if (cleanText.StartsWith("[Blacksmith]", StringComparison.OrdinalIgnoreCase) || cleanText.StartsWith("[Shop]", StringComparison.OrdinalIgnoreCase))
                     {
                         formattedText = $"<color=#F6D378>[Blacksmith]</color> {cleanText.Replace("[Blacksmith]", "").Replace("[Shop]", "").Trim()}";
+                    }
+                    else if (cleanText.StartsWith("[Fight]", StringComparison.OrdinalIgnoreCase))
+                    {
+                        formattedText = $"<color=#FF7043>[Fight]</color> {cleanText.Replace("[Fight]", "").Trim()}";
                     }
                     else if (cleanText.StartsWith("[Lore]", StringComparison.OrdinalIgnoreCase))
                     {
