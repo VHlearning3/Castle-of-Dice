@@ -73,6 +73,38 @@ namespace CastleOfTheD20.Bosses
             base.InitializeUnit();
 
             CheckArcaneHeresyDebuff();
+            AdoptStandingDecoys();
+        }
+
+        /// <summary>Name an illusion shows: Malakor's own unless Arcane Heresy exposed the trick.</summary>
+        private string DecoyDisplayName => isRealMalakorRevealed ? "[Decoy] Shadow Illusion" : "Shadow Mage Malakor";
+
+        /// <summary>
+        /// A decoy placed in the Library with the boss is his mirror image: it wears Malakor's name
+        /// (so only Arcane Heresy tells them apart) and counts towards the one-clone cap.
+        /// </summary>
+        private void AdoptStandingDecoys()
+        {
+            EnemyUnit[] enemies = FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None);
+            for (int i = 0; i < enemies.Length; i++)
+            {
+                EnemyUnit unit = enemies[i];
+                if (unit == null || unit == this || unit is ShadowMageMalakorBoss || !unit.IsAlive) continue;
+                if (unit.name.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+                unit.SetDisplayName(DecoyDisplayName);
+                if (!activeDecoys.Contains(unit)) activeDecoys.Add(unit);
+            }
+        }
+
+        private int CountLivingDecoys()
+        {
+            int count = 0;
+            for (int i = 0; i < activeDecoys.Count; i++)
+            {
+                if (activeDecoys[i] != null && activeDecoys[i].IsAlive) count++;
+            }
+            return count;
         }
 
         private void CheckArcaneHeresyDebuff()
@@ -159,6 +191,11 @@ namespace CastleOfTheD20.Bosses
         public void SpawnIllusionDecoys()
         {
             hasSpawnedIllusions = true;
+
+            // Only one mirror image at a time (solo hero pacing); a standing decoy already fills the slot
+            int toSpawn = decoyCount - CountLivingDecoys();
+            if (toSpawn <= 0) return;
+
             GridManager grid = GridManager.Instance;
             if (grid == null) return;
 
@@ -175,7 +212,7 @@ namespace CastleOfTheD20.Bosses
                     {
                         CreateDecoyUnit(tile);
                         spawned++;
-                        if (spawned >= decoyCount) break;
+                        if (spawned >= toSpawn) break;
                     }
                 }
             }
@@ -202,6 +239,16 @@ namespace CastleOfTheD20.Bosses
             if (decoyUnit == null)
             {
                 decoyUnit = decoyObj.AddComponent<EnemyUnit>();
+            }
+
+            if (illusionPrefab == null)
+            {
+                // Same profile as the Library's standing Shadow Decoy (ZoneSceneBuilder)
+                decoyUnit.ConfigureStats(DecoyDisplayName, hp: 18, ac: 12, damage: 4, bonus: 2);
+            }
+            else
+            {
+                decoyUnit.SetDisplayName(DecoyDisplayName);
             }
 
             decoyUnit.InitializeUnit();
