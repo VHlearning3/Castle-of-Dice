@@ -9,7 +9,8 @@ namespace CastleOfTheD20.UI
     /// <summary>
     /// User Interface Controller for the D20 dice rolling overlay.
     /// Listens to DiceSystem.OnDiceRolled and presents an animated dice modal,
-    /// showing numerical rolling ticks, Nat 20 critical gold glows, Nat 1 red glows,
+    /// tumbling a blue 3D d20 (<see cref="D20DieGraphic"/>) that lands with the rolled number on top,
+    /// Nat 20 critical gold glows, Nat 1 red glows,
     /// and formula breakdowns (Raw + Bonus vs DC -> SUCCESS/FAIL).
     /// </summary>
     public class DiceUIController : MonoBehaviour
@@ -44,11 +45,18 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Color standardFailColor = new Color(0.8f, 0.3f, 0.3f, 1f); // Soft Red
 
         [Header("Animation & Timing")]
-        [Tooltip("Duration of the rolling number shuffle animation in seconds.")]
-        [SerializeField] private float rollAnimationDuration = 0.8f;
+        [Tooltip("Duration of the die tumble, from throw to landing, in seconds.")]
+        [SerializeField] private float rollAnimationDuration = 1.0f;
 
         [Tooltip("Delay in seconds before the modal automatically dismisses when no reroll scrolls are held (~1.0s per MasterSpec §4.2).")]
         [SerializeField] private float autoDismissDelay = 1.0f;
+
+        [Header("Blue D20 Die")]
+        [Tooltip("Procedural d20 drawn behind the roll number. Created at runtime next to the roll text if left empty.")]
+        [SerializeField] private D20DieGraphic dieGraphic;
+
+        [Tooltip("Width and height of the die in canvas pixels.")]
+        [SerializeField] private float dieSize = 160f;
 
         [Tooltip("Optional button allowing the player to tap/click to dismiss early.")]
         [SerializeField] private Button dismissButton;
@@ -102,6 +110,17 @@ namespace CastleOfTheD20.UI
 
         #region Private State
 
+        /// <summary>Longest a whole roll (tumble + result on screen) may take before auto-continuing.</summary>
+        public const float MaxRollSequenceSeconds = 2f;
+
+        private const float FlickerInterval = 0.07f;
+        private const float RevealPunchDuration = 0.3f;
+        private static readonly string[] RollStrings = BuildRollStrings();
+        private static readonly Color RollTextColor = Color.white;
+        private static readonly Color CriticalFailTextColor = new Color(1f, 0.55f, 0.5f, 1f);
+
+        private Vector2 rollTextBasePosition;
+
         private CanvasGroup canvasGroup;
         private Coroutine activeRollCoroutine;
         private int lastHandledRollFrame = -1;
@@ -127,6 +146,8 @@ namespace CastleOfTheD20.UI
             instance = this;
 
             AutoLocateComponents();
+            ClampToMaxSequence(ref rollAnimationDuration, ref autoDismissDelay);
+            EnsureDieGraphic();
 
             // Locate or initialize CanvasGroup for flicker-free show/hide without disabling GameObject
             if (canvasGroup == null)
@@ -338,6 +359,89 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        /// <summary>
+        /// Shortens the tumble and the result hold so the whole roll never exceeds
+        /// <see cref="MaxRollSequenceSeconds"/>, whatever the scene serialized.
+        /// </summary>
+        public static void ClampToMaxSequence(ref float rollDuration, ref float holdDuration)
+        {
+            rollDuration = Mathf.Clamp(rollDuration, 0.3f, MaxRollSequenceSeconds);
+            holdDuration = Mathf.Clamp(holdDuration, 0f, MaxRollSequenceSeconds - rollDuration);
+        }
+
+        /// <summary>
+        /// Creates the blue d20 behind the roll number when the scene doesn't provide one,
+        /// and sizes the number so it fits on the die's top face.
+        /// </summary>
+        private void EnsureDieGraphic()
+        {
+            if (rollValueText == null) return;
+
+            RectTransform textRect = rollValueText.rectTransform;
+            rollTextBasePosition = textRect.anchoredPosition;
+
+            if (dieGraphic == null)
+            {
+                GameObject dieObject = new GameObject("D20Die", typeof(RectTransform), typeof(CanvasRenderer), typeof(D20DieGraphic));
+                dieObject.layer = textRect.gameObject.layer;
+
+                RectTransform dieRect = (RectTransform)dieObject.transform;
+                dieRect.SetParent(textRect.parent, false);
+                dieRect.anchorMin = new Vector2(0.5f, 0.5f);
+                dieRect.anchorMax = new Vector2(0.5f, 0.5f);
+                dieRect.pivot = new Vector2(0.5f, 0.5f);
+                dieRect.sizeDelta = new Vector2(dieSize, dieSize);
+                dieRect.localPosition = textRect.localPosition + (Vector3)textRect.rect.center;
+                dieRect.SetSiblingIndex(textRect.GetSiblingIndex());
+
+                dieGraphic = dieObject.GetComponent<D20DieGraphic>();
+            }
+
+            dieGraphic.raycastTarget = false;
+            dieGraphic.Rotation = D20DieGraphic.GetRestingRotation(19);
+
+            float faceFont = Mathf.Max(24f, dieSize * 0.22f);
+            rollValueText.fontSizeMax = faceFont;
+            rollValueText.fontSizeMin = Mathf.Min(20f, faceFont);
+        }
+
+        private void ResetRollVisuals()
+        {
+            if (rollValueText != null)
+            {
+                rollValueText.rectTransform.anchoredPosition = rollTextBasePosition;
+                rollValueText.rectTransform.localScale = Vector3.one;
+                rollValueText.alpha = 1f;
+            }
+
+            if (dieGraphic != null)
+            {
+                dieGraphic.Offset = Vector2.zero;
+                dieGraphic.Scale = 1f;
+                dieGraphic.Flash = 0f;
+            }
+        }
+
+        private static string[] BuildRollStrings()
+        {
+            string[] strings = new string[21];
+            for (int i = 0; i < strings.Length; i++) strings[i] = i.ToString();
+            return strings;
+        }
+
+        private static string RollString(int value)
+        {
+            return value >= 0 && value < RollStrings.Length ? RollStrings[value] : value.ToString();
+        }
+
+        private static float EaseOutBack(float t)
+        {
+            const float c1 = 1.70158f;
+            const float c3 = c1 + 1f;
+            float u = t - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
+
         private void OnEnable()
         {
             DiceSystem.OnDiceRolled += HandleDiceRolled;
@@ -458,6 +562,7 @@ namespace CastleOfTheD20.UI
         private IEnumerator AnimateRollRoutine(DiceResult result, string checkTitle = null)
         {
             ShowPanel();
+            ResetRollVisuals();
 
             if (rerollController != null)
             {
@@ -502,23 +607,16 @@ namespace CastleOfTheD20.UI
             if (outcomeText != null) outcomeText.text = "";
             if (glowBorderImage != null) glowBorderImage.color = normalColor;
 
-            // Rolling number shuffle effect
-            float elapsed = 0f;
-            while (elapsed < rollAnimationDuration)
-            {
-                elapsed += Time.unscaledDeltaTime;
-                int randomPreview = Random.Range(1, 21);
-                if (rollValueText != null)
-                {
-                    rollValueText.text = randomPreview.ToString();
-                }
-                yield return new WaitForSecondsRealtime(0.04f);
-            }
+            yield return TumbleDieRoutine();
 
-            // Reveal finalized roll
+            // Reveal finalized roll on the die's top face
             if (rollValueText != null)
             {
-                rollValueText.text = result.rawRoll.ToString();
+                rollValueText.text = RollString(result.rawRoll);
+                rollValueText.alpha = 1f;
+                rollValueText.color = result.isCriticalSuccess ? criticalSuccessColor
+                    : result.isCriticalFail ? CriticalFailTextColor
+                    : RollTextColor;
             }
 
             // Display formula breakdown
@@ -556,6 +654,26 @@ namespace CastleOfTheD20.UI
                 if (glowBorderImage != null) glowBorderImage.color = standardFailColor;
             }
 
+            // Landing punch: number pops, die flashes (counts toward the hold time)
+            float punch = Mathf.Min(RevealPunchDuration, autoDismissDelay);
+            float elapsed = 0f;
+            while (elapsed < punch)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / RevealPunchDuration);
+                if (rollValueText != null)
+                {
+                    rollValueText.rectTransform.localScale = Vector3.one * Mathf.Lerp(1.45f, 1f, EaseOutBack(t));
+                }
+                if (dieGraphic != null)
+                {
+                    dieGraphic.Flash = 1f - t;
+                    dieGraphic.Scale = Mathf.Lerp(1.08f, 1f, t);
+                }
+                yield return null;
+            }
+            ResetRollVisuals();
+
             // Check if player owns a Reroll Scroll to pause for decision
             if (rerollController != null && rerollController.ShouldPauseForDecision(result))
             {
@@ -563,10 +681,101 @@ namespace CastleOfTheD20.UI
                 yield break;
             }
 
-            // Auto-dismiss after display delay (~1.0s per MasterSpec §4.2)
-            yield return new WaitForSecondsRealtime(autoDismissDelay);
+            // Auto-dismiss after display delay (~1.0s per MasterSpec §4.2); tumble + hold stays within 2 s
+            float remainingHold = autoDismissDelay - punch;
+            while (remainingHold > 0f)
+            {
+                remainingHold -= Time.unscaledDeltaTime;
+                yield return null;
+            }
 
             Dismiss();
+        }
+
+        /// <summary>
+        /// Throws the blue d20: drops in, tumbles with decaying spin and two small bounces,
+        /// then settles with a slight overshoot so a face points straight at the player.
+        /// Runs for exactly <see cref="rollAnimationDuration"/> seconds.
+        /// </summary>
+        private IEnumerator TumbleDieRoutine()
+        {
+            float duration = rollAnimationDuration;
+            float settleStart = duration * 0.7f;
+
+            Quaternion resting = D20DieGraphic.GetRestingRotation(Random.Range(0, D20DieGraphic.FaceCount));
+            Quaternion spin = Random.rotationUniform;
+            Vector3 axis = new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), Random.Range(-0.35f, 0.35f));
+            if (axis.sqrMagnitude < 0.01f) axis = Vector3.right;
+            axis.Normalize();
+            const float spinSpeed = 1100f; // degrees per second at the throw
+
+            Quaternion settleFrom = spin;
+            float elapsed = 0f;
+            float flickerTimer = 0f;
+
+            if (rollValueText != null)
+            {
+                rollValueText.color = RollTextColor;
+                rollValueText.alpha = 0.55f;
+                rollValueText.text = RollString(Random.Range(1, 21));
+            }
+
+            while (elapsed < duration)
+            {
+                float dt = Time.unscaledDeltaTime;
+                elapsed += dt;
+                float t = Mathf.Clamp01(elapsed / duration);
+
+                // Faint number flicker while tumbling, hidden while the die settles
+                if (rollValueText != null)
+                {
+                    if (elapsed < settleStart)
+                    {
+                        flickerTimer -= dt;
+                        if (flickerTimer <= 0f)
+                        {
+                            flickerTimer = FlickerInterval;
+                            rollValueText.text = RollString(Random.Range(1, 21));
+                        }
+                    }
+                    else
+                    {
+                        rollValueText.alpha = 0f;
+                    }
+                }
+
+                // Two decaying hops across the tumble
+                float hop = Mathf.Abs(Mathf.Sin(t * Mathf.PI * 2f)) * 22f * (1f - t);
+
+                if (dieGraphic != null)
+                {
+                    if (elapsed < settleStart)
+                    {
+                        float decay = 1f - elapsed / settleStart;
+                        spin = Quaternion.AngleAxis(spinSpeed * (0.3f + 0.7f * decay) * dt, axis) * spin;
+                        settleFrom = spin;
+                        dieGraphic.Rotation = spin;
+                    }
+                    else
+                    {
+                        float s = Mathf.Clamp01((elapsed - settleStart) / (duration - settleStart));
+                        dieGraphic.Rotation = Quaternion.SlerpUnclamped(settleFrom, resting, EaseOutBack(s));
+                    }
+
+                    dieGraphic.Scale = Mathf.LerpUnclamped(0.55f, 1f, EaseOutBack(Mathf.Clamp01(elapsed / 0.25f)));
+                    dieGraphic.Offset = new Vector2(0f, hop);
+                }
+
+                if (rollValueText != null)
+                {
+                    rollValueText.rectTransform.anchoredPosition = rollTextBasePosition + new Vector2(0f, hop);
+                }
+
+                yield return null;
+            }
+
+            if (dieGraphic != null) dieGraphic.Rotation = resting;
+            ResetRollVisuals();
         }
 
         /// <summary>
@@ -610,6 +819,7 @@ namespace CastleOfTheD20.UI
                 activeRollCoroutine = null;
             }
 
+            ResetRollVisuals();
             HidePanel();
         }
 
