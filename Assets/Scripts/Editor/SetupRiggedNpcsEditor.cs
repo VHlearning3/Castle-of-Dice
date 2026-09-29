@@ -74,7 +74,7 @@ namespace CastleOfTheD20.Editor
                 SceneObjectName = "NPC_Othelia",
                 TargetHeight = 2.8f,
                 // This file ships no walk take: the Walk state reuses the idle loop
-                IdleTake = "Old women idle", WalkTake = null, AttackTake = "Old women punch", DieTake = "Old women falls down",
+                IdleTake = "Old women idle", WalkTake = null, AttackTake = "Old women punch", DieTake = "fall",
             },
         };
 
