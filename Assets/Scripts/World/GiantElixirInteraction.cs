@@ -55,6 +55,22 @@ namespace CastleOfTheD20.World
             interactionRadius = 2.5f;
         }
 
+        protected override void Awake()
+        {
+            base.Awake();
+
+            // Zone scenes reload on every visit: once drunk, the elixir stays gone
+            if (!isConsumed && GameManager.Instance != null && GameManager.Instance.IsRewardClaimed(GameManager.RewardKey(this)))
+            {
+                isConsumed = true;
+                promptMessage = "Empty Vial";
+                if (visualBottle != null)
+                {
+                    visualBottle.SetActive(false);
+                }
+            }
+        }
+
         #endregion
 
         #region Interactable Overrides
@@ -91,15 +107,12 @@ namespace CastleOfTheD20.World
 
             isConsumed = true;
             promptMessage = "Empty Vial";
+            GameManager.Instance?.MarkRewardClaimed(GameManager.RewardKey(this));
 
-            // 1. Permanently increase PlayerUnit Max HP and heal fully
+            // 1. Permanently increase PlayerUnit Max HP and heal fully.
+            // ApplyHeroResilience already records the new Max HP bonus in the session PlayerDataSO;
+            // adding it there a second time doubled the elixir to +60 on the next zone load.
             player.ApplyHeroResilience(maxHPBonus);
-
-            // 2. Persist to PlayerDataSO
-            if (PlayerProgressionManager.Instance != null && PlayerProgressionManager.Instance.PlayerData != null)
-            {
-                PlayerProgressionManager.Instance.PlayerData.MaxHPBonus += maxHPBonus;
-            }
 
             // 3. Audio & Visuals
             if (visualBottle != null)

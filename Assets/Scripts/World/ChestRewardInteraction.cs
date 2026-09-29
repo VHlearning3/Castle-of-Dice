@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using CastleOfTheD20.Audio;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Economy;
 
@@ -92,6 +93,12 @@ namespace CastleOfTheD20.World
             EnsureChestCollider();
             base.Awake();
 
+            // Zone scenes reload on every visit: a chest looted earlier stays empty
+            if (!isOpen && GameManager.Instance != null && GameManager.Instance.IsRewardClaimed(GameManager.RewardKey(this)))
+            {
+                isOpen = true;
+            }
+
             promptMessage = isOpen ? openedPrompt : unopenedPrompt;
 
             if (chestLid == null)
@@ -122,6 +129,7 @@ namespace CastleOfTheD20.World
 
             isOpen = true;
             promptMessage = openedPrompt;
+            GameManager.Instance?.MarkRewardClaimed(GameManager.RewardKey(this));
 
             // Visual feedback: rotate lid if available
             if (chestLid != null)

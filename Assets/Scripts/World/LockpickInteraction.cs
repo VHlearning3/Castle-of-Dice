@@ -79,6 +79,22 @@ namespace CastleOfTheD20.World
             interactionRadius = 2.5f;
         }
 
+        protected override void Awake()
+        {
+            base.Awake();
+
+            // Zone scenes reload on every visit: a picked lock stays open (and its loot stays taken)
+            if (isLocked && GameManager.Instance != null && GameManager.Instance.IsRewardClaimed(GameManager.RewardKey(this)))
+            {
+                isLocked = false;
+                promptMessage = "Opened";
+                if (hiddenPathObject != null)
+                {
+                    hiddenPathObject.SetActive(true);
+                }
+            }
+        }
+
         #endregion
 
         #region Interaction
@@ -127,6 +143,7 @@ namespace CastleOfTheD20.World
         {
             isLocked = false;
             promptMessage = "Opened";
+            GameManager.Instance?.MarkRewardClaimed(GameManager.RewardKey(this));
 
             Debug.Log($"[LockpickInteraction] SUCCESS! Lock picked. Gained {rewardGold} Gold.");
 

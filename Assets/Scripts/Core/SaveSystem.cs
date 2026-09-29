@@ -39,6 +39,8 @@ namespace CastleOfTheD20.Core
         public List<int> clearedWings = new List<int>();
         /// <summary>Zone scene the save was made in (empty = unknown).</summary>
         public string sceneName = "";
+        /// <summary>One-time world rewards already taken (chests, Giant's Elixir). Missing in older v3 saves.</summary>
+        public List<string> claimedRewards = new List<string>();
     }
 
     /// <summary>
@@ -108,7 +110,7 @@ namespace CastleOfTheD20.Core
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.CaptureCampaignProgress(save.defeatedBosses, save.clearedWings);
+                GameManager.Instance.CaptureCampaignProgress(save.defeatedBosses, save.clearedWings, save.claimedRewards);
             }
 
             save.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
@@ -177,7 +179,7 @@ namespace CastleOfTheD20.Core
 
             if (GameManager.Instance != null)
             {
-                GameManager.Instance.RestoreCampaignProgress(save.defeatedBosses, save.clearedWings);
+                GameManager.Instance.RestoreCampaignProgress(save.defeatedBosses, save.clearedWings, save.claimedRewards);
             }
 
             Debug.Log($"[SaveSystem] Game loaded successfully! Level: {save.currentLevel}");
@@ -223,6 +225,7 @@ namespace CastleOfTheD20.Core
             if (save.defeatedBosses == null) save.defeatedBosses = new List<string>();
             if (save.clearedWings == null) save.clearedWings = new List<int>();
             if (save.sceneName == null) save.sceneName = "";
+            if (save.claimedRewards == null) save.claimedRewards = new List<string>();
 
             return save;
         }
