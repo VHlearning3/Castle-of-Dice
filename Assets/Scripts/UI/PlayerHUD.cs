@@ -16,8 +16,10 @@ namespace CastleOfTheD20.UI
     /// Manages:
     /// 1. Top-Left Hero Status Card: Crest emblem, name, class/level, Armor Class badge,
     ///    ruby health vitality bar with smooth animation & damage flash,
-    ///    integrated Quick Potion slot with count badge & [Q] hotkey, and Gold Purse pill.
-    /// 2. Top-Center Zone & Campaign Banner: Shows active atmospheric location.
+    ///    integrated Quick Potion slot with count badge & [Q] hotkey, Gold Purse pill,
+    ///    and the hero stats block (to-hit, weapon, AC, move, effects) from CombatStatsHUD.
+    /// 2. Top-Center Zone & Campaign Banner: Shows active atmospheric location, with the
+    ///    CombatStatsHUD enemy cards below it while a battle is running.
     /// 3. Top-Right Quest Tracker Card: Displays active quest name, objectives, and hint steps.
     /// </summary>
     public class PlayerHUD : MonoBehaviour
@@ -130,6 +132,7 @@ namespace CastleOfTheD20.UI
         #region Private State
 
         private PlayerUnit trackedPlayer;
+        private CombatStatsHUD combatStatsHUD;
         private float targetHPValue;
         private float hpLerpSpeed = 8f;
         private Color normalRubyColor = new Color(0.85f, 0.18f, 0.15f, 1f);
@@ -423,7 +426,7 @@ namespace CastleOfTheD20.UI
             heroCardRect.anchorMax = new Vector2(0f, 1f);
             heroCardRect.pivot = new Vector2(0f, 1f);
             heroCardRect.anchoredPosition = new Vector2(24f, -18f);
-            heroCardRect.sizeDelta = new Vector2(460f, 138f);
+            heroCardRect.sizeDelta = new Vector2(460f, CombatStatsHUD.HeroCardHeight);
 
             Image heroCardBg = heroCardObj.GetComponent<Image>();
             if (panelDarkSprite != null)
@@ -974,6 +977,20 @@ namespace CastleOfTheD20.UI
                 questHUD = questCardObj.AddComponent<QuestHUDUIController>();
             }
             questHUD.AutoLocateOrBuildHierarchy();
+
+            // ========================================================
+            // 4. COMBAT STATS: hero stats block + enemy cards under the zone banner
+            // ========================================================
+            combatStatsHUD = GetComponent<CombatStatsHUD>();
+            if (combatStatsHUD == null)
+            {
+                combatStatsHUD = gameObject.AddComponent<CombatStatsHUD>();
+            }
+            combatStatsHUD.Build(heroCardRect, panelDarkSprite, pillBadgeSprite, barTrackSprite, barFillRubySprite, dividerGoldSprite);
+            if (trackedPlayer != null)
+            {
+                combatStatsHUD.SetPlayer(trackedPlayer);
+            }
         }
 
         #endregion
@@ -990,6 +1007,11 @@ namespace CastleOfTheD20.UI
                     trackedPlayer.OnHealthChanged -= HandleHealthChanged;
                     trackedPlayer.OnHealthChanged += HandleHealthChanged;
                 }
+            }
+
+            if (trackedPlayer != null && combatStatsHUD != null)
+            {
+                combatStatsHUD.SetPlayer(trackedPlayer);
             }
         }
 
