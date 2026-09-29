@@ -61,10 +61,10 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: Die
-      takeName: Old women falls down
-      internalID: 8700202436296347728
+      takeName: fall
+      internalID: -1504929105726005784
       firstFrame: 0
-      lastFrame: 71
+      lastFrame: 72
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
