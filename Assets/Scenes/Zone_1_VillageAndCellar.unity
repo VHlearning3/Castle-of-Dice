@@ -113681,8 +113681,8 @@ MonoBehaviour:
   criticalFailColor: {r: 1, g: 0.2, b: 0.2, a: 1}
   standardSuccessColor: {r: 0.2, g: 0.9, b: 0.3, a: 1}
   standardFailColor: {r: 0.8, g: 0.3, b: 0.3, a: 1}
-  rollAnimationDuration: 0.8
-  autoDismissDelay: 2.5
+  rollAnimationDuration: 1
+  autoDismissDelay: 1
   dismissButton: {fileID: 989641362}
   rerollController: {fileID: 1800715154}
 --- !u!114 &1800715154
