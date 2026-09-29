@@ -395,6 +395,15 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[CombatUnit] {unitName} has died.");
             OnUnitDied?.Invoke(this);
 
+            HideOnDeath();
+        }
+
+        /// <summary>
+        /// Removes the fallen unit from the battlefield. Overridden by units that stay in the world
+        /// after losing (e.g. a knocked-out villager).
+        /// </summary>
+        protected virtual void HideOnDeath()
+        {
             gameObject.SetActive(false);
         }
 

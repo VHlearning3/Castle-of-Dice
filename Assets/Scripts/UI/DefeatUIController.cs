@@ -154,6 +154,14 @@ namespace CastleOfTheD20.UI
                 player.HasMovedThisTurn = false;
             }
 
+            // Lost a fight picked with a villager: square up with them again on the same spot
+            NpcBrawlerUnit brawl = NpcBrawlerUnit.Active;
+            if (brawl != null && player != null)
+            {
+                brawl.Restart(player);
+                return;
+            }
+
             // Restart encounter if a DungeonRoomController is present in the active zone
             DungeonRoomController room = FindAnyObjectByType<DungeonRoomController>();
             if (room != null && TurnManager.Instance != null)
@@ -205,6 +213,13 @@ namespace CastleOfTheD20.UI
             if (TurnManager.Instance != null)
             {
                 TurnManager.Instance.EndCombat(false);
+            }
+
+            // The villager who won the brawl returns to where they stood and can be talked to again
+            NpcBrawlerUnit brawl = NpcBrawlerUnit.Active;
+            if (brawl != null)
+            {
+                brawl.Recover();
             }
 
             if (GameManager.Instance != null)

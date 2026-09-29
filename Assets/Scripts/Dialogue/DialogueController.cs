@@ -49,6 +49,9 @@ namespace CastleOfTheD20.Dialogue
         // Stores unlocked combat debuff tags (e.g., "CommanderArmorWeakened", "-2 AC")
         private readonly HashSet<string> registeredCombatDebuffs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        // Choices the speaker adds to every node of this conversation (e.g. a villager's [Fight] option)
+        private readonly List<DialogueOption> sessionOptions = new List<DialogueOption>();
+
         #endregion
 
         #region Public Properties
@@ -61,6 +64,9 @@ namespace CastleOfTheD20.Dialogue
 
         /// <summary>Read-only collection of active combat debuff tags gained from dialogues.</summary>
         public IReadOnlyCollection<string> RegisteredCombatDebuffs => registeredCombatDebuffs;
+
+        /// <summary>Choices added to every node of the current conversation by the speaker.</summary>
+        public IReadOnlyList<DialogueOption> SessionOptions => sessionOptions;
 
         #endregion
 
@@ -116,12 +122,22 @@ namespace CastleOfTheD20.Dialogue
         /// </summary>
         /// <param name="startingNode">The root node of the conversation.</param>
         /// <param name="player">Optional player reference used for skill check bonus calculations.</param>
-        public void StartDialogue(DialogueNodeSO startingNode, PlayerUnit player = null)
+        /// <param name="extraOptions">Optional choices shown on every node of this conversation, before its exit choices.</param>
+        public void StartDialogue(DialogueNodeSO startingNode, PlayerUnit player = null, IReadOnlyList<DialogueOption> extraOptions = null)
         {
             if (startingNode == null)
             {
                 Debug.LogWarning("[DialogueController] Cannot start dialogue: Starting node is null.");
                 return;
+            }
+
+            sessionOptions.Clear();
+            if (extraOptions != null)
+            {
+                for (int i = 0; i < extraOptions.Count; i++)
+                {
+                    if (extraOptions[i] != null) sessionOptions.Add(extraOptions[i]);
+                }
             }
 
             activePlayer = player != null ? player : FindAnyObjectByType<PlayerUnit>();
@@ -285,6 +301,7 @@ namespace CastleOfTheD20.Dialogue
             isResolvingCheck = false;
             currentNode = null;
             activePlayer = null;
+            sessionOptions.Clear();
 
             Debug.Log("[DialogueController] Dialogue session ended.");
 
@@ -301,6 +318,56 @@ namespace CastleOfTheD20.Dialogue
             {
                 GameManager.Instance.SetMode(GamePlayMode.Exploration);
             }
+        }
+
+        /// <summary>
+        /// Returns the choices to show for <paramref name="node"/>: its own options with the conversation's
+        /// extra options inserted before the trailing exit choices. Nodes without options stay empty so the
+        /// UI keeps its Continue button.
+        /// </summary>
+        public static List<DialogueOption> ComposeOptions(DialogueNodeSO node, IReadOnlyList<DialogueOption> extraOptions)
+        {
+            List<DialogueOption> result = new List<DialogueOption>();
+            if (node == null || node.Options == null) return result;
+
+            IReadOnlyList<DialogueOption> own = node.Options;
+            for (int i = 0; i < own.Count; i++)
+            {
+                if (own[i] != null) result.Add(own[i]);
+            }
+
+            if (result.Count == 0 || extraOptions == null) return result;
+
+            int insertAt = result.Count;
+            while (insertAt > 0 && IsExitOption(result[insertAt - 1]))
+            {
+                insertAt--;
+            }
+
+            for (int i = 0; i < extraOptions.Count; i++)
+            {
+                DialogueOption extra = extraOptions[i];
+                if (extra == null || result.Contains(extra)) continue;
+                result.Insert(insertAt, extra);
+                insertAt++;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Whether a choice leaves the conversation ([Exit] / [Leave] / [Poistu] or the close-dialogue action).
+        /// </summary>
+        public static bool IsExitOption(DialogueOption option)
+        {
+            if (option == null) return false;
+
+            string text = option.OptionText ?? string.Empty;
+            string tag = option.CombatDebuffTag ?? string.Empty;
+            return text.StartsWith("[Exit]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Leave]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Poistu", StringComparison.OrdinalIgnoreCase)
+                || tag.IndexOf("ACTION_CLOSE_DIALOGUE", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         #endregion
