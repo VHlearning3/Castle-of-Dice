@@ -112,7 +112,7 @@ namespace CastleOfTheD20.Tests
         {
             SetUpBattlefield();
 
-            NpcBrawlerUnit brawler = NpcBrawlerUnit.Begin(npc, player);
+            NpcBrawlerUnit brawler = TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
 
             Assert.IsNotNull(brawler);
             Assert.AreSame(brawler, NpcBrawlerUnit.Active);
@@ -123,6 +123,8 @@ namespace CastleOfTheD20.Tests
             Assert.AreEqual(npc.BrawlArmorClass, brawler.ArmorClass);
             Assert.AreEqual(npc.BrawlDamage, brawler.AttackDamage);
             Assert.Less(brawler.MaxHP, 25, "A villager must not count as an elite.");
+            Assert.AreSame(brawler.transform, npc.transform.parent, "The NPC moves with its combat body during the fight.");
+            Assert.IsTrue(npc.GetComponent<CombatUnit>() == null, "The villager itself never gains combat components.");
             Assert.IsFalse(npc.IsInteractable, "The NPC cannot be talked to mid-fight.");
             Assert.AreEqual(144, gridManager.Tiles.Count, "The brawl uses the standard 12x12 grid.");
             Assert.AreNotEqual(player.GridPosition, brawler.GridPosition);
@@ -132,13 +134,14 @@ namespace CastleOfTheD20.Tests
         public void Begin_RefusesASecondFightWhileOneIsRunning()
         {
             SetUpBattlefield();
-            NpcBrawlerUnit.Begin(npc, player);
+            TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
 
-            GameObject otherGo = Track(new GameObject("Mirabel"));
+            GameObject otherGo = Track(new GameObject("NPC_Mirabel"));
             VillageNPC other = otherGo.AddComponent<VillageNPC>();
 
-            Assert.IsNull(NpcBrawlerUnit.Begin(other, player));
-            Assert.IsNull(otherGo.GetComponent<NpcBrawlerUnit>());
+            Assert.IsTrue(NpcBrawlerUnit.Begin(other, player) == null);
+            Assert.IsTrue(other.transform.parent == null, "The second villager must not be picked up.");
+            Assert.IsTrue(other.IsInteractable);
         }
 
         [Test]
@@ -146,30 +149,76 @@ namespace CastleOfTheD20.Tests
         {
             SetUpBattlefield();
             Vector3 home = npc.transform.position;
-            NpcBrawlerUnit brawler = NpcBrawlerUnit.Begin(npc, player);
+            Quaternion homeRotation = npc.transform.rotation;
+            NpcBrawlerUnit brawler = TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
 
             brawler.TakeDamage(999);
 
             Assert.IsTrue(brawler.IsKnockedOut);
             Assert.IsFalse(brawler.IsAlive);
-            Assert.IsTrue(npc.gameObject.activeSelf, "A beaten villager stays in the village.");
+            Assert.IsTrue(npc.gameObject.activeInHierarchy, "A beaten villager stays in the village.");
             Assert.IsFalse(turnManager.IsCombatActive, "Knocking the NPC out wins the fight.");
             Assert.AreEqual(0, gridManager.Tiles.Count, "The brawl grid is cleared after the win.");
 
             brawler.Recover();
 
-            Assert.IsNull(npc.GetComponent<NpcBrawlerUnit>(), "The NPC must not stay a combatant after the fight.");
-            Assert.IsNull(npc.GetComponent<StatusEffectController>());
-            Assert.IsNull(NpcBrawlerUnit.Active);
+            Assert.IsTrue(brawler == null, "The temporary combat body is removed after the fight.");
+            Assert.IsTrue(npc.transform.parent == null, "The NPC goes back to its place in the hierarchy.");
+            Assert.IsTrue(npc.GetComponentInParent<CombatUnit>() == null, "The NPC must not stay a combatant after the fight.");
+            Assert.IsTrue(NpcBrawlerUnit.Active == null);
             Assert.IsTrue(npc.IsInteractable, "Dialogue and shop must keep working after the fight.");
             Assert.AreEqual(home, npc.transform.position);
+            Assert.Less(Quaternion.Angle(homeRotation, npc.transform.rotation), 0.01f, "The NPC is back on their feet.");
+        }
+
+        [Test]
+        public void BrawlVictory_PaysNoScrap()
+        {
+            SetUpBattlefield();
+            int scrapEvents = 0;
+            System.Action<int> countScrap = amount => scrapEvents++;
+            TurnManager.OnCombatVictoryScrapAwarded += countScrap;
+            try
+            {
+                NpcBrawlerUnit brawler = TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
+                brawler.TakeDamage(999);
+            }
+            finally
+            {
+                TurnManager.OnCombatVictoryScrapAwarded -= countScrap;
+            }
+
+            Assert.IsFalse(turnManager.IsCombatActive);
+            Assert.AreEqual(0, scrapEvents, "Villagers can be fought again and again, so beating one must not pay scrap.");
+        }
+
+        [Test]
+        public void Begin_GetsTheLastBeatenVillagerUpBeforeTheNextFight()
+        {
+            SetUpBattlefield();
+            Vector3 home = npc.transform.position;
+            NpcBrawlerUnit first = TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
+            first.TakeDamage(999);
+
+            GameObject otherGo = Track(new GameObject("NPC_Mirabel"));
+            otherGo.transform.position = new Vector3(299f, 0f, 302f);
+            VillageNPC other = otherGo.AddComponent<VillageNPC>();
+            NpcBrawlerUnit second = TrackBrawl(NpcBrawlerUnit.Begin(other, player));
+
+            Assert.IsNotNull(second);
+            Assert.IsTrue(first == null, "The first villager's combat body is removed.");
+            Assert.IsTrue(npc.transform.parent == null);
+            Assert.AreEqual(home, npc.transform.position);
+            Assert.IsTrue(npc.IsInteractable);
+            Assert.IsTrue(turnManager.IsCombatActive);
+            Assert.AreSame(second, NpcBrawlerUnit.Active);
         }
 
         [Test]
         public void LostFight_TryAgainRestartsTheBrawlAtFullHealth()
         {
             SetUpBattlefield();
-            NpcBrawlerUnit brawler = NpcBrawlerUnit.Begin(npc, player);
+            NpcBrawlerUnit brawler = TrackBrawl(NpcBrawlerUnit.Begin(npc, player));
             brawler.TakeDamage(5);
 
             player.TakeDamage(999);
@@ -181,6 +230,7 @@ namespace CastleOfTheD20.Tests
 
             Assert.IsTrue(turnManager.IsCombatActive);
             Assert.AreEqual(brawler.MaxHP, brawler.CurrentHP);
+            Assert.AreEqual(144, gridManager.Tiles.Count, "Try Again fights on the same grid.");
         }
 
         #endregion
@@ -231,6 +281,13 @@ namespace CastleOfTheD20.Tests
         {
             spawned.Add(obj);
             return obj;
+        }
+
+        private NpcBrawlerUnit TrackBrawl(NpcBrawlerUnit brawler)
+        {
+            // The combat body is its own GameObject; clean it up as a whole
+            if (brawler != null) spawned.Add(brawler.gameObject);
+            return brawler;
         }
 
         #endregion

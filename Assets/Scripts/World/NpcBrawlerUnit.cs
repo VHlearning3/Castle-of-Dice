@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.UI;
@@ -9,8 +10,9 @@ namespace CastleOfTheD20.World
 {
     /// <summary>
     /// Temporary combat body for a village NPC the hero picked a fight with from dialogue.
-    /// Added to the NPC when the brawl starts and removed once it is over, so the villager is never
-    /// swept into other encounters. The fight happens on the spot where the NPC stands.
+    /// Lives on its own GameObject that carries the NPC for the length of the fight, so the villager itself
+    /// never gains combat components (CombatUnit and StatusEffectController require each other and could not
+    /// be removed from the NPC again). The fight happens on the spot where the NPC stands.
     /// A beaten NPC is knocked out rather than killed: they go down, get back up where they stood,
     /// and their dialogue and shop keep working.
     /// </summary>
@@ -33,6 +35,13 @@ namespace CastleOfTheD20.World
         private Quaternion homeRotation;
         private bool isKnockedOut;
 
+        // Where the NPC sat in the hierarchy before the fight, restored exactly afterwards
+        private Transform npcParent;
+        private int npcSiblingIndex;
+        private Vector3 npcLocalPosition;
+        private Quaternion npcLocalRotation;
+        private Vector3 npcLocalScale;
+
         private GridManager grid;
         private Vector3 gridHomePosition;
         private bool ownsGrid;
@@ -45,7 +54,7 @@ namespace CastleOfTheD20.World
         /// <summary>The brawl currently in progress (or waiting on the Defeat modal), if any.</summary>
         public static NpcBrawlerUnit Active { get; private set; }
 
-        /// <summary>The villager this combat body belongs to.</summary>
+        /// <summary>The villager this combat body carries.</summary>
         public VillageNPC Npc => npc;
 
         /// <summary>Whether the NPC lost and is lying on the ground.</summary>
@@ -65,21 +74,25 @@ namespace CastleOfTheD20.World
         public static NpcBrawlerUnit Begin(VillageNPC npc, PlayerUnit player)
         {
             if (npc == null || player == null || !player.IsAlive) return null;
-            if (Active != null) return null;
             if (TurnManager.Instance != null && TurnManager.Instance.IsCombatActive) return null;
-
-            NpcBrawlerUnit unit = npc.GetComponent<NpcBrawlerUnit>();
-            if (unit == null)
+            if (Active != null)
             {
-                unit = npc.gameObject.AddComponent<NpcBrawlerUnit>();
-            }
-            if (npc.GetComponent<StatusEffectController>() == null)
-            {
-                npc.gameObject.AddComponent<StatusEffectController>();
+                // The last villager beaten is still lying down: get them up so the next fight can start
+                if (!Active.IsKnockedOut) return null;
+                Active.Recover();
             }
 
+            GameObject body = new GameObject($"Brawl_{npc.name}");
+            Scene npcScene = npc.gameObject.scene;
+            if (npcScene.IsValid() && npcScene.isLoaded && body.scene != npcScene)
+            {
+                SceneManager.MoveGameObjectToScene(body, npcScene);
+            }
+            body.transform.SetPositionAndRotation(npc.transform.position, npc.transform.rotation);
+
+            // RequireComponent adds the StatusEffectController alongside
+            NpcBrawlerUnit unit = body.AddComponent<NpcBrawlerUnit>();
             unit.Configure(npc);
-            npc.IsInteractable = false;
             Active = unit;
             TurnManager.OnCombatEnded += unit.HandleCombatEnded;
 
@@ -89,7 +102,7 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>
-        /// Copies the NPC's brawl stats onto this unit and remembers where they stand.
+        /// Copies the NPC's brawl stats onto this unit and picks the NPC up so it moves with this body.
         /// </summary>
         public void Configure(VillageNPC owner)
         {
@@ -107,33 +120,39 @@ namespace CastleOfTheD20.World
 
             homePosition = transform.position;
             homeRotation = transform.rotation;
+
+            Transform npcTransform = owner.transform;
+            npcParent = npcTransform.parent;
+            npcSiblingIndex = npcTransform.GetSiblingIndex();
+            npcLocalPosition = npcTransform.localPosition;
+            npcLocalRotation = npcTransform.localRotation;
+            npcLocalScale = npcTransform.localScale;
+            npcTransform.SetParent(transform, true);
+
+            owner.IsInteractable = false;
         }
 
         private void StartBrawl(PlayerUnit player)
         {
-            // A restart after a lost fight keeps the grid it already borrowed (and its home position)
+            // Try Again reuses the grid laid out for the first round
             if (grid == null)
             {
                 grid = ResolveGrid();
+                GenerateBrawlGrid(player);
             }
-            if (grid != null)
-            {
-                Vector3 center = (player.transform.position + homePosition) * 0.5f;
-                center.y = homePosition.y;
-                grid.GenerateGridAt(center, BrawlGridSize, BrawlGridSize, BrawlTileSize);
 
-                PlaceOnGrid(player);
-                PlaceOnGrid(this);
-            }
+            PlaceOnGrid(player);
+            PlaceOnGrid(this);
 
             GameManager.Instance?.SetState(GamePlayMode.Combat);
             CombatUIController.Instance?.EnsureActiveAndReady(true);
             MusicManager.Instance?.PlayCombatMusicForBoss("", GameLocation.Village.ToString());
 
+            // A villager can be fought again and again, so the fight pays no scrap
             TurnManager turnManager = TurnManager.EnsureInstance();
             if (turnManager != null)
             {
-                turnManager.StartCombat(new List<CombatUnit> { player, this });
+                turnManager.StartCombat(new List<CombatUnit> { player, this }, awardVictoryScrap: false);
             }
 
             // Square up: both fighters and the camera face each other
@@ -166,8 +185,8 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>
-        /// Ends the brawl: the NPC gets back up at full health where they stood, becomes talkable again
-        /// and loses its temporary combat components.
+        /// Ends the brawl: the NPC gets back up where they stood, becomes talkable again, and this temporary
+        /// combat body is destroyed.
         /// </summary>
         public void Recover()
         {
@@ -177,30 +196,43 @@ namespace CastleOfTheD20.World
 
             ClearTile();
             ReleaseGrid();
-
             isDead = false;
             isKnockedOut = false;
             currentHP = maxHP;
-            transform.SetPositionAndRotation(homePosition, homeRotation);
 
-            if (npc != null)
+            // Grab the NPC's animator before letting go of the NPC
+            Animator animator = UnitAnimator;
+            ReleaseNpc();
+            if (animator != null && animator.isActiveAndEnabled)
             {
-                npc.IsInteractable = true;
-                Debug.Log($"[NpcBrawlerUnit] {unitName} dusts themselves off and gets back up.");
+                // Leave the knocked-out pose and return to idle
+                animator.Rebind();
+                animator.Update(0f);
             }
-
-            // StatusEffectController requires a CombatUnit, so it has to go first
-            StatusEffectController effects = GetComponent<StatusEffectController>();
-            if (effects != null) DestroyImmediate(effects);
 
             if (Application.isPlaying)
             {
-                Destroy(this);
+                Destroy(gameObject);
             }
             else
             {
-                DestroyImmediate(this);
+                DestroyImmediate(gameObject);
             }
+        }
+
+        private void ReleaseNpc()
+        {
+            if (npc == null) return;
+
+            Transform npcTransform = npc.transform;
+            npcTransform.SetParent(npcParent != null ? npcParent : null, false);
+            npcTransform.SetSiblingIndex(npcSiblingIndex);
+            npcTransform.localPosition = npcLocalPosition;
+            npcTransform.localRotation = npcLocalRotation;
+            npcTransform.localScale = npcLocalScale;
+
+            npc.IsInteractable = true;
+            Debug.Log($"[NpcBrawlerUnit] {unitName} dusts themselves off and gets back up.");
         }
 
         private void HandleCombatEnded(bool isVictory)
@@ -233,7 +265,19 @@ namespace CastleOfTheD20.World
 
         #endregion
 
-        #region Knock-Out
+        #region Animation
+
+        /// <summary>
+        /// Swings at the hero with the NPC's attack clip before the D20 attack roll resolves.
+        /// </summary>
+        protected override void PerformAttack(PlayerUnit target, AbilityExecutor abilityExecutor)
+        {
+            if (target != null && target.IsAlive && HasAnimatorParameter("Attack"))
+            {
+                UnitAnimator.SetTrigger("Attack");
+            }
+            base.PerformAttack(target, abilityExecutor);
+        }
 
         /// <summary>
         /// A beaten villager is knocked out, not removed: they fall over where they stand.
@@ -241,34 +285,66 @@ namespace CastleOfTheD20.World
         protected override void HideOnDeath()
         {
             isKnockedOut = true;
-            transform.rotation = Quaternion.AngleAxis(-90f, transform.right) * transform.rotation;
+
+            // NPCs with a death clip already fell over through the "Die" trigger; tip the others over by hand
+            if (!HasAnimatorParameter("Die"))
+            {
+                transform.rotation = Quaternion.AngleAxis(-90f, transform.right) * transform.rotation;
+            }
             Debug.Log($"[NpcBrawlerUnit] {unitName} is knocked out!");
+        }
+
+        private bool HasAnimatorParameter(string parameterName)
+        {
+            Animator animator = UnitAnimator;
+            if (animator == null || animator.runtimeAnimatorController == null) return false;
+
+            AnimatorControllerParameter[] parameters = animator.parameters;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].name == parameterName) return true;
+            }
+            return false;
         }
 
         #endregion
 
         #region Grid Placement
 
-        /// <summary>
-        /// Stands the NPC on the tile with its feet on the floor. The base placement lifts units by half their
-        /// collider height, which floats NPCs whose pivot is already at their feet.
-        /// </summary>
-        public override void MoveToTile(GridTile tile)
+        private void GenerateBrawlGrid(PlayerUnit player)
         {
-            base.MoveToTile(tile);
-            if (tile == null) return;
+            Vector3 center = (player.transform.position + homePosition) * 0.5f;
+            center.y = homePosition.y;
 
-            Collider col = GetComponent<Collider>();
-            if (col == null) return;
+            // Keep both fighters out of the floor raycast and the obstacle scan, so the grid lies on the ground
+            // (not on someone's head) and the NPC's own tile stays walkable
+            List<Collider> hidden = new List<Collider>();
+            HideColliders(player.gameObject, hidden);
+            HideColliders(gameObject, hidden);
+            try
+            {
+                grid.GenerateGridAt(center, BrawlGridSize, BrawlGridSize, BrawlTileSize);
+            }
+            finally
+            {
+                for (int i = 0; i < hidden.Count; i++)
+                {
+                    if (hidden[i] != null) hidden[i].enabled = true;
+                }
+            }
+        }
 
-            float floorY = GridManager.Instance != null
-                ? GridManager.Instance.GetWorldPosition(tile.GridPosition).y
-                : tile.transform.position.y;
-            float pivotAboveFeet = transform.position.y - col.bounds.min.y;
-            Vector3 pos = transform.position;
-            pos.y = floorY + pivotAboveFeet;
-            transform.position = pos;
-            Physics.SyncTransforms();
+        private static void HideColliders(GameObject root, List<Collider> hidden)
+        {
+            Collider[] colliders = root.GetComponentsInChildren<Collider>();
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                if (colliders[i].enabled)
+                {
+                    colliders[i].enabled = false;
+                    hidden.Add(colliders[i]);
+                }
+            }
         }
 
         private void PlaceOnGrid(CombatUnit unit)

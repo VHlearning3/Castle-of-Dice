@@ -76,6 +76,7 @@ namespace CastleOfTheD20.Combat
         private CombatUnit currentActiveUnit;
         private int turnCounter = 0;
         private bool isCombatActive = false;
+        private bool awardScrapOnVictory = true;
 
         #endregion
 
@@ -256,7 +257,9 @@ namespace CastleOfTheD20.Combat
         /// <summary>
         /// Initializes the combat state machine with a specified list of combatants.
         /// </summary>
-        public void StartCombat(List<CombatUnit> units)
+        /// <param name="units">Combatants enrolled in this battle.</param>
+        /// <param name="awardVictoryScrap">False for fights that pay no scrap on victory (e.g. a repeatable village brawl).</param>
+        public void StartCombat(List<CombatUnit> units, bool awardVictoryScrap = true)
         {
             UnsubscribeFromUnitDeaths();
             activeUnits.Clear();
@@ -308,6 +311,7 @@ namespace CastleOfTheD20.Combat
             }
 
             isCombatActive = true;
+            awardScrapOnVictory = awardVictoryScrap;
             turnCounter = 0; // becomes 1 when the first unit in the queue starts its turn
             currentUnitIndex = -1;
 
@@ -493,7 +497,10 @@ namespace CastleOfTheD20.Combat
             GridManager.Instance?.ClearAllHighlights();
             if (isVictory)
             {
-                AwardCombatVictoryScrap();
+                if (awardScrapOnVictory)
+                {
+                    AwardCombatVictoryScrap();
+                }
                 foreach (var unit in activeUnits)
                 {
                     if (unit is PlayerUnit player && player.IsAlive && player.UnitAnimator != null)
