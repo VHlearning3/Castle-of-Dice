@@ -175,6 +175,7 @@ namespace CastleOfTheD20.Combat
 
             // Spec: 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage
             int damage = ability.RollDamage(GetCasterAttributeBonus(caster));
+            AbilityVfx.PlayWarCry(caster);
 
             // Collect first: pushing units moves them between tiles while we iterate
             List<CombatUnit> targets = new List<CombatUnit>();
@@ -190,6 +191,7 @@ namespace CastleOfTheD20.Combat
             foreach (CombatUnit target in targets)
             {
                 Vector2Int pushDir = target.GridPosition - caster.GridPosition;
+                Vector3 pushedFrom = target.transform.position;
                 for (int step = 0; step < WarCryMaxPushTiles; step++)
                 {
                     GridTile pushTile = grid.GetTileAt(target.GridPosition + pushDir);
@@ -197,6 +199,7 @@ namespace CastleOfTheD20.Combat
                     target.MoveToTile(pushTile);
                 }
                 Debug.Log($"[AbilityExecutor] War Cry knocks {target.UnitName} back to {target.GridPosition}!");
+                AbilityVfx.PlayPushSlide(target, pushedFrom);
 
                 target.TakeDamage(damage);
             }
@@ -251,7 +254,9 @@ namespace CastleOfTheD20.Combat
             }
 
             Debug.Log($"[AbilityExecutor] {caster.UnitName} blinks to {targetGridPos}!");
+            Vector3 blinkedFrom = caster.transform.position;
             caster.MoveToTile(targetTile);
+            AbilityVfx.PlayBlink(caster, blinkedFrom);
             return true;
         }
 
@@ -398,7 +403,9 @@ namespace CastleOfTheD20.Combat
             }
 
             Debug.Log($"[AbilityExecutor] {caster.UnitName} melts into shadows and emerges at {targetGridPos}! (Advantage applied to next attack)");
+            Vector3 steppedFrom = caster.transform.position;
             caster.MoveToTile(targetTile);
+            AbilityVfx.PlayShadowStep(caster, steppedFrom);
             caster.StatusEffects?.ApplyEffect(StatusEffectType.AdvantageNextAttack, durationTurns: 1);
             return true;
         }

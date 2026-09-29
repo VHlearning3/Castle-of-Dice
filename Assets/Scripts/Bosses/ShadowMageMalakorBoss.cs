@@ -175,7 +175,9 @@ namespace CastleOfTheD20.Bosses
                 int randomIndex = UnityEngine.Random.Range(0, candidateTiles.Count);
                 GridTile chosenTile = candidateTiles[randomIndex];
 
+                Vector3 previousWorldPos = transform.position;
                 MoveToTile(chosenTile);
+                AbilityVfx.PlayMalakorTeleport(this, previousWorldPos);
                 Debug.Log($"[ShadowMageMalakor] Malakor slips through shadows! Teleported from {previousPos} to {chosenTile.GridPosition}.");
                 OnBossTeleported?.Invoke(this, previousPos, chosenTile.GridPosition);
             }
