@@ -39,6 +39,9 @@ namespace CastleOfTheD20.UI
         [Tooltip("Button to manually conclude the hero's turn.")]
         [SerializeField] private Button endTurnButton;
 
+        [Tooltip("Button the hero presses before clicking a tile to move. Built at runtime if left empty.")]
+        [SerializeField] private Button moveButton;
+
         [Tooltip("Banner text indicating turn phase (PLAYER TURN / ENEMY TURN / VICTORY / DEFEAT).")]
         [SerializeField] private TMP_Text turnBannerText;
 
@@ -64,6 +67,10 @@ namespace CastleOfTheD20.UI
 
         public GameObject CombatActionBar => combatActionBar;
         public Button EndTurnButton => endTurnButton;
+        public Button MoveButton => moveButton;
+
+        /// <summary>True after the hero pressed Move; only then does clicking a tile move them.</summary>
+        public bool IsMoveModeActive => moveModeActive;
         public IReadOnlyList<Button> AbilityButtons => abilityButtons;
         public IReadOnlyList<Image> AbilityIcons => abilityIcons;
         public IReadOnlyList<TMP_Text> AbilityNames => abilityNames;
@@ -157,6 +164,7 @@ namespace CastleOfTheD20.UI
         private PlayerUnit activePlayer;
         private readonly List<string> logHistory = new List<string>();
         private int selectedAbilitySlot = -1;
+        private bool moveModeActive;
 
         #endregion
 
@@ -395,6 +403,92 @@ namespace CastleOfTheD20.UI
             capRect.localEulerAngles = new Vector3(0f, 0f, 90f);
         }
 
+        private const string MoveButtonName = "Move_Button";
+        private const float MoveButtonX = 175f;       // End Turn is 165px wide at x = 0
+        private const float MoveButtonWidth = 145f;
+        private const float AbilityRowStartX = 330f;  // Move button ends at 320
+
+        /// <summary>
+        /// Builds (or re-styles) the Move button between End Turn and the ability cards.
+        /// Tiles only move the hero after this button is pressed, so a stray click can't waste the move.
+        /// </summary>
+        private void EnsureMoveButton()
+        {
+            if (combatActionBar == null) return;
+
+            if (moveButton == null)
+            {
+                Transform existing = combatActionBar.transform.Find(MoveButtonName);
+                GameObject go = existing != null
+                    ? existing.gameObject
+                    : new GameObject(MoveButtonName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                moveButton = go.GetComponent<Button>();
+                if (moveButton == null) moveButton = go.AddComponent<Button>();
+            }
+
+            moveButton.transform.SetParent(combatActionBar.transform, false);
+            RectTransform rect = moveButton.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0.5f);
+            rect.anchorMax = new Vector2(0f, 0.5f);
+            rect.pivot = new Vector2(0f, 0.5f);
+            rect.anchoredPosition = new Vector2(MoveButtonX, 0f);
+            rect.sizeDelta = new Vector2(MoveButtonWidth, 66f);
+            rect.localScale = Vector3.one;
+
+            Image img = moveButton.GetComponent<Image>();
+            if (img != null)
+            {
+                if (buttonNormalSprite != null)
+                {
+                    img.sprite = buttonNormalSprite;
+                    img.type = Image.Type.Sliced;
+                    img.color = Color.white;
+                }
+                else
+                {
+                    img.color = UITheme.PanelSlate;
+                }
+                img.raycastTarget = true;
+                moveButton.targetGraphic = img;
+            }
+
+            if (buttonHoverSprite != null && buttonPressedSprite != null)
+            {
+                moveButton.transition = Selectable.Transition.SpriteSwap;
+                moveButton.spriteState = new SpriteState
+                {
+                    highlightedSprite = buttonHoverSprite,
+                    pressedSprite = buttonPressedSprite,
+                    selectedSprite = buttonHoverSprite,
+                    disabledSprite = buttonNormalSprite
+                };
+            }
+
+            TMP_Text label = moveButton.GetComponentInChildren<TMP_Text>(true);
+            if (label == null)
+            {
+                GameObject textObj = new GameObject("Move_Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textObj.transform.SetParent(moveButton.transform, false);
+                label = textObj.GetComponent<TMP_Text>();
+            }
+            RectTransform labelRect = label.rectTransform;
+            labelRect.anchorMin = Vector2.zero;
+            labelRect.anchorMax = Vector2.one;
+            labelRect.pivot = new Vector2(0.5f, 0.5f);
+            labelRect.offsetMin = new Vector2(8f, 0f);
+            labelRect.offsetMax = new Vector2(-8f, 0f);
+            labelRect.localScale = Vector3.one;
+
+            label.text = "Move";
+            label.fontSize = 15.5f;
+            label.fontStyle = FontStyles.Bold;
+            label.color = UITheme.GoldAccent;
+            label.alignment = TextAlignmentOptions.Center;
+            label.enableAutoSizing = false;
+            label.margin = Vector4.zero;
+            label.raycastTarget = false;
+        }
+
         public void EnsureStyledHierarchy()
         {
             LoadThemeSpritesIfMissing();
@@ -410,7 +504,7 @@ namespace CastleOfTheD20.UI
                 barRect.anchorMax = new Vector2(0.5f, 0f);
                 barRect.pivot = new Vector2(0.5f, 0f);
                 barRect.anchoredPosition = new Vector2(0f, 20f);
-                barRect.sizeDelta = new Vector2(1080f, 76f);
+                barRect.sizeDelta = new Vector2(1210f, 76f); // End Turn + Move + 4 ability cards
                 barRect.localScale = Vector3.one;
             }
 
@@ -496,7 +590,10 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // 3. Style Abilities Container
+            // 3. Move button, right of End Turn
+            EnsureMoveButton();
+
+            // 4. Style Abilities Container
             Transform containerTr = combatActionBar.transform.Find("AblilitiesContainer")
                 ?? combatActionBar.transform.Find("AbilitiesContainer")
                 ?? combatActionBar.transform.Find("AbilityContainer");
@@ -507,8 +604,8 @@ namespace CastleOfTheD20.UI
                 contRect.anchorMin = new Vector2(0f, 0.5f);
                 contRect.anchorMax = new Vector2(1f, 0.5f);
                 contRect.pivot = new Vector2(0f, 0.5f);
-                contRect.anchoredPosition = new Vector2(180f, 0f);
-                contRect.sizeDelta = new Vector2(-180f, 76f);
+                contRect.anchoredPosition = new Vector2(AbilityRowStartX, 0f);
+                contRect.sizeDelta = new Vector2(-AbilityRowStartX, 76f);
                 contRect.localScale = Vector3.one;
 
                 HorizontalLayoutGroup hlg = containerTr.GetComponent<HorizontalLayoutGroup>();
@@ -521,7 +618,7 @@ namespace CastleOfTheD20.UI
                 hlg.childForceExpandHeight = false;
             }
 
-            // 4. Style each of the 4 Ability Buttons
+            // 5. Style each of the 4 Ability Buttons
             for (int i = 0; i < abilityButtons.Count; i++)
             {
                 if (abilityButtons[i] == null) continue;
@@ -529,7 +626,7 @@ namespace CastleOfTheD20.UI
                 Transform btnTr = btn.transform;
 
                 RectTransform bRect = btn.GetComponent<RectTransform>();
-                bRect.sizeDelta = new Vector2(215f, 66f);
+                bRect.sizeDelta = new Vector2(210f, 66f);
                 bRect.localScale = Vector3.one;
 
                 // Button Sprite
@@ -762,6 +859,12 @@ namespace CastleOfTheD20.UI
                 endTurnButton.onClick.AddListener(OnEndTurnClicked);
             }
 
+            if (moveButton != null)
+            {
+                moveButton.onClick.RemoveAllListeners();
+                moveButton.onClick.AddListener(ToggleMoveMode);
+            }
+
             // Hook up ability slot clicks
             for (int i = 0; i < abilityButtons.Count; i++)
             {
@@ -828,6 +931,11 @@ namespace CastleOfTheD20.UI
             {
                 endTurnButton.onClick.RemoveListener(OnEndTurnClicked);
             }
+
+            if (moveButton != null)
+            {
+                moveButton.onClick.RemoveListener(ToggleMoveMode);
+            }
         }
 
         private void OnEnable()
@@ -838,7 +946,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnCombatEnded += HandleCombatEnded;
             TurnManager.OnCombatVictoryScrapAwarded += HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged += HandleUnitDamaged;
-            GridTile.OnTileClicked += HandleTileClicked;
+            GridTile.OnTileClicked += HandleTileMouseDown;
         }
 
         private void OnDisable()
@@ -849,7 +957,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnCombatEnded -= HandleCombatEnded;
             TurnManager.OnCombatVictoryScrapAwarded -= HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged -= HandleUnitDamaged;
-            GridTile.OnTileClicked -= HandleTileClicked;
+            GridTile.OnTileClicked -= HandleTileMouseDown;
         }
 
         private void Start()
@@ -1041,8 +1149,9 @@ namespace CastleOfTheD20.UI
 
         private bool IsPointerOverUI()
         {
+            // No IsPointerOverGameObject() shortcut: with InputSystemUIInputModule it can lag a frame
+            // behind the click, which let clicks on the action bar tray fall through to the tiles.
             if (UnityEngine.EventSystems.EventSystem.current == null) return false;
-            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject()) return false;
 
             UnityEngine.EventSystems.EventSystem eventSystem = UnityEngine.EventSystems.EventSystem.current;
             if (cachedPointerData == null || cachedPointerEventSystem != eventSystem)
@@ -1185,17 +1294,73 @@ namespace CastleOfTheD20.UI
                 bool isPlayerTurn = TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.PlayerTurn;
                 endTurnButton.interactable = isPlayerTurn;
             }
+
+            RefreshMoveButton();
+        }
+
+        private bool CanMoveNow()
+        {
+            return activePlayer != null
+                && !activePlayer.HasMovedThisTurn
+                && activePlayer.MovementRange > 0
+                && TurnManager.Instance != null
+                && TurnManager.Instance.CurrentState == TurnState.PlayerTurn;
+        }
+
+        private void RefreshMoveButton()
+        {
+            if (moveButton == null) return;
+
+            bool canMove = CanMoveNow();
+            if (!canMove) moveModeActive = false;
+            moveButton.interactable = canMove;
+
+            TMP_Text label = moveButton.GetComponentInChildren<TMP_Text>(true);
+            if (label != null)
+            {
+                if (moveModeActive) label.text = "Cancel Move";
+                else if (activePlayer != null && activePlayer.HasMovedThisTurn) label.text = "Moved";
+                else label.text = activePlayer != null ? $"Move ({activePlayer.MovementRange})" : "Move";
+            }
+
+            // Pressed-in look while move mode is on, same as a selected ability card
+            Image img = moveButton.GetComponent<Image>();
+            if (img != null && buttonNormalSprite != null)
+            {
+                img.sprite = (moveModeActive && buttonHoverSprite != null) ? buttonHoverSprite : buttonNormalSprite;
+            }
         }
 
         #endregion
 
         #region UI Event Callbacks
 
+        /// <summary>
+        /// Move button: turns move mode on (tiles in reach light up and a click moves the hero there)
+        /// or off again. Picking an ability, moving, or ending the turn also turns it off.
+        /// </summary>
+        public void ToggleMoveMode()
+        {
+            LocatePlayer();
+            if (!moveModeActive && !CanMoveNow()) return;
+
+            moveModeActive = !moveModeActive;
+            if (moveModeActive)
+            {
+                selectedAbilitySlot = -1;
+                LogCombatMessage("Move: click a highlighted tile.");
+            }
+
+            RefreshAbilityBar();
+            UpdateMovementHighlights();
+        }
+
         private void OnAbilitySlotClicked(int slotIndex)
         {
             LocatePlayer();
             if (activePlayer == null || activePlayer.HasActedThisTurn) return;
             activePlayer.EnsureTilePosition();
+            moveModeActive = false;
 
             // Clicking the same slot toggles it off
             if (selectedAbilitySlot == slotIndex)
@@ -1262,6 +1427,16 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        /// <summary>
+        /// GridTile.OnMouseDown fires from physics raycasts, which UI does not block, so a click on the
+        /// action bar tray used to land on the tile underneath it. Drop those clicks here.
+        /// </summary>
+        private void HandleTileMouseDown(GridTile tile)
+        {
+            if (IsPointerOverUI()) return;
+            HandleTileClicked(tile);
+        }
+
         private void HandleTileClicked(GridTile tile)
         {
             if (tile == null) return;
@@ -1312,7 +1487,9 @@ namespace CastleOfTheD20.UI
                 return;
             }
 
-            // 3. If no ability is selected and player clicked an empty walkable tile: handle tactical movement
+            // 3. Empty tile: the hero only moves while move mode is on (Move button), never by a stray click
+            if (!moveModeActive) return;
+
             if (!activePlayer.HasMovedThisTurn && tile.IsWalkable && !tile.IsOccupied && GridManager.Instance != null)
             {
                 var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
@@ -1321,6 +1498,7 @@ namespace CastleOfTheD20.UI
                     activePlayer.FaceTowards(tile.transform.position);
                     activePlayer.MoveToTile(tile);
                     activePlayer.HasMovedThisTurn = true;
+                    moveModeActive = false;
                     RefreshAbilityBar();
                     UpdateMovementHighlights();
                     LogCombatMessage($"{activePlayer.UnitName} moved to tile ({tile.GridPosition.x}, {tile.GridPosition.y}).");
@@ -1380,24 +1558,10 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // Check if a SingleTarget ability was clicked on an empty tile while movement is still available
+            // A SingleTarget ability clicked on an empty tile does nothing: moving is the Move button's job
             bool isOccupiedUnit = targetOccupant != null;
             if (ability.TargetType == AbilityTargetType.SingleTarget && !isOccupiedUnit)
             {
-                if (!activePlayer.HasMovedThisTurn && targetTile.IsWalkable && !targetTile.IsOccupied)
-                {
-                    var reachable = grid.GetReachableTiles(casterPos, activePlayer.MovementRange);
-                    if (reachable.Contains(targetTile))
-                    {
-                        activePlayer.MoveToTile(targetTile);
-                        activePlayer.HasMovedThisTurn = true;
-                        selectedAbilitySlot = -1;
-                        RefreshAbilityBar();
-                        UpdateMovementHighlights();
-                        LogCombatMessage($"{activePlayer.UnitName} moved to tile ({targetTile.GridPosition.x}, {targetTile.GridPosition.y}).");
-                        return;
-                    }
-                }
                 LogCombatMessage($"{ability.AbilityName} requires a target enemy unit.");
                 return;
             }
@@ -1436,23 +1600,9 @@ namespace CastleOfTheD20.UI
                 }
                 else
                 {
-                    // Target is out of full reach; move as close as possible along the path
-                    GridTile closestTile = grid.FindReachableTileClosestToTarget(casterPos, activePlayer.MovementRange, targetPos);
-                    if (closestTile != null && closestTile != activePlayer.CurrentTile)
-                    {
-                        activePlayer.MoveToTile(closestTile);
-                        activePlayer.HasMovedThisTurn = true;
-                        int remDist = grid.GetDistance(closestTile.GridPosition, targetPos);
-                        LogCombatMessage($"{activePlayer.UnitName} moved towards target ({closestTile.GridPosition.x}, {closestTile.GridPosition.y}), but remains out of range for {ability.AbilityName} (Distance: {remDist}, Range: {ability.Range}).");
-                        selectedAbilitySlot = -1;
-                        RefreshAbilityBar();
-                        UpdateMovementHighlights();
-                        return;
-                    }
-                    else
-                    {
-                        LogCombatMessage($"Target is out of reach! (Distance: {currentDist}, Movement: {activePlayer.MovementRange}, Range: {ability.Range})");
-                    }
+                    // Out of reach even after a full move: don't spend the move without attacking.
+                    // Walking closer is done with the Move button.
+                    LogCombatMessage($"Target is out of reach! (Distance: {currentDist}, Movement: {activePlayer.MovementRange}, Range: {ability.Range})");
                 }
             }
             else
@@ -1467,11 +1617,15 @@ namespace CastleOfTheD20.UI
 
             GridManager.Instance.ClearAllHighlights();
 
-            // If player has movement available, no ability is selected, and it's player's turn:
-            if (!activePlayer.HasMovedThisTurn && selectedAbilitySlot < 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn)
+            // No ability selected and it's the player's turn:
+            if (selectedAbilitySlot < 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn)
             {
-                var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
-                GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+                // Blue move tiles only while move mode is on
+                if (moveModeActive && !activePlayer.HasMovedThisTurn)
+                {
+                    var reachable = GridManager.Instance.GetReachableTiles(activePlayer.GridPosition, activePlayer.MovementRange);
+                    GridManager.Instance.HighlightTiles(reachable, TileHighlightType.Reachable);
+                }
 
                 // Highlight any enemies currently within direct primary attack range with EnemyTarget (Red)
                 AbilitySO primaryAbility = activePlayer.GetAbility(0);
@@ -1490,6 +1644,7 @@ namespace CastleOfTheD20.UI
         private void OnEndTurnClicked()
         {
             selectedAbilitySlot = -1;
+            moveModeActive = false;
             GridManager.Instance?.ClearAllHighlights();
             TurnManager.Instance?.EndPlayerTurn();
         }
@@ -1555,6 +1710,7 @@ namespace CastleOfTheD20.UI
             }
 
             bool isPlayer = unit is PlayerUnit;
+            moveModeActive = false; // every turn starts with move mode off
             SetCombatBarVisible(isPlayer);
             RefreshAbilityBar();
             if (isPlayer)
@@ -1638,6 +1794,7 @@ namespace CastleOfTheD20.UI
                 }
 
                 selectedAbilitySlot = -1;
+                moveModeActive = false;
                 GridManager.Instance?.ClearAllHighlights();
             }
         }
