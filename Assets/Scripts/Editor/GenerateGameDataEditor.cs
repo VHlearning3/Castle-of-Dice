@@ -124,15 +124,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorSlash)) warriorSlash.Initialize(
                 id: "warrior_sword_slash",
                 name: "Sword Slash",
-                desc: "Standard melee strike dealing heavy slashing damage to an adjacent enemy.",
+                desc: "Melee strike for 1d8 + STR damage. Half of the damage also cleaves an enemy standing next to you.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 1,
                 aoeRadius: 0,
-                value: 6,
+                value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.None,
                 duration: 0,
-                animTrigger: "Attack"
+                animTrigger: "Attack",
+                diceCount: 1,
+                diceSides: 8,
+                addAttribute: true
             );
             EditorUtility.SetDirty(warriorSlash);
             assetCount++;
@@ -141,13 +144,13 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorShield)) warriorShield.Initialize(
                 id: "warrior_shield_block",
                 name: "Shield Block",
-                desc: "Raise shield defensively, granting +3 Armor Class and damage mitigation until next turn.",
+                desc: "Raise your shield for +4 Armor Class until your next turn, and strike back for 1d6 whenever an adjacent enemy misses you.",
                 target: AbilityTargetType.Self,
                 abilityRange: 0,
                 aoeRadius: 0,
                 value: 0,
                 checkRequired: false,
-                effect: StatusEffectType.ManaShield,
+                effect: StatusEffectType.ShieldWall,
                 duration: 1,
                 animTrigger: "Buff"
             );
@@ -158,15 +161,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorWarCry)) warriorWarCry.Initialize(
                 id: "warrior_war_cry",
                 name: "War Cry",
-                desc: "Unleash an intimidating shout that knocks back surrounding foes and bolsters resolve.",
+                desc: "A 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage.",
                 target: AbilityTargetType.Area3x3,
                 abilityRange: 1,
                 aoeRadius: 1,
-                value: 3,
+                value: 0,
                 checkRequired: false,
                 effect: StatusEffectType.None,
                 duration: 0,
-                animTrigger: "Buff"
+                animTrigger: "Buff",
+                diceCount: 1,
+                diceSides: 4,
+                addAttribute: true
             );
             EditorUtility.SetDirty(warriorWarCry);
             assetCount++;
@@ -175,11 +181,11 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorIronWill)) warriorIronWill.Initialize(
                 id: "warrior_iron_will",
                 name: "Iron Will",
-                desc: "Channel inner fortitude to immediately restore 30% of maximum hit points.",
+                desc: "Restore 30% of your maximum hit points and shake off poison, frostbite and blindness.",
                 target: AbilityTargetType.Self,
                 abilityRange: 0,
                 aoeRadius: 0,
-                value: 10,
+                value: 0,
                 checkRequired: false,
                 effect: StatusEffectType.None,
                 duration: 0,
@@ -193,15 +199,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFireball)) mageFireball.Initialize(
                 id: "mage_fireball",
                 name: "Fireball",
-                desc: "Hurl an explosive sphere of arcane flame, dealing area damage across a 3x3 grid zone.",
+                desc: "Hurl a sphere of flame up to 4 tiles, dealing 2d6 fire damage to everything in a 3x3 area.",
                 target: AbilityTargetType.Area3x3,
-                abilityRange: 6,
+                abilityRange: 4,
                 aoeRadius: 1,
-                value: 8,
+                value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.None,
                 duration: 0,
-                animTrigger: "CastSpell"
+                animTrigger: "CastSpell",
+                diceCount: 2,
+                diceSides: 6,
+                addAttribute: false
             );
             EditorUtility.SetDirty(mageFireball);
             assetCount++;
@@ -210,15 +219,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
-                desc: "Blast a target with chilling frost, inflicting frostbite and halving movement for 2 turns.",
+                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 1 turn.",
                 target: AbilityTargetType.SingleTarget,
-                abilityRange: 5,
+                abilityRange: 4,
                 aoeRadius: 0,
-                value: 5,
+                value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.Frostbite,
-                duration: 2,
-                animTrigger: "CastSpell"
+                duration: 1,
+                animTrigger: "CastSpell",
+                diceCount: 1,
+                diceSides: 6,
+                addAttribute: true
             );
             EditorUtility.SetDirty(mageFrostbite);
             assetCount++;
@@ -227,7 +239,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageManaShield)) mageManaShield.Initialize(
                 id: "mage_mana_shield",
                 name: "Mana Shield",
-                desc: "Conjure a protective barrier of pure arcane energy that absorbs incoming attacks.",
+                desc: "Conjure a barrier that completely absorbs the next attack that hits you.",
                 target: AbilityTargetType.Self,
                 abilityRange: 0,
                 aoeRadius: 0,
@@ -244,9 +256,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageBlink)) mageBlink.Initialize(
                 id: "mage_blink",
                 name: "Blink",
-                desc: "Instantly teleport to an unoccupied grid tile up to 5 tiles away without provoking attacks.",
+                desc: "Instantly teleport to an unoccupied tile up to 7 tiles away without provoking attacks.",
                 target: AbilityTargetType.SingleTarget,
-                abilityRange: 5,
+                abilityRange: 7,
                 aoeRadius: 0,
                 value: 0,
                 checkRequired: false,
@@ -262,15 +274,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(rogueBackstab)) rogueBackstab.Initialize(
                 id: "rogue_backstab",
                 name: "Backstab",
-                desc: "Strike from the shadows for devastating critical puncture damage.",
+                desc: "Attack with Advantage for 2d6 + AGI damage, doubled if the target is blinded or you just used Shadow Step.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 1,
                 aoeRadius: 0,
-                value: 8,
+                value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.None,
                 duration: 0,
-                animTrigger: "Attack"
+                animTrigger: "Attack",
+                diceCount: 2,
+                diceSides: 6,
+                addAttribute: true
             );
             EditorUtility.SetDirty(rogueBackstab);
             assetCount++;
@@ -279,9 +294,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(rogueSmokeBomb)) rogueSmokeBomb.Initialize(
                 id: "rogue_smoke_bomb",
                 name: "Smoke Bomb",
-                desc: "Toss a dense smoke canister, blinding all targets in a 3x3 area for 1 turn.",
+                desc: "Toss a smoke canister up to 3 tiles, blinding everything in a 3x3 area for 1 turn (Disadvantage on attacks).",
                 target: AbilityTargetType.Area3x3,
-                abilityRange: 4,
+                abilityRange: 3,
                 aoeRadius: 1,
                 value: 0,
                 checkRequired: false,
@@ -296,15 +311,18 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(roguePoisonDagger)) roguePoisonDagger.Initialize(
                 id: "rogue_poison_dagger",
                 name: "Poison Dagger",
-                desc: "Slash with an envenomed blade, dealing light damage and poisoning the victim for 3 turns.",
+                desc: "Slash with an envenomed blade for 1d4 + AGI damage, then 1d6 poison damage each turn for 2 turns.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 1,
                 aoeRadius: 0,
-                value: 4,
+                value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.Poison,
-                duration: 3,
-                animTrigger: "Attack"
+                duration: 2,
+                animTrigger: "Attack",
+                diceCount: 1,
+                diceSides: 4,
+                addAttribute: true
             );
             EditorUtility.SetDirty(roguePoisonDagger);
             assetCount++;
@@ -351,7 +369,7 @@ namespace CastleOfTheD20.Editor
                 maxHp: 20,
                 ac: 12,
                 move: 3,
-                bonus: 4,
+                bonus: 3,
                 abilities: new List<AbilitySO> { mageFireball, mageFrostbite, mageManaShield, mageBlink }
             );
             EditorUtility.SetDirty(mageClass);
@@ -366,7 +384,7 @@ namespace CastleOfTheD20.Editor
                 maxHp: 25,
                 ac: 13,
                 move: 5,
-                bonus: 4,
+                bonus: 3,
                 abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueLockpicking }
             );
             EditorUtility.SetDirty(rogueClass);

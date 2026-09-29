@@ -142,6 +142,45 @@ namespace CastleOfTheD20.World
 
             // 4. Hook into TurnManager combat end events to auto-resolve upon victory
             TurnManager.OnCombatEnded += HandleCombatEnded;
+
+            // 5. Zone scenes reload on every visit: a room cleared earlier (this session or in the save)
+            // stays cleared instead of re-running its fight, boss milestone and chest reward.
+            if (WasClearedBefore())
+            {
+                RestoreClearedState();
+            }
+        }
+
+        /// <summary>
+        /// True when the campaign already records this room's boss as defeated or its wing as cleared.
+        /// </summary>
+        private bool WasClearedBefore()
+        {
+            GameManager gm = GameManager.Instance;
+            if (gm == null) return false;
+
+            if (!string.IsNullOrEmpty(bossIdentifier))
+            {
+                return gm.IsBossDefeated(bossIdentifier);
+            }
+
+            return Enum.TryParse<GameLocation>(roomLocation, true, out GameLocation location) && gm.IsWingCleared(location);
+        }
+
+        private void RestoreClearedState()
+        {
+            currentState = RoomState.Cleared;
+            isEncounterTriggered = true;
+
+            if (triggerCollider != null) triggerCollider.enabled = false;
+
+            // The reward chest stays reachable; it remembers on its own whether it was already looted
+            if (secretPassageOrChest != null)
+            {
+                RevealRewardChest();
+            }
+
+            Debug.Log($"[DungeonRoomController] '{roomLocation}' was already cleared; encounter skipped.");
         }
 
         private void OnDestroy()
@@ -373,14 +412,7 @@ namespace CastleOfTheD20.World
             // 2. Enable the secretPassageOrChest to reward the player
             if (secretPassageOrChest != null)
             {
-                secretPassageOrChest.SetActive(true);
-                ChestRewardInteraction chestReward = secretPassageOrChest.GetComponent<ChestRewardInteraction>();
-                if (chestReward == null)
-                {
-                    chestReward = secretPassageOrChest.AddComponent<ChestRewardInteraction>();
-                    chestReward.GoldReward = 30;
-                }
-                chestReward.EnsureChestCollider();
+                ChestRewardInteraction chestReward = RevealRewardChest();
                 Debug.Log($"[DungeonRoomController] Secret passage or reward chest revealed in '{roomLocation}' with {chestReward.GoldReward} gold reward.");
             }
 
@@ -408,6 +440,19 @@ namespace CastleOfTheD20.World
             }
 
             OnRoomCleared?.Invoke(this);
+        }
+
+        private ChestRewardInteraction RevealRewardChest()
+        {
+            secretPassageOrChest.SetActive(true);
+            ChestRewardInteraction chestReward = secretPassageOrChest.GetComponent<ChestRewardInteraction>();
+            if (chestReward == null)
+            {
+                chestReward = secretPassageOrChest.AddComponent<ChestRewardInteraction>();
+                chestReward.GoldReward = 30;
+            }
+            chestReward.EnsureChestCollider();
+            return chestReward;
         }
 
         /// <summary>

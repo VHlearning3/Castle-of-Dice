@@ -10,7 +10,8 @@ namespace CastleOfTheD20.Combat
     /// Core combat execution engine that resolves AbilitySO actions.
     /// Handles Warrior abilities (Sword Slash, Shield Block, War Cry, Iron Will),
     /// Mage spells (Fireball 3x3 AOE, Frostbite, Mana Shield, Blink),
-    /// and Rogue skills (Backstab, Smoke Bomb, Poison Dagger, Lockpicking).
+    /// and Rogue skills (Backstab, Smoke Bomb, Poison Dagger, Shadow Step).
+    /// Damage follows the spec's dice formulas (e.g. Sword Slash 1d8 + STR) via AbilitySO.RollDamage.
     /// Integrates directly with DiceSystem.RollD20 for hit checks vs Armor Class (AC).
     /// </summary>
     public class AbilityExecutor : MonoBehaviour
@@ -18,6 +19,16 @@ namespace CastleOfTheD20.Combat
         #region Singleton
 
         public static AbilityExecutor Instance { get; private set; }
+
+        #endregion
+
+        #region Constants
+
+        /// <summary>Farthest a War Cry shockwave pushes an adjacent enemy (spec: 1-2 tiles).</summary>
+        public const int WarCryMaxPushTiles = 2;
+
+        /// <summary>Blink range used when the ability asset does not set one (spec: 5-7 tiles).</summary>
+        public const int BlinkMaxRange = 7;
 
         #endregion
 
@@ -116,7 +127,11 @@ namespace CastleOfTheD20.Combat
             }
             if (id.Contains("blink"))
             {
-                return ExecuteBlink(caster, targetGridPos, grid);
+                return ExecuteBlink(caster, ability, targetGridPos, grid);
+            }
+            if (id.Contains("smoke_bomb"))
+            {
+                return ExecuteSmokeBomb(caster, ability, targetGridPos, grid);
             }
             if (ability.TargetType == AbilityTargetType.Area3x3 || id.Contains("fireball"))
             {
@@ -127,10 +142,6 @@ namespace CastleOfTheD20.Combat
             if (id.Contains("backstab"))
             {
                 return ExecuteBackstab(caster, ability, targetGridPos, grid);
-            }
-            if (id.Contains("smoke_bomb"))
-            {
-                return ExecuteSmokeBomb(caster, ability, targetGridPos, grid);
             }
             if (id.Contains("shadow_step") || id.Contains("shadowstep"))
             {
@@ -152,8 +163,8 @@ namespace CastleOfTheD20.Combat
 
         private bool ExecuteShieldBlock(CombatUnit caster, AbilitySO ability)
         {
-            // Warrior Shield Wall: +4 AC and counterattack against adjacent attackers until the next turn
-            Debug.Log($"[AbilityExecutor] {caster.UnitName} raises a Shield Wall! +{StatusEffectController.ShieldWallArmorBonus} AC and counterattacks until next turn.");
+            // Warrior Shield Wall: +4 AC until the next turn; an adjacent attacker that misses takes a 1d6 counterattack
+            Debug.Log($"[AbilityExecutor] {caster.UnitName} raises a Shield Wall! +{StatusEffectController.ShieldWallArmorBonus} AC and counterattacks misses until next turn.");
             caster.StatusEffects?.ApplyEffect(StatusEffectType.ShieldWall, durationTurns: Mathf.Max(1, ability.EffectDurationTurns));
             return true;
         }
@@ -162,26 +173,32 @@ namespace CastleOfTheD20.Combat
         {
             Debug.Log($"[AbilityExecutor] {caster.UnitName} roars with War Cry!");
 
-            // Knockback adjacent enemies 1 tile away from caster
+            // Spec: 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage
+            int damage = ability.RollDamage(GetCasterAttributeBonus(caster));
+
+            // Collect first: pushing units moves them between tiles while we iterate
+            List<CombatUnit> targets = new List<CombatUnit>();
             List<GridTile> adjacent = grid.GetTilesInRadius(caster.GridPosition, radius: 1);
             foreach (var tile in adjacent)
             {
-                if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit != caster)
+                if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit != caster && IsHostileTo(caster, tile.OccupyingUnit))
                 {
-                    CombatUnit target = tile.OccupyingUnit;
-                    Vector2Int pushDir = target.GridPosition - caster.GridPosition;
-                    Vector2Int newPos = target.GridPosition + pushDir;
-
-                    GridTile pushTile = grid.GetTileAt(newPos);
-                    if (pushTile != null && pushTile.IsWalkable && !pushTile.IsOccupied)
-                    {
-                        Debug.Log($"[AbilityExecutor] War Cry knocks {target.UnitName} back to {newPos}!");
-                        target.MoveToTile(pushTile);
-                    }
-
-                    // Deal minor shockwave damage
-                    target.TakeDamage(ability.BaseValue);
+                    targets.Add(tile.OccupyingUnit);
                 }
+            }
+
+            foreach (CombatUnit target in targets)
+            {
+                Vector2Int pushDir = target.GridPosition - caster.GridPosition;
+                for (int step = 0; step < WarCryMaxPushTiles; step++)
+                {
+                    GridTile pushTile = grid.GetTileAt(target.GridPosition + pushDir);
+                    if (pushTile == null || !pushTile.IsWalkable || pushTile.IsOccupied) break;
+                    target.MoveToTile(pushTile);
+                }
+                Debug.Log($"[AbilityExecutor] War Cry knocks {target.UnitName} back to {target.GridPosition}!");
+
+                target.TakeDamage(damage);
             }
 
             return true;
@@ -189,10 +206,18 @@ namespace CastleOfTheD20.Combat
 
         private bool ExecuteIronWill(CombatUnit caster, AbilitySO ability)
         {
-            // Iron Will: Restores 30% of maximum HP
-            int healAmount = Mathf.Max(1, Mathf.RoundToInt(caster.MaxHP * 0.30f));
-            Debug.Log($"[AbilityExecutor] {caster.UnitName} activates Iron Will! Restoring {healAmount} HP.");
+            // Iron Will: Restores 30% of maximum HP (+ Rank 2 potency) and removes all debuffs
+            int healAmount = Mathf.Max(1, Mathf.RoundToInt(caster.MaxHP * 0.30f)) + Mathf.Max(0, ability.BaseValue);
+            Debug.Log($"[AbilityExecutor] {caster.UnitName} activates Iron Will! Restoring {healAmount} HP and shaking off debuffs.");
             caster.Heal(healAmount);
+
+            StatusEffectController effects = caster.StatusEffects;
+            if (effects != null)
+            {
+                effects.RemoveEffect(StatusEffectType.Poison);
+                effects.RemoveEffect(StatusEffectType.Frostbite);
+                effects.RemoveEffect(StatusEffectType.Blind);
+            }
             return true;
         }
 
@@ -207,7 +232,7 @@ namespace CastleOfTheD20.Combat
             return true;
         }
 
-        private bool ExecuteBlink(CombatUnit caster, Vector2Int targetGridPos, GridManager grid)
+        private bool ExecuteBlink(CombatUnit caster, AbilitySO ability, Vector2Int targetGridPos, GridManager grid)
         {
             GridTile targetTile = grid.GetTileAt(targetGridPos);
             if (targetTile == null || !targetTile.IsWalkable || targetTile.IsOccupied)
@@ -216,10 +241,12 @@ namespace CastleOfTheD20.Combat
                 return false;
             }
 
+            // Spec: Blink carries the mage up to 7 tiles
+            int maxRange = ability.Range > 0 ? ability.Range : BlinkMaxRange;
             int distance = grid.GetDistance(caster.GridPosition, targetGridPos);
-            if (distance > 6)
+            if (distance > maxRange)
             {
-                Debug.Log($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range 6.");
+                Debug.Log($"[AbilityExecutor] Blink distance ({distance}) exceeds maximum range {maxRange}.");
                 return false;
             }
 
@@ -234,6 +261,9 @@ namespace CastleOfTheD20.Combat
 
             List<GridTile> areaTiles = grid.GetArea3x3(targetGridPos);
             int bonus = GetCasterAttributeBonus(caster);
+
+            // One damage roll for the whole blast (e.g. Fireball 2d6); a natural 20 doubles it for that target
+            int damage = ability.RollDamage(bonus);
 
             foreach (var tile in areaTiles)
             {
@@ -251,14 +281,13 @@ namespace CastleOfTheD20.Combat
 
                         if (hitCheck.isSuccess)
                         {
-                            int damage = hitCheck.isCriticalSuccess ? ability.BaseValue * 2 : ability.BaseValue;
-                            target.TakeDamage(damage, hitCheck.isCriticalSuccess);
+                            target.TakeDamage(hitCheck.isCriticalSuccess ? damage * 2 : damage, hitCheck.isCriticalSuccess);
                             ApplyAbilityStatusEffect(target, ability);
                         }
                     }
                     else
                     {
-                        target.TakeDamage(ability.BaseValue);
+                        target.TakeDamage(damage);
                         ApplyAbilityStatusEffect(target, ability);
                     }
                 }
@@ -298,8 +327,11 @@ namespace CastleOfTheD20.Combat
             }
             int bonus = GetCasterAttributeBonus(caster);
 
-            // Backstab (spec): attack roll with Advantage, and a hit deals double damage.
-            // A natural 20 doubles it again, like every other critical hit.
+            // Backstab (spec): attack roll with Advantage for 2d6 + AGI damage, doubled when the target is
+            // blinded or the rogue struck out of a Shadow Step. A natural 20 doubles it again.
+            bool fromShadowStep = caster.StatusEffects != null && caster.StatusEffects.HasEffect(StatusEffectType.AdvantageNextAttack);
+            bool targetBlinded = target.StatusEffects != null && target.StatusEffects.HasEffect(StatusEffectType.Blind);
+
             DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass, AdvantageType.Advantage);
             caster.StatusEffects?.ConsumeAdvantageNextAttack();
             Debug.Log($"[AbilityExecutor] {caster.UnitName} executes Backstab on {target.UnitName}: {hitCheck}");
@@ -307,7 +339,12 @@ namespace CastleOfTheD20.Combat
             if (hitCheck.isSuccess)
             {
                 int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus : 0;
-                int damage = (ability.BaseValue + weaponBonus) * 2;
+                int damage = ability.RollDamage(bonus, weaponBonus);
+
+                if (fromShadowStep || targetBlinded)
+                {
+                    damage *= 2;
+                }
 
                 if (hitCheck.isCriticalSuccess)
                 {
@@ -330,7 +367,7 @@ namespace CastleOfTheD20.Combat
             {
                 if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit != caster)
                 {
-                    tile.OccupyingUnit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: 1);
+                    tile.OccupyingUnit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: Mathf.Max(1, ability.EffectDurationTurns));
                 }
             }
 
@@ -407,7 +444,7 @@ namespace CastleOfTheD20.Combat
                 if (hitCheck.isSuccess)
                 {
                     int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus : 0;
-                    int damage = ability.BaseValue + weaponBonus;
+                    int damage = ability.RollDamage(bonus, weaponBonus);
 
                     if (hitCheck.isCriticalSuccess)
                     {
@@ -416,6 +453,12 @@ namespace CastleOfTheD20.Combat
 
                     target.TakeDamage(damage, hitCheck.isCriticalSuccess);
                     ApplyAbilityStatusEffect(target, ability);
+
+                    // Sword Slash (spec): half of the damage also cleaves an enemy next to the warrior
+                    if (ability.AbilityID.IndexOf("sword_slash", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        CleaveAdjacentEnemy(caster, target, damage / 2, grid);
+                    }
                 }
                 else
                 {
@@ -425,9 +468,9 @@ namespace CastleOfTheD20.Combat
             else
             {
                 // Direct heal or guaranteed damage
-                if (ability.BaseValue > 0)
+                if (ability.DealsDamage)
                 {
-                    target.TakeDamage(ability.BaseValue);
+                    target.TakeDamage(ability.RollDamage(bonus));
                 }
                 ApplyAbilityStatusEffect(target, ability);
             }
@@ -446,6 +489,30 @@ namespace CastleOfTheD20.Combat
 
             ApplyAbilityStatusEffect(caster, ability);
             return true;
+        }
+
+        /// <summary>
+        /// Deals cleave damage to one other hostile unit standing next to the caster.
+        /// </summary>
+        private void CleaveAdjacentEnemy(CombatUnit caster, CombatUnit primaryTarget, int cleaveDamage, GridManager grid)
+        {
+            if (cleaveDamage <= 0) return;
+
+            List<GridTile> adjacent = grid.GetTilesInRadius(caster.GridPosition, radius: 1);
+            foreach (var tile in adjacent)
+            {
+                CombatUnit other = tile.OccupyingUnit;
+                if (other == null || other == caster || other == primaryTarget || !other.IsAlive || !IsHostileTo(caster, other)) continue;
+
+                Debug.Log($"[AbilityExecutor] {caster.UnitName}'s swing cleaves into {other.UnitName} for {cleaveDamage} damage!");
+                other.TakeDamage(cleaveDamage);
+                return;
+            }
+        }
+
+        private static bool IsHostileTo(CombatUnit caster, CombatUnit other)
+        {
+            return (caster is EnemyUnit) != (other is EnemyUnit);
         }
 
         private void ApplyAbilityStatusEffect(CombatUnit target, AbilitySO ability)

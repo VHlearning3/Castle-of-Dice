@@ -46,6 +46,30 @@ namespace CastleOfTheD20.Combat
 
         #endregion
 
+        #region Runtime Configuration
+
+        /// <summary>
+        /// Applies a combat profile to a unit created at runtime (boss summons), which would otherwise
+        /// fight as a default "Combatant".
+        /// </summary>
+        public void ConfigureStats(string displayName, int hp, int ac, int damage, int bonus)
+        {
+            unitName = displayName;
+            maxHP = Mathf.Max(1, hp);
+            currentHP = maxHP;
+            armorClass = ac;
+            attackDamage = damage;
+            attackBonus = bonus;
+        }
+
+        /// <summary>Changes the name shown for this unit in combat (e.g. disguising an illusion).</summary>
+        public void SetDisplayName(string displayName)
+        {
+            unitName = displayName;
+        }
+
+        #endregion
+
         #region Tactical AI Routine
 
         /// <summary>
@@ -178,9 +202,10 @@ namespace CastleOfTheD20.Combat
             else
             {
                 Debug.Log($"[EnemyUnit] {unitName}'s attack missed {target.UnitName}!");
-            }
 
-            target.ResolveCounterAttack(this);
+                // Shield Wall (spec): the defender strikes back only when the attack misses
+                target.ResolveCounterAttack(this);
+            }
         }
 
         #endregion

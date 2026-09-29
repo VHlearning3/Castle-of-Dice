@@ -137,11 +137,21 @@ namespace CastleOfTheD20.Bosses
 
         /// <summary>
         /// Spawns Skeleton minion on adjacent grid cells (reduced to 1 for solo hero encounter balance).
+        /// Boss adds are capped at <see cref="skeletonCount"/> living minions, so a guard already
+        /// standing in the room counts towards the cap.
         /// </summary>
         public void SpawnSkeletonReinforcements()
         {
             hasSpawnedAdds = true;
-            Debug.Log($"[CursedCommander] \"Arise, guardian of the gate!\" The Commander summons {skeletonCount} Skeleton add!");
+
+            int toSpawn = skeletonCount - CountLivingAllies();
+            if (toSpawn <= 0)
+            {
+                Debug.Log("[CursedCommander] \"Hold the line!\" The Commander's guard already stands beside him; no reinforcements.");
+                return;
+            }
+
+            Debug.Log($"[CursedCommander] \"Arise, guardian of the gate!\" The Commander summons {toSpawn} Skeleton add!");
 
             GridManager grid = GridManager.Instance;
             if (grid == null) return;
@@ -155,11 +165,25 @@ namespace CastleOfTheD20.Bosses
                 {
                     SpawnSingleSkeleton(tile);
                     spawnedCount++;
-                    if (spawnedCount >= skeletonCount) break;
+                    if (spawnedCount >= toSpawn) break;
                 }
             }
 
             OnReinforcementsSummoned?.Invoke(this);
+        }
+
+        private int CountLivingAllies()
+        {
+            int count = 0;
+            TurnManager turnManager = TurnManager.Instance;
+            if (turnManager == null) return 0;
+
+            IReadOnlyList<CombatUnit> units = turnManager.ActiveUnits;
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] is EnemyUnit ally && ally != this && ally.IsAlive) count++;
+            }
+            return count;
         }
 
         private void SpawnSingleSkeleton(GridTile tile)
@@ -181,6 +205,12 @@ namespace CastleOfTheD20.Bosses
             if (skeleton == null)
             {
                 skeleton = addObj.AddComponent<EnemyUnit>();
+            }
+
+            if (skeletonAddPrefab == null)
+            {
+                // Same profile as the Courtyard's standing guard (ZoneSceneBuilder)
+                skeleton.ConfigureStats("Armored Skeleton Guard", hp: 20, ac: 12, damage: 4, bonus: 2);
             }
 
             skeleton.InitializeUnit();

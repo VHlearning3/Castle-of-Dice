@@ -14,14 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: warrior_shield_block
   abilityName: Shield Block
-  description: Raise shield defensively, granting +3 Armor Class and damage mitigation
-    until next turn.
+  description: Raise your shield for +4 Armor Class until your next turn, and strike back for 1d6 whenever an adjacent enemy misses you.
   abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000010, type: 3}
   targetType: 2
   range: 0
   areaOfEffectRadius: 0
   baseValue: 0
+  damageDiceCount: 0
+  damageDiceSides: 0
+  addsAttributeToDamage: 0
   requiresCheck: 0
-  appliedEffect: 4
+  appliedEffect: 6
   effectDurationTurns: 1
   animationTriggerName: Buff

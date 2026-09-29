@@ -20,6 +20,9 @@ MonoBehaviour:
   range: 3
   areaOfEffectRadius: 0
   baseValue: 0
+  damageDiceCount: 0
+  damageDiceSides: 0
+  addsAttributeToDamage: 0
   requiresCheck: 0
   appliedEffect: 5
   effectDurationTurns: 1

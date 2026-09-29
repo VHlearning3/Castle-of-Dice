@@ -280,7 +280,7 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Called after an attacker resolves a melee attack against this unit. With Shield Wall active,
+        /// Called when an attacker's melee attack against this unit misses. With Shield Wall active,
         /// strikes back at an adjacent attacker for 1d6 (+ permanent weapon bonus for heroes).
         /// </summary>
         public virtual void ResolveCounterAttack(CombatUnit attacker)

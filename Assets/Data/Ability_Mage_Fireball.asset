@@ -14,13 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: mage_fireball
   abilityName: Fireball
-  description: Hurl an explosive sphere of arcane flame, dealing area damage across
-    a 3x3 grid zone.
+  description: Hurl a sphere of flame up to 4 tiles, dealing 2d6 fire damage to everything in a 3x3 area.
   abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000015, type: 3}
   targetType: 1
-  range: 6
+  range: 4
   areaOfEffectRadius: 1
-  baseValue: 8
+  baseValue: 0
+  damageDiceCount: 2
+  damageDiceSides: 6
+  addsAttributeToDamage: 0
   requiresCheck: 1
   appliedEffect: 0
   effectDurationTurns: 0

@@ -113,6 +113,9 @@ namespace CastleOfTheD20.Core
         private readonly HashSet<string> defeatedBosses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<GameLocation> clearedLocations = new HashSet<GameLocation>();
 
+        // One-time world rewards already taken (chests, the Giant's Elixir), keyed by RewardKey()
+        private readonly HashSet<string> claimedRewards = new HashSet<string>(StringComparer.Ordinal);
+
         #endregion
 
         #region Public Properties
@@ -134,6 +137,12 @@ namespace CastleOfTheD20.Core
 
         /// <summary>Whether a specific dungeon wing or location has been cleared of hostiles.</summary>
         public bool IsWingCleared(GameLocation location) => clearedLocations.Contains(location);
+
+        /// <summary>Whether the boss with the given identifier (e.g. "CursedCommander") has been defeated.</summary>
+        public bool IsBossDefeated(string bossID) => !string.IsNullOrWhiteSpace(bossID) && defeatedBosses.Contains(bossID);
+
+        /// <summary>Whether a one-time world reward (chest, elixir) has already been taken.</summary>
+        public bool IsRewardClaimed(string rewardKey) => !string.IsNullOrEmpty(rewardKey) && claimedRewards.Contains(rewardKey);
 
         #endregion
 
@@ -249,9 +258,28 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
-        /// Writes defeated bosses and cleared wings for the save file.
+        /// Records that a one-time world reward (chest, elixir) was taken so it stays taken
+        /// when its zone scene is loaded again.
         /// </summary>
-        public void CaptureCampaignProgress(List<string> bosses, List<int> clearedWings)
+        public void MarkRewardClaimed(string rewardKey)
+        {
+            if (string.IsNullOrEmpty(rewardKey)) return;
+            claimedRewards.Add(rewardKey);
+        }
+
+        /// <summary>
+        /// Builds a stable key for a one-time reward from its scene and object name.
+        /// </summary>
+        public static string RewardKey(Component reward)
+        {
+            if (reward == null) return string.Empty;
+            return reward.gameObject.scene.name + "/" + reward.gameObject.name;
+        }
+
+        /// <summary>
+        /// Writes defeated bosses, cleared wings and claimed rewards for the save file.
+        /// </summary>
+        public void CaptureCampaignProgress(List<string> bosses, List<int> clearedWings, List<string> rewards = null)
         {
             bosses.Clear();
             bosses.AddRange(defeatedBosses);
@@ -260,15 +288,31 @@ namespace CastleOfTheD20.Core
             {
                 clearedWings.Add((int)location);
             }
+
+            if (rewards != null)
+            {
+                rewards.Clear();
+                rewards.AddRange(claimedRewards);
+            }
         }
 
         /// <summary>
-        /// Restores defeated bosses and cleared wings from a save without re-firing defeat/victory events.
+        /// Restores defeated bosses, cleared wings and claimed rewards from a save without re-firing
+        /// defeat/victory events. Null lists reset that part of the campaign (New Adventure).
         /// </summary>
-        public void RestoreCampaignProgress(IReadOnlyList<string> bosses, IReadOnlyList<int> clearedWings)
+        public void RestoreCampaignProgress(IReadOnlyList<string> bosses, IReadOnlyList<int> clearedWings, IReadOnlyList<string> rewards = null)
         {
             defeatedBosses.Clear();
             clearedLocations.Clear();
+            claimedRewards.Clear();
+
+            if (rewards != null)
+            {
+                for (int i = 0; i < rewards.Count; i++)
+                {
+                    if (!string.IsNullOrEmpty(rewards[i])) claimedRewards.Add(rewards[i]);
+                }
+            }
 
             if (bosses != null)
             {

@@ -14,12 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: rogue_backstab
   abilityName: Backstab
-  description: Strike from the shadows for devastating critical puncture damage.
+  description: Attack with Advantage for 2d6 + AGI damage, doubled if the target is blinded or you just used Shadow Step.
   abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000019, type: 3}
   targetType: 0
   range: 1
   areaOfEffectRadius: 0
-  baseValue: 8
+  baseValue: 0
+  damageDiceCount: 2
+  damageDiceSides: 6
+  addsAttributeToDamage: 1
   requiresCheck: 1
   appliedEffect: 0
   effectDurationTurns: 0

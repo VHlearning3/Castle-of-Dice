@@ -153,16 +153,13 @@ namespace CastleOfTheD20.UI
                 string checkStr = ability.RequiresCheck ? "d20 + Bonus >= Enemy AC" : "Automatic Success";
                 string dmgStr;
 
-                if (ability.BaseValue > 0)
+                if (ability.DealsDamage)
                 {
-                    int totalDmg = ability.BaseValue;
-                    string bonusStr = "";
-                    if (player.WeaponDamageBonus > 0)
-                    {
-                        totalDmg += player.WeaponDamageBonus;
-                        bonusStr = $" (+{player.WeaponDamageBonus} Blacksmith)";
-                    }
-                    dmgStr = $"{totalDmg} Damage{bonusStr}";
+                    // Area spells do not use the blacksmith's weapon upgrade
+                    bool usesWeapon = ability.TargetType == AbilityTargetType.SingleTarget;
+                    int weaponBonus = usesWeapon ? player.WeaponDamageBonus : 0;
+                    string bonusStr = weaponBonus > 0 ? $" (incl. +{weaponBonus} Blacksmith)" : "";
+                    dmgStr = $"{ability.GetDamageFormula(player.PrimaryAttributeBonus, weaponBonus)} Damage{bonusStr}";
                 }
                 else
                 {
