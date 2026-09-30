@@ -38,6 +38,8 @@ namespace CastleOfTheD20.Tests
         {
             GameObject inventoryGo = Track(new GameObject("Test_Inventory"));
             inventory = inventoryGo.AddComponent<InventoryManager>();
+            // A new inventory starts with 5 scrap; the scrap quest tests count from an empty pouch.
+            inventory.RemoveScrapMetal(inventory.ScrapMetalCount);
             GameObject questGo = Track(new GameObject("Test_Quests"));
             quests = questGo.AddComponent<QuestManager>();
 
