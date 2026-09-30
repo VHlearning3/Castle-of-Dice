@@ -196,6 +196,7 @@ namespace CastleOfTheD20.UI
         private readonly List<ShopRow> sellRows = new List<ShopRow>(MaxSellRows);
         private readonly List<ItemSO> sellableBuffer = new List<ItemSO>(MaxSellRows);
         private ShopRow scrapRow;
+        private TMP_Text sellEmptyHint;
         private Transform shelfTransform;
         private bool showingSellTab;
         private float feedbackResetTime;
@@ -831,6 +832,7 @@ namespace CastleOfTheD20.UI
             shelfTransform = shelfObj.transform;
             BuildBuyRows();
             BuildScrapRow();
+            EnsureSellEmptyHint();
 
             EnsureFeedbackText();
 
@@ -1472,6 +1474,39 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
+        /// Muted line under the scrap row when the player carries nothing else Baldur buys.
+        /// </summary>
+        private void EnsureSellEmptyHint()
+        {
+            if (sellEmptyHint == null)
+            {
+                Transform tr = shelfTransform.Find("Sell_Empty_Hint");
+                GameObject obj = tr != null ? tr.gameObject : null;
+                if (obj == null)
+                {
+                    obj = new GameObject("Sell_Empty_Hint", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(LayoutElement));
+                    obj.transform.SetParent(shelfTransform, false);
+                }
+                sellEmptyHint = obj.GetComponent<TMP_Text>();
+            }
+
+            LayoutElement le = sellEmptyHint.GetComponent<LayoutElement>();
+            if (le == null) le = sellEmptyHint.gameObject.AddComponent<LayoutElement>();
+            le.minHeight = 56f;
+            le.preferredHeight = 56f;
+            le.flexibleWidth = 1f;
+
+            sellEmptyHint.text = "<i>Potions, poison vials and other loot you carry will show up here.\nQuest items stay with you.</i>";
+            sellEmptyHint.fontSize = 13f;
+            sellEmptyHint.color = MutedText;
+            sellEmptyHint.alignment = TextAlignmentOptions.Center;
+            sellEmptyHint.enableAutoSizing = false;
+            sellEmptyHint.richText = true;
+            sellEmptyHint.raycastTarget = false;
+            sellEmptyHint.gameObject.SetActive(false);
+        }
+
+        /// <summary>
         /// Returns the pooled sell row at the given index, creating it the first time.
         /// </summary>
         private ShopRow GetSellRow(int index)
@@ -1897,6 +1932,12 @@ namespace CastleOfTheD20.UI
             // Hide the other tab's rows
             SetRowsActive(buyRows, !showingSellTab);
             if (scrapRow != null && scrapRow.Root != null) scrapRow.Root.SetActive(showingSellTab);
+            if (sellEmptyHint != null)
+            {
+                bool showHint = showingSellTab && sellableBuffer.Count == 0;
+                sellEmptyHint.gameObject.SetActive(showHint);
+                if (showHint) sellEmptyHint.transform.SetAsLastSibling();
+            }
             if (!showingSellTab) SetRowsActive(sellRows, false);
 
             ApplyRowHeights(visibleRows);
