@@ -572,12 +572,12 @@ namespace CastleOfTheD20.UI
 
             // 2. Whispering Woods / Forest (Middle-Left: -250, -35)
             CreateNode(container, "Forest", "WHISPERING WOODS (FOREST)",
-                "Non-combat nature buffer. Contains marsh herb harvesting nodes.",
+                "Forest path to the castle. Mirabel's swamp blossoms grow here.",
                 new Vector2(-250f, -35f), new Vector2(320f, 85f));
 
             // 3. Wing 1: Castle Courtyard (Middle-Right: +190, -35)
             CreateNode(container, "Courtyard", "WING 1: CASTLE COURTYARD",
-                "Boss 1: Cursed Commander (50 HP). Unlocks Signet Ring reward.",
+                "Boss 1: Cursed Commander (50 HP). Guards the way into the castle.",
                 new Vector2(190f, -35f), new Vector2(320f, 85f));
 
             // 4. Wing 2: Grand Archives / Library (Upper-Left: -250, +75)

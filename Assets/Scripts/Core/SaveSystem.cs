@@ -41,6 +41,8 @@ namespace CastleOfTheD20.Core
         public string sceneName = "";
         /// <summary>One-time world rewards already taken (chests, Giant's Elixir). Missing in older v3 saves.</summary>
         public List<string> claimedRewards = new List<string>();
+        /// <summary>Quests whose giver agreed to a bonus reward in dialogue. Missing in older v3 saves.</summary>
+        public List<string> questBonuses = new List<string>();
     }
 
     /// <summary>
@@ -106,6 +108,7 @@ namespace CastleOfTheD20.Core
             if (QuestManager.Instance != null)
             {
                 QuestManager.Instance.CaptureState(save.questIds, save.questStates, save.questProgress);
+                QuestManager.Instance.CaptureBonuses(save.questBonuses);
             }
 
             if (GameManager.Instance != null)
@@ -175,6 +178,7 @@ namespace CastleOfTheD20.Core
             if (QuestManager.Instance != null)
             {
                 QuestManager.Instance.RestoreState(save.questIds, save.questStates, save.questProgress);
+                QuestManager.Instance.RestoreBonuses(save.questBonuses);
             }
 
             if (GameManager.Instance != null)
@@ -226,6 +230,7 @@ namespace CastleOfTheD20.Core
             if (save.clearedWings == null) save.clearedWings = new List<int>();
             if (save.sceneName == null) save.sceneName = "";
             if (save.claimedRewards == null) save.claimedRewards = new List<string>();
+            if (save.questBonuses == null) save.questBonuses = new List<string>();
 
             return save;
         }

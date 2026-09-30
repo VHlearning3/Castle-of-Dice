@@ -12,9 +12,9 @@ namespace CastleOfTheD20.UI
     /// Master controller for the top-right Quest HUD Tracker card (Quest_Tracker_Card).
     /// Implements MasterSpec §6.2, AGENTS.md §3.2, and UNITY_SETUP_GUIDE §4:
     /// - Anchored Top-Right [1, 1] with dark fantasy panel and gold divider.
-    /// - Displays all active and tracked village quests with real-time 'X/X' counters.
+    /// - Displays every accepted quest with its 'X/X' counter and location, or who to return to once done.
     /// - Collapsible via header [-] button (toggles to [+] when minimized).
-    /// - Completed quests fade to alpha = 0.5 with '(Completed)' indicator.
+    /// - Handed-in quests fade to alpha = 0.5 with '(Completed)' for a few seconds, then leave the card (the journal keeps them).
     /// - Self-healing auto-discovery & procedural hierarchy generation if UI objects are missing.
     /// </summary>
     public class QuestHUDUIController : MonoBehaviour
@@ -73,6 +73,19 @@ namespace CastleOfTheD20.UI
 
         private readonly List<QuestEntryUI> spawnedEntries = new List<QuestEntryUI>();
 
+        // Quests just handed in stay on the card briefly (faded, "Completed") before dropping off
+        private struct RecentCompletion
+        {
+            public string QuestID;
+            public float HideAt;
+        }
+
+        private readonly List<RecentCompletion> recentCompletions = new List<RecentCompletion>();
+        private readonly List<QuestSO> displayBuffer = new List<QuestSO>();
+
+        /// <summary>How long a handed-in quest stays on the card.</summary>
+        public const float CompletedLingerSeconds = 4f;
+
         #endregion
 
         #region Public Properties
@@ -101,6 +114,24 @@ namespace CastleOfTheD20.UI
         private void Start()
         {
             RefreshQuestList();
+        }
+
+        private void Update()
+        {
+            if (recentCompletions.Count == 0) return;
+
+            bool expired = false;
+            float now = Time.unscaledTime;
+            for (int i = recentCompletions.Count - 1; i >= 0; i--)
+            {
+                if (now >= recentCompletions[i].HideAt)
+                {
+                    recentCompletions.RemoveAt(i);
+                    expired = true;
+                }
+            }
+
+            if (expired) RefreshQuestList();
         }
 
         private void OnEnable()
@@ -188,8 +219,8 @@ namespace CastleOfTheD20.UI
 
             if (visibleCount == 0) return minExpandedHeight;
 
-            // Header ~36px + Divider ~6px + (Entry ~46px * count) + bottom padding ~14px
-            float computed = 44f + (visibleCount * 46f) + 14f;
+            // Header ~36px + Divider ~6px + (Entry row + 6px spacing) * count + bottom padding ~14px
+            float computed = 44f + (visibleCount * (QuestEntryUI.RowHeight + 6f)) + 14f;
             return Mathf.Max(minExpandedHeight, computed);
         }
 
@@ -206,49 +237,27 @@ namespace CastleOfTheD20.UI
             if (questListContainer == null) return;
 
             QuestManager qm = QuestManager.Instance;
-            List<QuestSO> questsToDisplay = new List<QuestSO>();
-
-            if (qm != null)
-            {
-                // Prefer InProgress quests, followed by Completed quests
-                List<QuestSO> activeQuests = qm.GetAllActiveQuests();
-                questsToDisplay.AddRange(activeQuests);
-
-                List<QuestSO> tracked = qm.GetTrackedQuests();
-                foreach (var q in tracked)
-                {
-                    if (!questsToDisplay.Contains(q))
-                    {
-                        questsToDisplay.Add(q);
-                    }
-                }
-            }
+            CollectDisplayedQuests(qm, displayBuffer);
 
             int entryIndex = 0;
 
-            if (questsToDisplay.Count > 0)
+            if (displayBuffer.Count > 0)
             {
-                foreach (var quest in questsToDisplay)
+                for (int i = 0; i < displayBuffer.Count; i++)
                 {
-                    if (quest == null) continue;
-
+                    QuestSO quest = displayBuffer[i];
                     QuestEntryUI entry = GetOrCreateEntry(entryIndex);
-                    int currentProgress = qm != null ? qm.GetQuestProgress(quest.QuestID) : 0;
-                    QuestState state = qm != null ? qm.GetQuestState(quest.QuestID) : quest.DefaultState;
-
-                    entry.Setup(quest, currentProgress, state);
+                    entry.Setup(quest, qm.GetQuestProgress(quest.QuestID), qm.GetQuestState(quest.QuestID));
                     entryIndex++;
                 }
             }
             else
             {
-                // Default exploration guidance when no quest is yet accepted
+                // Guidance before any quest is accepted
                 QuestEntryUI entry = GetOrCreateEntry(entryIndex);
                 entry.SetupCustom(
                     "Oakhaven Village",
-                    "Speak with Baldur at the forge or Barnaby at the tavern",
-                    "0/3",
-                    false);
+                    "Villagers marked with <color=#F1C40F><b>!</b></color> have work for you.\n  <color=#A0AEC0>[J] Quest journal</color>");
                 entryIndex++;
             }
 
@@ -266,6 +275,50 @@ namespace CastleOfTheD20.UI
             {
                 cardRectTransform.sizeDelta = new Vector2(cardWidth, CalculateExpandedHeight());
             }
+        }
+
+        /// <summary>
+        /// The quests the card shows: every accepted quest, then quests handed in during the last few seconds.
+        /// Older completed quests live only in the journal.
+        /// </summary>
+        public void CollectDisplayedQuests(QuestManager qm, List<QuestSO> result)
+        {
+            result.Clear();
+            if (qm == null) return;
+
+            List<QuestSO> tracked = qm.GetTrackedQuests();
+            for (int i = 0; i < tracked.Count; i++)
+            {
+                QuestSO quest = tracked[i];
+                if (quest != null && qm.GetQuestState(quest.QuestID) == QuestState.InProgress) result.Add(quest);
+            }
+
+            for (int i = 0; i < tracked.Count; i++)
+            {
+                QuestSO quest = tracked[i];
+                if (quest != null && qm.GetQuestState(quest.QuestID) == QuestState.Completed && IsRecentlyCompleted(quest.QuestID))
+                {
+                    result.Add(quest);
+                }
+            }
+        }
+
+        private bool IsRecentlyCompleted(string questID)
+        {
+            for (int i = 0; i < recentCompletions.Count; i++)
+            {
+                if (string.Equals(recentCompletions[i].QuestID, questID, StringComparison.OrdinalIgnoreCase)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Keeps a just-completed quest on the card for <see cref="CompletedLingerSeconds"/>.
+        /// </summary>
+        public void MarkRecentlyCompleted(string questID)
+        {
+            if (string.IsNullOrEmpty(questID) || IsRecentlyCompleted(questID)) return;
+            recentCompletions.Add(new RecentCompletion { QuestID = questID, HideAt = Time.unscaledTime + CompletedLingerSeconds });
         }
 
         private QuestEntryUI GetOrCreateEntry(int index)
@@ -301,7 +354,7 @@ namespace CastleOfTheD20.UI
             rowObj.transform.SetParent(questListContainer, false);
 
             RectTransform rowRect = rowObj.GetComponent<RectTransform>();
-            rowRect.sizeDelta = new Vector2(0f, 44f);
+            rowRect.sizeDelta = new Vector2(0f, QuestEntryUI.RowHeight);
 
             // Title Text
             GameObject titleObj = new GameObject("Quest_Title", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
@@ -359,6 +412,7 @@ namespace CastleOfTheD20.UI
 
         private void HandleQuestCompleted(QuestSO quest, int goldAwarded)
         {
+            if (quest != null) MarkRecentlyCompleted(quest.QuestID);
             RefreshQuestList();
         }
 

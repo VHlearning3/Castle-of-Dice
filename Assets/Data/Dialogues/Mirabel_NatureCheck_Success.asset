@@ -18,7 +18,7 @@ MonoBehaviour:
     of nature, I shall brew you a Greater Health Potion instead of ordinary poison
     as your reward!
   options:
-  - optionText: Agreed. I will gather the swamp blossoms from the moat.
+  - optionText: 'Agreed. I will gather the swamp blossoms on the Forest Path.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

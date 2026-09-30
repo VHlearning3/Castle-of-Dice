@@ -964,14 +964,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3e57810a9bc4efea82903746a5d419b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.ChestRewardInteraction
-  promptMessage: Gather Swamp Herb
+  promptMessage: Gather Swamp Blossom
   interactionRadius: 3
   isInteractable: 1
   goldReward: 0
   itemReward: {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
   isOpen: 0
-  unopenedPrompt: Open Chest
-  openedPrompt: Opened (Empty)
+  unopenedPrompt: Gather Swamp Blossom
+  openedPrompt: Gathered
   chestLid: {fileID: 0}
   openLidRotation: {x: -65, y: 0, z: 0}
   openSound: {fileID: 0}
@@ -2573,14 +2573,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3e57810a9bc4efea82903746a5d419b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.ChestRewardInteraction
-  promptMessage: Gather Swamp Herb
+  promptMessage: Gather Swamp Blossom
   interactionRadius: 3
   isInteractable: 1
   goldReward: 0
   itemReward: {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
   isOpen: 0
-  unopenedPrompt: Open Chest
-  openedPrompt: Opened (Empty)
+  unopenedPrompt: Gather Swamp Blossom
+  openedPrompt: Gathered
   chestLid: {fileID: 0}
   openLidRotation: {x: -65, y: 0, z: 0}
   openSound: {fileID: 0}
@@ -4556,14 +4556,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3e57810a9bc4efea82903746a5d419b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.ChestRewardInteraction
-  promptMessage: Gather Swamp Herb
+  promptMessage: Gather Swamp Blossom
   interactionRadius: 3
   isInteractable: 1
   goldReward: 0
   itemReward: {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
   isOpen: 0
-  unopenedPrompt: Open Chest
-  openedPrompt: Opened (Empty)
+  unopenedPrompt: Gather Swamp Blossom
+  openedPrompt: Gathered
   chestLid: {fileID: 0}
   openLidRotation: {x: -65, y: 0, z: 0}
   openSound: {fileID: 0}

@@ -390,50 +390,7 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(rogueClass);
             assetCount++;
 
-            // 4. Generate 3 Quests
-            QuestSO cellarRats = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_CellarRats.asset");
-            if (ShouldInitialize(cellarRats)) cellarRats.Initialize(
-                id: "CellarRats",
-                title: "Cellar Infestation",
-                desc: "Clear 3 giant cellar rats infesting the wine cellar beneath Barnaby's tavern.",
-                state: QuestState.NotStarted,
-                reqAmount: 3,
-                gold: 30,
-                bonusGold: 15,
-                reward: potionHealth
-            );
-            EditorUtility.SetDirty(cellarRats);
-            assetCount++;
-
-            QuestSO lostSignet = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_LostSignetRing.asset");
-            if (ShouldInitialize(lostSignet)) lostSignet.Initialize(
-                id: "LostSignetRing",
-                title: "The Lost Signet Ring",
-                desc: "Search the courtyard ruins and recover the ancestral signet ring for Elder Othelia.",
-                state: QuestState.NotStarted,
-                reqAmount: 1,
-                gold: 20,
-                bonusGold: 10,
-                reward: null
-            );
-            EditorUtility.SetDirty(lostSignet);
-            assetCount++;
-
-            QuestSO swampHerbs = GetOrCreateAsset<QuestSO>($"{DataFolderPath}/Quest_SwampHerbs.asset");
-            if (ShouldInitialize(swampHerbs)) swampHerbs.Initialize(
-                id: "SwampHerbs",
-                title: "Herbs for Mirabel",
-                desc: "Gather 3 marsh swamp herbs from the castle moat for herbalist Mirabel.",
-                state: QuestState.NotStarted,
-                reqAmount: 3,
-                gold: 25,
-                bonusGold: 15,
-                reward: null
-            );
-            EditorUtility.SetDirty(swampHerbs);
-            assetCount++;
-
-            // 5. Generate Village Dialogues and Quests
+            // 4. Generate Village Dialogues and Quests
             GenerateVillageDialoguesAndQuestsInternal(potionHealth, ref assetCount);
 
             // Save and refresh asset database
@@ -449,7 +406,7 @@ namespace CastleOfTheD20.Editor
                     "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
                     "- 12 Abilities (4 per class)\n" +
                     "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
-                    "- 4 Quests (Cellar Pests, Cellar Rats, Lost Signet Ring, Swamp Herbs)\n" +
+                    "- 4 Quests (Cellar Pests, Scrap for the Forge, Lost Signet Ring, Herbs for the Healer)\n" +
                     "- 7 Village Dialogue Nodes (Baldur and Barnaby trees with Persuasion checks)",
                     "OK"
                 );
@@ -487,13 +444,24 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(cellarPests)) cellarPests.Initialize(
                 id: "quest_cellar_pests",
                 title: "Cellar Pests",
-                desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's cellar casks.",
+                desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's wine cellar.",
                 state: QuestState.NotStarted,
                 reqAmount: 3,
                 gold: 30,
                 bonusGold: 15,
                 reward: potionHealth
             );
+            if (ShouldInitialize(cellarPests))
+            {
+                cellarPests.ConfigureObjective(QuestObjectiveType.DefeatEnemies, "Slay the giant cellar rats", "Wine cellar under the tavern", "Barnaby", enemyName: "Cellar Rat");
+                cellarPests.ConfigureRewards(2, null);
+                cellarPests.ConfigureDialogue(
+                    inProgress: "Those rats are still gnawing on my casks, I can hear them! The cellar hatch is right behind the counter.",
+                    ready: "The screeching has stopped! Did you really clear out the whole nest?",
+                    turnInOption: "The cellar is clear. Not a single rat left.",
+                    thanks: "Bless you, friend! My wine is safe. Here's your pay, and a couple of healing draughts for the road.",
+                    completed: "The cellar's quiet as a tomb now, and my ale has never tasted better. You're always welcome here.");
+            }
             EditorUtility.SetDirty(cellarPests);
             assetCount++;
 
@@ -503,13 +471,24 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(scrapQuest)) scrapQuest.Initialize(
                 id: "quest_scrap_metal",
                 title: "Scrap for the Forge",
-                desc: "Collect 5 pieces of scrap metal from the castle ruins for Blacksmith Baldur.",
+                desc: "Collect 5 pieces of scrap metal from fights in the castle ruins for Blacksmith Baldur.",
                 state: QuestState.NotStarted,
                 reqAmount: 5,
                 gold: 50,
-                bonusGold: 25,
+                bonusGold: 0,
                 reward: sharpenedBlade
             );
+            if (ShouldInitialize(scrapQuest))
+            {
+                scrapQuest.ConfigureObjective(QuestObjectiveType.ScrapMetal, "Collect scrap metal", "Won from fights", "Baldur");
+                scrapQuest.ConfigureRewards(1, null);
+                scrapQuest.ConfigureDialogue(
+                    inProgress: "Still need that scrap, friend. Five pieces of good salvage. The undead sentries in the ruins carry plenty.",
+                    ready: "That clanking in your pack sounds like my scrap! Hand it over?",
+                    turnInOption: "Five pieces of scrap, as promised.",
+                    thanks: "Fine salvage! Here's your gold, and a blade I sharpened myself. It bites deeper than anything else in the village.",
+                    completed: "The fires are fed and the anvil sings. Need anything else from my shop?");
+            }
             EditorUtility.SetDirty(scrapQuest);
             assetCount++;
 
@@ -692,26 +671,37 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(questSignetRing)) questSignetRing.Initialize(
                 id: "quest_lost_signet_ring",
                 title: "The Lost Signet Ring",
-                desc: "Search for Elder Othelia's ancestral signet ring in the courtyard ruins.",
+                desc: "Find Elder Othelia's ancestral signet ring, carried off to the castle's treasure tower.",
                 state: QuestState.NotStarted,
                 reqAmount: 1,
                 gold: 50,
                 bonusGold: 0,
                 reward: itemRerollRune
             );
+            if (ShouldInitialize(questSignetRing))
+            {
+                questSignetRing.ConfigureObjective(QuestObjectiveType.CollectItem, "Recover Othelia's signet ring", "Castle treasure tower", "Othelia", item: itemSignetRing);
+                questSignetRing.ConfigureRewards(1, null);
+                questSignetRing.ConfigureDialogue(
+                    inProgress: "Have you reached the castle's tower yet? The creatures serving the curse hoard their plunder up there.",
+                    ready: "Is that a glint of gold in your hand? Please, tell me you found it!",
+                    turnInOption: "Your family's signet ring, returned to you.",
+                    thanks: "My ancestors' seal, home at last! Take this Rune of Fate. May it turn the dice in your favour when it matters most.",
+                    completed: "I wear the ring every day now. Oakhaven owes you more than it can ever repay.");
+            }
             EditorUtility.SetDirty(questSignetRing);
             assetCount++;
 
             DialogueNodeSO otheliaAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Accepted.asset");
             if (ShouldInitialize(otheliaAccepted)) otheliaAccepted.Initialize(
                 speaker: "Elder Othelia",
-                text: "Thank you, brave adventurer! My family's signet ring was lost in the lower courtyards when the guards fell. Beware the skeletons among the ruins!",
+                text: "Thank you, brave adventurer! My family's signet ring was carried off to the castle's treasure tower when the curse fell. The way there is long and dangerous, so stay alive!",
                 portrait: null,
                 isExit: false
             );
             otheliaAccepted.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("[Leave] I shall search for the ring as soon as I enter the castle.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+                new DialogueOption("[Leave] I shall search the tower for your ring.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(otheliaAccepted);
             assetCount++;
@@ -751,8 +741,8 @@ namespace CastleOfTheD20.Editor
             ItemSO itemSwampHerb = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_SwampHerb.asset");
             if (ShouldInitialize(itemSwampHerb)) itemSwampHerb.Initialize(
                 id: "item_swamp_herb",
-                name: "Castle Moat Blossom",
-                desc: "Rare swamp flower that blooms only near the castle moat.",
+                name: "Swamp Blossom",
+                desc: "Rare blue swamp flower that blooms in the damp hollows along the Forest Path.",
                 type: ItemType.QuestItem,
                 buyPrice: 0,
                 sellPrice: 5,
@@ -794,20 +784,31 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(questSwampHerbs)) questSwampHerbs.Initialize(
                 id: "quest_swamp_herbs",
                 title: "Herbs for the Healer",
-                desc: "Gather 3 swamp flowers near the moat for Mirabel.",
+                desc: "Gather 3 swamp blossoms along the Forest Path for Mirabel's remedies.",
                 state: QuestState.NotStarted,
                 reqAmount: 3,
                 gold: 30,
-                bonusGold: 20,
+                bonusGold: 0,
                 reward: itemPoisonVial
             );
+            if (ShouldInitialize(questSwampHerbs))
+            {
+                questSwampHerbs.ConfigureObjective(QuestObjectiveType.CollectItem, "Gather swamp blossoms", "Forest Path", "Mirabel", item: itemSwampHerb);
+                questSwampHerbs.ConfigureRewards(1, itemGreaterPotion);
+                questSwampHerbs.ConfigureDialogue(
+                    inProgress: "The blue blossoms grow in the damp hollows along the Forest Path. Three will be enough for my brew.",
+                    ready: "I can smell the moss on you! Did you bring the blossoms?",
+                    turnInOption: "Three swamp blossoms, roots intact.",
+                    thanks: "Perfect specimens! As promised, here is your reward. Use it wisely.",
+                    completed: "My remedies are brewing nicely thanks to you. Come back whenever you need patching up.");
+            }
             EditorUtility.SetDirty(questSwampHerbs);
             assetCount++;
 
             DialogueNodeSO mirabelAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Accepted.asset");
             if (ShouldInitialize(mirabelAccepted)) mirabelAccepted.Initialize(
                 speaker: "Mirabel the Herbalist",
-                text: "Splendid! Rare blue blossoms thrive along the moat. Three flowers will suffice for a potent brew. Beware the shadows lurking near the moat!",
+                text: "Splendid! Rare blue blossoms thrive in the damp hollows along the Forest Path. Three flowers will suffice for a potent brew. Beware what lurks among the trees!",
                 portrait: null,
                 isExit: false
             );
@@ -827,7 +828,7 @@ namespace CastleOfTheD20.Editor
             );
             mirabelCheckSuccess.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("Agreed. I will gather the swamp blossoms from the moat.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]")
+                new DialogueOption("Agreed. I will gather the swamp blossoms on the Forest Path.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs:bonus]")
             });
             EditorUtility.SetDirty(mirabelCheckSuccess);
             assetCount++;
@@ -849,15 +850,15 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO mirabelIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Mirabel_Intro.asset");
             if (ShouldInitialize(mirabelIntro)) mirabelIntro.Initialize(
                 speaker: "Mirabel the Herbalist",
-                text: "Hush... be quiet. Do you smell the bitter moss of the moat? I am Mirabel, herbalist of Oakhaven. I desperately need three swamp flowers from near the moat for my remedies, but the undead sentries make foraging far too perilous.",
+                text: "Hush... be quiet. Do you smell the bitter moss on the wind? I am Mirabel, herbalist of Oakhaven. I desperately need three swamp blossoms from the damp hollows along the Forest Path for my remedies, but the undead roaming there make foraging far too perilous.",
                 portrait: null,
                 isExit: false
             );
             mirabelIntro.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption("I can retrieve the flowers from the moat for you.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]"),
+                new DialogueOption("I can gather the blossoms on the Forest Path for you.", mirabelAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_swamp_herbs]"),
                 new DialogueOption(
-                    "[DC 10 Nature Lore] Moat blossoms are an ancient remedy - I know how to harvest them without damaging the roots.",
+                    "[DC 10 Nature Lore] Swamp blossoms are an ancient remedy - I know how to harvest them without damaging the roots.",
                     mirabelCheckSuccess,
                     true,
                     10,

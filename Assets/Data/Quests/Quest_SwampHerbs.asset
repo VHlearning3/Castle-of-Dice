@@ -13,10 +13,23 @@ MonoBehaviour:
   m_Name: Quest_SwampHerbs
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_swamp_herbs
-  questTitle: Herbs for the Healer
-  description: Gather 3 swamp flowers near the moat for Mirabel.
+  questTitle: 'Herbs for the Healer'
+  description: 'Gather 3 swamp blossoms along the Forest Path for Mirabel''s remedies.'
   defaultState: 0
   requiredAmount: 3
   rewardGold: 30
-  bonusRewardGold: 20
+  bonusRewardGold: 0
   rewardItem: {fileID: 11400000, guid: 9746e69eeef23ad4f8d1ab9ac0cd62ea, type: 2}
+  rewardItemAmount: 1
+  bonusRewardItem: {fileID: 11400000, guid: a86f225b9266fe5499fe470cf8113a67, type: 2}
+  objectiveType: 2
+  targetEnemyName: ''
+  objectiveItem: {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
+  objectiveSummary: 'Gather swamp blossoms'
+  objectiveLocation: 'Forest Path'
+  questGiverName: 'Mirabel'
+  inProgressText: 'The blue blossoms grow in the damp hollows along the Forest Path. Three will be enough for my brew.'
+  readyText: 'I can smell the moss on you! Did you bring the blossoms?'
+  turnInOptionText: 'Three swamp blossoms, roots intact.'
+  thanksText: 'Perfect specimens! As promised, here is your reward. Use it wisely.'
+  completedText: 'My remedies are brewing nicely thanks to you. Come back whenever you need patching up.'
