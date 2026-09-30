@@ -16,6 +16,11 @@ namespace CastleOfTheD20.Editor
         public const string ChestName = "Village_Lockpick_Practice_Chest";
         private const string Zone1Path = "Assets/Scenes/Zone_1_VillageAndCellar.unity";
         private const string ChestPrefabPath = "Assets/PREFABS/Chest.prefab";
+        private const string LidPrefabPath = "Assets/PREFABS/Chest_cover.prefab";
+        private const string LidName = "Chest_Lid";
+
+        // The cover's pivot is its hinge edge; the lid body extends along its local -Z, so +X tips it up
+        private static readonly Vector3 OpenLidRotation = new Vector3(70f, 0f, 0f);
 
         // Beside Baldur (south-west of him), clear of the forge, anvil and awning
         private static readonly Vector3 OffsetFromBaldur = new Vector3(-3.0f, 0f, -2.6f);
@@ -42,7 +47,7 @@ namespace CastleOfTheD20.Editor
             {
                 chest = CreateChestBody();
                 chest.transform.position = FindPlacement();
-                chest.transform.rotation = Quaternion.Euler(0f, 200f, 0f);
+                chest.transform.rotation = Quaternion.Euler(0f, 20f, 0f);
                 Undo.RegisterCreatedObjectUndo(chest, "Add Lockpick Practice Chest");
             }
 
@@ -50,10 +55,14 @@ namespace CastleOfTheD20.Editor
             ChestRewardInteraction plainChest = chest.GetComponent<ChestRewardInteraction>();
             if (plainChest != null) Object.DestroyImmediate(plainChest);
 
+            // Closed lid on top, so the chest reads as locked until it is picked
+            Transform lid = FindChildLid(chest.transform);
+            if (lid == null) lid = CreateLid(chest.transform);
+
             BoxCollider box = chest.GetComponent<BoxCollider>();
             if (box == null) box = chest.AddComponent<BoxCollider>();
-            box.center = new Vector3(0f, 0.45f, 0f);
-            box.size = new Vector3(1.4f, 0.9f, 1.0f);
+            box.center = new Vector3(0f, 0.7f, 0f);
+            box.size = new Vector3(2.4f, 1.4f, 1.7f);
 
             LockpickInteraction lockpick = chest.GetComponent<LockpickInteraction>();
             if (lockpick == null) lockpick = chest.AddComponent<LockpickInteraction>();
@@ -68,10 +77,31 @@ namespace CastleOfTheD20.Editor
             so.FindProperty("hasTrap").boolValue = false;
             so.FindProperty("trapDamage").intValue = 0;
             so.FindProperty("isLocked").boolValue = true;
-            so.FindProperty("chestLid").objectReferenceValue = FindChildLid(chest.transform);
+            so.FindProperty("chestLid").objectReferenceValue = lid;
+            so.FindProperty("openLidRotation").vector3Value = OpenLidRotation;
             so.ApplyModifiedProperties();
 
             return chest;
+        }
+
+        private static Transform CreateLid(Transform chest)
+        {
+            GameObject chestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ChestPrefabPath);
+            GameObject lidPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(LidPrefabPath);
+            if (chestPrefab == null || lidPrefab == null) return null;
+
+            // Both prefabs were saved from the same scene, so their offset is where the lid sits closed
+            Transform chestRoot = chestPrefab.transform;
+            Transform lidRoot = lidPrefab.transform;
+
+            GameObject lid = (GameObject)PrefabUtility.InstantiatePrefab(lidPrefab);
+            lid.name = LidName;
+            lid.transform.SetParent(chest, false);
+            lid.transform.localPosition = chestRoot.InverseTransformPoint(lidRoot.position);
+            lid.transform.localRotation = Quaternion.Inverse(chestRoot.rotation) * lidRoot.rotation;
+            lid.transform.localScale = Vector3.one;
+            Undo.RegisterCreatedObjectUndo(lid, "Add Practice Chest Lid");
+            return lid.transform;
         }
 
         private static GameObject CreateChestBody()
