@@ -175,7 +175,7 @@ namespace CastleOfTheD20.Economy
         {
             if (instance != null && instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 
