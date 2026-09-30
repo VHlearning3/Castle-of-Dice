@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.Audio
 {
@@ -100,7 +101,7 @@ namespace CastleOfTheD20.Audio
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 

@@ -25,7 +25,7 @@ namespace CastleOfTheD20.Core
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 
