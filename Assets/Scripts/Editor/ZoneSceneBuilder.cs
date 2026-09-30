@@ -125,6 +125,9 @@ namespace CastleOfTheD20.Editor
                 startSpawn = CreateSpawnPoint("StartSpawn", new Vector3(0f, 0.5f, -25f), Quaternion.identity);
             }
 
+            // Rogue's lockpick practice chest beside Baldur's forge
+            LockpickPracticeChestEditor.EnsurePracticeChest();
+
             // Save as Zone_1_VillageAndCellar.unity
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, zone1Path);
