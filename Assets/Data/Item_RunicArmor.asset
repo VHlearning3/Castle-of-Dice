@@ -18,7 +18,7 @@ MonoBehaviour:
     Armor Class by +1.
   itemIcon: {fileID: 0}
   itemType: 2
-  buyPriceGold: 100
+  buyPriceGold: 50
   sellPriceGold: 35
   statBonusValue: 1
   isConsumable: 0

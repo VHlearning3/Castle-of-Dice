@@ -1143,7 +1143,10 @@ namespace CastleOfTheD20.UI
             InventoryManager inventory = InventoryManager.Instance;
             if (inventory == null) return;
 
+            // Small and greater potions share the quick slot
             int count = (healthPotionItem != null) ? inventory.GetItemCount(healthPotionItem) : 0;
+            ItemSO greaterPotion = inventory.FindItemByID(ShopManager.GREATER_POTION_ID);
+            if (greaterPotion != null) count += inventory.GetItemCount(greaterPotion);
 
             if (potionCountText != null)
             {
@@ -1260,14 +1263,27 @@ namespace CastleOfTheD20.UI
         public void OnQuickPotionClicked()
         {
             LocatePlayer();
-            if (trackedPlayer == null || healthPotionItem == null) return;
+            if (trackedPlayer == null) return;
 
             InventoryManager inventory = InventoryManager.Instance;
-            if (inventory != null && inventory.HasItem(healthPotionItem, 1))
+            ItemSO potion = inventory != null ? ResolveQuickPotion(inventory) : null;
+            if (potion != null)
             {
-                inventory.UseItem(healthPotionItem, trackedPlayer);
+                inventory.UseItem(potion, trackedPlayer);
                 UpdatePotionDisplay();
             }
+        }
+
+        /// <summary>
+        /// The potion [Q] drinks: a small one first, a greater one when no small potions are left.
+        /// </summary>
+        public ItemSO ResolveQuickPotion(InventoryManager inventory)
+        {
+            if (inventory == null) return null;
+            if (healthPotionItem != null && inventory.HasItem(healthPotionItem, 1)) return healthPotionItem;
+
+            ItemSO greaterPotion = inventory.FindItemByID(ShopManager.GREATER_POTION_ID);
+            return greaterPotion != null && inventory.HasItem(greaterPotion, 1) ? greaterPotion : null;
         }
 
         #endregion

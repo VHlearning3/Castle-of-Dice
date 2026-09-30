@@ -68,8 +68,8 @@ namespace CastleOfTheD20.Editor
                 name: "Small Health Potion",
                 desc: "Restores 15 hit points when consumed during exploration or combat.",
                 type: ItemType.Consumable,
-                buyPrice: 25,
-                sellPrice: 10,
+                buyPrice: ShopManager.HEALTH_POTION_PRICE,
+                sellPrice: 7,
                 statBonus: 15,
                 consumable: true
             );
@@ -82,7 +82,7 @@ namespace CastleOfTheD20.Editor
                 name: "Sharpened Blade",
                 desc: "Finely honed weapon forged by Blacksmith Baldur. Permanently adds +1 to all attack damage.",
                 type: ItemType.WeaponUpgrade,
-                buyPrice: 60,
+                buyPrice: ShopManager.WEAPON_UPGRADE_PRICE,
                 sellPrice: 20,
                 statBonus: 1,
                 consumable: false
@@ -96,7 +96,7 @@ namespace CastleOfTheD20.Editor
                 name: "Runic Armor",
                 desc: "Reinforced armor inscribed with protective runes. Permanently increases Armor Class by +1.",
                 type: ItemType.ArmorUpgrade,
-                buyPrice: 100,
+                buyPrice: ShopManager.ARMOR_UPGRADE_PRICE,
                 sellPrice: 35,
                 statBonus: 1,
                 consumable: false
@@ -680,8 +680,8 @@ namespace CastleOfTheD20.Editor
                 name: "Rune of Fate (D20 Reroll)",
                 desc: "Mystical rune stone of Oakhaven. Allows the bearer to invoke a critical D20 reroll.",
                 type: ItemType.QuestItem,
-                buyPrice: 0,
-                sellPrice: 50,
+                buyPrice: ShopManager.REROLL_RUNE_PRICE,
+                sellPrice: 35,
                 statBonus: 1,
                 consumable: false
             );
@@ -766,9 +766,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(itemPoisonVial)) itemPoisonVial.Initialize(
                 id: "item_poison_vial",
                 name: "Poison Vial",
-                desc: "Potent herbal extract that adds +5 bonus damage in the next combat encounter.",
+                desc: "Potent herbal extract. Coats your blade when a fight begins: the first hit deals +5 damage.",
                 type: ItemType.Consumable,
-                buyPrice: 30,
+                buyPrice: ShopManager.POISON_VIAL_PRICE,
                 sellPrice: 15,
                 statBonus: 5,
                 consumable: true
@@ -782,8 +782,8 @@ namespace CastleOfTheD20.Editor
                 name: "Greater Health Potion",
                 desc: "Concentrated healing draught. Restores 35 Hit Points.",
                 type: ItemType.Consumable,
-                buyPrice: 50,
-                sellPrice: 25,
+                buyPrice: ShopManager.GREATER_POTION_PRICE,
+                sellPrice: 12,
                 statBonus: 35,
                 consumable: true
             );

@@ -7,13 +7,15 @@ using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Economy;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Audio;
 
 namespace CastleOfTheD20.UI
 {
     /// <summary>
     /// User Interface Controller for Blacksmith Baldur's Shop in Oakhaven Village.
-    /// Displays current gold and scrap metal resources in ornate tabletop D&D pill badges,
-    /// presents stock items in styled rows with framed item image slots, and handles one-click purchases.
+    /// Displays current gold and scrap metal resources in ornate tabletop D&D pill badges and splits
+    /// the stock into Buy and Sell tabs: potions, poison, the reroll rune and levelled blade/armor
+    /// upgrades to buy; scrap and loot to sell. Every purchase or sale shows a message and plays a sound.
     /// Strictly preserves authentic CoinIcon.png and HealthPotionIcon.png assets.
     /// </summary>
     public class ShopUIController : MonoBehaviour
@@ -135,6 +137,69 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Sprite swordIconSprite;
         [SerializeField] private Sprite shieldIconSprite;
         [SerializeField] private Sprite scrapOreSprite;
+        [SerializeField] private Sprite runeIconSprite;
+
+        [Header("Buy / Sell Tabs")]
+        [SerializeField] private Button buyTabButton;
+        [SerializeField] private Button sellTabButton;
+
+        [Tooltip("Line under the shelf: Baldur's greeting, or what just happened (bought, sold, not enough gold).")]
+        [SerializeField] private TMP_Text feedbackText;
+
+        #endregion
+
+        #region Layout & Text Constants
+
+        private const float ShelfTopOffset = 182f;
+        private const float ShelfBottomOffset = 104f;
+        private const float RowSpacing = 6f;
+        private const float MaxRowHeight = 64f;
+        private const float MinRowHeight = 48f;
+        private const int MaxSellRows = 8;
+        private const float FeedbackSeconds = 2.5f;
+
+        private const string ScrapRowKey = "scrap";
+        private const string IdleLine = "<i>\"Steel for coin, coin for steel. What'll it be?\"</i>  - Baldur";
+
+        private static readonly Color RowTint = new Color(0.06f, 0.08f, 0.12f, 0.85f);
+        private static readonly Color RowTintMaxed = new Color(0.10f, 0.09f, 0.05f, 0.85f);
+        private static readonly Color PriceGold = new Color(1f, 0.85f, 0.40f, 1f);
+        private static readonly Color PriceTooHigh = new Color(0.95f, 0.45f, 0.40f, 1f);
+        private static readonly Color MutedText = new Color(0.65f, 0.70f, 0.78f, 1f);
+        private static readonly Color PipFilled = new Color(1f, 0.82f, 0.32f, 1f);
+        private static readonly Color PipEmpty = new Color(0.20f, 0.22f, 0.28f, 1f);
+        private static readonly Color PoisonTint = new Color(0.55f, 1f, 0.45f, 1f);
+        private static readonly Color FeedbackGood = new Color(0.60f, 0.92f, 0.55f, 1f);
+        private static readonly Color FeedbackBad = new Color(0.95f, 0.50f, 0.45f, 1f);
+
+        #endregion
+
+        #region Stock Rows
+
+        /// <summary>One card on the shelf: an item to buy, an item to sell, or the scrap salvage row.</summary>
+        private sealed class ShopRow
+        {
+            public string Key;
+            public ItemSO Item;
+            public bool IsSellRow;
+            public GameObject Root;
+            public Image Background;
+            public Image Icon;
+            public TMP_Text Title;
+            public TMP_Text Desc;
+            public Button Button;
+            public TMP_Text ButtonLabel;
+            public Image[] Pips;
+        }
+
+        private readonly List<ShopRow> buyRows = new List<ShopRow>(6);
+        private readonly List<ShopRow> sellRows = new List<ShopRow>(MaxSellRows);
+        private readonly List<ItemSO> sellableBuffer = new List<ItemSO>(MaxSellRows);
+        private ShopRow scrapRow;
+        private TMP_Text sellEmptyHint;
+        private Transform shelfTransform;
+        private bool showingSellTab;
+        private float feedbackResetTime;
 
         #endregion
 
@@ -167,16 +232,45 @@ namespace CastleOfTheD20.UI
         {
             InventoryManager.OnGoldChanged += HandleGoldChanged;
             InventoryManager.OnScrapMetalChanged += HandleScrapMetalChanged;
+            InventoryManager.OnInventoryChanged += HandleInventoryChanged;
+            InventoryManager.OnRerollScrollsChanged += HandleRerollScrollsChanged;
             ShopManager.OnScrapConverted += HandleScrapConverted;
             ShopManager.OnItemPurchased += HandleItemPurchased;
+            ShopManager.OnItemSold += HandleItemSold;
         }
 
         private void OnDisable()
         {
             InventoryManager.OnGoldChanged -= HandleGoldChanged;
             InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
+            InventoryManager.OnInventoryChanged -= HandleInventoryChanged;
+            InventoryManager.OnRerollScrollsChanged -= HandleRerollScrollsChanged;
             ShopManager.OnScrapConverted -= HandleScrapConverted;
             ShopManager.OnItemPurchased -= HandleItemPurchased;
+            ShopManager.OnItemSold -= HandleItemSold;
+        }
+
+        private void Update()
+        {
+            if (shopPanel == null || !shopPanel.activeInHierarchy) return;
+
+            if (GameInput.GetKeyDown(KeyCode.Escape))
+            {
+                CloseShop();
+                return;
+            }
+
+            if (GameInput.GetKeyDown(KeyCode.Tab))
+            {
+                if (showingSellTab) ShowBuyTab();
+                else ShowSellTab();
+            }
+
+            if (feedbackResetTime > 0f && Time.unscaledTime >= feedbackResetTime)
+            {
+                feedbackResetTime = 0f;
+                ShowIdleLine();
+            }
         }
 
         private void OnDestroy()
@@ -220,6 +314,8 @@ namespace CastleOfTheD20.UI
                 shieldIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_Shield.png");
             if (scrapOreSprite == null)
                 scrapOreSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
+            if (runeIconSprite == null)
+                runeIconSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Fantasy_Crest_Mage.png");
 
 #if UNITY_EDITOR
             if (healthPotionItem == null)
@@ -294,6 +390,9 @@ namespace CastleOfTheD20.UI
             {
                 string lower = btn.name.ToLowerInvariant();
                 string parentLower = btn.transform.parent != null ? btn.transform.parent.name.ToLowerInvariant() : "";
+
+                // Tabs and the generated stock rows are wired by the controller itself
+                if (lower.StartsWith("tab_") || lower.StartsWith("row_buy_") || lower.StartsWith("row_sell_")) continue;
 
                 if (sellAllScrapButton == null && (lower.Contains("scrap") || lower.Contains("sell") || lower.Contains("convert") || parentLower.Contains("scrap")))
                 {
@@ -387,7 +486,7 @@ namespace CastleOfTheD20.UI
                 panelRect.anchorMax = new Vector2(0.5f, 0.5f);
                 panelRect.pivot = new Vector2(0.5f, 0.5f);
                 panelRect.anchoredPosition = Vector2.zero;
-                panelRect.sizeDelta = new Vector2(760f, 560f);
+                panelRect.sizeDelta = new Vector2(780f, 740f);
             }
 
             Image panelImg = shopPanel.GetComponent<Image>();
@@ -699,7 +798,9 @@ namespace CastleOfTheD20.UI
                 scrapMetalText.raycastTarget = false;
             }
 
-            // G. Stock Items Container (4 Distinct Rows)
+            // G. Buy / Sell tabs above the stock shelf
+            EnsureTabBar();
+
             Transform shelfTr = shopPanel.transform.Find("ActionContainer") ?? shopPanel.transform.Find("Stock_Shelf_Container");
             GameObject shelfObj = shelfTr != null ? shelfTr.gameObject : null;
             if (shelfObj == null)
@@ -716,23 +817,24 @@ namespace CastleOfTheD20.UI
             shRect.anchorMin = new Vector2(0f, 0f);
             shRect.anchorMax = new Vector2(1f, 1f);
             shRect.pivot = new Vector2(0.5f, 0.5f);
-            shRect.offsetMin = new Vector2(32f, 72f);
-            shRect.offsetMax = new Vector2(-32f, -135f);
+            shRect.offsetMin = new Vector2(32f, ShelfBottomOffset);
+            shRect.offsetMax = new Vector2(-32f, -ShelfTopOffset);
 
             VerticalLayoutGroup vlg = shelfObj.GetComponent<VerticalLayoutGroup>();
             if (vlg == null) vlg = shelfObj.AddComponent<VerticalLayoutGroup>();
-            vlg.spacing = 8f;
+            vlg.spacing = RowSpacing;
             vlg.childAlignment = TextAnchor.UpperCenter;
             vlg.childControlWidth = true;
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = true;
             vlg.childForceExpandHeight = false;
 
-            // Setup each of the 4 item rows with framed item image slots
-            SetupItemRow(shelfObj.transform, "Row_Potion", "Small Health Potion", "Restores 15 Hit Points instantly.", potionSprite, ref buyPotionButton, ref potionIconImage, "Buy (15g)");
-            SetupItemRow(shelfObj.transform, "Row_Sword", "Sharpen Blade (+1 DMG)", "Hones steel edge for permanent +1 attack damage.", swordIconSprite, ref buyWeaponButton, ref weaponIconImage, "Upgrade (50g)");
-            SetupItemRow(shelfObj.transform, "Row_Shield", "Reinforce Shield (+1 AC)", "Tempers runic armor for permanent +1 Armor Class.", shieldIconSprite, ref buyArmorButton, ref armorIconImage, "Upgrade (50g)");
-            SetupItemRow(shelfObj.transform, "Row_Scrap", "Scrap Metal Salvage", "Sell recovered ruin metal to Baldur at 10 Gold each.", scrapOreSprite, ref sellAllScrapButton, ref scrapActionIconImage, "Sell All (+50g)");
+            shelfTransform = shelfObj.transform;
+            BuildBuyRows();
+            BuildScrapRow();
+            EnsureSellEmptyHint();
+
+            EnsureFeedbackText();
 
             // H. Bottom Footer Divider
             Transform botDivTr = shopPanel.transform.Find("Bottom_Divider");
@@ -746,7 +848,7 @@ namespace CastleOfTheD20.UI
             bdRect.anchorMin = new Vector2(0f, 0f);
             bdRect.anchorMax = new Vector2(1f, 0f);
             bdRect.pivot = new Vector2(0.5f, 0f);
-            bdRect.anchoredPosition = new Vector2(0f, 62f);
+            bdRect.anchoredPosition = new Vector2(0f, 98f);
             bdRect.sizeDelta = new Vector2(-48f, 4f);
 
             Image bdImg = botDivObj.GetComponent<Image>();
@@ -968,7 +1070,7 @@ namespace CastleOfTheD20.UI
                 "Row_Sword" => "BuyWeaponButton",
                 "Row_Shield" => "BuyArmorButton",
                 "Row_Scrap" => "SellAllScrapButton",
-                _ => "Action_Button"
+                _ => rowName + "_Button"
             };
 
             if (btn == null)
@@ -1097,28 +1199,18 @@ namespace CastleOfTheD20.UI
 
         private void SubscribeButtonListeners()
         {
-            if (sellAllScrapButton != null)
+            // Stock row buttons are wired once, when their rows are built (see WireRowButton)
+
+            if (buyTabButton != null)
             {
-                sellAllScrapButton.onClick.RemoveListener(SellAllScrap);
-                sellAllScrapButton.onClick.AddListener(SellAllScrap);
+                buyTabButton.onClick.RemoveListener(ShowBuyTab);
+                buyTabButton.onClick.AddListener(ShowBuyTab);
             }
 
-            if (buyPotionButton != null)
+            if (sellTabButton != null)
             {
-                buyPotionButton.onClick.RemoveListener(BuyPotion);
-                buyPotionButton.onClick.AddListener(BuyPotion);
-            }
-
-            if (buyWeaponButton != null)
-            {
-                buyWeaponButton.onClick.RemoveListener(BuyWeapon);
-                buyWeaponButton.onClick.AddListener(BuyWeapon);
-            }
-
-            if (buyArmorButton != null)
-            {
-                buyArmorButton.onClick.RemoveListener(BuyArmor);
-                buyArmorButton.onClick.AddListener(BuyArmor);
+                sellTabButton.onClick.RemoveListener(ShowSellTab);
+                sellTabButton.onClick.AddListener(ShowSellTab);
             }
 
             if (exitShopButton != null)
@@ -1136,24 +1228,14 @@ namespace CastleOfTheD20.UI
 
         private void UnsubscribeButtonListeners()
         {
-            if (sellAllScrapButton != null)
+            if (buyTabButton != null)
             {
-                sellAllScrapButton.onClick.RemoveListener(SellAllScrap);
+                buyTabButton.onClick.RemoveListener(ShowBuyTab);
             }
 
-            if (buyPotionButton != null)
+            if (sellTabButton != null)
             {
-                buyPotionButton.onClick.RemoveListener(BuyPotion);
-            }
-
-            if (buyWeaponButton != null)
-            {
-                buyWeaponButton.onClick.RemoveListener(BuyWeapon);
-            }
-
-            if (buyArmorButton != null)
-            {
-                buyArmorButton.onClick.RemoveListener(BuyArmor);
+                sellTabButton.onClick.RemoveListener(ShowSellTab);
             }
 
             if (exitShopButton != null)
@@ -1191,6 +1273,8 @@ namespace CastleOfTheD20.UI
             }
 
             GameManager.Instance?.SetMode(GamePlayMode.Shop);
+            showingSellTab = false;
+            ShowIdleLine();
             RefreshEconomyDisplay();
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -1213,6 +1297,511 @@ namespace CastleOfTheD20.UI
 
         #endregion
 
+        #region Tabs, Rows & Feedback Line
+
+        /// <summary>
+        /// Buy / Sell tab buttons between the currency bar and the shelf.
+        /// </summary>
+        private void EnsureTabBar()
+        {
+            Transform barTr = shopPanel.transform.Find("Tab_Bar");
+            GameObject barObj = barTr != null ? barTr.gameObject : null;
+            if (barObj == null)
+            {
+                barObj = new GameObject("Tab_Bar", typeof(RectTransform));
+                barObj.transform.SetParent(shopPanel.transform, false);
+            }
+
+            RectTransform barRect = barObj.GetComponent<RectTransform>();
+            barRect.anchorMin = new Vector2(0.5f, 1f);
+            barRect.anchorMax = new Vector2(0.5f, 1f);
+            barRect.pivot = new Vector2(0.5f, 1f);
+            barRect.anchoredPosition = new Vector2(0f, -134f);
+            barRect.sizeDelta = new Vector2(360f, 36f);
+
+            buyTabButton = EnsureTabButton(barObj.transform, "Tab_Buy", "BUY", -92f, buyTabButton);
+            sellTabButton = EnsureTabButton(barObj.transform, "Tab_Sell", "SELL", 92f, sellTabButton);
+        }
+
+        private Button EnsureTabButton(Transform parent, string name, string label, float x, Button existing)
+        {
+            Button tabBtn = existing;
+            if (tabBtn == null)
+            {
+                Transform tr = parent.Find(name);
+                if (tr != null) tabBtn = tr.GetComponent<Button>();
+            }
+
+            if (tabBtn == null)
+            {
+                GameObject obj = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image), typeof(Button));
+                obj.transform.SetParent(parent, false);
+                tabBtn = obj.GetComponent<Button>();
+
+                GameObject txtObj = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                txtObj.transform.SetParent(obj.transform, false);
+            }
+
+            RectTransform rect = tabBtn.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0.5f, 0.5f);
+            rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(x, 0f);
+            rect.sizeDelta = new Vector2(172f, 34f);
+
+            Image img = tabBtn.GetComponent<Image>();
+            if (img != null && buttonNormalSprite != null)
+            {
+                img.sprite = buttonNormalSprite;
+                img.type = Image.Type.Sliced;
+            }
+
+            if (buttonHoverSprite != null && buttonPressedSprite != null)
+            {
+                tabBtn.transition = Selectable.Transition.SpriteSwap;
+                SpriteState ss = tabBtn.spriteState;
+                ss.highlightedSprite = buttonHoverSprite;
+                ss.pressedSprite = buttonPressedSprite;
+                ss.selectedSprite = buttonHoverSprite;
+                tabBtn.spriteState = ss;
+            }
+
+            TMP_Text txt = tabBtn.GetComponentInChildren<TMP_Text>(true);
+            if (txt != null)
+            {
+                RectTransform tRect = txt.GetComponent<RectTransform>();
+                tRect.anchorMin = Vector2.zero;
+                tRect.anchorMax = Vector2.one;
+                tRect.anchoredPosition = Vector2.zero;
+                tRect.sizeDelta = Vector2.zero;
+
+                txt.text = label;
+                txt.fontSize = 15f;
+                txt.fontStyle = FontStyles.Bold;
+                txt.characterSpacing = 6f;
+                txt.alignment = TextAlignmentOptions.Center;
+                txt.enableAutoSizing = false;
+                txt.raycastTarget = false;
+            }
+
+            return tabBtn;
+        }
+
+        /// <summary>
+        /// Highlights the active tab: bright frame and gold text; the other tab is dimmed.
+        /// </summary>
+        private void RefreshTabVisuals()
+        {
+            StyleTab(buyTabButton, !showingSellTab);
+            StyleTab(sellTabButton, showingSellTab);
+        }
+
+        private static void StyleTab(Button tabBtn, bool active)
+        {
+            if (tabBtn == null) return;
+
+            Image img = tabBtn.GetComponent<Image>();
+            if (img != null)
+            {
+                img.color = active ? Color.white : new Color(0.45f, 0.47f, 0.52f, 0.9f);
+            }
+
+            TMP_Text txt = tabBtn.GetComponentInChildren<TMP_Text>(true);
+            if (txt != null)
+            {
+                txt.color = active ? PriceGold : MutedText;
+            }
+        }
+
+        /// <summary>
+        /// Builds the Buy tab: potions, poison, the reroll rune and the two levelled upgrades.
+        /// The old scene rows (Row_Potion, Row_Sword, Row_Shield) are reused.
+        /// </summary>
+        private void BuildBuyRows()
+        {
+            buyRows.Clear();
+
+            for (int i = 0; i < ShopManager.BuyStockOrder.Length; i++)
+            {
+                string itemId = ShopManager.BuyStockOrder[i];
+                ShopRow row;
+                switch (itemId)
+                {
+                    case ShopManager.SMALL_POTION_ID:
+                        row = CreateRow("Row_Potion", ref buyPotionButton, ref potionIconImage);
+                        break;
+                    case ShopManager.SHARPENED_BLADE_ID:
+                        row = CreateRow("Row_Sword", ref buyWeaponButton, ref weaponIconImage);
+                        break;
+                    case ShopManager.RUNIC_ARMOR_ID:
+                        row = CreateRow("Row_Shield", ref buyArmorButton, ref armorIconImage);
+                        break;
+                    default:
+                        Button noButton = null;
+                        Image noIcon = null;
+                        row = CreateRow("Row_Buy_" + itemId, ref noButton, ref noIcon);
+                        break;
+                }
+
+                row.Key = itemId;
+                row.Item = ResolveItem(itemId);
+                row.IsSellRow = false;
+
+                bool isUpgrade = itemId == ShopManager.SHARPENED_BLADE_ID || itemId == ShopManager.RUNIC_ARMOR_ID;
+                if (isUpgrade)
+                {
+                    row.Pips = EnsureLevelPips(row.Root.transform);
+                }
+
+                row.Root.transform.SetSiblingIndex(i);
+                WireRowButton(row);
+                buyRows.Add(row);
+            }
+        }
+
+        /// <summary>
+        /// The scrap salvage row at the top of the Sell tab (1 scrap = 10 gold).
+        /// </summary>
+        private void BuildScrapRow()
+        {
+            scrapRow = CreateRow("Row_Scrap", ref sellAllScrapButton, ref scrapActionIconImage);
+            scrapRow.Key = ScrapRowKey;
+            scrapRow.IsSellRow = true;
+            sellScrapButtonLabel = scrapRow.ButtonLabel;
+            if (scrapRow.Icon != null && scrapOreSprite != null) scrapRow.Icon.sprite = scrapOreSprite;
+            scrapRow.Root.transform.SetSiblingIndex(ShopManager.BuyStockOrder.Length);
+            WireRowButton(scrapRow);
+        }
+
+        /// <summary>
+        /// Muted line under the scrap row when the player carries nothing else Baldur buys.
+        /// </summary>
+        private void EnsureSellEmptyHint()
+        {
+            if (sellEmptyHint == null)
+            {
+                Transform tr = shelfTransform.Find("Sell_Empty_Hint");
+                GameObject obj = tr != null ? tr.gameObject : null;
+                if (obj == null)
+                {
+                    obj = new GameObject("Sell_Empty_Hint", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI), typeof(LayoutElement));
+                    obj.transform.SetParent(shelfTransform, false);
+                }
+                sellEmptyHint = obj.GetComponent<TMP_Text>();
+            }
+
+            LayoutElement le = sellEmptyHint.GetComponent<LayoutElement>();
+            if (le == null) le = sellEmptyHint.gameObject.AddComponent<LayoutElement>();
+            le.minHeight = 56f;
+            le.preferredHeight = 56f;
+            le.flexibleWidth = 1f;
+
+            sellEmptyHint.text = "<i>Potions, poison vials and other loot you carry will show up here.\nQuest items stay with you.</i>";
+            sellEmptyHint.fontSize = 13f;
+            sellEmptyHint.color = MutedText;
+            sellEmptyHint.alignment = TextAlignmentOptions.Center;
+            sellEmptyHint.enableAutoSizing = false;
+            sellEmptyHint.richText = true;
+            sellEmptyHint.raycastTarget = false;
+            sellEmptyHint.gameObject.SetActive(false);
+        }
+
+        /// <summary>
+        /// Returns the pooled sell row at the given index, creating it the first time.
+        /// </summary>
+        private ShopRow GetSellRow(int index)
+        {
+            while (sellRows.Count <= index)
+            {
+                Button noButton = null;
+                Image noIcon = null;
+                ShopRow row = CreateRow("Row_Sell_" + sellRows.Count, ref noButton, ref noIcon);
+                row.IsSellRow = true;
+                WireRowButton(row);
+                sellRows.Add(row);
+            }
+            return sellRows[index];
+        }
+
+        /// <summary>
+        /// Creates (or finds) a styled row through SetupItemRow and caches its parts.
+        /// </summary>
+        private ShopRow CreateRow(string rowName, ref Button button, ref Image icon)
+        {
+            SetupItemRow(shelfTransform, rowName, "", "", null, ref button, ref icon, "");
+
+            Transform rowTr = shelfTransform.Find(rowName);
+            ShopRow row = new ShopRow
+            {
+                Root = rowTr.gameObject,
+                Background = rowTr.GetComponent<Image>(),
+                Icon = icon,
+                Button = button
+            };
+
+            Transform titleTr = rowTr.Find("Item_Text_Info/Item_Title");
+            Transform descTr = rowTr.Find("Item_Text_Info/Item_Desc");
+            row.Title = titleTr != null ? titleTr.GetComponent<TMP_Text>() : null;
+            row.Desc = descTr != null ? descTr.GetComponent<TMP_Text>() : null;
+            row.ButtonLabel = button != null ? button.GetComponentInChildren<TMP_Text>(true) : null;
+
+            if (row.Title != null) row.Title.richText = true;
+            if (row.Desc != null)
+            {
+                row.Desc.richText = true;
+                row.Desc.textWrappingMode = TextWrappingModes.Normal;
+            }
+
+            return row;
+        }
+
+        /// <summary>
+        /// Three small squares next to an upgrade's title: one lit per level bought.
+        /// </summary>
+        private Image[] EnsureLevelPips(Transform rowTransform)
+        {
+            Transform pipsTr = rowTransform.Find("Level_Pips");
+            GameObject pipsObj = pipsTr != null ? pipsTr.gameObject : null;
+            if (pipsObj == null)
+            {
+                pipsObj = new GameObject("Level_Pips", typeof(RectTransform));
+                pipsObj.transform.SetParent(rowTransform, false);
+            }
+
+            RectTransform pRect = pipsObj.GetComponent<RectTransform>();
+            pRect.anchorMin = new Vector2(1f, 0.5f);
+            pRect.anchorMax = new Vector2(1f, 0.5f);
+            pRect.pivot = new Vector2(1f, 0.5f);
+            pRect.anchoredPosition = new Vector2(-190f, 11f);
+            pRect.sizeDelta = new Vector2(3 * 14f + 2 * 5f, 14f);
+
+            Image[] pips = new Image[ShopManager.MAX_UPGRADE_LEVEL];
+            for (int i = 0; i < pips.Length; i++)
+            {
+                string pipName = "Pip_" + i;
+                Transform pipTr = pipsObj.transform.Find(pipName);
+                GameObject pipObj = pipTr != null ? pipTr.gameObject : null;
+                if (pipObj == null)
+                {
+                    pipObj = new GameObject(pipName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    pipObj.transform.SetParent(pipsObj.transform, false);
+                }
+
+                RectTransform r = pipObj.GetComponent<RectTransform>();
+                r.anchorMin = new Vector2(0f, 0.5f);
+                r.anchorMax = new Vector2(0f, 0.5f);
+                r.pivot = new Vector2(0.5f, 0.5f);
+                r.anchoredPosition = new Vector2(7f + i * 19f, 0f);
+                r.sizeDelta = new Vector2(11f, 11f);
+                r.localRotation = Quaternion.Euler(0f, 0f, 45f);
+
+                Image pipImg = pipObj.GetComponent<Image>();
+                pipImg.raycastTarget = false;
+                pips[i] = pipImg;
+            }
+
+            return pips;
+        }
+
+        private void WireRowButton(ShopRow row)
+        {
+            if (row.Button == null) return;
+
+            row.Button.onClick.RemoveAllListeners();
+            ShopRow captured = row;
+            row.Button.onClick.AddListener(() => OnRowButtonClicked(captured));
+        }
+
+        private void OnRowButtonClicked(ShopRow row)
+        {
+            if (row == null) return;
+
+            if (row.Key == ScrapRowKey)
+            {
+                SellAllScrap();
+            }
+            else if (row.IsSellRow)
+            {
+                SellStockItem(row.Item);
+            }
+            else
+            {
+                BuyStockItem(row.Item);
+            }
+        }
+
+        /// <summary>
+        /// Text line between the shelf and the Leave button.
+        /// </summary>
+        private void EnsureFeedbackText()
+        {
+            if (feedbackText == null)
+            {
+                Transform tr = shopPanel.transform.Find("Shop_Feedback_Text");
+                GameObject obj = tr != null ? tr.gameObject : null;
+                if (obj == null)
+                {
+                    obj = new GameObject("Shop_Feedback_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                    obj.transform.SetParent(shopPanel.transform, false);
+                }
+                feedbackText = obj.GetComponent<TMP_Text>();
+            }
+
+            RectTransform rect = feedbackText.GetComponent<RectTransform>();
+            rect.anchorMin = new Vector2(0f, 0f);
+            rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.anchoredPosition = new Vector2(0f, 64f);
+            rect.sizeDelta = new Vector2(-64f, 30f);
+
+            feedbackText.fontSize = 14f;
+            feedbackText.alignment = TextAlignmentOptions.Center;
+            feedbackText.enableAutoSizing = false;
+            feedbackText.richText = true;
+            feedbackText.raycastTarget = false;
+        }
+
+        private void ShowIdleLine()
+        {
+            feedbackResetTime = 0f;
+            if (feedbackText == null) return;
+            feedbackText.text = IdleLine;
+            feedbackText.color = MutedText;
+        }
+
+        private void ShowFeedback(string message, bool success)
+        {
+            if (feedbackText != null)
+            {
+                feedbackText.text = message;
+                feedbackText.color = success ? FeedbackGood : FeedbackBad;
+            }
+            feedbackResetTime = Time.unscaledTime + FeedbackSeconds;
+        }
+
+        private static void PlayShopSound(SFXClipType clip, float volume = 1f)
+        {
+            if (SFXManager.Instance != null)
+            {
+                SFXManager.Instance.PlaySFX(clip, default, volume);
+            }
+        }
+
+        /// <summary>Switches the shelf to the Buy tab.</summary>
+        public void ShowBuyTab()
+        {
+            if (!showingSellTab) return;
+            showingSellTab = false;
+            PlayShopSound(SFXClipType.ButtonClick, 0.6f);
+            RefreshEconomyDisplay();
+        }
+
+        /// <summary>Switches the shelf to the Sell tab.</summary>
+        public void ShowSellTab()
+        {
+            if (showingSellTab) return;
+            showingSellTab = true;
+            PlayShopSound(SFXClipType.ButtonClick, 0.6f);
+            RefreshEconomyDisplay();
+        }
+
+        /// <summary>Whether the Sell tab is showing.</summary>
+        public bool IsSellTabActive => showingSellTab;
+
+        #endregion
+
+        #region Item Lookup & Row Text
+
+        /// <summary>
+        /// Finds an item by ID in the inventory catalog, falling back to the serialized stock fields.
+        /// </summary>
+        private ItemSO ResolveItem(string itemId)
+        {
+            InventoryManager inventory = InventoryManager.Instance;
+            ItemSO item = inventory != null ? inventory.FindItemByID(itemId) : null;
+            if (item != null) return item;
+
+            switch (itemId)
+            {
+                case ShopManager.SMALL_POTION_ID: return healthPotionItem;
+                case ShopManager.SHARPENED_BLADE_ID: return sharpenedBladeItem;
+                case ShopManager.RUNIC_ARMOR_ID: return runicArmorItem;
+                default: return null;
+            }
+        }
+
+        private void ApplyIcon(ShopRow row)
+        {
+            if (row.Icon == null || row.Item == null) return;
+
+            Sprite sprite = row.Item.ItemIcon;
+            Color tint = Color.white;
+
+            if (sprite == null)
+            {
+                switch (row.Item.ItemID)
+                {
+                    case ShopManager.POISON_VIAL_ID:
+                        sprite = potionSprite;
+                        tint = PoisonTint;
+                        break;
+                    case ShopManager.REROLL_RUNE_ID:
+                        sprite = runeIconSprite;
+                        break;
+                    default:
+                        if (row.Item.ItemType == ItemType.WeaponUpgrade) sprite = swordIconSprite;
+                        else if (row.Item.ItemType == ItemType.ArmorUpgrade) sprite = shieldIconSprite;
+                        else if (row.Item.ItemType == ItemType.Consumable) sprite = potionSprite;
+                        else sprite = coinSprite;
+                        break;
+                }
+            }
+
+            row.Icon.sprite = sprite;
+            row.Icon.color = tint;
+            row.Icon.enabled = sprite != null;
+        }
+
+        /// <summary>
+        /// Short, player-facing description of what buying the item does right now.
+        /// </summary>
+        private static string GetBuyDescription(ItemSO item, int level)
+        {
+            switch (item.ItemID)
+            {
+                case ShopManager.SMALL_POTION_ID:
+                    return $"Restores {item.StatBonusValue} HP. Drink with [Q].";
+                case ShopManager.GREATER_POTION_ID:
+                    return $"Restores {item.StatBonusValue} HP. [Q] drinks it when small potions run out.";
+                case ShopManager.POISON_VIAL_ID:
+                    return $"Coats your blade when a fight starts: first hit deals +{item.StatBonusValue} damage.";
+                case ShopManager.REROLL_RUNE_ID:
+                    return "Reroll one failed d20 roll of your choice.";
+            }
+
+            bool isWeapon = item.ItemType == ItemType.WeaponUpgrade;
+            string stat = isWeapon ? "DMG" : "AC";
+            if (level >= ShopManager.MAX_UPGRADE_LEVEL)
+            {
+                return $"Baldur can't improve it further. <color=#F6D578>+{level} {stat}</color>";
+            }
+            return level == 0
+                ? $"Permanent +1 {stat}."
+                : $"Now <color=#F6D578>+{level} {stat}</color>. Next level: +{level + 1} {stat}.";
+        }
+
+        private static string GetBuyTitle(ItemSO item, int owned)
+        {
+            switch (item.ItemID)
+            {
+                case ShopManager.SHARPENED_BLADE_ID: return "Sharpen Blade";
+                case ShopManager.RUNIC_ARMOR_ID: return "Reinforce Armor";
+            }
+            return owned > 0 ? $"{item.ItemName}  <color=#A6B3C7><size=80%>(you have {owned})</size></color>" : item.ItemName;
+        }
+
+        #endregion
+
         #region Economy Actions
 
         /// <summary>
@@ -1220,51 +1809,95 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void SellAllScrap()
         {
+            int gold = 0;
+            int scrapBefore = InventoryManager.Instance != null ? InventoryManager.Instance.ScrapMetalCount : 0;
             ShopManager sm = ShopManager.Instance;
             if (sm != null)
             {
-                sm.ConvertScrapToGold(-1);
+                gold = sm.ConvertScrapToGold(-1);
+            }
+
+            if (gold > 0)
+            {
+                ShowFeedback($"Baldur melts down {scrapBefore} scrap: <b>+{gold} gold</b>.", true);
+                PlayShopSound(SFXClipType.SwordHit, 0.8f);
+            }
+            else
+            {
+                ShowFeedback("You have no scrap to sell. Fights drop 2-10 scrap.", false);
             }
 
             RefreshEconomyDisplay();
             PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
-        /// <summary>
-        /// Purchases a Health Potion if the player has sufficient gold.
-        /// </summary>
-        public void BuyPotion()
-        {
-            PerformPurchase(healthPotionItem, ShopManager.HEALTH_POTION_PRICE);
-        }
+        /// <summary>Buys a small health potion.</summary>
+        public void BuyPotion() => BuyStockItem(ResolveItem(ShopManager.SMALL_POTION_ID));
+
+        /// <summary>Buys the next blade level (+1 permanent DMG).</summary>
+        public void BuyWeapon() => BuyStockItem(ResolveItem(ShopManager.SHARPENED_BLADE_ID));
+
+        /// <summary>Buys the next armor level (+1 permanent AC).</summary>
+        public void BuyArmor() => BuyStockItem(ResolveItem(ShopManager.RUNIC_ARMOR_ID));
 
         /// <summary>
-        /// Purchases weapon sharpening (+1 permanent DMG) if the player has sufficient gold.
+        /// Buys one item, then reports the outcome on the feedback line with a sound.
         /// </summary>
-        public void BuyWeapon()
+        public void BuyStockItem(ItemSO item)
         {
-            PerformPurchase(sharpenedBladeItem, ShopManager.WEAPON_UPGRADE_PRICE);
-        }
-
-        /// <summary>
-        /// Purchases runic armor reinforcements (+1 permanent AC) if the player has sufficient gold.
-        /// </summary>
-        public void BuyArmor()
-        {
-            PerformPurchase(runicArmorItem, ShopManager.ARMOR_UPGRADE_PRICE);
-        }
-
-        private void PerformPurchase(ItemSO item, int fallbackPrice)
-        {
-            if (item == null) return;
+            ShopManager sm = ShopManager.Instance;
+            if (sm == null || item == null) return;
 
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
-            bool success = ShopManager.Instance?.BuyItem(item, player) ?? false;
+            int price = ShopManager.GetBuyPrice(item, player);
+            ShopPurchaseResult result = sm.TryBuyItem(item, player);
 
-            if (success)
+            switch (result)
             {
-                RefreshEconomyDisplay();
+                case ShopPurchaseResult.Success:
+                    if (ShopManager.IsUpgrade(item))
+                    {
+                        int level = ShopManager.GetUpgradeLevel(item, player);
+                        string what = item.ItemType == ItemType.WeaponUpgrade ? $"Your blade now deals +{level} DMG" : $"Your armor now gives +{level} AC";
+                        ShowFeedback($"<b>Clang!</b> {what}. (-{price}g)", true);
+                        PlayShopSound(SFXClipType.SwordHit);
+                    }
+                    else
+                    {
+                        ShowFeedback($"Bought <b>{item.ItemName}</b> for {price} gold.", true);
+                        PlayShopSound(SFXClipType.ButtonClick);
+                    }
+                    break;
+
+                case ShopPurchaseResult.NotEnoughGold:
+                    int gold = InventoryManager.Instance != null ? InventoryManager.Instance.CurrentGold : 0;
+                    ShowFeedback($"Not enough gold. {item.ItemName} costs {price}g, you need {price - gold}g more.", false);
+                    PlayShopSound(SFXClipType.CriticalFailure, 0.5f);
+                    break;
+
+                case ShopPurchaseResult.MaxLevel:
+                    ShowFeedback("\"That's as fine as steel gets, friend.\"", false);
+                    break;
             }
+
+            RefreshEconomyDisplay();
+        }
+
+        /// <summary>
+        /// Sells one of the item back to Baldur.
+        /// </summary>
+        public void SellStockItem(ItemSO item)
+        {
+            ShopManager sm = ShopManager.Instance;
+            if (sm == null || item == null) return;
+
+            if (sm.SellItem(item))
+            {
+                ShowFeedback($"Sold <b>{item.ItemName}</b> for {item.SellPriceGold} gold.", true);
+                PlayShopSound(SFXClipType.ButtonClick);
+            }
+
+            RefreshEconomyDisplay();
         }
 
         #endregion
@@ -1272,7 +1905,7 @@ namespace CastleOfTheD20.UI
         #region Refresh Display
 
         /// <summary>
-        /// Synchronizes gold count, scrap metal amount, potential payout label, and button interactable states.
+        /// Synchronizes the gold and scrap badges, the tab highlight and every row on the active tab.
         /// </summary>
         public void RefreshEconomyDisplay()
         {
@@ -1290,44 +1923,204 @@ namespace CastleOfTheD20.UI
                 scrapMetalText.text = $"{currentScrap} Scrap Ore";
             }
 
-            if (sellScrapButtonLabel != null)
+            RefreshTabVisuals();
+
+            int visibleRows = showingSellTab
+                ? RefreshSellRows(inventory, currentScrap)
+                : RefreshBuyRows(inventory, currentGold);
+
+            // Hide the other tab's rows
+            SetRowsActive(buyRows, !showingSellTab);
+            if (scrapRow != null && scrapRow.Root != null) scrapRow.Root.SetActive(showingSellTab);
+            if (sellEmptyHint != null)
             {
+                bool showHint = showingSellTab && sellableBuffer.Count == 0;
+                sellEmptyHint.gameObject.SetActive(showHint);
+                if (showHint) sellEmptyHint.transform.SetAsLastSibling();
+            }
+            if (!showingSellTab) SetRowsActive(sellRows, false);
+
+            ApplyRowHeights(visibleRows);
+        }
+
+        private int RefreshBuyRows(InventoryManager inventory, int currentGold)
+        {
+            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+            int visible = 0;
+
+            for (int i = 0; i < buyRows.Count; i++)
+            {
+                ShopRow row = buyRows[i];
+                if (row.Item == null) row.Item = ResolveItem(row.Key);
+
+                bool available = row.Item != null;
+                row.Root.SetActive(available);
+                if (!available) continue;
+                visible++;
+
+                ItemSO item = row.Item;
+                bool isUpgrade = ShopManager.IsUpgrade(item);
+                int level = isUpgrade ? ShopManager.GetUpgradeLevel(item, player) : 0;
+                int price = ShopManager.GetBuyPrice(item, player);
+                bool maxed = price < 0;
+                bool affordable = !maxed && currentGold >= price;
+                int owned = !isUpgrade && inventory != null ? inventory.GetItemCount(item) : 0;
+
+                ApplyIcon(row);
+                if (row.Title != null) row.Title.text = GetBuyTitle(item, owned);
+                if (row.Desc != null) row.Desc.text = GetBuyDescription(item, level);
+                if (row.Background != null) row.Background.color = maxed ? RowTintMaxed : RowTint;
+
+                if (row.Pips != null)
+                {
+                    for (int p = 0; p < row.Pips.Length; p++)
+                    {
+                        row.Pips[p].color = p < level ? PipFilled : PipEmpty;
+                    }
+                }
+
+                if (row.ButtonLabel != null)
+                {
+                    row.ButtonLabel.text = maxed ? "Max Level" : (isUpgrade ? $"Upgrade  {price}g" : $"Buy  {price}g");
+                    row.ButtonLabel.color = maxed ? MutedText : (affordable ? PriceGold : PriceTooHigh);
+                }
+
+                // Unaffordable stays clickable so the player is told how much gold is missing
+                if (row.Button != null) row.Button.interactable = !maxed;
+            }
+
+            return visible;
+        }
+
+        private int RefreshSellRows(InventoryManager inventory, int currentScrap)
+        {
+            int visible = 0;
+
+            if (scrapRow != null)
+            {
+                visible++;
                 int potentialGold = currentScrap * ShopManager.SCRAP_TO_GOLD_RATE;
-                sellScrapButtonLabel.text = currentScrap > 0
-                    ? $"Sell All (+{potentialGold}g)"
-                    : "No Scrap";
+                if (scrapRow.Title != null) scrapRow.Title.text = currentScrap > 0 ? $"Scrap Metal  <color=#A6B3C7><size=80%>(you have {currentScrap})</size></color>" : "Scrap Metal";
+                if (scrapRow.Desc != null) scrapRow.Desc.text = $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. Fights drop 2-10 scrap.";
+                if (scrapRow.ButtonLabel != null)
+                {
+                    scrapRow.ButtonLabel.text = currentScrap > 0 ? $"Sell All  +{potentialGold}g" : "No Scrap";
+                    scrapRow.ButtonLabel.color = currentScrap > 0 ? PriceGold : MutedText;
+                }
+                if (scrapRow.Button != null) scrapRow.Button.interactable = currentScrap > 0;
+                if (scrapRow.Background != null) scrapRow.Background.color = RowTint;
             }
 
-            if (sellAllScrapButton != null)
+            sellableBuffer.Clear();
+            if (inventory != null)
             {
-                sellAllScrapButton.interactable = currentScrap > 0;
+                foreach (KeyValuePair<ItemSO, int> entry in inventory.Items)
+                {
+                    if (entry.Value > 0 && ShopManager.IsSellable(entry.Key) && sellableBuffer.Count < MaxSellRows - 1)
+                    {
+                        sellableBuffer.Add(entry.Key);
+                    }
+                }
+            }
+            sellableBuffer.Sort(CompareItemsByName);
+
+            for (int i = 0; i < sellableBuffer.Count; i++)
+            {
+                ShopRow row = GetSellRow(i);
+                ItemSO item = sellableBuffer[i];
+                row.Item = item;
+                row.Key = item.ItemID;
+                row.Root.SetActive(true);
+                row.Root.transform.SetSiblingIndex(buyRows.Count + 1 + i);
+                visible++;
+
+                int owned = inventory.GetItemCount(item);
+                ApplyIcon(row);
+                if (row.Title != null) row.Title.text = $"{item.ItemName}  <color=#A6B3C7><size=80%>(you have {owned})</size></color>";
+                if (row.Desc != null) row.Desc.text = $"Baldur buys it for {item.SellPriceGold} gold each.";
+                if (row.Background != null) row.Background.color = RowTint;
+                if (row.ButtonLabel != null)
+                {
+                    row.ButtonLabel.text = $"Sell  +{item.SellPriceGold}g";
+                    row.ButtonLabel.color = PriceGold;
+                }
+                if (row.Button != null) row.Button.interactable = true;
             }
 
-            // Update item purchase button affordability
-            if (buyPotionButton != null)
+            for (int i = sellableBuffer.Count; i < sellRows.Count; i++)
             {
-                buyPotionButton.interactable = currentGold >= ShopManager.HEALTH_POTION_PRICE;
+                sellRows[i].Item = null;
+                sellRows[i].Root.SetActive(false);
             }
 
-            if (buyWeaponButton != null)
-            {
-                buyWeaponButton.interactable = currentGold >= ShopManager.WEAPON_UPGRADE_PRICE;
-            }
+            return visible;
+        }
 
-            if (buyArmorButton != null)
+        private static int CompareItemsByName(ItemSO a, ItemSO b)
+        {
+            return string.CompareOrdinal(a.ItemName, b.ItemName);
+        }
+
+        private static void SetRowsActive(List<ShopRow> rows, bool active)
+        {
+            if (active) return; // visible rows are switched on individually during refresh
+            for (int i = 0; i < rows.Count; i++)
             {
-                buyArmorButton.interactable = currentGold >= ShopManager.ARMOR_UPGRADE_PRICE;
+                if (rows[i].Root != null) rows[i].Root.SetActive(false);
             }
+        }
+
+        /// <summary>
+        /// Shrinks rows when the tab holds more than fits at full height.
+        /// </summary>
+        private void ApplyRowHeights(int visibleRows)
+        {
+            if (shopPanel == null || visibleRows <= 0) return;
+
+            RectTransform panelRect = shopPanel.GetComponent<RectTransform>();
+            float panelHeight = panelRect != null ? panelRect.sizeDelta.y : 740f;
+            float shelfHeight = panelHeight - ShelfTopOffset - ShelfBottomOffset;
+            float height = Mathf.Clamp((shelfHeight - RowSpacing * (visibleRows - 1)) / visibleRows, MinRowHeight, MaxRowHeight);
+
+            ApplyHeight(buyRows, height);
+            ApplyHeight(sellRows, height);
+            if (scrapRow != null) ApplyHeight(scrapRow, height);
+        }
+
+        private static void ApplyHeight(List<ShopRow> rows, float height)
+        {
+            for (int i = 0; i < rows.Count; i++) ApplyHeight(rows[i], height);
+        }
+
+        private static void ApplyHeight(ShopRow row, float height)
+        {
+            if (row.Root == null) return;
+            LayoutElement le = row.Root.GetComponent<LayoutElement>();
+            if (le == null) return;
+            le.minHeight = height;
+            le.preferredHeight = height;
         }
 
         #endregion
 
         #region Event Handlers
 
-        private void HandleGoldChanged(int newGold) => RefreshEconomyDisplay();
-        private void HandleScrapMetalChanged(int newScrap) => RefreshEconomyDisplay();
-        private void HandleScrapConverted(int scrap, int gold) => RefreshEconomyDisplay();
-        private void HandleItemPurchased(ItemSO item) => RefreshEconomyDisplay();
+        private void HandleGoldChanged(int newGold) => RefreshIfOpen();
+        private void HandleScrapMetalChanged(int newScrap) => RefreshIfOpen();
+        private void HandleScrapConverted(int scrap, int gold) => RefreshIfOpen();
+        private void HandleItemPurchased(ItemSO item) => RefreshIfOpen();
+        private void HandleItemSold(ItemSO item) => RefreshIfOpen();
+        private void HandleInventoryChanged() => RefreshIfOpen();
+        private void HandleRerollScrollsChanged(int count) => RefreshIfOpen();
+
+        // Gold and items change during fights too; only redraw the shelf while the shop is on screen
+        private void RefreshIfOpen()
+        {
+            if (shopPanel != null && shopPanel.activeInHierarchy)
+            {
+                RefreshEconomyDisplay();
+            }
+        }
 
         #endregion
     }

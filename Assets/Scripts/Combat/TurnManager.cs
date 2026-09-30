@@ -328,6 +328,18 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
+            // A Poison Vial is used up automatically at the start of a real fight (not a village brawl)
+            if (awardVictoryScrap && InventoryManager.Instance != null)
+            {
+                foreach (var u in activeUnits)
+                {
+                    if (u is PlayerUnit hero)
+                    {
+                        InventoryManager.Instance.TryCoatWithPoisonVial(hero);
+                    }
+                }
+            }
+
             // Ensure CombatUIController is awake and active
             CombatUIController.Instance?.EnsureActiveAndReady(true);
 
@@ -511,6 +523,10 @@ namespace CastleOfTheD20.Combat
             UnsubscribeFromUnitDeaths();
             SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
             GridManager.Instance?.ClearAllHighlights();
+            foreach (var unit in activeUnits)
+            {
+                if (unit is PlayerUnit hero) hero.ClearPoisonCoating();
+            }
             if (isVictory)
             {
                 if (awardScrapOnVictory)
