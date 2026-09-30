@@ -35,9 +35,9 @@ namespace CastleOfTheD20.UI
         public const string KeyTower = "Tower";
         public const string KeyCrownHall = "CrownHall";
 
-        private static readonly Vector2 FrameSize = new Vector2(1560f, 920f);
+        private static readonly Vector2 FrameSize = new Vector2(1560f, 980f);
         private static readonly Vector2 CardSize = new Vector2(380f, 128f);
-        private static readonly Vector2 PinOffset = new Vector2(0f, 21f);
+        private static readonly Vector2 PinOffset = new Vector2(0f, 22f);
 
         private static readonly Color GoldText = new Color(0.98f, 0.85f, 0.45f, 1f);
         private static readonly Color HereGold = new Color(1f, 0.80f, 0.25f, 1f);
@@ -591,6 +591,19 @@ namespace CastleOfTheD20.UI
             frRt.anchoredPosition = Vector2.zero;
             ApplyPanelLook(frameObj.GetComponent<Image>(), panelDarkSprite, new Color(0.06f, 0.07f, 0.1f, 0.98f), 3f);
 
+            // Solid backing inside the border: the themed panel sprite is see-through in the middle, which let
+            // the title menu and HUD text show through the map.
+            GameObject backingObj = new GameObject("Map_Frame_Backing", typeof(RectTransform), typeof(Image));
+            backingObj.transform.SetParent(frameObj.transform, false);
+            RectTransform bkRt = backingObj.GetComponent<RectTransform>();
+            bkRt.anchorMin = Vector2.zero;
+            bkRt.anchorMax = Vector2.one;
+            bkRt.offsetMin = new Vector2(8f, 8f);
+            bkRt.offsetMax = new Vector2(-8f, -8f);
+            Image bkImg = backingObj.GetComponent<Image>();
+            bkImg.color = new Color(0.05f, 0.06f, 0.09f, 1f);
+            bkImg.raycastTarget = false;
+
             BuildHeader(frameObj.transform);
 
             // 3. Map area: paths first so they sit behind the cards
@@ -678,8 +691,9 @@ namespace CastleOfTheD20.UI
             dRt.sizeDelta = new Vector2(0f, 4f);
             dRt.anchoredPosition = new Vector2(0f, -134f);
             Image dImg = divObj.GetComponent<Image>();
-            dImg.sprite = dividerGoldSprite;
-            dImg.type = dividerGoldSprite != null ? Image.Type.Sliced : Image.Type.Simple;
+            // Plain line: the sliced divider sprite collapsed to a short dash at this height.
+            dImg.sprite = null;
+            dImg.type = Image.Type.Simple;
             dImg.color = new Color(1f, 0.82f, 0.35f, 0.9f);
             dImg.raycastTarget = false;
 
@@ -702,13 +716,14 @@ namespace CastleOfTheD20.UI
             // Card positions follow the real door links between the zone scenes:
             // Village - Forest; Forest - Courtyard; Forest - Library (secret Rogue gate);
             // Courtyard/Library - Great Hall; Great Hall - Tower; Great Hall - Throne Room.
-            Vector2 throne = new Vector2(0f, 215f);
-            Vector2 hall = new Vector2(0f, 45f);
-            Vector2 tower = new Vector2(480f, 45f);
-            Vector2 library = new Vector2(-400f, -125f);
-            Vector2 courtyard = new Vector2(400f, -125f);
-            Vector2 forest = new Vector2(0f, -295f);
-            Vector2 village = new Vector2(-480f, -295f);
+            // Rows are 56px apart so the "YOU ARE HERE" tag fits between a card and the one above it.
+            Vector2 throne = new Vector2(0f, 245f);
+            Vector2 hall = new Vector2(0f, 61f);
+            Vector2 tower = new Vector2(480f, 61f);
+            Vector2 library = new Vector2(-400f, -123f);
+            Vector2 courtyard = new Vector2(400f, -123f);
+            Vector2 forest = new Vector2(0f, -307f);
+            Vector2 village = new Vector2(-480f, -307f);
 
             CreatePath(pathsRoot, KeyVillage, village, KeyForest, forest, false);
             CreatePath(pathsRoot, KeyForest, forest, KeyCourtyard, courtyard, false);
@@ -718,12 +733,13 @@ namespace CastleOfTheD20.UI
             CreatePath(pathsRoot, KeyHall, hall, KeyTower, tower, false);
             CreatePath(pathsRoot, KeyHall, hall, KeyCrownHall, throne, false);
 
-            // Secret route tag in the gap between the Forest and Library cards
+            // Secret route tag just right of the dashed Forest-Library line, clear of the village's
+            // "YOU ARE HERE" tag and of the line itself
             GameObject secretObj = new GameObject("Secret_Route_Indicator", typeof(RectTransform), typeof(Image));
             secretObj.transform.SetParent(pathsRoot, false);
             RectTransform secRt = secretObj.GetComponent<RectTransform>();
             secRt.sizeDelta = new Vector2(170f, 32f);
-            secRt.anchoredPosition = new Vector2(-255f, -210f);
+            secRt.anchoredPosition = new Vector2(-80f, -215f);
             Image secImg = secretObj.GetComponent<Image>();
             ApplyPanelLook(secImg, pillBadgeSprite, new Color(0.04f, 0.12f, 0.2f, 0.95f), 0f);
             secImg.color = new Color(0.1f, 0.35f, 0.55f, 1f);
@@ -843,10 +859,11 @@ namespace CastleOfTheD20.UI
             RectTransform pRt = pinObj.GetComponent<RectTransform>();
             pRt.anchorMin = new Vector2(0.5f, 1f);
             pRt.anchorMax = new Vector2(0.5f, 1f);
-            pRt.sizeDelta = new Vector2(250f, 36f);
+            pRt.sizeDelta = new Vector2(250f, 34f);
             pRt.anchoredPosition = PinOffset;
             Image pinImg = pinObj.GetComponent<Image>();
-            ApplyPanelLook(pinImg, pillBadgeSprite, HereGold, 0f);
+            // Solid gold tag: the pill sprite is dark, which hid the dark label text.
+            pinImg.sprite = null;
             pinImg.color = HereGold;
             pinImg.raycastTarget = false;
 
