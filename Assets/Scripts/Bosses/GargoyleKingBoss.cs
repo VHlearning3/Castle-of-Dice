@@ -155,6 +155,7 @@ namespace CastleOfTheD20.Bosses
             if (target == null || !target.IsAlive) return;
 
             // Attack with modified damage accounting for intimidation
+            PlayAttackAnimation();
             AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
             DiceResult hitCheck = DiceSystem.RollD20(AttackBonus, target.ArmorClass, advantage);
 

@@ -2662,6 +2662,77 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1052783086}
   m_Mesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1001 &1062511867
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1669457298}
+    m_Modifications:
+    - target: {fileID: 3656505337940144442, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_Name
+      value: Forest_Zombie
+      objectReference: {fileID: 0}
+    - target: {fileID: 3656505337940144442, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -18
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.00000004371139
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+--- !u!1 &1062511868 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3656505337940144442, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+  m_PrefabInstance: {fileID: 1062511867}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1062511869 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5028117889300550200, guid: b0acf39adf5d33b49a10f9e6407f6674, type: 3}
+  m_PrefabInstance: {fileID: 1062511867}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1149914909
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3277,6 +3348,146 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4927710184057331858, guid: 2bc35fd9a5805674fbdf70126ef21dd7, type: 3}
   m_PrefabInstance: {fileID: 1548901612}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1549597712
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1669457298}
+    m_Modifications:
+    - target: {fileID: 1000000000, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_Name
+      value: CombatGrid_Forest
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -24
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+--- !u!4 &1549597713 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
+  m_PrefabInstance: {fileID: 1549597712}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1631296121
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1631296122}
+  - component: {fileID: 1631296124}
+  - component: {fileID: 1631296123}
+  m_Layer: 0
+  m_Name: Forest_Zombie_Trigger
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1631296122
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1631296121}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 2.5, z: -24}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1669457298}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1631296123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1631296121}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 49dc75af8b7e76344a540257153d4ea2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.World.DungeonRoomController
+  roomLocation: Forest
+  bossIdentifier: 
+  exitBarriers: []
+  roomEnemies:
+  - {fileID: 1062511868}
+  secretPassageOrChest: {fileID: 0}
+  generateGridOnCombat: 1
+  gridCenterOffset: {x: 0, y: 0, z: 0}
+  gridWidth: 12
+  gridHeight: 12
+  gridTileSize: 1.6
+  clearGridOnCombatResolved: 1
+--- !u!65 &1631296124
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1631296121}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 20, y: 6, z: 14}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1001 &1638825822
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3339,6 +3550,40 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7566144878320133479, guid: eb96abd199a07bd48a16fc58c4d4553b, type: 3}
   m_PrefabInstance: {fileID: 1638825822}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1669457297
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1669457298}
+  m_Layer: 0
+  m_Name: Forest_Zombie_Encounter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1669457298
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1669457297}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1549597713}
+  - {fileID: 1062511869}
+  - {fileID: 1631296122}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1697603302
 GameObject:
   m_ObjectHideFlags: 0
@@ -4420,3 +4665,4 @@ SceneRoots:
   - {fileID: 1957143133}
   - {fileID: 338444187}
   - {fileID: 1697603303}
+  - {fileID: 1669457298}

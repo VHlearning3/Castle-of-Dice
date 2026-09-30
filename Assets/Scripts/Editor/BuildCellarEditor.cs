@@ -806,6 +806,14 @@ namespace CastleOfTheD20.Editor
                 col.size = new Vector3(0.9f, RatColliderHalfHeight * 2f, 1.9f);
             }
 
+            // Rigged rat model (SetupRiggedEnemiesEditor) replaces the primitive rat when it exists
+            GameObject riggedRat = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Characters/Visual_Enemy_Rat.prefab");
+            if (riggedRat != null)
+            {
+                PrefabUtility.InstantiatePrefab(riggedRat, root.transform);
+                return;
+            }
+
             RatPart(PrimitiveType.Sphere, "Body", new Vector3(0f, 0.28f, 0f), new Vector3(0.75f, 0.5f, 1.15f), Vector3.zero, fur, root.transform);
             RatPart(PrimitiveType.Sphere, "Head", new Vector3(0f, 0.36f, 0.62f), new Vector3(0.45f, 0.38f, 0.5f), Vector3.zero, fur, root.transform);
             RatPart(PrimitiveType.Sphere, "Snout", new Vector3(0f, 0.3f, 0.9f), new Vector3(0.18f, 0.16f, 0.2f), Vector3.zero, skin, root.transform);
