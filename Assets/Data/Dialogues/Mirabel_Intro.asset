@@ -14,19 +14,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: Hush... be quiet. Do you smell the bitter moss of the moat? I am
-    Mirabel, herbalist of Oakhaven. I desperately need three swamp flowers from near
-    the moat for my remedies, but the undead sentries make foraging far too perilous.
+  dialogueText: 'Hush... be quiet. Do you smell the bitter moss on the wind? I am Mirabel, herbalist of Oakhaven. I desperately need three swamp blossoms from the damp hollows along the Forest Path for my remedies, but the undead roaming there make foraging far too perilous.'
   options:
-  - optionText: I can retrieve the flowers from the moat for you.
+  - optionText: 'I can gather the blossoms on the Forest Path for you.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 
     nextNodeSuccess: {fileID: 11400000, guid: 1995299417fdbb34c9f74f35aa2aeb2f, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_swamp_herbs]'
-  - optionText: '[DC 10 Nature Lore] Moat blossoms are an ancient remedy - I know
-      how to harvest them without damaging the roots.'
+  - optionText: '[DC 10 Nature Lore] Swamp blossoms are an ancient remedy - I know how to harvest them without damaging the roots.'
     requiresCheck: 1
     targetDC: 10
     skillCheckDescription: Nature / Wisdom Check

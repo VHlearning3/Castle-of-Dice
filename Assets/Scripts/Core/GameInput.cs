@@ -373,6 +373,26 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// True during the frame the Quest Journal hotkey [J] was pressed.
+        /// </summary>
+        public static bool IsJournalHotkeyPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.jKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            try
+            {
+                return Input.GetKeyDown(KeyCode.J);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// True during the frame any user input (key press or mouse click) occurred.
         /// Used for audio autoplay unmuting and wake-from-idle checks.
         /// </summary>

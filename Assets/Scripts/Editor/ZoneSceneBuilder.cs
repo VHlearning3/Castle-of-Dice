@@ -263,8 +263,6 @@ namespace CastleOfTheD20.Editor
             GameObject chestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Chest.prefab");
             GameObject combatGridPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/CombatGrid.prefab");
 
-            ItemSO signetRing = AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_SignetRing.asset");
-
             // Setup Framework
             SetupStandardSceneFramework(new Color(1f, 0.95f, 0.85f), 1.2f, new Vector3(0f, 0.5f, -42f));
 
@@ -330,7 +328,8 @@ namespace CastleOfTheD20.Editor
             CreateBossDialogueNPC("NPC_CursedCommander", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Commander_Intro.asset", "Challenge the Cursed Commander", null);
 
             // Reward Chest
-            GameObject chestObj = CreateRewardChest("Courtyard_Reward_Chest", new Vector3(0f, 0.4f, 30f), woodMat, goldMat, chestPrefab, null, 40, signetRing);
+            // Gold only: Othelia's signet ring waits in the Treasure Tower (Zone 6), per the v2.6 spec
+            GameObject chestObj = CreateRewardChest("Courtyard_Reward_Chest", new Vector3(0f, 0.4f, 30f), woodMat, goldMat, chestPrefab, null, 40, null);
             chestObj.SetActive(false);
 
             // Encounter Controller Trigger
@@ -1076,7 +1075,7 @@ namespace CastleOfTheD20.Editor
             ChestRewardInteraction reward = herb.AddComponent<ChestRewardInteraction>();
             reward.GoldReward = 0;
             reward.ItemReward = herbItem;
-            reward.PromptMessage = "Gather Swamp Herb";
+            reward.PromptMessage = "Gather Swamp Blossom";
             reward.EnsureChestCollider();
         }
 

@@ -13,11 +13,23 @@ MonoBehaviour:
   m_Name: Quest_LostSignetRing
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_lost_signet_ring
-  questTitle: The Lost Signet Ring
-  description: Search for Elder Othelia's ancestral signet ring in the courtyard
-    ruins.
+  questTitle: 'The Lost Signet Ring'
+  description: 'Find Elder Othelia''s ancestral signet ring, carried off to the castle''s treasure tower.'
   defaultState: 0
   requiredAmount: 1
   rewardGold: 50
   bonusRewardGold: 0
   rewardItem: {fileID: 11400000, guid: ebb93952c35701c4cb4d17cae1d0f5af, type: 2}
+  rewardItemAmount: 1
+  bonusRewardItem: {fileID: 0}
+  objectiveType: 2
+  targetEnemyName: ''
+  objectiveItem: {fileID: 11400000, guid: 8406208b4a12b3844b9e7722af463c80, type: 2}
+  objectiveSummary: 'Recover Othelia''s signet ring'
+  objectiveLocation: 'Castle treasure tower'
+  questGiverName: 'Othelia'
+  inProgressText: 'Have you reached the castle''s tower yet? The creatures serving the curse hoard their plunder up there.'
+  readyText: 'Is that a glint of gold in your hand? Please, tell me you found it!'
+  turnInOptionText: 'Your family''s signet ring, returned to you.'
+  thanksText: 'My ancestors'' seal, home at last! Take this Rune of Fate. May it turn the dice in your favour when it matters most.'
+  completedText: 'I wear the ring every day now. Oakhaven owes you more than it can ever repay.'

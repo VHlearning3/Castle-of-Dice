@@ -128,6 +128,9 @@ namespace CastleOfTheD20.Combat
         /// <summary>Fired when this unit dies.</summary>
         public event Action<CombatUnit> OnUnitDied;
 
+        /// <summary>Global event fired when any combatant dies (e.g. quest kill counters).</summary>
+        public static event Action<CombatUnit> OnAnyUnitDied;
+
         /// <summary>Global event fired when any combatant receives damage: (unit, damageAmount, isCritical).</summary>
         public static event Action<CombatUnit, int, bool> OnAnyUnitDamaged;
 
@@ -582,6 +585,7 @@ namespace CastleOfTheD20.Combat
 
             Debug.Log($"[CombatUnit] {unitName} has died.");
             OnUnitDied?.Invoke(this);
+            OnAnyUnitDied?.Invoke(this);
 
             HideOnDeath();
         }
