@@ -18,7 +18,7 @@ MonoBehaviour:
     +1 to all attack damage.
   itemIcon: {fileID: 0}
   itemType: 1
-  buyPriceGold: 60
+  buyPriceGold: 50
   sellPriceGold: 20
   statBonusValue: 1
   isConsumable: 0

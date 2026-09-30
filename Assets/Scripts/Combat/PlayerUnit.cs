@@ -41,6 +41,9 @@ namespace CastleOfTheD20.Combat
         private bool hasBaseline;
         private bool isApplyingProgression;
 
+        // Extra damage from a Poison Vial, added to the first hit of the current fight
+        private int poisonCoatingBonus;
+
         #endregion
 
         #region Progression Data
@@ -355,6 +358,37 @@ namespace CastleOfTheD20.Combat
             permanentArmorClassBonus += amount;
             Debug.Log($"[PlayerUnit] Armor Class bonus increased by {amount}. Total AC: {ArmorClass}");
             PushProgressionToData();
+        }
+
+        #endregion
+
+        #region Poison Coating
+
+        /// <summary>Extra damage waiting on the blade for the next hit (0 when uncoated).</summary>
+        public int PoisonCoatingBonus => poisonCoatingBonus;
+
+        /// <summary>
+        /// Coats the weapon with poison: the next hit this fight deals the given extra damage.
+        /// </summary>
+        public void ApplyPoisonCoating(int bonusDamage)
+        {
+            poisonCoatingBonus = Mathf.Max(0, bonusDamage);
+        }
+
+        /// <summary>
+        /// Returns the coating bonus and removes it, so only one hit benefits.
+        /// </summary>
+        public int ConsumePoisonCoating()
+        {
+            int bonus = poisonCoatingBonus;
+            poisonCoatingBonus = 0;
+            return bonus;
+        }
+
+        /// <summary>Wipes an unused coating when the fight ends.</summary>
+        public void ClearPoisonCoating()
+        {
+            poisonCoatingBonus = 0;
         }
 
         #endregion

@@ -343,7 +343,7 @@ namespace CastleOfTheD20.Combat
 
             if (hitCheck.isSuccess)
             {
-                int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus : 0;
+                int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus + player.ConsumePoisonCoating() : 0;
                 int damage = ability.RollDamage(bonus, weaponBonus);
 
                 if (fromShadowStep || targetBlinded)
@@ -450,7 +450,7 @@ namespace CastleOfTheD20.Combat
 
                 if (hitCheck.isSuccess)
                 {
-                    int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus : 0;
+                    int weaponBonus = caster is PlayerUnit player ? player.WeaponDamageBonus + player.ConsumePoisonCoating() : 0;
                     int damage = ability.RollDamage(bonus, weaponBonus);
 
                     if (hitCheck.isCriticalSuccess)
