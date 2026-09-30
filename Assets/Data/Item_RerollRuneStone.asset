@@ -18,7 +18,7 @@ MonoBehaviour:
     D20 reroll.
   itemIcon: {fileID: 0}
   itemType: 3
-  buyPriceGold: 0
-  sellPriceGold: 50
+  buyPriceGold: 75
+  sellPriceGold: 35
   statBonusValue: 1
   isConsumable: 0
