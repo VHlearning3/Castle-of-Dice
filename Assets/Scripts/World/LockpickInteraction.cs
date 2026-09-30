@@ -4,24 +4,33 @@ using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Economy;
+using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.World
 {
     /// <summary>
     /// Implements lockpicked chests, locked iron gates, and secret passageways.
-    /// Initiates a D20 lockpicking skill check (default DC 13).
-    /// Rogue characters benefit from Advantage (roll twice, take higher).
+    /// Only the Rogue can pick locks: it opens the lockpick timing minigame (LockpickMinigameUI),
+    /// whose difficulty comes from the lock's DC. Other classes get a "Can't lockpick" popup.
     /// Upon success: grants gold, distributes loot to InventoryManager, and reveals secret doorways.
-    /// Upon failure: retains lock or springs a trap dealing damage.
+    /// Upon failure (too many slips): the lock stays shut and may spring a trap dealing damage.
     /// </summary>
     public class LockpickInteraction : Interactable
     {
         #region Serialized Fields
 
         [Header("Lockpick Difficulty")]
-        [Tooltip("Target Difficulty Class (DC) to pick the lock (standard is DC 13).")]
+        [Tooltip("Lock difficulty (standard is DC 13). Higher DC = narrower gold zone and a faster pick in the minigame.")]
         [Range(1, 30)]
         [SerializeField] private int lockpickDC = 13;
+
+        [Tooltip("Pins the Rogue must set to open the lock.")]
+        [Range(1, 6)]
+        [SerializeField] private int pinCount = LockpickMinigame.DefaultPinCount;
+
+        [Tooltip("Missed presses allowed before the attempt fails (and the trap springs).")]
+        [Range(1, 5)]
+        [SerializeField] private int maxSlips = LockpickMinigame.DefaultMaxSlips;
 
         [Header("Loot & Rewards")]
         [Tooltip("Gold found inside the locked chest upon success.")]
@@ -34,6 +43,13 @@ namespace CastleOfTheD20.World
         [Header("Secret Passage / Door")]
         [Tooltip("Optional GameObject activated or opened upon success (e.g., hidden door revealed).")]
         [SerializeField] private GameObject hiddenPathObject;
+
+        [Header("Chest Lid (optional)")]
+        [Tooltip("Lid transform rotated open when the lock is picked (chests only).")]
+        [SerializeField] private Transform chestLid;
+
+        [Tooltip("Local Euler rotation for the lid when opened.")]
+        [SerializeField] private Vector3 openLidRotation = new Vector3(-65f, 0f, 0f);
 
         [Header("Trap Settings")]
         [Tooltip("If true, a failed check springs a trap.")]
@@ -60,8 +76,11 @@ namespace CastleOfTheD20.World
 
         #region Events
 
-        /// <summary>Fired when a lockpicking attempt completes: (result, isSuccess).</summary>
-        public static event Action<DiceResult, bool> OnLockpickAttempt;
+        /// <summary>Popup shown when a non-Rogue tries to pick a lock.</summary>
+        public const string CannotLockpickMessage = "Can't lockpick";
+
+        /// <summary>Fired when a lockpicking minigame ends in success or failure (not when the Rogue steps away): (isSuccess).</summary>
+        public static event Action<bool> OnLockpickAttempt;
 
         /// <summary>Fired when the lock is successfully opened.</summary>
         public event Action OnUnlocked;
@@ -75,7 +94,7 @@ namespace CastleOfTheD20.World
 
         private void Reset()
         {
-            promptMessage = "Pick Lock (DC 13)";
+            promptMessage = "Pick Lock";
             interactionRadius = 2.5f;
         }
 
@@ -88,6 +107,7 @@ namespace CastleOfTheD20.World
             {
                 isLocked = false;
                 promptMessage = "Opened";
+                OpenLid();
                 if (hiddenPathObject != null)
                 {
                     hiddenPathObject.SetActive(true);
@@ -113,30 +133,47 @@ namespace CastleOfTheD20.World
                 return;
             }
 
-            int bonus = player.PrimaryAttributeBonus;
-
-            // Rogues possess the lockpicking expertise trait, granting Advantage on lockpicking
-            AdvantageType advantage = AdvantageType.None;
-            if (player.CharacterClass != null && player.CharacterClass.ClassType == CharacterClassType.Rogue)
+            // Tiirikointi is the Rogue's exploration passive: nobody else can even try
+            if (!CanPickLocks(player))
             {
-                advantage = AdvantageType.Advantage;
-                Debug.Log("[LockpickInteraction] Rogue expertise grants Advantage on this lockpicking check!");
+                Debug.Log($"[LockpickInteraction] {player.UnitName} can't pick locks (Rogue only).");
+                LockpickMinigameUI.ShowToast(CannotLockpickMessage);
+                return;
             }
 
-            // Roll D20 vs lock DC
-            DiceResult result = DiceSystem.RollD20(bonus, lockpickDC, advantage);
-            Debug.Log($"[LockpickInteraction] {player.UnitName} attempts lockpick vs DC {lockpickDC}: {result}");
+            if (LockpickMinigameUI.IsOpen) return;
 
-            OnLockpickAttempt?.Invoke(result, result.isSuccess);
+            LockpickMinigame minigame = new LockpickMinigame(lockpickDC, pinCount, maxSlips);
+            Debug.Log($"[LockpickInteraction] {player.UnitName} starts picking '{name}' (DC {lockpickDC}, {pinCount} pins, {maxSlips} slips allowed).");
+            string title = chestLid != null ? "Pick the Chest Lock" : "Pick the Lock";
+            LockpickMinigameUI.Open(minigame, title, outcome => HandleMinigameFinished(player, outcome));
+        }
 
-            if (result.isSuccess)
+        /// <summary>Only the Rogue (Varjo-Corvo) can pick locks.</summary>
+        public static bool CanPickLocks(PlayerUnit player)
+        {
+            return player != null && player.CharacterClass != null && player.CharacterClass.ClassType == CharacterClassType.Rogue;
+        }
+
+        private void HandleMinigameFinished(PlayerUnit player, LockpickOutcome outcome)
+        {
+            if (outcome == LockpickOutcome.Cancelled || !isLocked)
+            {
+                return;
+            }
+
+            bool success = outcome == LockpickOutcome.Unlocked;
+            if (success)
             {
                 HandleLockpickSuccess(player);
             }
-            else
+            else if (player != null)
             {
                 HandleLockpickFailure(player);
             }
+
+            // Raised after the lock state changes so listeners see the opened lock
+            OnLockpickAttempt?.Invoke(success);
         }
 
         private void HandleLockpickSuccess(PlayerUnit player)
@@ -144,6 +181,7 @@ namespace CastleOfTheD20.World
             isLocked = false;
             promptMessage = "Opened";
             GameManager.Instance?.MarkRewardClaimed(GameManager.RewardKey(this));
+            OpenLid();
 
             Debug.Log($"[LockpickInteraction] SUCCESS! Lock picked. Gained {rewardGold} Gold.");
 
@@ -187,6 +225,14 @@ namespace CastleOfTheD20.World
                 Debug.Log($"[LockpickInteraction] TRAP TRIGGERED! Dart trap deals {trapDamage} damage to {player.UnitName}!");
                 player.TakeDamage(trapDamage);
                 OnTrapSprung?.Invoke(trapDamage);
+            }
+        }
+
+        private void OpenLid()
+        {
+            if (chestLid != null)
+            {
+                chestLid.localEulerAngles = openLidRotation;
             }
         }
 
