@@ -42902,6 +42902,68 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: dd0e147bc15c921458a4e1d080d90b87, type: 3}
+--- !u!1001 &742984370
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1688380216}
+    m_Modifications:
+    - target: {fileID: 3931378116682099742, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_Name
+      value: Chest_Lid
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.02978366
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.2549998
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0.8359947
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -181.127
+      objectReference: {fileID: 0}
+    - target: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+--- !u!4 &742984371 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 4450927788058539684, guid: ee4f15b8af2ac394aaa415264282d5a6, type: 3}
+  m_PrefabInstance: {fileID: 742984370}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &743835045
 GameObject:
   m_ObjectHideFlags: 0
@@ -77062,64 +77124,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1254765267}
   m_CullTransparentMesh: 1
---- !u!1 &1255907471
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1255907473}
-  - component: {fileID: 1255907472}
-  m_Layer: 0
-  m_Name: SFXManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1255907472
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1255907471}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3757235360011e04593c4d33acd756b6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Audio.SFXManager
-  sfxVolume: 0.9
-  levelUpClip: {fileID: 0}
-  diceRollClip: {fileID: 0}
-  critSuccessClip: {fileID: 0}
-  critFailClip: {fileID: 0}
-  swordHitClip: {fileID: 0}
-  spellCastClip: {fileID: 0}
-  damageTakenClip: {fileID: 0}
-  potionDrinkClip: {fileID: 0}
-  buttonClickClip: {fileID: 0}
-  questCompleteClip: {fileID: 0}
-  doorOpenClip: {fileID: 0}
-  victoryClip: {fileID: 0}
-  defeatClip: {fileID: 0}
---- !u!4 &1255907473
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1255907471}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1258001017
 GameObject:
   m_ObjectHideFlags: 0
@@ -77900,65 +77904,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 630293359802143985, guid: 128e719ab180dca47a69de1c2323aaee, type: 3}
   m_PrefabInstance: {fileID: 1271283001}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &1274254137
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1274254139}
-  - component: {fileID: 1274254138}
-  m_Layer: 0
-  m_Name: InventoryManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1274254138
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1274254137}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 156ad658bbdabfd4189a600f4be49015, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.InventoryManager
-  currentGold: 100
-  scrapMetalCount: 943
-  rerollScrollCount: 1
-  persistAcrossScenes: 1
-  itemCatalog:
-  - {fileID: 11400000, guid: 9a781b43d2c14092b76e81f1295c5201, type: 2}
-  - {fileID: 11400000, guid: a86f225b9266fe5499fe470cf8113a67, type: 2}
-  - {fileID: 11400000, guid: 9746e69eeef23ad4f8d1ab9ac0cd62ea, type: 2}
-  - {fileID: 11400000, guid: 45c342be3e3b68e4f90742f55236d846, type: 2}
-  - {fileID: 11400000, guid: ebb93952c35701c4cb4d17cae1d0f5af, type: 2}
-  - {fileID: 11400000, guid: 1439c55bed160784780ba9ca9f666677, type: 2}
-  - {fileID: 11400000, guid: f078b79d21bd45544a3c9a2f85c64d3d, type: 2}
-  - {fileID: 11400000, guid: d077db9c6874e4a48a9a2be4e9557e8f, type: 2}
-  - {fileID: 11400000, guid: 8406208b4a12b3844b9e7722af463c80, type: 2}
-  - {fileID: 11400000, guid: a1d35a846bc53544fb017af15a0b6e29, type: 2}
---- !u!4 &1274254139
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1274254137}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1274646144
 GameObject:
   m_ObjectHideFlags: 0
@@ -101281,6 +101226,10 @@ MonoBehaviour:
   swordIconSprite: {fileID: 21300000, guid: a11a11a110010001000100000000000f, type: 3}
   shieldIconSprite: {fileID: 21300000, guid: a11a11a1100100010001000000000010, type: 3}
   scrapOreSprite: {fileID: 21300000, guid: a11a11a1100100010001000000000011, type: 3}
+  runeIconSprite: {fileID: 0}
+  buyTabButton: {fileID: 0}
+  sellTabButton: {fileID: 0}
+  feedbackText: {fileID: 0}
 --- !u!1001 &1648623162
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -104509,6 +104458,129 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1687869121}
   m_CullTransparentMesh: 1
+--- !u!1001 &1688380214
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 13.799999
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -8.799999
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9848078
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.1736482
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: -181.127
+      objectReference: {fileID: 0}
+    - target: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 753187148504308968, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      propertyPath: m_Name
+      value: Village_Lockpick_Practice_Chest
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 742984371}
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 753187148504308968, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688380218}
+    - targetCorrespondingSourceObject: {fileID: 753187148504308968, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1688380217}
+  m_SourcePrefab: {fileID: 100100000, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+--- !u!1 &1688380215 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 753187148504308968, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+  m_PrefabInstance: {fileID: 1688380214}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &1688380216 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 87832373417035346, guid: fbd4d42de1087f341b2e50b8a912d5b7, type: 3}
+  m_PrefabInstance: {fileID: 1688380214}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1688380217
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688380215}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cab6eedf577ed1d42a2be6d46c6e4284, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.World.LockpickInteraction
+  promptMessage: Pick Lock (Practice Chest)
+  interactionRadius: 3
+  isInteractable: 1
+  lockpickDC: 8
+  pinCount: 3
+  maxSlips: 3
+  rewardGold: 10
+  rewardItem: {fileID: 0}
+  hiddenPathObject: {fileID: 0}
+  chestLid: {fileID: 742984371}
+  openLidRotation: {x: 70, y: 0, z: 0}
+  hasTrap: 0
+  trapDamage: 0
+  isLocked: 1
+--- !u!65 &1688380218
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688380215}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2.4, y: 1.4, z: 1.7}
+  m_Center: {x: 0, y: 0.7, z: 0}
 --- !u!1001 &1689393958
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -113590,52 +113662,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1839847246}
   m_CullTransparentMesh: 1
---- !u!1 &1842920981
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1842920983}
-  - component: {fileID: 1842920982}
-  m_Layer: 0
-  m_Name: PlayerProgressionManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1842920982
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1842920981}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4f89d0fa7ad3add41835eb79ecc2a937, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Core.PlayerProgressionManager
-  playerData: {fileID: 0}
-  currentLevel: 1
---- !u!4 &1842920983
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1842920981}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1842957045
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -118453,55 +118479,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1937166642}
   m_CullTransparentMesh: 1
---- !u!1 &1938936132
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1938936134}
-  - component: {fileID: 1938936133}
-  m_Layer: 0
-  m_Name: QuestManager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1938936133
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1938936132}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 83e32ecb541370b4c941a88f34c48316, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestManager
-  questDatabase:
-  - {fileID: 11400000, guid: b1a2c3d4e5f60718293a4b5c6d7e8f01, type: 2}
-  - {fileID: 11400000, guid: 9092411e830a2b94a9843166a5520ad0, type: 2}
-  - {fileID: 11400000, guid: c72833161b39297428fa279a343ecd4d, type: 2}
-  - {fileID: 11400000, guid: 07a234d195670eb43a40a2a273b631f0, type: 2}
---- !u!4 &1938936134
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1938936132}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1939332935
 GameObject:
   m_ObjectHideFlags: 0
@@ -131594,12 +131571,8 @@ SceneRoots:
   - {fileID: 459166743}
   - {fileID: 1077739571}
   - {fileID: 593134711}
-  - {fileID: 1274254139}
   - {fileID: 6260641264781425344}
-  - {fileID: 1842920983}
-  - {fileID: 1255907473}
   - {fileID: 1191091350}
-  - {fileID: 1938936134}
   - {fileID: 465413790}
   - {fileID: 956895779}
   - {fileID: 1300694782}
@@ -131612,3 +131585,4 @@ SceneRoots:
   - {fileID: 1092257320}
   - {fileID: 437892662}
   - {fileID: 1058500319}
+  - {fileID: 1688380214}

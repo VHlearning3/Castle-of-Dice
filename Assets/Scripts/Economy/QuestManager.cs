@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
+using CastleOfTheD20.Combat;
 using CastleOfTheD20.Data;
 using CastleOfTheD20.UI;
 
@@ -9,7 +10,9 @@ namespace CastleOfTheD20.Economy
 {
     /// <summary>
     /// Singleton manager tracking quest life cycles, objective progress, and reward distribution.
-    /// Handles village side quests: Cellar Rats, Lost Signet Ring, and Swamp Herbs.
+    /// Handles the village side quests: Cellar Pests (Barnaby), The Lost Signet Ring (Othelia),
+    /// Herbs for the Healer (Mirabel) and Scrap for the Forge (Baldur).
+    /// Objectives move on their own: enemy kills, items carried and scrap owned are counted from game events.
     /// </summary>
     public class QuestManager : MonoBehaviour
     {
@@ -52,18 +55,30 @@ namespace CastleOfTheD20.Economy
         private readonly Dictionary<string, QuestState> questStates = new Dictionary<string, QuestState>(StringComparer.OrdinalIgnoreCase);
         private readonly Dictionary<string, int> questProgress = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
+        // Quests whose giver agreed to a better reward through a D20 dialogue check
+        private readonly HashSet<string> negotiatedBonuses = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
         #endregion
 
         #region Events
 
-        /// <summary>Fired when a quest state transitions: (questID, newState).</summary>
+        /// <summary>Fired when a quest state transitions: (questID, newState). Also fired when a save is restored.</summary>
         public static event Action<string, QuestState> OnQuestStateUpdated;
 
-        /// <summary>Fired when objective counter increases: (questID, currentAmount, requiredAmount).</summary>
+        /// <summary>Fired when objective counter changes: (questID, currentAmount, requiredAmount).</summary>
         public static event Action<string, int, int> OnQuestProgressUpdated;
 
         /// <summary>Fired when a quest is finalized and rewards are granted: (quest, totalGoldAwarded).</summary>
         public static event Action<QuestSO, int> OnQuestCompleted;
+
+        /// <summary>Fired when the player accepts a quest during play (not on save restore).</summary>
+        public static event Action<QuestSO> OnQuestAccepted;
+
+        /// <summary>Fired when an accepted quest's counter goes up during play: (quest, current, required).</summary>
+        public static event Action<QuestSO, int, int> OnQuestObjectiveAdvanced;
+
+        /// <summary>Fired when an accepted quest's objective becomes complete and can be handed in.</summary>
+        public static event Action<QuestSO> OnQuestReadyToTurnIn;
 
         #endregion
 
@@ -73,7 +88,7 @@ namespace CastleOfTheD20.Economy
         {
             if (instance != null && instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 
@@ -85,11 +100,15 @@ namespace CastleOfTheD20.Economy
         private void OnEnable()
         {
             InventoryManager.OnScrapMetalChanged += HandleScrapMetalChanged;
+            InventoryManager.OnInventoryChanged += HandleInventoryChanged;
+            CombatUnit.OnAnyUnitDied += HandleUnitDied;
         }
 
         private void OnDisable()
         {
             InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
+            InventoryManager.OnInventoryChanged -= HandleInventoryChanged;
+            CombatUnit.OnAnyUnitDied -= HandleUnitDied;
         }
 
         private void OnDestroy()
@@ -134,6 +153,9 @@ namespace CastleOfTheD20.Economy
             if (!questStates.ContainsKey(quest.QuestID))
             {
                 questStates[quest.QuestID] = quest.DefaultState;
+            }
+            if (!questProgress.ContainsKey(quest.QuestID))
+            {
                 questProgress[quest.QuestID] = 0;
             }
         }
@@ -143,32 +165,40 @@ namespace CastleOfTheD20.Economy
         #region Quest Operations
 
         /// <summary>
-        /// Starts a quest by setting its state to InProgress.
+        /// Accepts a quest. A quest already accepted or finished is left as it is (returns false), so talking to
+        /// the giver again never resets progress or hands out the reward twice. Items already carried, scrap
+        /// already owned and enemies already slain count straight away.
         /// </summary>
         public bool StartQuest(string questID)
         {
             if (string.IsNullOrEmpty(questID)) return false;
 
-            if (!registeredQuests.ContainsKey(questID))
+            if (!registeredQuests.TryGetValue(questID, out QuestSO quest))
             {
                 Debug.LogWarning($"[QuestManager] Cannot start quest: '{questID}' is not registered.");
                 return false;
             }
 
-            questStates[questID] = QuestState.InProgress;
-            questProgress[questID] = 0;
-
-            QuestSO quest = registeredQuests[questID];
-            Debug.Log($"[QuestManager] Quest accepted: {quest.QuestTitle} ({questID})");
-
-            // If it's a scrap collection quest, initialize with existing scrap count in inventory
-            if (questID.IndexOf("scrap", StringComparison.OrdinalIgnoreCase) >= 0 && InventoryManager.Instance != null)
+            QuestState current = GetQuestState(questID);
+            if (current == QuestState.InProgress || current == QuestState.Completed)
             {
-                questProgress[questID] = Mathf.Min(quest.RequiredAmount, InventoryManager.Instance.ScrapMetalCount);
+                Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' is already {current}; not restarting it.");
+                return false;
             }
 
+            questStates[questID] = QuestState.InProgress;
+            int progress = Mathf.Clamp(ComputeTrackedProgress(quest, GetQuestProgress(questID)), 0, quest.RequiredAmount);
+            questProgress[questID] = progress;
+
+            Debug.Log($"[QuestManager] Quest accepted: {quest.QuestTitle} ({questID}) at {progress}/{quest.RequiredAmount}");
+
             OnQuestStateUpdated?.Invoke(questID, QuestState.InProgress);
-            OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
+            OnQuestProgressUpdated?.Invoke(questID, progress, quest.RequiredAmount);
+            OnQuestAccepted?.Invoke(quest);
+            if (progress >= quest.RequiredAmount)
+            {
+                OnQuestReadyToTurnIn?.Invoke(quest);
+            }
             PlayerHUD.Instance?.UpdateQuestSummaryText();
 
             return true;
@@ -182,15 +212,11 @@ namespace CastleOfTheD20.Economy
             if (string.IsNullOrEmpty(questID) || !registeredQuests.TryGetValue(questID, out QuestSO quest)) return;
             if (GetQuestState(questID) != QuestState.InProgress) return;
 
-            questProgress[questID] = Mathf.Clamp(amount, 0, quest.RequiredAmount);
-            Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' progress updated: {questProgress[questID]}/{quest.RequiredAmount}");
-
-            OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
-            PlayerHUD.Instance?.UpdateQuestSummaryText();
+            ApplyProgress(quest, amount);
         }
 
         /// <summary>
-        /// Increments objective progress for a quest (e.g., killed a rat, collected a swamp herb).
+        /// Increments objective progress for an active quest.
         /// </summary>
         public void AdvanceQuest(string questID, int amount = 1)
         {
@@ -208,18 +234,67 @@ namespace CastleOfTheD20.Economy
                 return;
             }
 
-            questProgress[questID] = Mathf.Min(quest.RequiredAmount, questProgress[questID] + amount);
-            Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' progress: {questProgress[questID]}/{quest.RequiredAmount}");
-
-            OnQuestProgressUpdated?.Invoke(questID, questProgress[questID], quest.RequiredAmount);
-            PlayerHUD.Instance?.UpdateQuestSummaryText();
+            ApplyProgress(quest, GetQuestProgress(questID) + amount);
         }
 
         /// <summary>
-        /// Completes a quest, validates objectives, and pays out gold and item rewards via InventoryManager.
+        /// Counts a defeated enemy toward every DefeatEnemies quest it matches. Kills made before the quest was
+        /// accepted are remembered too, so clearing the cellar first still counts once Barnaby asks.
+        /// </summary>
+        public void RecordEnemyDefeated(string enemyName)
+        {
+            if (string.IsNullOrEmpty(enemyName)) return;
+
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                QuestSO quest = entry.Value;
+                if (quest == null || !quest.CountsEnemy(enemyName)) continue;
+
+                QuestState state = GetQuestState(entry.Key);
+                if (state == QuestState.Completed) continue;
+
+                int next = GetQuestProgress(entry.Key) + 1;
+                if (state == QuestState.InProgress)
+                {
+                    ApplyProgress(quest, next);
+                }
+                else
+                {
+                    questProgress[entry.Key] = Mathf.Min(quest.RequiredAmount, next);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Re-counts carried items and scrap for every accepted quest (called whenever the inventory changes).
+        /// </summary>
+        public void RefreshTrackedObjectives()
+        {
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                QuestSO quest = entry.Value;
+                if (quest == null || GetQuestState(entry.Key) != QuestState.InProgress) continue;
+                if (quest.ObjectiveType != QuestObjectiveType.CollectItem && quest.ObjectiveType != QuestObjectiveType.ScrapMetal) continue;
+
+                ApplyProgress(quest, ComputeTrackedProgress(quest, GetQuestProgress(entry.Key)));
+            }
+        }
+
+        /// <summary>
+        /// Whether an accepted quest's objective is done and the giver can take it back.
+        /// </summary>
+        public bool IsReadyToTurnIn(string questID)
+        {
+            if (string.IsNullOrEmpty(questID) || !registeredQuests.TryGetValue(questID, out QuestSO quest)) return false;
+            return GetQuestState(questID) == QuestState.InProgress && GetQuestProgress(questID) >= quest.RequiredAmount;
+        }
+
+        /// <summary>
+        /// Hands a finished quest in: takes the quest items (ring, herbs, scrap), then pays the gold and item
+        /// rewards via InventoryManager. Fails while the objective is unfinished.
         /// </summary>
         /// <param name="questID">The quest string ID.</param>
-        /// <param name="grantedBonus">True if the player passed a D20 dialogue negotiation check for bonus gold.</param>
+        /// <param name="grantedBonus">Forces the bonus reward; otherwise the negotiated bonus recorded for this quest is used.</param>
         public bool CompleteQuest(string questID, bool grantedBonus = false)
         {
             if (string.IsNullOrEmpty(questID) || !registeredQuests.TryGetValue(questID, out QuestSO quest))
@@ -228,55 +303,172 @@ namespace CastleOfTheD20.Economy
                 return false;
             }
 
-            if (questStates[questID] == QuestState.Completed)
+            QuestState state = GetQuestState(questID);
+            if (state == QuestState.Completed)
             {
                 Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' is already completed.");
                 return false;
             }
 
-            if (questStates[questID] != QuestState.InProgress)
+            if (state != QuestState.InProgress)
             {
                 Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' has not been accepted yet; cannot complete it.");
                 return false;
             }
 
-            // Mark completed
+            // Carried objectives are re-counted so a sold ring or spent scrap can't be handed in
+            int progress = ComputeTrackedProgress(quest, GetQuestProgress(questID));
+            if (progress < quest.RequiredAmount)
+            {
+                ApplyProgress(quest, progress);
+                Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' is not finished yet ({progress}/{quest.RequiredAmount}).");
+                return false;
+            }
+
+            // Mark completed before taking the items so the inventory events don't lower the counter
             questStates[questID] = QuestState.Completed;
             questProgress[questID] = quest.RequiredAmount;
 
-            // Compute reward payout
-            int totalGold = quest.RewardGold + (grantedBonus ? quest.BonusRewardGold : 0);
+            bool bonus = grantedBonus || HasNegotiatedBonus(questID);
+            int totalGold = quest.RewardGold + (bonus ? quest.BonusRewardGold : 0);
+            ItemSO rewardItem = bonus && quest.BonusRewardItem != null ? quest.BonusRewardItem : quest.RewardItem;
 
             InventoryManager inventory = InventoryManager.Instance;
             if (inventory != null)
             {
+                TakeObjectiveItems(quest, inventory);
                 inventory.AddGold(totalGold);
-                if (quest.RewardItem != null)
+                if (rewardItem != null)
                 {
-                    inventory.AddItem(quest.RewardItem, 1);
+                    inventory.AddItem(rewardItem, quest.RewardItemAmount);
                 }
             }
 
-            Debug.Log($"[QuestManager] Completed quest '{quest.QuestTitle}'! Reward: {totalGold} Gold{(quest.RewardItem != null ? $" + {quest.RewardItem.ItemName}" : "")}.");
+            Debug.Log($"[QuestManager] Completed quest '{quest.QuestTitle}'! Reward: {totalGold} Gold{(rewardItem != null ? $" + {quest.RewardItemAmount}x {rewardItem.ItemName}" : "")}.");
 
             OnQuestStateUpdated?.Invoke(questID, QuestState.Completed);
+            OnQuestProgressUpdated?.Invoke(questID, quest.RequiredAmount, quest.RequiredAmount);
             OnQuestCompleted?.Invoke(quest, totalGold);
             PlayerHUD.Instance?.UpdateQuestSummaryText();
 
             return true;
         }
 
-        private void HandleScrapMetalChanged(int newScrap)
+        /// <summary>
+        /// The item the giver hands over for this quest, taking a negotiated bonus into account.
+        /// </summary>
+        public ItemSO GetRewardItem(QuestSO quest)
         {
-            // Automatically update any active scrap metal quests
-            foreach (var kvp in registeredQuests)
+            if (quest == null) return null;
+            return HasNegotiatedBonus(quest.QuestID) && quest.BonusRewardItem != null ? quest.BonusRewardItem : quest.RewardItem;
+        }
+
+        /// <summary>
+        /// The gold the giver pays for this quest, taking a negotiated bonus into account.
+        /// </summary>
+        public int GetRewardGold(QuestSO quest)
+        {
+            if (quest == null) return 0;
+            return quest.RewardGold + (HasNegotiatedBonus(quest.QuestID) ? quest.BonusRewardGold : 0);
+        }
+
+        private static void TakeObjectiveItems(QuestSO quest, InventoryManager inventory)
+        {
+            switch (quest.ObjectiveType)
             {
-                string qid = kvp.Key;
-                if (qid.IndexOf("scrap", StringComparison.OrdinalIgnoreCase) >= 0 && GetQuestState(qid) == QuestState.InProgress)
+                case QuestObjectiveType.CollectItem:
+                    if (quest.ObjectiveItem != null)
+                    {
+                        inventory.RemoveItem(quest.ObjectiveItem, Mathf.Min(quest.RequiredAmount, inventory.GetItemCount(quest.ObjectiveItem)));
+                    }
+                    break;
+
+                case QuestObjectiveType.ScrapMetal:
+                    inventory.RemoveScrapMetal(Mathf.Min(quest.RequiredAmount, inventory.ScrapMetalCount));
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Current counter for a quest: carried objectives are read from the inventory, the rest keep their count.
+        /// </summary>
+        private static int ComputeTrackedProgress(QuestSO quest, int storedProgress)
+        {
+            InventoryManager inventory = InventoryManager.Instance;
+            switch (quest.ObjectiveType)
+            {
+                case QuestObjectiveType.CollectItem:
+                    return inventory != null && quest.ObjectiveItem != null ? inventory.GetItemCount(quest.ObjectiveItem) : storedProgress;
+
+                case QuestObjectiveType.ScrapMetal:
+                    return inventory != null ? inventory.ScrapMetalCount : storedProgress;
+
+                default:
+                    return storedProgress;
+            }
+        }
+
+        /// <summary>
+        /// Sets an accepted quest's counter and raises the HUD / notification events for the change.
+        /// </summary>
+        private void ApplyProgress(QuestSO quest, int amount)
+        {
+            string questID = quest.QuestID;
+            int previous = GetQuestProgress(questID);
+            int next = Mathf.Clamp(amount, 0, quest.RequiredAmount);
+            if (next == previous) return;
+
+            questProgress[questID] = next;
+            Debug.Log($"[QuestManager] Quest '{quest.QuestTitle}' progress: {next}/{quest.RequiredAmount}");
+
+            OnQuestProgressUpdated?.Invoke(questID, next, quest.RequiredAmount);
+            if (next > previous)
+            {
+                OnQuestObjectiveAdvanced?.Invoke(quest, next, quest.RequiredAmount);
+                if (next >= quest.RequiredAmount)
                 {
-                    SetQuestProgress(qid, newScrap);
+                    OnQuestReadyToTurnIn?.Invoke(quest);
                 }
             }
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
+        }
+
+        private void HandleScrapMetalChanged(int newScrap)
+        {
+            RefreshTrackedObjectives();
+        }
+
+        private void HandleInventoryChanged()
+        {
+            RefreshTrackedObjectives();
+        }
+
+        private void HandleUnitDied(CombatUnit unit)
+        {
+            if (unit == null || unit is PlayerUnit) return;
+            RecordEnemyDefeated(unit.UnitName);
+        }
+
+        #endregion
+
+        #region Negotiated Bonus
+
+        /// <summary>
+        /// Records whether the player talked the giver into the bonus reward (saved with the game).
+        /// </summary>
+        public void SetNegotiatedBonus(string questID, bool bonus)
+        {
+            if (string.IsNullOrEmpty(questID)) return;
+            if (bonus) negotiatedBonuses.Add(questID);
+            else negotiatedBonuses.Remove(questID);
+        }
+
+        /// <summary>
+        /// Whether the player talked the giver into the bonus reward.
+        /// </summary>
+        public bool HasNegotiatedBonus(string questID)
+        {
+            return !string.IsNullOrEmpty(questID) && negotiatedBonuses.Contains(questID);
         }
 
         #endregion
@@ -284,7 +476,7 @@ namespace CastleOfTheD20.Economy
         #region Save Support
 
         /// <summary>
-        /// Writes every quest that has left its NotStarted state as parallel lists for the save file.
+        /// Writes every quest that has left its NotStarted state (or has early kills recorded) as parallel lists for the save file.
         /// </summary>
         public void CaptureState(List<string> questIds, List<int> states, List<int> progress)
         {
@@ -293,10 +485,23 @@ namespace CastleOfTheD20.Economy
             progress.Clear();
             foreach (KeyValuePair<string, QuestState> entry in questStates)
             {
-                if (entry.Value == QuestState.NotStarted) continue;
+                int count = GetQuestProgress(entry.Key);
+                if (entry.Value == QuestState.NotStarted && count <= 0) continue;
                 questIds.Add(entry.Key);
                 states.Add((int)entry.Value);
-                progress.Add(GetQuestProgress(entry.Key));
+                progress.Add(count);
+            }
+        }
+
+        /// <summary>
+        /// Writes the quests with a negotiated bonus for the save file.
+        /// </summary>
+        public void CaptureBonuses(List<string> questIds)
+        {
+            questIds.Clear();
+            foreach (string id in negotiatedBonuses)
+            {
+                questIds.Add(id);
             }
         }
 
@@ -323,16 +528,31 @@ namespace CastleOfTheD20.Economy
         }
 
         /// <summary>
+        /// Restores the quests with a negotiated bonus from the save file (null = none).
+        /// </summary>
+        public void RestoreBonuses(IReadOnlyList<string> questIds)
+        {
+            negotiatedBonuses.Clear();
+            if (questIds == null) return;
+            for (int i = 0; i < questIds.Count; i++)
+            {
+                if (!string.IsNullOrEmpty(questIds[i])) negotiatedBonuses.Add(questIds[i]);
+            }
+        }
+
+        /// <summary>
         /// Resets every registered quest to its default state (New Adventure).
         /// </summary>
         public void ResetAllQuests()
         {
             questStates.Clear();
             questProgress.Clear();
+            negotiatedBonuses.Clear();
             foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
             {
                 questStates[entry.Key] = entry.Value.DefaultState;
                 questProgress[entry.Key] = 0;
+                OnQuestStateUpdated?.Invoke(entry.Key, entry.Value.DefaultState);
             }
 
             PlayerHUD.Instance?.UpdateQuestSummaryText();
@@ -349,6 +569,25 @@ namespace CastleOfTheD20.Economy
         {
             if (string.IsNullOrEmpty(questID)) return null;
             return registeredQuests.TryGetValue(questID, out QuestSO quest) ? quest : null;
+        }
+
+        /// <summary>
+        /// Returns the quest this villager gives, matched by QuestGiverName inside the NPC's name (null = none).
+        /// </summary>
+        public QuestSO FindQuestForGiver(string npcName)
+        {
+            if (string.IsNullOrEmpty(npcName)) return null;
+
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                QuestSO quest = entry.Value;
+                if (quest != null && !string.IsNullOrEmpty(quest.QuestGiverName)
+                    && npcName.IndexOf(quest.QuestGiverName, StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    return quest;
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -371,6 +610,7 @@ namespace CastleOfTheD20.Economy
         /// </summary>
         public QuestState GetQuestState(string questID)
         {
+            if (string.IsNullOrEmpty(questID)) return QuestState.NotStarted;
             return questStates.TryGetValue(questID, out QuestState state) ? state : QuestState.NotStarted;
         }
 
@@ -379,6 +619,7 @@ namespace CastleOfTheD20.Economy
         /// </summary>
         public int GetQuestProgress(string questID)
         {
+            if (string.IsNullOrEmpty(questID)) return 0;
             return questProgress.TryGetValue(questID, out int count) ? count : 0;
         }
 

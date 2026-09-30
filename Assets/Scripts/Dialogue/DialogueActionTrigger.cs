@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using CastleOfTheD20.Core;
 using CastleOfTheD20.UI;
 using CastleOfTheD20.Economy;
 
@@ -44,9 +45,6 @@ namespace CastleOfTheD20.Dialogue
             }
             private set => instance = value;
         }
-
-        // Tracks quests where the player negotiated a bonus reward
-        private static readonly HashSet<string> questsWithNegotiatedBonus = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         #endregion
 
@@ -170,33 +168,22 @@ namespace CastleOfTheD20.Dialogue
                          || text.IndexOf(":bonus", StringComparison.OrdinalIgnoreCase) >= 0
                          || tag.IndexOf("BarnabyNegotiationBonus", StringComparison.OrdinalIgnoreCase) >= 0;
 
-            if (hasBonus)
+            QuestManager quests = QuestManager.Instance;
+            if (quests == null)
             {
-                SetQuestBonusNegotiated(questId, true);
+                Debug.LogWarning($"[DialogueActionTrigger] QuestManager.Instance is null. Quest '{questId}' could not be accepted.");
+                return;
+            }
+
+            // A quest that is already running or done keeps the terms it was accepted with
+            if (quests.GetQuestState(questId) == QuestState.NotStarted && hasBonus)
+            {
+                quests.SetNegotiatedBonus(questId, true);
                 Debug.Log($"[DialogueActionTrigger] Bonus reward recorded for quest: '{questId}'.");
             }
 
-            if (QuestManager.Instance != null)
-            {
-                bool started = QuestManager.Instance.StartQuest(questId);
-                if (!started)
-                {
-                    // Fallback to alias IDs if registered differently
-                    if (questId.Equals("quest_cellar_pests", StringComparison.OrdinalIgnoreCase))
-                    {
-                        QuestManager.Instance.StartQuest("CellarRats");
-                    }
-                    else if (questId.Equals("quest_scrap_collection", StringComparison.OrdinalIgnoreCase))
-                    {
-                        QuestManager.Instance.StartQuest("quest_scrap_metal");
-                    }
-                }
-                Debug.Log($"[DialogueActionTrigger] Started Quest: '{questId}' (Bonus Negotiated: {hasBonus}).");
-            }
-            else
-            {
-                Debug.LogWarning($"[DialogueActionTrigger] QuestManager.Instance is null. Quest '{questId}' could not be accepted.");
-            }
+            bool started = quests.StartQuest(questId);
+            Debug.Log($"[DialogueActionTrigger] Accept quest '{questId}': started = {started} (Bonus Negotiated: {hasBonus}).");
 
             PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
@@ -204,77 +191,59 @@ namespace CastleOfTheD20.Dialogue
         private void ExecuteCompleteQuest(string tag, string text)
         {
             string questId = ExtractQuestId(tag, text, fallback: "quest_cellar_pests");
-            bool bonus = HasQuestBonusNegotiated(questId);
 
-            if (QuestManager.Instance != null)
+            QuestManager quests = QuestManager.Instance;
+            if (quests != null)
             {
-                bool completed = QuestManager.Instance.CompleteQuest(questId, grantedBonus: bonus);
-                if (!completed)
-                {
-                    if (questId.Equals("quest_cellar_pests", StringComparison.OrdinalIgnoreCase))
-                    {
-                        QuestManager.Instance.CompleteQuest("CellarRats", grantedBonus: bonus);
-                    }
-                    else if (questId.Equals("quest_scrap_collection", StringComparison.OrdinalIgnoreCase))
-                    {
-                        QuestManager.Instance.CompleteQuest("quest_scrap_metal", grantedBonus: bonus);
-                    }
-                }
-                Debug.Log($"[DialogueActionTrigger] Completed Quest: '{questId}' with bonus = {bonus}.");
+                bool completed = quests.CompleteQuest(questId);
+                Debug.Log($"[DialogueActionTrigger] Complete quest '{questId}': completed = {completed} (bonus = {quests.HasNegotiatedBonus(questId)}).");
             }
 
             PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
-        private string ExtractQuestId(string tag, string text, string fallback)
+        /// <summary>
+        /// Reads the quest ID from "[ACTION_ACCEPT_QUEST:quest_id]" / "[ACTION_COMPLETE_QUEST:quest_id(:bonus)]"
+        /// in the option's tag (or, failing that, its text). Returns <paramref name="fallback"/> when none is given.
+        /// </summary>
+        public static string ExtractQuestId(string tag, string text, string fallback)
         {
-            // Expected format: "[ACTION_ACCEPT_QUEST:quest_id]" or "[ACTION_COMPLETE_QUEST:quest_id]"
-            string source = tag.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 || tag.IndexOf(TAG_COMPLETE_QUEST, StringComparison.OrdinalIgnoreCase) >= 0 ? tag : text;
-            int startIndex = source.IndexOf(TAG_ACCEPT_QUEST, StringComparison.OrdinalIgnoreCase);
-            if (startIndex < 0)
-            {
-                startIndex = source.IndexOf(TAG_COMPLETE_QUEST, StringComparison.OrdinalIgnoreCase);
-            }
-
-            if (startIndex >= 0)
-            {
-                int colonIndex = source.IndexOf(':', startIndex);
-                if (colonIndex >= 0)
-                {
-                    int endIndex = source.IndexOfAny(new[] { ':', ']', ' ' }, colonIndex + 1);
-                    if (endIndex > colonIndex)
-                    {
-                        return source.Substring(colonIndex + 1, endIndex - colonIndex - 1).Trim();
-                    }
-                    else
-                    {
-                        return source.Substring(colonIndex + 1).Trim();
-                    }
-                }
-            }
-
-            return fallback;
+            string id = FindQuestIdIn(tag);
+            if (string.IsNullOrEmpty(id)) id = FindQuestIdIn(text);
+            return string.IsNullOrEmpty(id) ? fallback : id;
         }
+
+        private static string FindQuestIdIn(string source)
+        {
+            if (string.IsNullOrEmpty(source)) return null;
+
+            int keyIndex = source.IndexOf("ACTION_ACCEPT_QUEST:", StringComparison.OrdinalIgnoreCase);
+            int keyLength = "ACTION_ACCEPT_QUEST:".Length;
+            if (keyIndex < 0)
+            {
+                keyIndex = source.IndexOf("ACTION_COMPLETE_QUEST:", StringComparison.OrdinalIgnoreCase);
+                keyLength = "ACTION_COMPLETE_QUEST:".Length;
+            }
+            if (keyIndex < 0) return null;
+
+            int start = keyIndex + keyLength;
+            int end = source.IndexOfAny(QuestIdTerminators, start);
+            string id = (end >= 0 ? source.Substring(start, end - start) : source.Substring(start)).Trim();
+            return id.Length > 0 ? id : null;
+        }
+
+        private static readonly char[] QuestIdTerminators = { ':', ']', ' ' };
 
         #endregion
 
         #region Bonus Tracking API
 
         /// <summary>
-        /// Marks whether a quest has a negotiated bonus reward unlocked via dialogue checks.
+        /// Marks whether a quest has a negotiated bonus reward unlocked via dialogue checks (stored and saved by QuestManager).
         /// </summary>
         public static void SetQuestBonusNegotiated(string questId, bool bonus)
         {
-            if (string.IsNullOrEmpty(questId)) return;
-
-            if (bonus)
-            {
-                questsWithNegotiatedBonus.Add(questId);
-            }
-            else
-            {
-                questsWithNegotiatedBonus.Remove(questId);
-            }
+            QuestManager.Instance?.SetNegotiatedBonus(questId, bonus);
         }
 
         /// <summary>
@@ -282,7 +251,8 @@ namespace CastleOfTheD20.Dialogue
         /// </summary>
         public static bool HasQuestBonusNegotiated(string questId)
         {
-            return !string.IsNullOrEmpty(questId) && questsWithNegotiatedBonus.Contains(questId);
+            QuestManager quests = QuestManager.Instance;
+            return quests != null && quests.HasNegotiatedBonus(questId);
         }
 
         #endregion

@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Item_SwampHerb
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_swamp_herb
-  itemName: Castle Moat Blossom
-  description: Rare swamp flower that blooms only near the castle moat.
+  itemName: Swamp Blossom
+  description: Rare blue swamp flower that blooms in the damp hollows along the Forest Path.
   itemIcon: {fileID: 0}
   itemType: 3
   buyPriceGold: 0

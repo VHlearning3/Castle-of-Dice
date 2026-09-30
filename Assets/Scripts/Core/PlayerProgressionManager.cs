@@ -58,7 +58,7 @@ namespace CastleOfTheD20.Core
         {
             if (Instance != null && Instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 
@@ -135,7 +135,7 @@ namespace CastleOfTheD20.Core
         /// Lockpick Secret Route Milestone Handler:
         /// Rogue picking lock with secret passage / Nature Path unlocks Level 2.
         /// </summary>
-        private void HandleLockpickAttempt(DiceResult result, bool isSuccess)
+        private void HandleLockpickAttempt(bool isSuccess)
         {
             if (!isSuccess || currentLevel >= 2) return;
 

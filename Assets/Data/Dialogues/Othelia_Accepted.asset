@@ -14,10 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: Thank you, brave adventurer! My family's signet ring was lost in
-    the lower courtyards when the guards fell. Beware the skeletons among the ruins!
+  dialogueText: 'Thank you, brave adventurer! My family''s signet ring was carried off to the castle''s treasure tower when the curse fell. The way there is long and dangerous, so stay alive!'
   options:
-  - optionText: '[Leave] I shall search for the ring as soon as I enter the castle.'
+  - optionText: '[Leave] I shall search the tower for your ring.'
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

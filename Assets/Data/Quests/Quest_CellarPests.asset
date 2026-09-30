@@ -13,10 +13,23 @@ MonoBehaviour:
   m_Name: Quest_CellarPests
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_cellar_pests
-  questTitle: Cellar Pests
-  description: Slay the 3 giant rats infesting Innkeeper Barnaby's cellar casks.
+  questTitle: 'Cellar Pests'
+  description: 'Slay the 3 giant rats infesting Innkeeper Barnaby''s wine cellar.'
   defaultState: 0
   requiredAmount: 3
   rewardGold: 30
   bonusRewardGold: 15
   rewardItem: {fileID: 11400000, guid: 45c342be3e3b68e4f90742f55236d846, type: 2}
+  rewardItemAmount: 2
+  bonusRewardItem: {fileID: 0}
+  objectiveType: 1
+  targetEnemyName: 'Cellar Rat'
+  objectiveItem: {fileID: 0}
+  objectiveSummary: 'Slay the giant cellar rats'
+  objectiveLocation: 'Wine cellar under the tavern'
+  questGiverName: 'Barnaby'
+  inProgressText: 'Those rats are still gnawing on my casks, I can hear them! The cellar hatch is right behind the counter.'
+  readyText: 'The screeching has stopped! Did you really clear out the whole nest?'
+  turnInOptionText: 'The cellar is clear. Not a single rat left.'
+  thanksText: 'Bless you, friend! My wine is safe. Here''s your pay, and a couple of healing draughts for the road.'
+  completedText: 'The cellar''s quiet as a tomb now, and my ale has never tasted better. You''re always welcome here.'

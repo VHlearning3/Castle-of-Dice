@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Concentrated healing draught. Restores 35 Hit Points.
   itemIcon: {fileID: 0}
   itemType: 0
-  buyPriceGold: 50
-  sellPriceGold: 25
+  buyPriceGold: 25
+  sellPriceGold: 12
   statBonusValue: 35
   isConsumable: 1

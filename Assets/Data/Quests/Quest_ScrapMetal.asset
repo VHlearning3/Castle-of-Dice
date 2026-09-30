@@ -13,11 +13,23 @@ MonoBehaviour:
   m_Name: Quest_ScrapMetal
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_scrap_metal
-  questTitle: Scrap for the Forge
-  description: Collect 5 pieces of scrap metal from the castle ruins for Blacksmith
-    Baldur.
+  questTitle: 'Scrap for the Forge'
+  description: 'Collect 5 pieces of scrap metal from fights in the castle ruins for Blacksmith Baldur.'
   defaultState: 0
   requiredAmount: 5
   rewardGold: 50
-  bonusRewardGold: 25
+  bonusRewardGold: 0
   rewardItem: {fileID: 11400000, guid: d077db9c6874e4a48a9a2be4e9557e8f, type: 2}
+  rewardItemAmount: 1
+  bonusRewardItem: {fileID: 0}
+  objectiveType: 3
+  targetEnemyName: ''
+  objectiveItem: {fileID: 0}
+  objectiveSummary: 'Collect scrap metal'
+  objectiveLocation: 'Won from fights'
+  questGiverName: 'Baldur'
+  inProgressText: 'Still need that scrap, friend. Five pieces of good salvage. The undead sentries in the ruins carry plenty.'
+  readyText: 'That clanking in your pack sounds like my scrap! Hand it over?'
+  turnInOptionText: 'Five pieces of scrap, as promised.'
+  thanksText: 'Fine salvage! Here''s your gold, and a blade I sharpened myself. It bites deeper than anything else in the village.'
+  completedText: 'The fires are fed and the anvil sings. Need anything else from my shop?'

@@ -42,17 +42,35 @@ namespace CastleOfTheD20.Economy
         #region Constants
 
         public const int SCRAP_TO_GOLD_RATE = 10;
-        public const int HEALTH_POTION_PRICE = 25;
-        public const int WEAPON_UPGRADE_PRICE = 60;
-        public const int ARMOR_UPGRADE_PRICE = 100;
+        public const int HEALTH_POTION_PRICE = 15;
+        public const int GREATER_POTION_PRICE = 25;
+        public const int POISON_VIAL_PRICE = 30;
+        public const int REROLL_RUNE_PRICE = 75;
 
-        #endregion
+        /// <summary>Highest level Baldur can raise the blade (+DMG) or the armor (+AC) to.</summary>
+        public const int MAX_UPGRADE_LEVEL = 3;
 
-        #region Serialized Fields
+        /// <summary>Price of the next +1, indexed by the current upgrade level (0 -> 50g, 1 -> 75g, 2 -> 100g).</summary>
+        private static readonly int[] UpgradePriceByLevel = { 50, 75, 100 };
 
-        [Header("Shop Inventory Catalog")]
-        [Tooltip("Standard stock offered by Blacksmith Baldur.")]
-        [SerializeField] private List<ItemSO> shopCatalog = new List<ItemSO>();
+        /// <summary>First upgrade price (kept for older callers).</summary>
+        public const int WEAPON_UPGRADE_PRICE = 50;
+
+        /// <summary>First upgrade price (kept for older callers).</summary>
+        public const int ARMOR_UPGRADE_PRICE = 50;
+
+        public const string SMALL_POTION_ID = "potion_health_small";
+        public const string GREATER_POTION_ID = "item_greater_potion";
+        public const string POISON_VIAL_ID = "item_poison_vial";
+        public const string REROLL_RUNE_ID = "item_reroll_rune";
+        public const string SHARPENED_BLADE_ID = "upgrade_sharpened_blade";
+        public const string RUNIC_ARMOR_ID = "upgrade_runic_armor";
+
+        /// <summary>Buy-tab stock order, by ItemID.</summary>
+        public static readonly string[] BuyStockOrder =
+        {
+            SMALL_POTION_ID, GREATER_POTION_ID, POISON_VIAL_ID, REROLL_RUNE_ID, SHARPENED_BLADE_ID, RUNIC_ARMOR_ID
+        };
 
         #endregion
 
@@ -129,28 +147,94 @@ namespace CastleOfTheD20.Economy
 
         #endregion
 
+        #region Pricing & Upgrade Levels
+
+        /// <summary>
+        /// Price of the next upgrade at the given current level, or -1 when the upgrade is maxed.
+        /// </summary>
+        public static int GetUpgradePrice(int currentLevel)
+        {
+            if (currentLevel < 0) currentLevel = 0;
+            if (currentLevel >= MAX_UPGRADE_LEVEL) return -1;
+            return UpgradePriceByLevel[currentLevel];
+        }
+
+        /// <summary>
+        /// Whether the item is a permanent blade or armor upgrade with tiered pricing.
+        /// </summary>
+        public static bool IsUpgrade(ItemSO item)
+        {
+            return item != null && (item.ItemType == ItemType.WeaponUpgrade || item.ItemType == ItemType.ArmorUpgrade);
+        }
+
+        /// <summary>
+        /// Current upgrade level (0..3) for a weapon or armor upgrade item. Reads the hero when one is
+        /// given, otherwise the session progression data.
+        /// </summary>
+        public static int GetUpgradeLevel(ItemSO item, PlayerUnit player)
+        {
+            if (!IsUpgrade(item)) return 0;
+
+            int bonus;
+            if (player != null)
+            {
+                bonus = item.ItemType == ItemType.WeaponUpgrade ? player.WeaponDamageBonus : player.ArmorClassBonus;
+            }
+            else
+            {
+                PlayerDataSO data = PlayerDataSO.Session;
+                if (data == null) return 0;
+                bonus = item.ItemType == ItemType.WeaponUpgrade ? data.WeaponDamageBonus : data.ArmorClassBonus;
+            }
+
+            return Mathf.Clamp(bonus, 0, MAX_UPGRADE_LEVEL);
+        }
+
+        /// <summary>
+        /// Gold needed to buy the item right now: tiered for upgrades (-1 when maxed), the item's own price otherwise.
+        /// </summary>
+        public static int GetBuyPrice(ItemSO item, PlayerUnit player)
+        {
+            if (item == null) return -1;
+            if (IsUpgrade(item)) return GetUpgradePrice(GetUpgradeLevel(item, player));
+            return item.BuyPriceGold;
+        }
+
+        /// <summary>
+        /// Whether Baldur takes this item in the Sell tab. Quest items, scrap (sold in its own row)
+        /// and worthless items are refused.
+        /// </summary>
+        public static bool IsSellable(ItemSO item)
+        {
+            if (item == null || item.SellPriceGold <= 0) return false;
+            return item.ItemType != ItemType.QuestItem && item.ItemType != ItemType.ScrapMetal;
+        }
+
+        #endregion
+
         #region Purchasing
 
         /// <summary>
-        /// Purchases an item from the shop catalog.
-        /// Deducts gold, adds item to inventory, or applies permanent bonuses directly if targeted.
+        /// Purchases an item from the shop. Deducts gold and either adds the item to the inventory or,
+        /// for blade/armor upgrades, raises the permanent bonus (capped at MAX_UPGRADE_LEVEL).
         /// </summary>
         public bool BuyItem(ItemSO item, PlayerUnit targetPlayer = null)
         {
-            if (item == null) return false;
+            return TryBuyItem(item, targetPlayer) == ShopPurchaseResult.Success;
+        }
+
+        /// <summary>
+        /// Same as BuyItem, but reports why a purchase was refused so the UI can tell the player.
+        /// </summary>
+        public ShopPurchaseResult TryBuyItem(ItemSO item, PlayerUnit targetPlayer = null)
+        {
+            if (item == null) return ShopPurchaseResult.InvalidItem;
 
             InventoryManager inventory = InventoryManager.Instance;
             if (inventory == null)
             {
                 Debug.LogError("[ShopManager] InventoryManager instance not found.");
-                return false;
-            }
-
-            int price = item.BuyPriceGold;
-            if (!inventory.RemoveGold(price))
-            {
-                Debug.Log($"[ShopManager] Cannot buy {item.ItemName}: Not enough gold (Requires {price} Gold).");
-                return false;
+                return ShopPurchaseResult.InvalidItem;
             }
 
             // Auto-locate PlayerUnit if targetPlayer not explicitly provided
@@ -159,23 +243,22 @@ namespace CastleOfTheD20.Economy
                 targetPlayer = FindAnyObjectByType<PlayerUnit>();
             }
 
-            // If purchasing a permanent equipment upgrade and a player unit is targeted, apply immediately
-            if (targetPlayer != null && !item.IsConsumable)
+            int price = GetBuyPrice(item, targetPlayer);
+            if (price < 0)
             {
-                if (item.ItemType == ItemType.WeaponUpgrade)
-                {
-                    targetPlayer.AddWeaponDamageBonus(item.StatBonusValue);
-                    Debug.Log($"[ShopManager] Baldur sharpened {targetPlayer.UnitName}'s weapon (+{item.StatBonusValue} DMG)!");
-                }
-                else if (item.ItemType == ItemType.ArmorUpgrade)
-                {
-                    targetPlayer.AddArmorClassBonus(item.StatBonusValue);
-                    Debug.Log($"[ShopManager] Baldur reinforced {targetPlayer.UnitName}'s armor (+{item.StatBonusValue} AC)!");
-                }
-                else
-                {
-                    inventory.AddItem(item, 1);
-                }
+                Debug.Log($"[ShopManager] {item.ItemName} is already at the maximum level.");
+                return ShopPurchaseResult.MaxLevel;
+            }
+
+            if (!inventory.RemoveGold(price))
+            {
+                Debug.Log($"[ShopManager] Cannot buy {item.ItemName}: Not enough gold (Requires {price} Gold).");
+                return ShopPurchaseResult.NotEnoughGold;
+            }
+
+            if (IsUpgrade(item))
+            {
+                ApplyUpgrade(item, targetPlayer);
             }
             else
             {
@@ -184,8 +267,33 @@ namespace CastleOfTheD20.Economy
 
             Debug.Log($"[ShopManager] Purchased {item.ItemName} for {price} Gold.");
             OnItemPurchased?.Invoke(item);
+            return ShopPurchaseResult.Success;
+        }
 
-            return true;
+        private static void ApplyUpgrade(ItemSO item, PlayerUnit targetPlayer)
+        {
+            bool isWeapon = item.ItemType == ItemType.WeaponUpgrade;
+
+            if (targetPlayer != null)
+            {
+                if (isWeapon)
+                {
+                    targetPlayer.AddWeaponDamageBonus(1);
+                    Debug.Log($"[ShopManager] Baldur sharpened {targetPlayer.UnitName}'s weapon (+1 DMG)!");
+                }
+                else
+                {
+                    targetPlayer.AddArmorClassBonus(1);
+                    Debug.Log($"[ShopManager] Baldur reinforced {targetPlayer.UnitName}'s armor (+1 AC)!");
+                }
+                return;
+            }
+
+            // No hero in the scene: store the upgrade in the session data so the next hero picks it up.
+            PlayerDataSO data = PlayerDataSO.Session;
+            if (data == null) return;
+            if (isWeapon) data.WeaponDamageBonus += 1;
+            else data.ArmorClassBonus += 1;
         }
 
         #endregion
@@ -206,6 +314,12 @@ namespace CastleOfTheD20.Economy
                 return false;
             }
 
+            if (!IsSellable(item))
+            {
+                Debug.Log($"[ShopManager] Baldur won't take {item.ItemName}.");
+                return false;
+            }
+
             int payout = item.SellPriceGold;
             inventory.RemoveItem(item, 1);
             inventory.AddGold(payout);
@@ -217,5 +331,14 @@ namespace CastleOfTheD20.Economy
         }
 
         #endregion
+    }
+
+    /// <summary>Outcome of a shop purchase attempt.</summary>
+    public enum ShopPurchaseResult
+    {
+        Success,
+        NotEnoughGold,
+        MaxLevel,
+        InvalidItem
     }
 }

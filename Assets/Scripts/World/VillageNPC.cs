@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Core;
 using CastleOfTheD20.Dialogue;
+using CastleOfTheD20.Economy;
 using CastleOfTheD20.UI;
 
 namespace CastleOfTheD20.World
@@ -30,6 +32,10 @@ namespace CastleOfTheD20.World
         [Header("Dialogue")]
         [Tooltip("Starting dialogue node triggered when the player interacts with this NPC.")]
         [SerializeField] private DialogueNodeSO startingDialogueNode;
+
+        [Header("Quest Giver")]
+        [Tooltip("Quest this villager gives and takes back. Empty = matched by name (QuestSO.QuestGiverName, e.g. 'Barnaby').")]
+        [SerializeField] private string questId = "";
 
         [Header("Brawl")]
         [Tooltip("If checked, this NPC's dialogue offers a [Fight] choice that starts combat on the spot. Only offered in the starting village.")]
@@ -64,6 +70,10 @@ namespace CastleOfTheD20.World
         private DialogueOption fightOption;
         private PlayerUnit conversationPlayer;
         private bool isListeningForFight;
+
+        // Quest status conversations built at runtime; destroyed when replaced
+        private readonly List<DialogueNodeSO> questDialogueNodes = new List<DialogueNodeSO>();
+        private DialogueOption shopSideOption;
 
         #endregion
 
@@ -115,9 +125,33 @@ namespace CastleOfTheD20.World
         /// <summary>Damage per hit the NPC fights with.</summary>
         public int BrawlDamage => brawlDamage;
 
+        /// <summary>Quest ID set in the Inspector (empty = matched by name).</summary>
+        public string QuestId
+        {
+            get => questId;
+            set => questId = value;
+        }
+
         #endregion
 
         #region Unity Lifecycle & Validation
+
+        private void Start()
+        {
+            // Quest givers show ! / ? above their heads
+            QuestSO quest = ResolveQuest();
+            if (quest != null)
+            {
+                QuestGiverMarker marker = GetComponent<QuestGiverMarker>();
+                if (marker == null) marker = gameObject.AddComponent<QuestGiverMarker>();
+                marker.Configure(quest.QuestID);
+            }
+        }
+
+        private void OnDestroy()
+        {
+            ReleaseQuestDialogueNodes();
+        }
 
         private void Reset()
         {
@@ -193,6 +227,8 @@ namespace CastleOfTheD20.World
                 startingDialogueNode = ResolveFallbackDialogueTree();
             }
 
+            DialogueNodeSO openingNode = BuildQuestOpeningNode() ?? startingDialogueNode;
+
             List<DialogueOption> extraOptions = null;
             if (OffersFight)
             {
@@ -205,7 +241,67 @@ namespace CastleOfTheD20.World
                 StartListeningForFight();
             }
 
-            controller.StartDialogue(startingDialogueNode, player, extraOptions);
+            controller.StartDialogue(openingNode, player, extraOptions);
+        }
+
+        /// <summary>
+        /// The quest this villager gives: the Inspector's quest ID, or the quest whose giver name is in this NPC's name.
+        /// </summary>
+        public QuestSO ResolveQuest()
+        {
+            QuestManager quests = QuestManager.Instance;
+            if (quests == null) return null;
+
+            if (!string.IsNullOrEmpty(questId))
+            {
+                return quests.GetQuest(questId);
+            }
+
+            return quests.FindQuestForGiver(npcName) ?? quests.FindQuestForGiver(name);
+        }
+
+        /// <summary>
+        /// Once this villager's quest is accepted they open with a reminder, the hand-in or a thank-you instead
+        /// of their intro. Returns null while the quest is not accepted (or the NPC gives none).
+        /// </summary>
+        private DialogueNodeSO BuildQuestOpeningNode()
+        {
+            QuestSO quest = ResolveQuest();
+            if (quest == null) return null;
+
+            QuestManager quests = QuestManager.Instance;
+            QuestState state = quests.GetQuestState(quest.QuestID);
+            if (state == QuestState.NotStarted) return null;
+
+            ReleaseQuestDialogueNodes();
+
+            List<DialogueOption> sideOptions = null;
+            if (isBlacksmith)
+            {
+                if (shopSideOption == null)
+                {
+                    shopSideOption = new DialogueOption("[Blacksmith] Show me your wares.", null, false, 10, "", null, DialogueActionTrigger.TAG_OPEN_SHOP);
+                }
+                sideOptions = new List<DialogueOption> { shopSideOption };
+            }
+
+            string speaker = startingDialogueNode != null && !string.IsNullOrEmpty(startingDialogueNode.SpeakerName)
+                ? startingDialogueNode.SpeakerName
+                : npcName;
+
+            return QuestDialogueBuilder.BuildOpeningNode(quest, state, quests.GetQuestProgress(quest.QuestID),
+                speaker, sideOptions, questDialogueNodes);
+        }
+
+        private void ReleaseQuestDialogueNodes()
+        {
+            for (int i = 0; i < questDialogueNodes.Count; i++)
+            {
+                if (questDialogueNodes[i] == null) continue;
+                if (Application.isPlaying) Destroy(questDialogueNodes[i]);
+                else DestroyImmediate(questDialogueNodes[i]);
+            }
+            questDialogueNodes.Clear();
         }
 
         private void OnDisable()

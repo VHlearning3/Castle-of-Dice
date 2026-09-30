@@ -2644,7 +2644,7 @@ MonoBehaviour:
   interactionRadius: 3
   isInteractable: 1
   goldReward: 40
-  itemReward: {fileID: 11400000, guid: 8406208b4a12b3844b9e7722af463c80, type: 2}
+  itemReward: {fileID: 0}
   isOpen: 0
   unopenedPrompt: Open Chest
   openedPrompt: Opened (Empty)

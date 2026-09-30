@@ -175,7 +175,7 @@ namespace CastleOfTheD20.Economy
         {
             if (instance != null && instance != this)
             {
-                Destroy(gameObject);
+                ManagerDuplicates.Discard(this);
                 return;
             }
 
@@ -439,6 +439,23 @@ namespace CastleOfTheD20.Economy
         }
 
         /// <summary>
+        /// Uses up one Poison Vial, if owned, to coat the hero's weapon: the first hit of this fight
+        /// deals the vial's bonus damage. Does nothing when the blade is already coated.
+        /// </summary>
+        public bool TryCoatWithPoisonVial(PlayerUnit player)
+        {
+            if (player == null || player.PoisonCoatingBonus > 0) return false;
+
+            ItemSO vial = FindItemByID(ShopManager.POISON_VIAL_ID);
+            if (vial == null || !HasItem(vial, 1)) return false;
+
+            RemoveItem(vial, 1);
+            player.ApplyPoisonCoating(vial.StatBonusValue);
+            Debug.Log($"[InventoryManager] {player.UnitName} coats their weapon with poison (+{vial.StatBonusValue} DMG on the first hit).");
+            return true;
+        }
+
+        /// <summary>
         /// Uses an item from the inventory onto a target hero.
         /// Consumes potions to heal, applies permanent weapon/armor upgrades, and removes consumed item.
         /// </summary>
@@ -462,6 +479,12 @@ namespace CastleOfTheD20.Economy
             }
 
             bool effectApplied = false;
+
+            // A Poison Vial coats the weapon instead of healing
+            if (string.Equals(item.ItemID, ShopManager.POISON_VIAL_ID, StringComparison.OrdinalIgnoreCase))
+            {
+                return TryCoatWithPoisonVial(target);
+            }
 
             switch (item.ItemType)
             {

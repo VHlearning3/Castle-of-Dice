@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Mirabel the Herbalist
   speakerPortrait: {fileID: 0}
-  dialogueText: Splendid! Rare blue blossoms thrive along the moat. Three flowers
-    will suffice for a potent brew. Beware the shadows lurking near the moat!
+  dialogueText: 'Splendid! Rare blue blossoms thrive in the damp hollows along the Forest Path. Three flowers will suffice for a potent brew. Beware what lurks among the trees!'
   options:
   - optionText: '[Leave] I shall return with the blossoms as soon as I find them.'
     requiresCheck: 0

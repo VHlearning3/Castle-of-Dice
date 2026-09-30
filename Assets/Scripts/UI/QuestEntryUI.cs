@@ -9,7 +9,7 @@ namespace CastleOfTheD20.UI
 {
     /// <summary>
     /// UI component representing a single quest row within the Quest_Tracker_Card list.
-    /// Displays quest title, objective description, and dynamic 'X/X' progress counter.
+    /// Displays quest title, objective with its 'X/X' counter and location, or who to return to once done.
     /// Per MasterSpec §6.2: completed quests are shown with alpha = 0.5.
     /// </summary>
     [RequireComponent(typeof(CanvasGroup))]
@@ -18,7 +18,7 @@ namespace CastleOfTheD20.UI
         #region Serialized Fields
 
         [Header("Text References")]
-        [Tooltip("Header text displaying quest title (e.g., '• Viinikellarin tuholaiset').")]
+        [Tooltip("Header text displaying quest title (e.g., '• Cellar Pests').")]
         [SerializeField] private TMP_Text titleText;
 
         [Tooltip("Description & status text displaying objective details.")]
@@ -40,6 +40,9 @@ namespace CastleOfTheD20.UI
 
         /// <summary>Whether this entry is currently flagged as completed.</summary>
         public bool IsCompleted { get; private set; }
+
+        /// <summary>Whether the objective is done and the quest can be handed in.</summary>
+        public bool IsReadyToTurnIn { get; private set; }
 
         #endregion
 
@@ -66,7 +69,16 @@ namespace CastleOfTheD20.UI
             {
                 rectTransform = GetComponent<RectTransform>();
             }
+
+            // Title + objective + location need three lines; the tracker's layout group reads this height
+            LayoutElement layout = GetComponent<LayoutElement>();
+            if (layout == null) layout = gameObject.AddComponent<LayoutElement>();
+            layout.preferredHeight = RowHeight;
+            layout.minHeight = RowHeight;
         }
+
+        /// <summary>Height of one quest row in the tracker.</summary>
+        public const float RowHeight = 58f;
 
         /// <summary>
         /// Populates this entry with live QuestSO state and progress.
@@ -86,49 +98,61 @@ namespace CastleOfTheD20.UI
 
             int required = Mathf.Max(1, quest.RequiredAmount);
             int current = Mathf.Clamp(currentProgress, 0, required);
-            IsCompleted = (state == QuestState.Completed) || (current >= required);
+            IsCompleted = state == QuestState.Completed;
+            IsReadyToTurnIn = !IsCompleted && current >= required;
 
-            // 1. Title formatting
+            // 1. Title
             if (titleText != null)
             {
-                if (IsCompleted)
-                {
-                    titleText.text = $"• {quest.QuestTitle} <color=#2ECC71>(Valmis)</color>";
-                    titleText.color = new Color(0.82f, 0.92f, 0.82f, 1f);
-                }
-                else
-                {
-                    titleText.text = $"• {quest.QuestTitle}";
-                    titleText.color = UITheme.CreamText; // Warm ivory gold
-                }
+                titleText.text = IsCompleted
+                    ? $"• {quest.QuestTitle} <color=#2ECC71>(Completed)</color>"
+                    : $"• {quest.QuestTitle}";
+                titleText.color = IsCompleted ? new Color(0.82f, 0.92f, 0.82f, 1f) : UITheme.CreamText;
             }
 
-            // 2. Objective & Counter formatting
+            // 2. Counter
             string progressRatio = $"{current}/{required}";
-
             if (counterText != null)
             {
-                counterText.text = progressRatio;
-                counterText.color = IsCompleted ? new Color(0.18f, 0.80f, 0.44f, 1f) : new Color(0.96f, 0.78f, 0.20f, 1f);
+                counterText.text = IsCompleted ? "" : progressRatio;
+                counterText.color = IsReadyToTurnIn ? new Color(0.18f, 0.80f, 0.44f, 1f) : new Color(0.96f, 0.78f, 0.20f, 1f);
             }
 
+            // 3. Objective line + where to go
             if (objectiveText != null)
             {
-                string desc = string.IsNullOrEmpty(quest.Description) ? "Tavoite" : quest.Description;
-                if (IsCompleted)
-                {
-                    objectiveText.text = $"  {desc}: <color=#2ECC71>{progressRatio}</color>";
-                    objectiveText.color = new Color(0.72f, 0.82f, 0.72f, 1f);
-                }
-                else
-                {
-                    objectiveText.text = $"  {desc}: <color=#F1C40F><b>{progressRatio}</b></color>";
-                    objectiveText.color = new Color(0.85f, 0.88f, 0.90f, 1f);
-                }
+                objectiveText.text = FormatObjective(quest, current, required, IsCompleted);
+                objectiveText.color = IsCompleted ? new Color(0.72f, 0.82f, 0.72f, 1f) : new Color(0.85f, 0.88f, 0.90f, 1f);
             }
 
-            // 3. Alpha per MasterSpec §6.2 ("Suoritetut tehtävät muuttuvat kuittauksen jälkeen läpinäkyviksi (alpha = 0.5)")
+            // 4. Finished quests fade out (MasterSpec §6.2: alpha = 0.5) before the tracker drops them
             canvasGroup.alpha = IsCompleted ? 0.5f : 1.0f;
+        }
+
+        /// <summary>
+        /// Builds the objective text for a tracker row: progress and location, or who to return to once done.
+        /// </summary>
+        public static string FormatObjective(QuestSO quest, int current, int required, bool completed)
+        {
+            if (quest == null) return "";
+
+            if (completed)
+            {
+                return "  <color=#2ECC71>Reward received</color>";
+            }
+
+            if (current >= required)
+            {
+                string giver = string.IsNullOrEmpty(quest.QuestGiverName) ? "the quest giver" : quest.QuestGiverName;
+                return $"  {quest.ObjectiveSummary}: <color=#2ECC71><b>{required}/{required}</b></color>\n  <color=#2ECC71>Return to {giver}</color>";
+            }
+
+            string line = $"  {quest.ObjectiveSummary}: <color=#F1C40F><b>{current}/{required}</b></color>";
+            if (!string.IsNullOrEmpty(quest.ObjectiveLocation))
+            {
+                line += $"\n  <color=#A0AEC0>{quest.ObjectiveLocation}</color>";
+            }
+            return line;
         }
 
         /// <summary>
@@ -141,6 +165,7 @@ namespace CastleOfTheD20.UI
 
             QuestID = null;
             IsCompleted = isCompleted;
+            IsReadyToTurnIn = false;
 
             if (titleText != null)
             {
