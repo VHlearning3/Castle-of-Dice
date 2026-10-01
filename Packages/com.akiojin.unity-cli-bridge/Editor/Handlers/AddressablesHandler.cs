@@ -886,17 +886,6 @@ namespace UnityCliBridge.Handlers
             var settings = AddressableAssetSettingsDefaultObject.Settings;
             if (settings == null)
             {
-                // Try to find any existing AddressableAssetSettings asset in the project
-                var guids = AssetDatabase.FindAssets("t:AddressableAssetSettings");
-                if (guids != null && guids.Length > 0)
-                {
-                    var path = AssetDatabase.GUIDToAssetPath(guids[0]);
-                    settings = AssetDatabase.LoadAssetAtPath<AddressableAssetSettings>(path);
-                }
-            }
-
-            if (settings == null)
-            {
                 throw new InvalidOperationException("Addressables設定が見つかりません。Addressablesパッケージが正しくインストールされているか確認してください。");
             }
             return settings;

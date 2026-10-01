@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using UnityEditor;
 using UnityEngine;
@@ -32,6 +33,7 @@ namespace UnityCliBridge.Core
         private static CancellationTokenSource cancellationTokenSource;
         private static Task listenerTask;
         private static bool isProcessingCommand;
+        private static Task pendingCommand;
         private static int activeClientCount;
         
         
@@ -50,7 +52,12 @@ namespace UnityCliBridge.Core
         }
         
         public const int DEFAULT_PORT = 6400;
+        /// <summary>How many ports after the configured one are tried when it is in use.</summary>
+        internal const int PortFallbackRange = 20;
+        private const string BoundPortSessionKey = "UnityCliBridge.BoundPort";
+        private const string BoundForConfiguredPortSessionKey = "UnityCliBridge.BoundForConfiguredPort";
         private static int currentPort = DEFAULT_PORT;
+        private static int boundPort;
         // For logging only (what we bind/listen on)
         private static string currentHost = "localhost";
         private static IPAddress bindAddress = IPAddress.Any; // default: 0.0.0.0
@@ -60,10 +67,11 @@ namespace UnityCliBridge.Core
         /// </summary>
         static UnityCliBridge()
         {
+            global::UnityCliBridge.Handlers.PlayerBuildHandler.Initialize();
             BridgeLogger.Log("Initializing...");
             EditorApplication.update += ProcessCommandQueue;
-            EditorApplication.quitting += Shutdown;
-            AssemblyReloadEvents.beforeAssemblyReload += Shutdown;
+            EditorApplication.quitting += OnQuitting;
+            AssemblyReloadEvents.beforeAssemblyReload += OnBeforeAssemblyReload;
             
             // Load Project Settings and start the TCP listener
             TryLoadProjectSettingsAndApply();
@@ -214,21 +222,127 @@ namespace UnityCliBridge.Core
                 return;
             }
 
+            StartTcpListenerOnCurrentEndpoint(publishLockfile: true);
+        }
+
+        /// <summary>
+        /// Ports to try, in order: the port bound before the last domain reload (so clients keep
+        /// their endpoint), the configured port, then the next <see cref="PortFallbackRange"/> ports.
+        /// </summary>
+        internal static List<int> BuildPortCandidates(int configuredPort, int previousBoundPort, int previousConfiguredPort)
+        {
+            var candidates = new List<int>();
+            if (configuredPort == 0)
+            {
+                candidates.Add(0);
+                return candidates;
+            }
+            if (previousBoundPort > 0 && previousConfiguredPort == configuredPort)
+            {
+                candidates.Add(previousBoundPort);
+            }
+            for (var offset = 0; offset <= PortFallbackRange; offset++)
+            {
+                var port = configuredPort + offset;
+                if (port > 65535)
+                {
+                    break;
+                }
+                if (!candidates.Contains(port))
+                {
+                    candidates.Add(port);
+                }
+            }
+            return candidates;
+        }
+
+        /// <summary>
+        /// Starts a listener on an ephemeral loopback port even in a test-runner process, so
+        /// integration tests exercise the real transport. Returns the bound port. Call
+        /// <see cref="Restart"/> afterwards to return to the configured endpoint.
+        /// </summary>
+        internal static int StartOnEphemeralLoopbackPortForTesting()
+        {
+            currentHost = "127.0.0.1";
+            bindAddress = IPAddress.Loopback;
+            currentPort = 0;
+            StartTcpListenerOnCurrentEndpoint(publishLockfile: false);
+            if (tcpListener == null)
+            {
+                throw new InvalidOperationException("TCP listener failed to start; see the Unity CLI Bridge log.");
+            }
+            return ((IPEndPoint)tcpListener.LocalEndpoint).Port;
+        }
+
+        private static void StartTcpListenerOnCurrentEndpoint(bool publishLockfile)
+        {
             try
             {
                 if (tcpListener != null)
                 {
                     StopTcpListener();
                 }
-                
+
+                var configuredPort = currentPort;
+                var candidates = publishLockfile
+                    ? BuildPortCandidates(
+                        configuredPort,
+                        SessionState.GetInt(BoundPortSessionKey, 0),
+                        SessionState.GetInt(BoundForConfiguredPortSessionKey, 0))
+                    : new List<int> { configuredPort };
+
+                TcpListener listener = null;
+                SocketException lastError = null;
+                foreach (var port in candidates)
+                {
+                    var attempt = new TcpListener(bindAddress, port);
+                    if (Application.platform == RuntimePlatform.WindowsEditor)
+                    {
+                        // Windows lets a second socket share a port unless it is exclusive. Unix
+                        // already refuses a second listener, and exclusivity there would block
+                        // re-binding our own port after a domain reload while old connections linger.
+                        attempt.ExclusiveAddressUse = true;
+                    }
+                    try
+                    {
+                        attempt.Start();
+                        listener = attempt;
+                        break;
+                    }
+                    catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
+                    {
+                        lastError = ex;
+                        BridgeLogger.LogWarning($"Port {port} is already in use; trying the next port.");
+                    }
+                }
+
+                if (listener == null)
+                {
+                    Status = BridgeStatus.Error;
+                    BridgeLogger.LogError(
+                        $"Failed to start TCP listener: ports {configuredPort}-{configuredPort + PortFallbackRange} are in use ({lastError?.Message}).");
+                    return;
+                }
+
                 cancellationTokenSource = new CancellationTokenSource();
-                tcpListener = new TcpListener(bindAddress, currentPort);
-                tcpListener.Start();
+                tcpListener = listener;
+                boundPort = ((IPEndPoint)listener.LocalEndpoint).Port;
                 Interlocked.Exchange(ref activeClientCount, 0);
-                
+
                 Status = BridgeStatus.Disconnected;
-                BridgeLogger.Log($"TCP listener binding on {bindAddress}:{currentPort} (host={currentHost})");
-                
+                if (boundPort != configuredPort && configuredPort != 0)
+                {
+                    BridgeLogger.LogWarning($"Configured port {configuredPort} is in use; listening on {boundPort} instead.");
+                }
+                BridgeLogger.Log($"TCP listener binding on {bindAddress}:{boundPort} (host={currentHost})");
+
+                if (publishLockfile)
+                {
+                    SessionState.SetInt(BoundPortSessionKey, boundPort);
+                    SessionState.SetInt(BoundForConfiguredPortSessionKey, configuredPort);
+                    EditorLockfile.Publish(EditorLockfile.ConnectHostFor(bindAddress), boundPort, configuredPort);
+                }
+
                 // Start accepting connections asynchronously
                 listenerTask = Task.Run(() => AcceptConnectionsAsync(cancellationTokenSource.Token));
             }
@@ -236,11 +350,6 @@ namespace UnityCliBridge.Core
             {
                 Status = BridgeStatus.Error;
                 BridgeLogger.LogError($"Failed to start TCP listener on port {currentPort}: {ex.Message}");
-                
-                if (ex.SocketErrorCode == SocketError.AddressAlreadyInUse)
-                {
-                    BridgeLogger.LogError($"Port {currentPort} is already in use. Please ensure no other instance is running.");
-                }
             }
             catch (Exception ex)
             {
@@ -248,7 +357,10 @@ namespace UnityCliBridge.Core
                 BridgeLogger.LogError($"Unexpected error starting TCP listener: {ex}");
             }
         }
-        
+
+        /// <summary>The port actually listened on (differs from the configured port after a fallback).</summary>
+        public static int BoundPort => boundPort;
+
         /// <summary>
         /// Stops the TCP listener
         /// </summary>
@@ -400,6 +512,11 @@ namespace UnityCliBridge.Core
                                 var command = JsonConvert.DeserializeObject<Command>(json);
                                 if (command != null)
                                 {
+                                    if (global::UnityCliBridge.Handlers.PlayerBuildHandler.TryHandleBackground(command, out var buildResponse))
+                                    {
+                                        if (!await TrySendFramedMessage(stream, buildResponse, cancellationToken)) break;
+                                        continue;
+                                    }
                                     // Queue command for processing on main thread
                                     lock (queueLock)
                                     {
@@ -408,7 +525,7 @@ namespace UnityCliBridge.Core
                                 }
                                 else
                                 {
-                                    var errorResponse = Response.ErrorResult("Invalid command format", "PARSE_ERROR", null);
+                                    var errorResponse = Response.ErrorResult("Invalid command format", "PARSE_ERROR", (object)null);
                                     if (!await TrySendFramedMessage(stream, errorResponse, cancellationToken))
                                     {
                                         break;
@@ -417,7 +534,7 @@ namespace UnityCliBridge.Core
                             }
                             catch (JsonException ex)
                             {
-                                var errorResponse = Response.ErrorResult($"JSON parsing error: {ex.Message}", "JSON_ERROR", null);
+                                var errorResponse = Response.ErrorResult($"JSON parsing error: {ex.Message}", "JSON_ERROR", (object)null);
                                 if (!await TrySendFramedMessage(stream, errorResponse, cancellationToken))
                                 {
                                     break;
@@ -472,14 +589,18 @@ namespace UnityCliBridge.Core
                 return false;
             }
 
+            var sendGate = SendGates.GetValue(stream, _ => new SemaphoreSlim(1, 1));
+            var entered = false;
             try
             {
+                await sendGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+                entered = true;
                 var messageBytes = Encoding.UTF8.GetBytes(message);
                 var lengthBytes = BitConverter.GetBytes(messageBytes.Length);
                 if (BitConverter.IsLittleEndian) Array.Reverse(lengthBytes);
-                await stream.WriteAsync(lengthBytes, 0, 4, cancellationToken);
-                await stream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken);
-                await stream.FlushAsync(cancellationToken);
+                await stream.WriteAsync(lengthBytes, 0, 4, cancellationToken).ConfigureAwait(false);
+                await stream.WriteAsync(messageBytes, 0, messageBytes.Length, cancellationToken).ConfigureAwait(false);
+                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
                 return true;
             }
             catch (Exception ex) when (cancellationToken.IsCancellationRequested || IsExpectedDisconnect(ex))
@@ -491,15 +612,32 @@ namespace UnityCliBridge.Core
                 try { BridgeLogger.LogError($"Send error: {ex}"); } catch { }
                 return false;
             }
+            finally
+            {
+                if (entered) sendGate.Release();
+            }
         }
+
+        private static readonly ConditionalWeakTable<NetworkStream, SemaphoreSlim> SendGates =
+            new ConditionalWeakTable<NetworkStream, SemaphoreSlim>();
         
         /// <summary>
         /// Processes queued commands on the Unity main thread.
         /// Drains all queued commands within a single frame for lower latency.
         /// </summary>
-        private static async void ProcessCommandQueue()
+        private static void ProcessCommandQueue()
         {
             if (isProcessingCommand) return;
+            // Unity 2022 does not pump UnitySynchronizationContext while paused.
+            // Poll completion from Editor.update so the next handler still starts
+            // on the main thread without depending on that context resuming.
+            if (pendingCommand != null)
+            {
+                if (!pendingCommand.IsCompleted) return;
+                if (pendingCommand.IsFaulted)
+                    BridgeLogger.LogError($"Command failed: {pendingCommand.Exception}");
+                pendingCommand = null;
+            }
             isProcessingCommand = true;
             try
             {
@@ -511,7 +649,11 @@ namespace UnityCliBridge.Core
                         if (commandQueue.Count == 0) break;
                         item = commandQueue.Dequeue();
                     }
-                    await ProcessCommandInternal(item.command, item.client, item.enqueuedAtUtc);
+                    pendingCommand = ProcessCommandInternal(item.command, item.client, item.enqueuedAtUtc);
+                    if (!pendingCommand.IsCompleted) break;
+                    if (pendingCommand.IsFaulted)
+                        BridgeLogger.LogError($"Command failed: {pendingCommand.Exception}");
+                    pendingCommand = null;
                 }
             }
             finally
@@ -550,7 +692,7 @@ namespace UnityCliBridge.Core
                     response = Response.ErrorResult(command.Id, $"Command '{command.Type}' is blocked during Play Mode", "PLAY_MODE_BLOCKED", state);
                     response = PrepareCommandResponseForStats(response, out _);
                     var sendStopwatch = Stopwatch.StartNew();
-                    await TrySendFramedMessage(responseStream, response, CancellationToken.None);
+                    await TrySendFramedMessage(responseStream, response, CancellationToken.None).ConfigureAwait(false);
                     sendStopwatch.Stop();
                     BridgeCommandStats.RecordStageDuration("response_send_ms", sendStopwatch.Elapsed.TotalMilliseconds);
                     statsScope.Complete(false, Encoding.UTF8.GetByteCount(response));
@@ -572,10 +714,17 @@ namespace UnityCliBridge.Core
 
                 // Send response
                 var responseWriteStopwatch = Stopwatch.StartNew();
-                await TrySendFramedMessage(responseStream, response, CancellationToken.None);
+                var responseSent = await TrySendFramedMessage(responseStream, response, CancellationToken.None).ConfigureAwait(false);
                 responseWriteStopwatch.Stop();
                 BridgeCommandStats.RecordStageDuration("response_send_ms", responseWriteStopwatch.Elapsed.TotalMilliseconds);
                 statsScope.Complete(!responseIsError, Encoding.UTF8.GetByteCount(response));
+                if (responseSent && !responseIsError &&
+                    string.Equals(command.Type, "quit_editor", StringComparison.OrdinalIgnoreCase))
+                {
+                    // delayCall can run while an asynchronous write is suspended.
+                    // Register only after the complete success frame has been flushed.
+                    EditorApplication.delayCall += () => EditorApplication.Exit(0);
+                }
             }
             catch (Exception ex)
             {
@@ -596,7 +745,7 @@ namespace UnityCliBridge.Core
                         );
                         errorResponse = PrepareCommandResponseForStats(errorResponse, out _);
                         var responseWriteStopwatch = Stopwatch.StartNew();
-                        await TrySendFramedMessage(responseStream, errorResponse, CancellationToken.None);
+                        await TrySendFramedMessage(responseStream, errorResponse, CancellationToken.None).ConfigureAwait(false);
                         responseWriteStopwatch.Stop();
                         BridgeCommandStats.RecordStageDuration("response_send_ms", responseWriteStopwatch.Elapsed.TotalMilliseconds);
                         statsScope.Complete(false, Encoding.UTF8.GetByteCount(errorResponse));
@@ -850,7 +999,20 @@ namespace UnityCliBridge.Core
             BridgeLogger.Log("Shutting down...");
             StopTcpListener();
             EditorApplication.update -= ProcessCommandQueue;
-            EditorApplication.quitting -= Shutdown;
+            EditorApplication.quitting -= OnQuitting;
+            AssemblyReloadEvents.beforeAssemblyReload -= OnBeforeAssemblyReload;
+        }
+
+        private static void OnBeforeAssemblyReload()
+        {
+            EditorLockfile.MarkReloading();
+            Shutdown();
+        }
+
+        private static void OnQuitting()
+        {
+            EditorLockfile.Delete();
+            Shutdown();
         }
 
         /// <summary>
@@ -869,6 +1031,7 @@ namespace UnityCliBridge.Core
         public static void Stop()
         {
             BridgeLogger.Log("Stopping...");
+            EditorLockfile.Delete();
             StopTcpListener();
             Status = BridgeStatus.NotConfigured;
         }

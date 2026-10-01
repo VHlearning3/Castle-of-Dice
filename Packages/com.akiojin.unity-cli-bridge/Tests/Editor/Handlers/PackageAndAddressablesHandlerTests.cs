@@ -18,23 +18,18 @@ namespace UnityCliBridge.Tests
         [TearDown]
         public void TearDown()
         {
-#if UNITY_ADDRESSABLES
-            if (UnityEditor.AddressableAssets.AddressableAssetSettingsDefaultObject.Settings != null)
+            AddressablesHandler.HandleCommand("remove_entry", new JObject
             {
-                AddressablesHandler.HandleCommand("remove_entry", new JObject
-                {
-                    ["assetPath"] = TestAssetPath
-                });
-                AddressablesHandler.HandleCommand("remove_group", new JObject
-                {
-                    ["groupName"] = GroupName
-                });
-                AddressablesHandler.HandleCommand("remove_group", new JObject
-                {
-                    ["groupName"] = MoveGroupName
-                });
-            }
-#endif
+                ["assetPath"] = TestAssetPath
+            });
+            AddressablesHandler.HandleCommand("remove_group", new JObject
+            {
+                ["groupName"] = GroupName
+            });
+            AddressablesHandler.HandleCommand("remove_group", new JObject
+            {
+                ["groupName"] = MoveGroupName
+            });
 
             if (AssetDatabase.IsValidFolder(TestFolder))
             {
