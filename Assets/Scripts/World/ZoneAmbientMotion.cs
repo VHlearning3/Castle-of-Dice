@@ -3,12 +3,12 @@ using UnityEngine;
 namespace CastleOfTheD20.World
 {
     /// <summary>
-    /// Small allocation-free ambient motion for zone dressing: flickering fire lights, floating books and crystals,
-    /// and storm lightning flashes. Added by the zone dressing tool; no gameplay effect.
+    /// Small allocation-free ambient motion for zone dressing: flickering fire lights, pulsing glows, floating books
+    /// and crystals, and storm lightning flashes. Added by the zone dressing tool; no gameplay effect.
     /// </summary>
     public class ZoneAmbientMotion : MonoBehaviour
     {
-        public enum MotionKind { FlickerLight, Float, Lightning }
+        public enum MotionKind { FlickerLight, Float, Lightning, Pulse }
 
         public MotionKind kind = MotionKind.FlickerLight;
 
@@ -49,6 +49,12 @@ namespace CastleOfTheD20.World
                     if (cachedLight == null) return;
                     float n = Mathf.PerlinNoise(t * speed, phase) - 0.5f;
                     cachedLight.intensity = baseIntensity * (1f + n * 2f * amount);
+                    break;
+
+                case MotionKind.Pulse:
+                    // amount = fraction of base intensity, speed = pulses per second
+                    if (cachedLight == null) return;
+                    cachedLight.intensity = baseIntensity * (1f + Mathf.Sin(t * speed * Mathf.PI * 2f) * amount);
                     break;
 
                 case MotionKind.Float:

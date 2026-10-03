@@ -7,6 +7,7 @@ using UnityEditor;
 using UnityEditor.SceneManagement;
 using CastleOfTheD20.World;
 using CastleOfTheD20.Bosses;
+using CastleOfTheD20.Data;
 
 namespace CastleOfTheD20.Editor
 {
@@ -125,7 +126,7 @@ namespace CastleOfTheD20.Editor
             Mat("Stone", new Color(0.55f, 0.53f, 0.50f));
             Mat("StoneDark", new Color(0.36f, 0.35f, 0.34f));
             Mat("StoneLight", new Color(0.72f, 0.69f, 0.64f));
-            Mat("StoneStatue", new Color(0.60f, 0.65f, 0.63f), 0.2f);
+            Mat("StoneStatue", Hex("8a9290"), 0.2f);
             Mat("Wood", new Color(0.50f, 0.33f, 0.19f));
             Mat("WoodDark", new Color(0.30f, 0.19f, 0.11f));
             Mat("Iron", new Color(0.24f, 0.25f, 0.27f), 0.4f, 0.6f);
@@ -139,34 +140,37 @@ namespace CastleOfTheD20.Editor
             Mat("Cloth", new Color(0.84f, 0.79f, 0.67f));
             Mat("Paper", new Color(0.93f, 0.87f, 0.70f));
             Mat("Candle", new Color(0.95f, 0.92f, 0.82f));
-            Mat("BannerPurple", new Color(0.34f, 0.12f, 0.40f));
-            Mat("BannerBlue", new Color(0.14f, 0.22f, 0.50f));
-            Mat("CarpetRed", new Color(0.60f, 0.07f, 0.08f));
+            Mat("BannerPurple", Hex("3a1f4a"));
+            Mat("BannerBlue", Hex("2a4a9a"));
+            Mat("BannerGold", Hex("e8c35a"), 0.5f, 0.6f);
+            Mat("CarpetRed", Hex("a8242e"));
+            Mat("CarpetTrim", Hex("8a1a24"));
             Mat("CarpetDark", new Color(0.32f, 0.05f, 0.07f));
             Mat("Leaf", new Color(0.27f, 0.52f, 0.21f));
             Mat("LeafDark", new Color(0.17f, 0.38f, 0.15f));
-            Mat("Dirt", new Color(0.66f, 0.50f, 0.32f));
-            Mat("GemGreen", new Color(0.45f, 1f, 0.62f), 0.6f, 0f, new Color(0.35f, 1.5f, 0.65f));
-            Mat("WaterGreen", new Color(0.18f, 0.80f, 0.48f), 0.85f, 0f, new Color(0.10f, 0.75f, 0.38f));
-            Mat("Arcane", new Color(0.75f, 0.50f, 1f), 0f, 0f, new Color(1.3f, 0.6f, 2.4f));
-            Mat("Cyan", new Color(0.55f, 0.95f, 1f), 0.8f, 0f, new Color(0.5f, 1.5f, 1.9f));
-            Mat("Lava", new Color(0.95f, 0.28f, 0.04f), 0f, 0f, new Color(1.5f, 0.32f, 0.02f));
+            Mat("Dirt", Hex("c89a5c"));
+            Mat("GemGreen", Hex("8affb0"), 0.6f, 0f, Hex("8affb0") * 1.4f);
+            Mat("WaterGreen", Hex("3aa86a"), 0.85f, 0f, Hex("3aa86a") * 1.1f);
+            Mat("Arcane", Hex("b06aff"), 0f, 0f, Hex("b06aff") * 2.2f);
+            Mat("Cyan", Hex("5ad8ff"), 0.8f, 0f, Hex("5ad8ff") * 1.8f);
+            Mat("Lava", Hex("ff6a1a"), 0f, 0f, Hex("ff9a3a") * 1.6f);
             Mat("Charred", new Color(0.08f, 0.05f, 0.04f));
-            Mat("WindowWarm", new Color(1f, 0.92f, 0.70f), 0.3f, 0f, new Color(1.5f, 1.25f, 0.75f));
-            Mat("GlassPurple", new Color(0.55f, 0.30f, 0.85f), 0.6f, 0f, new Color(0.65f, 0.25f, 1.2f));
-            Mat("GlassBlue", new Color(0.25f, 0.45f, 0.95f), 0.6f, 0f, new Color(0.25f, 0.5f, 1.4f));
-            Mat("GlassRed", new Color(0.85f, 0.20f, 0.30f), 0.6f, 0f, new Color(1.1f, 0.2f, 0.3f));
-            Mat("GlassGold", new Color(0.95f, 0.78f, 0.35f), 0.6f, 0f, new Color(1.3f, 0.95f, 0.3f));
+            Mat("WindowWarm", Hex("ffe8b0"), 0.3f, 0f, Hex("ffe8b0") * 1.5f);
+            Mat("GlassPurple", Hex("8aa8f0"), 0.6f, 0f, Hex("8aa8f0") * 1.3f);
+            Mat("GlassTeal", Hex("7ac0c0"), 0.6f, 0f, Hex("7ac0c0") * 1.3f);
+            Mat("GlassBlue", Hex("5a7ad0"), 0.6f, 0f, Hex("5a7ad0") * 1.3f);
+            Mat("GlassRed", Hex("c87a9a"), 0.6f, 0f, Hex("c87a9a") * 1.3f);
+            Mat("GlassGold", Hex("d0c07a"), 0.6f, 0f, Hex("d0c07a") * 1.3f);
             Mat("BookRed", new Color(0.58f, 0.12f, 0.12f));
             Mat("BookBlue", new Color(0.15f, 0.25f, 0.55f));
             Mat("BookGreen", new Color(0.14f, 0.42f, 0.22f));
             Mat("BookPurple", new Color(0.38f, 0.16f, 0.48f));
             Mat("BookTan", new Color(0.75f, 0.60f, 0.35f));
-            Mat("PotionPurple", new Color(0.70f, 0.25f, 0.85f), 0.8f, 0f, new Color(0.35f, 0.08f, 0.45f));
-            Mat("PotionBlue", new Color(0.25f, 0.50f, 0.95f), 0.8f, 0f, new Color(0.10f, 0.22f, 0.50f));
-            Mat("PotionGreen", new Color(0.35f, 0.85f, 0.30f), 0.8f, 0f, new Color(0.15f, 0.42f, 0.10f));
-            Mat("PotionRed", new Color(0.90f, 0.15f, 0.20f), 0.8f, 0f, new Color(0.50f, 0.05f, 0.08f));
-            Transparent("CyanBeam", new Color(0.45f, 0.95f, 1f, 0.10f), new Color(0.08f, 0.30f, 0.40f));
+            Mat("PotionPurple", Hex("c83ad8"), 0.8f, 0f, Hex("c83ad8") * 0.6f);
+            Mat("PotionBlue", Hex("3a8ad8"), 0.8f, 0f, Hex("3a8ad8") * 0.6f);
+            Mat("PotionGreen", Hex("6ad83a"), 0.8f, 0f, Hex("6ad83a") * 0.6f);
+            Mat("PotionRed", Hex("d83a3a"), 0.8f, 0f, Hex("d83a3a") * 0.6f);
+            Transparent("CyanBeam", new Color(0.667f, 0.957f, 1f, 0.25f), new Color(0.10f, 0.30f, 0.36f));
             Transparent("GoldBeam", new Color(1f, 0.92f, 0.65f, 0.08f), new Color(0.22f, 0.18f, 0.09f));
 
             Floor("Forest", new Color(0.40f, 0.60f, 0.24f), new Color(0.39f, 0.585f, 0.235f), new Color(0.395f, 0.59f, 0.237f), 80f, 110f, 5f, 0.03f, false);
@@ -667,6 +671,57 @@ namespace CastleOfTheD20.Editor
             return f;
         }
 
+        /// <summary>Soft floating motes (pollen, dust, sparks) in a box; at most <paramref name="count"/> alive.</summary>
+        private static ParticleSystem Particles(string name, Transform parent, Vector3 pos, Vector3 box, int count, float lifetime,
+            float speed, float sizeMin, float sizeMax, Color color, float upward)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var ps = go.AddComponent<ParticleSystem>();
+            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            var main = ps.main;
+            main.loop = true;
+            main.prewarm = true;
+            main.startLifetime = lifetime;
+            main.startSpeed = speed;
+            main.startSize = new ParticleSystem.MinMaxCurve(sizeMin, sizeMax);
+            main.startColor = color;
+            main.maxParticles = count;
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var emission = ps.emission;
+            emission.rateOverTime = count / lifetime;
+            var shape = ps.shape;
+            shape.shapeType = ParticleSystemShapeType.Box;
+            shape.scale = box;
+            shape.randomDirectionAmount = 1f;
+            if (upward != 0f)
+            {
+                var vel = ps.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.World;
+                vel.x = new ParticleSystem.MinMaxCurve(0f, 0f);
+                vel.y = new ParticleSystem.MinMaxCurve(upward * 0.6f, upward);
+                vel.z = new ParticleSystem.MinMaxCurve(0f, 0f);
+            }
+            var fade = ps.colorOverLifetime;
+            fade.enabled = true;
+            var grad = new Gradient();
+            grad.SetKeys(new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.7f), new GradientAlphaKey(0f, 1f) });
+            fade.color = grad;
+            var r = go.GetComponent<ParticleSystemRenderer>();
+            r.shadowCastingMode = ShadowCastingMode.Off;
+            r.sharedMaterial = LoadOrCreateParticleMat("Mote", Color.white);
+            return ps;
+        }
+
+        private static Color Hex(string hex)
+        {
+            ColorUtility.TryParseHtmlString("#" + hex, out Color c);
+            return c;
+        }
+
         private static float Rand(float a, float b) { return a + (float)rng.NextDouble() * (b - a); }
 
         private static T Pick<T>(T[] arr) { return arr[rng.Next(arr.Length)]; }
@@ -761,7 +816,7 @@ namespace CastleOfTheD20.Editor
                 pb.Cone("Flame", new Vector3(0.18f, 1.4f, 0.1f), 0.2f, 0.55f, new Vector3(0, 30, 6));
                 pb.Cone("Flame", new Vector3(-0.15f, 1.4f, -0.12f), 0.18f, 0.5f, new Vector3(0, 70, -8));
             });
-            PointLight(name + "_Light", b.transform, pos + new Vector3(0, 2.1f, 0), new Color(1f, 0.62f, 0.3f), 11f, 2.4f, true);
+            PointLight(name + "_Light", b.transform, pos + new Vector3(0, 1.8f, 0), Hex("ff9a3a"), 10f, 1.6f, true);
             return b;
         }
 
@@ -797,14 +852,14 @@ namespace CastleOfTheD20.Editor
             return s;
         }
 
-        private static GameObject Carpet(string name, Transform parent, Vector3 center, float width, float length, string clothMat)
+        private static GameObject Carpet(string name, Transform parent, Vector3 center, float width, float length, string clothMat, string trimMat = "Gold")
         {
-            string mesh = "Carpet_" + clothMat + "_" + width.ToString("0.#") + "x" + length.ToString("0.#");
+            string mesh = "Carpet_" + clothMat + "_" + trimMat + "_" + width.ToString("0.#") + "x" + length.ToString("0.#");
             return Prop(mesh, name, parent, center, 0f, pb =>
             {
-                pb.Box(clothMat, new Vector3(0, 0.015f, 0), new Vector3(width, 0.03f, length));
-                pb.Box("Gold", new Vector3(-width * 0.5f + 0.25f, 0.032f, 0), new Vector3(0.12f, 0.01f, length - 0.3f));
-                pb.Box("Gold", new Vector3(width * 0.5f - 0.25f, 0.032f, 0), new Vector3(0.12f, 0.01f, length - 0.3f));
+                pb.Box(clothMat, new Vector3(0, 0.01f, 0), new Vector3(width, 0.02f, length));
+                pb.Box(trimMat, new Vector3(-width * 0.5f + 0.25f, 0.022f, 0), new Vector3(0.18f, 0.01f, length - 0.3f));
+                pb.Box(trimMat, new Vector3(width * 0.5f - 0.25f, 0.022f, 0), new Vector3(0.18f, 0.01f, length - 0.3f));
             }, 1f, Col.None, false);
         }
 
@@ -846,43 +901,48 @@ namespace CastleOfTheD20.Editor
 
         private static readonly List<Vector3> ForestMainPath = new List<Vector3>
         {
-            new Vector3(0f, 0f, -56f), new Vector3(2.9f, 0f, -40.6f), new Vector3(-5f, 0f, -26f), new Vector3(2.9f, 0f, -8f),
-            new Vector3(-2.9f, 0f, 5.8f), new Vector3(-6.4f, 0f, 15.2f), new Vector3(2.9f, 0f, 42.7f), new Vector3(0f, 0f, 56f)
+            new Vector3(0f, 0f, -56f), new Vector3(3f, 0f, -40f), new Vector3(-4f, 0f, -25f), new Vector3(2f, 0f, -8f),
+            new Vector3(-3f, 0f, 5f), new Vector3(-6f, 0f, 15f), new Vector3(0f, 0f, 30f), new Vector3(4f, 0f, 42f), new Vector3(0f, 0f, 56f)
         };
 
         private static readonly List<Vector3> ForestSidePath = new List<Vector3>
         {
-            new Vector3(-6.4f, 0f, 15.2f), new Vector3(-14.3f, 0f, 17.4f), new Vector3(-23.6f, 0f, 15f)
+            new Vector3(-6f, 0f, 15f), new Vector3(-14f, 0f, 17f), new Vector3(-22f, 0f, 15f), new Vector3(-33f, 0f, 15f)
         };
 
         private static void DressForest()
         {
             SetFloor("Forest_Ground", "Forest");
-            Mood(new Color(1f, 0.95f, 0.82f), 1.25f, new Vector3(48f, -35f, 0f),
-                new Color(0.62f, 0.72f, 0.86f), new Color(0.50f, 0.60f, 0.46f), new Color(0.28f, 0.30f, 0.20f),
-                new Color(0.76f, 0.86f, 0.80f), 45f, 130f, null);
+            // Mood A: sunny day (spec: #fff1cc 1.25 at (45, -35), gradient ambient, light haze)
+            Mood(Hex("fff1cc"), 1.25f, new Vector3(45f, -35f, 0f),
+                Hex("9ccbea"), Hex("bfd8a0"), Hex("4e6b3a"),
+                Hex("dce8d2"), 40f, 130f, null);
+            SetLight("ForestLight_South", Hex("8cd973"), 1.2f);
+            SetLight("ForestLight_North", Hex("73bfa6"), 1.2f);
 
-            // Winding dirt path (proposal) and the side path to the locked secret gate
+            // Winding dirt path from door to door and the side path through the secret gate to the hidden door
             Transform paths = Group("Paths").transform;
-            Ribbon("Forest_Path_Main", paths, ForestMainPath, 4.2f, 0.02f, "Dirt");
-            Ribbon("Forest_Path_Side", paths, ForestSidePath, 2.8f, 0.025f, "Dirt");
+            Ribbon("Forest_Path_Main", paths, ForestMainPath, 6f, 0.02f, "Dirt");
+            Ribbon("Forest_Path_Side", paths, ForestSidePath, 3.5f, 0.025f, "Dirt");
 
-            // Pine groups from the floor plan (green proposals)
+            // Pine groups (spec positions, kept off the zombie fight grid x -9.6..9.6, z -33.6..-14.4)
             Transform trees = Group("Pine_Groups").transform;
             Vector2[] groups =
             {
-                new Vector2(-34f, 45.8f), new Vector2(-20f, 46.9f), new Vector2(-12f, 40.8f), new Vector2(-30f, 28.7f),
-                new Vector2(14f, 30.6f), new Vector2(31.9f, 26.6f), new Vector2(34f, 46.9f), new Vector2(-34f, 0f),
-                new Vector2(34f, 0f), new Vector2(12f, -20.4f), new Vector2(31f, -25.5f), new Vector2(-30f, -28.4f),
-                new Vector2(-14f, -42.7f), new Vector2(-33f, -45.9f), new Vector2(16f, -48.8f), new Vector2(33f, -45.9f)
+                new Vector2(-33f, -45f), new Vector2(-30f, -28f), new Vector2(-34f, 0f), new Vector2(-30f, 28f), new Vector2(-34f, 45f),
+                new Vector2(33f, -45f), new Vector2(31f, -25f), new Vector2(34f, 0f), new Vector2(32f, 26f), new Vector2(34f, 46f),
+                new Vector2(-12f, 40f), new Vector2(14f, 30f), new Vector2(13.5f, -20f), new Vector2(-14f, -42f), new Vector2(16f, -48f),
+                new Vector2(-20f, 46f)
             };
             var occupied = new List<Vector3>();
             foreach (Vector2 g in groups)
             {
                 Vector3 c = new Vector3(g.x, 0f, g.y);
-                Place("Pine_tree", trees, c, Rand(0f, 360f), Rand(0.85f, 1.15f));
-                Place(Pick(new[] { "Pine_tree_2", "Pine_tree_2_1" }), trees, c + new Vector3(Rand(2.5f, 3.5f), 0f, Rand(-1.5f, 1.5f)), Rand(0f, 360f), Rand(0.8f, 1.1f));
-                Place(Pick(new[] { "Pine_tree_2", "Tree_2" }), trees, c + new Vector3(Rand(-3.5f, -2.5f), 0f, Rand(1f, 2.5f)), Rand(0f, 360f), Rand(0.7f, 1f));
+                // 2-3 pines within 2.6 m; the inner one leans away from the path side so nothing reaches the grid
+                float away = Mathf.Sign(g.x);
+                Place("Pine_tree", trees, c, Rand(0f, 360f), Rand(0.9f, 1.3f));
+                Place(Pick(new[] { "Pine_tree_2", "Pine_tree_2_1" }), trees, c + new Vector3(away * Rand(1.6f, 2.4f), 0f, Rand(-1.5f, 1.5f)), Rand(0f, 360f), Rand(0.9f, 1.2f));
+                if (rng.NextDouble() < 0.6) Place("Pine_tree_2", trees, c + new Vector3(away * Rand(0.5f, 1.5f), 0f, Rand(1.5f, 2.4f)), Rand(0f, 360f), Rand(0.9f, 1.1f));
                 occupied.Add(c);
             }
 
@@ -903,27 +963,28 @@ namespace CastleOfTheD20.Editor
 
             // Rocks, logs and stumps
             Transform rocks = Group("Rocks_And_Logs").transform;
-            Place("Rock_1", rocks, new Vector3(-8.1f, 0f, 22.6f), 30f, 0.8f);
-            Place("Rock_3", rocks, new Vector3(9f, 0f, 20.4f), 110f, 0.5f);
-            Place("Rock_1", rocks, new Vector3(6.9f, 0f, -33.5f), 200f, 0.7f);
-            Place("Rock_4", rocks, new Vector3(-9f, 0f, -44.8f), 75f, 0.45f);
+            Place("Rock_1", rocks, new Vector3(12.5f, 0f, -35f), 200f, 0.8f);
+            Place("Rock_1", rocks, new Vector3(-8f, 0f, 22f), 30f, 0.8f);
+            Place("Rock_3", rocks, new Vector3(9f, 0f, 20f), 110f, 0.5f);
+            Place("Rock_4", rocks, new Vector3(-9f, 0f, -44f), 75f, 0.45f);
             Place("Log", rocks, new Vector3(-16f, 0.3f, -6f), 25f, 1f);
-            Place("Log", rocks, new Vector3(20f, 0.3f, -32f), 140f, 0.9f);
-            Place("Log", rocks, new Vector3(-21f, 0.3f, 31f), 75f, 1f);
+            Place("Log", rocks, new Vector3(21f, 0.3f, -32f), 140f, 0.9f);
+            Place("Log", rocks, new Vector3(-21f, 0.3f, 33f), 75f, 1f);
             Place("Stump", rocks, new Vector3(8f, 0f, 12f), 0f, 1f);
-            Place("Stump", rocks, new Vector3(-12f, 0f, -36f), 90f, 0.9f);
+            Place("Stump", rocks, new Vector3(-13f, 0f, -37f), 90f, 0.9f);
             Place("Stump", rocks, new Vector3(24f, 0f, 40f), 45f, 1.1f);
-            Place("Stump", rocks, new Vector3(-29f, 0f, -9f), 160f, 1f);
+            Place("Stump", rocks, new Vector3(-24f, 0f, -9f), 160f, 1f);
 
-            // Lantern posts (night variant's warm light; also one in the south-west clearing)
-            Transform lamps = Group("Lantern_Posts").transform;
-            foreach (Vector3 p in new[] { new Vector3(10f, 0f, -1.9f), new Vector3(-28f, 0f, -40.6f) })
-            {
-                Place("Lamppost", lamps, p, 200f, 1f);
-                PointLight("Lantern_Light", lamps, p + new Vector3(0f, 4.6f, 0f), new Color(1f, 0.78f, 0.45f), 10f, 1.6f, true);
-            }
+            // Lantern post by the path; its warm light belongs to the night variant, so it is off in the day mood
+            Transform lamps = Group("Lantern_Post").transform;
+            Place("Lamppost", lamps, new Vector3(4.5f, 0f, -2f), 200f, 0.65f);
+            Light lantern = PointLight("Lantern_Light", lamps, new Vector3(4.5f, 2.8f, -2f), Hex("ffb04a"), 10f, 1.6f, true);
+            lantern.gameObject.SetActive(false);
 
             DressSecretGate();
+
+            // Drifting pollen in the sunlight (mood A)
+            Particles("Pollen", root, new Vector3(0f, 3f, 0f), new Vector3(70f, 4f, 100f), 35, 9f, 0.35f, 0.06f, 0.12f, new Color(1f, 0.96f, 0.75f, 0.8f), 0f);
 
             // Undergrowth: grass, ferns, flowers, mushrooms and bushes, kept off the path and away from gameplay spots
             Transform under = Group("Undergrowth").transform;
@@ -931,7 +992,7 @@ namespace CastleOfTheD20.Editor
             {
                 new Vector4(-12f, -20f, 2f, 0), new Vector4(15f, 8f, 2f, 0), new Vector4(-8f, 32f, 2f, 0),
                 new Vector4(0f, -44f, 3f, 0), new Vector4(0f, 44f, 3f, 0), new Vector4(-28f, 15f, 6f, 0),
-                new Vector4(10f, -1.9f, 1.5f, 0), new Vector4(-28f, -40.6f, 1.5f, 0)
+                new Vector4(4.5f, -2f, 1.5f, 0)
             };
             Scatter(under, new[] { "Grass_1", "Grass_2", "Grass_3" }, 170, 0.9f, 1.4f, keepOut, occupied, 2.6f);
             Scatter(under, new[] { "Fern" }, 34, 0.7f, 1.1f, keepOut, occupied, 3.2f);
@@ -1017,7 +1078,7 @@ namespace CastleOfTheD20.Editor
                 pb.Box("GoldGlow", new Vector3(0, 0.33f, 0), new Vector3(0.08f, 0.22f, 0.3f));
             }, 1f, Col.None);
             lockGo.transform.SetParent(gate.transform, true);
-            PointLight("Gold_Lock_Glow", frame, new Vector3(g.x + 1.6f, 2.6f, g.z), new Color(1f, 0.8f, 0.35f), 6f, 1.8f, true);
+            PointLight("Gold_Lock_Glow", frame, new Vector3(-24.2f, 2.6f, 15f), Hex("ffd76a"), 6f, 1.2f, true);
         }
 
         #endregion
@@ -1028,9 +1089,9 @@ namespace CastleOfTheD20.Editor
         {
             SetFloor("Courtyard_Floor", "Courtyard");
             // Mood A: storm. Cold grey light, green cursed glow, lightning.
-            Mood(new Color(0.62f, 0.68f, 0.80f), 0.9f, new Vector3(55f, -20f, 0f),
-                new Color(0.34f, 0.38f, 0.48f), new Color(0.27f, 0.30f, 0.35f), new Color(0.14f, 0.15f, 0.17f),
-                new Color(0.30f, 0.34f, 0.40f), 35f, 120f, new Color(0.20f, 0.23f, 0.28f));
+            Mood(Hex("9aa8bf"), 0.75f, new Vector3(50f, -30f, 0f),
+                Hex("3a4452"), Color.Lerp(Hex("3a4452"), Hex("2e3440"), 0.5f), Hex("2e3440"),
+                Hex("5e6672"), 25f, 110f, new Color(0.20f, 0.23f, 0.28f));
             SetLight("CourtyardLight_Center", new Color(0.75f, 0.95f, 0.85f), 1.6f);
             SetLight("CourtyardLight_North", new Color(0.45f, 1f, 0.62f), 1.8f);
 
@@ -1045,7 +1106,7 @@ namespace CastleOfTheD20.Editor
             var flash = lightningGo.AddComponent<ZoneAmbientMotion>();
             flash.kind = ZoneAmbientMotion.MotionKind.Lightning;
             flash.flashInterval = 11f;
-            flash.amount = 1.6f;
+            flash.amount = 1.65f; // with the 0.75 sun this peaks at the spec's 2.4
 
             Battlements("Courtyard_Battlements", new List<Vector4>
             {
@@ -1056,60 +1117,60 @@ namespace CastleOfTheD20.Editor
 
             // Corner towers with green-glowing windows
             Transform towers = Group("Corner_Towers").transform;
-            Vector2[] corners = { new Vector2(-40f, 40f), new Vector2(40f, 40f), new Vector2(-40f, -40f), new Vector2(40f, -40f) };
+            Vector2[] corners = { new Vector2(-41f, 41f), new Vector2(41f, 41f), new Vector2(-41f, -41f), new Vector2(41f, -41f) };
             foreach (Vector2 c in corners)
             {
+                // 9 x 14 x 9, enclosing the existing corner pillar
                 Prop("Courtyard_Tower", "Tower", towers, new Vector3(c.x, 0f, c.y), 0f, pb =>
                 {
-                    pb.Box("Stone", new Vector3(0, 8f, 0), new Vector3(8f, 16f, 8f));
-                    pb.Box("StoneDark", new Vector3(0, 16.1f, 0), new Vector3(8.6f, 0.4f, 8.6f));
+                    pb.Box("Stone", new Vector3(0, 6.5f, 0), new Vector3(9f, 13f, 9f));
+                    pb.Box("StoneDark", new Vector3(0, 13.1f, 0), new Vector3(9.6f, 0.4f, 9.6f));
                     for (int s = 0; s < 4; s++)
                     {
                         Quaternion q = Quaternion.Euler(0, s * 90f, 0);
-                        for (int m = -1; m <= 1; m++) pb.Box("StoneDark", q * new Vector3(m * 3f, 16.9f, -3.9f), new Vector3(1.6f, 1.3f, 0.8f), new Vector3(0, s * 90f, 0));
-                        for (int w = 0; w < 3; w++) pb.Box("GemGreen", q * new Vector3(0f, 5f + w * 4f, -4.03f), new Vector3(0.9f, 1.6f, 0.1f), new Vector3(0, s * 90f, 0));
+                        for (int m = -1; m <= 1; m++) pb.Box("StoneDark", q * new Vector3(m * 3.3f, 13.75f, -4.4f), new Vector3(1.7f, 1.3f, 0.8f), new Vector3(0, s * 90f, 0));
+                        for (int w = 0; w < 3; w++) pb.Box("GemGreen", q * new Vector3(0f, 4f + w * 3.5f, -4.53f), new Vector3(0.9f, 1.6f, 0.1f), new Vector3(0, s * 90f, 0));
                     }
                 });
-                PointLight("Tower_Glow", towers, new Vector3(c.x * 0.86f, 10f, c.y * 0.86f), new Color(0.4f, 1f, 0.6f), 12f, 1.4f);
+                PointLight("Tower_Glow", towers, new Vector3(c.x * 0.85f, 8f, c.y * 0.85f), new Color(0.4f, 1f, 0.6f), 12f, 1.4f);
             }
 
-            // Gatehouse at the Castle Hall door: two towers, a lintel and a raised portcullis
+            // Gatehouse at the Castle Hall door: two 4 x 10 x 6 towers, a lintel and a raised portcullis
             Transform gate = Group("Gatehouse").transform;
             foreach (float x in new[] { -7f, 7f })
             {
-                Prop("Courtyard_GateTower", "Gate_Tower", gate, new Vector3(x, 0f, 42.6f), 0f, pb =>
+                Prop("Courtyard_GateTower", "Gate_Tower", gate, new Vector3(x, 0f, 41f), 0f, pb =>
                 {
-                    pb.Box("Stone", new Vector3(0, 6f, 0), new Vector3(3.2f, 12f, 3.2f));
-                    for (int s = 0; s < 4; s++)
-                    {
-                        Quaternion q = Quaternion.Euler(0, s * 90f, 0);
-                        pb.Box("StoneDark", q * new Vector3(-0.9f, 12.6f, -1.4f), new Vector3(0.8f, 1.2f, 0.5f), new Vector3(0, s * 90f, 0));
-                        pb.Box("StoneDark", q * new Vector3(0.9f, 12.6f, -1.4f), new Vector3(0.8f, 1.2f, 0.5f), new Vector3(0, s * 90f, 0));
-                    }
-                    pb.Box("GemGreen", new Vector3(0, 8.5f, -1.63f), new Vector3(0.7f, 1.3f, 0.08f));
+                    pb.Box("Stone", new Vector3(0, 5f, 0), new Vector3(4f, 10f, 6f));
+                    pb.Box("StoneDark", new Vector3(-1.2f, 10.6f, -2.75f), new Vector3(1f, 1.2f, 0.5f));
+                    pb.Box("StoneDark", new Vector3(1.2f, 10.6f, -2.75f), new Vector3(1f, 1.2f, 0.5f));
+                    pb.Box("StoneDark", new Vector3(-1.75f, 10.6f, 0f), new Vector3(0.5f, 1.2f, 1f));
+                    pb.Box("StoneDark", new Vector3(1.75f, 10.6f, 0f), new Vector3(0.5f, 1.2f, 1f));
+                    pb.Box("GemGreen", new Vector3(0, 7f, -3.03f), new Vector3(0.7f, 1.3f, 0.08f));
                 });
             }
-            Prop("Courtyard_GateLintel", "Gate_Lintel_And_Portcullis", gate, new Vector3(0f, 0f, 42.6f), 0f, pb =>
+            Prop("Courtyard_GateLintel", "Gate_Lintel_And_Portcullis", gate, new Vector3(0f, 0f, 43f), 0f, pb =>
             {
-                pb.Box("StoneLight", new Vector3(0, 9.4f, 0), new Vector3(11f, 2.2f, 2.6f));
-                for (int m = -2; m <= 2; m++) pb.Box("StoneDark", new Vector3(m * 2.2f, 11.1f, -0.9f), new Vector3(1.2f, 1.2f, 0.8f));
-                for (int i = -4; i <= 4; i++) pb.Box("Iron", new Vector3(i * 1.05f, 7.4f, -0.2f), new Vector3(0.16f, 2.4f, 0.16f));
-                for (int j = 0; j < 3; j++) pb.Box("Iron", new Vector3(0, 6.6f + j * 0.75f, -0.2f), new Vector3(9.2f, 0.14f, 0.14f));
-                for (int i = -4; i <= 4; i++) pb.Cone("Iron", new Vector3(i * 1.05f, 6.2f, -0.2f), 0.1f, 0.25f, new Vector3(180, 0, 0));
+                pb.Box("StoneLight", new Vector3(0, 8.9f, 0), new Vector3(10f, 2.2f, 2.4f));
+                for (int m = -2; m <= 2; m++) pb.Box("StoneDark", new Vector3(m * 2.1f, 10.6f, -0.8f), new Vector3(1.2f, 1.2f, 0.8f));
+                for (int i = -4; i <= 4; i++) pb.Box("Iron", new Vector3(i * 1.05f, 7f, -0.2f), new Vector3(0.16f, 2.2f, 0.16f));
+                for (int j = 0; j < 3; j++) pb.Box("Iron", new Vector3(0, 6.3f + j * 0.7f, -0.2f), new Vector3(9.2f, 0.14f, 0.14f));
+                for (int i = -4; i <= 4; i++) pb.Cone("Iron", new Vector3(i * 1.05f, 5.65f, -0.2f), 0.1f, 0.25f, new Vector3(180, 0, 0));
             }, 1f, Col.None);
 
-            // Torn banners along the north wall
+            // Torn banners on the north wall, hanging 1.5-7.5 m
             Transform banners = Group("Banners").transform;
             foreach (float x in new[] { -30f, -18f, 18f, 30f })
             {
-                Prop("Banner_Purple", "Banner", banners, new Vector3(x, 7.4f, 43.85f), 0f, pb =>
+                Prop("Banner_Purple", "Banner", banners, new Vector3(x, 7.5f, 43.85f), 0f, pb =>
                 {
-                    pb.Box("Iron", Vector3.zero, new Vector3(2.0f, 0.08f, 0.08f));
-                    pb.Box("BannerPurple", new Vector3(0, -1.55f, -0.08f), new Vector3(1.6f, 3.0f, 0.05f));
-                    pb.Box("BannerPurple", new Vector3(-0.4f, -3.05f, -0.08f), new Vector3(0.57f, 0.57f, 0.05f), new Vector3(0, 0, 45));
-                    pb.Box("BannerPurple", new Vector3(0.4f, -3.05f, -0.08f), new Vector3(0.57f, 0.57f, 0.05f), new Vector3(0, 0, 45));
-                    pb.Box("Black", new Vector3(0.35f, -2.2f, -0.1f), new Vector3(0.35f, 0.5f, 0.02f), new Vector3(0, 0, 20));
-                    pb.Octa("GemGreen", new Vector3(0, -1.35f, -0.13f), new Vector3(0.5f, 0.8f, 0.1f));
+                    pb.Box("Iron", Vector3.zero, new Vector3(3.4f, 0.1f, 0.1f));
+                    pb.Box("BannerPurple", new Vector3(0, -2.6f, -0.08f), new Vector3(3f, 5.2f, 0.05f));
+                    pb.Box("BannerPurple", new Vector3(-0.75f, -5.25f, -0.08f), new Vector3(1.06f, 1.06f, 0.05f), new Vector3(0, 0, 45));
+                    pb.Box("BannerPurple", new Vector3(0.75f, -5.25f, -0.08f), new Vector3(1.06f, 1.06f, 0.05f), new Vector3(0, 0, 45));
+                    pb.Box("Black", new Vector3(0.7f, -3.9f, -0.1f), new Vector3(0.5f, 0.9f, 0.02f), new Vector3(0, 0, 20));
+                    pb.Box("Black", new Vector3(-0.9f, -1.2f, -0.1f), new Vector3(0.3f, 0.6f, 0.02f), new Vector3(0, 0, -15));
+                    pb.Octa("GemGreen", new Vector3(0, -2.3f, -0.13f), new Vector3(0.9f, 1.4f, 0.1f));
                 }, 1f, Col.None);
             }
 
@@ -1144,7 +1205,7 @@ namespace CastleOfTheD20.Editor
             }
             foreach (float z in new[] { -10f, -20f, -30f })
             {
-                Prop("TrainingDummy", "Training_Dummy", training, new Vector3(-36f, 0f, z), 70f + z, pb =>
+                Prop("TrainingDummy", "Training_Dummy", training, new Vector3(-36f, 0f, z), 90f, pb =>
                 {
                     pb.Box("Wood", new Vector3(0, 0.05f, 0), new Vector3(1.2f, 0.1f, 0.18f));
                     pb.Box("Wood", new Vector3(0, 0.05f, 0), new Vector3(0.18f, 0.1f, 1.2f));
@@ -1160,34 +1221,44 @@ namespace CastleOfTheD20.Editor
             Transform fountain = Group("Cursed_Fountain").transform;
             Prop("CursedFountain", "Fountain", fountain, new Vector3(0f, 0f, -26f), 22.5f, pb =>
             {
-                float R = 5.2f;
+                // Basin r 5.5, rim 0.8 high, with a broken statue (3.5 m) in the middle
+                float R = 5.15f;
                 float side = 2f * R * Mathf.Tan(Mathf.PI / 8f) + 0.6f;
                 for (int i = 0; i < 8; i++)
                 {
                     float a = i * 45f;
-                    Vector3 p = Quaternion.Euler(0, a, 0) * new Vector3(0, 0.45f, -R);
-                    pb.Box("Stone", p, new Vector3(side, 0.9f, 0.7f), new Vector3(0, a, 0));
-                    pb.Box("StoneLight", p + Vector3.up * 0.5f, new Vector3(side, 0.12f, 0.9f), new Vector3(0, a, 0));
+                    Vector3 p = Quaternion.Euler(0, a, 0) * new Vector3(0, 0.35f, -R);
+                    pb.Box("Stone", p, new Vector3(side, 0.7f, 0.7f), new Vector3(0, a, 0));
+                    pb.Box("StoneLight", p + Vector3.up * 0.4f, new Vector3(side, 0.1f, 0.9f), new Vector3(0, a, 0));
                 }
                 pb.Prism("StoneDark", Vector3.zero, 5.0f, 0.15f);
-                pb.Prism("WaterGreen", new Vector3(0, 0.15f, 0), 4.9f, 0.5f);
-                pb.Prism("Stone", Vector3.zero, 0.7f, 2.2f);
-                pb.Prism("StoneLight", new Vector3(0, 2.2f, 0), 1.7f, 0.35f);
-                pb.Prism("WaterGreen", new Vector3(0, 2.4f, 0), 1.45f, 0.2f);
-                pb.Prism("Stone", new Vector3(0, 2.55f, 0), 0.3f, 0.9f);
-                pb.Octa("GemGreen", new Vector3(0, 3.8f, 0), new Vector3(0.6f, 1.0f, 0.6f));
+                pb.Prism("WaterGreen", new Vector3(0, 0.15f, 0), 4.9f, 0.45f);
+                pb.Prism("Stone", new Vector3(0, 0.15f, 0), 1.1f, 0.8f, 6);
+                pb.Box("StoneStatue", new Vector3(-0.2f, 1.45f, 0), new Vector3(0.45f, 1.0f, 0.5f));
+                pb.Box("StoneStatue", new Vector3(0.2f, 1.45f, 0), new Vector3(0.45f, 1.0f, 0.5f));
+                pb.Box("StoneStatue", new Vector3(0, 2.4f, 0), new Vector3(1.0f, 1.0f, 0.65f), new Vector3(0, 0, 4));
+                pb.Box("StoneStatue", new Vector3(-0.62f, 2.3f, -0.15f), new Vector3(0.28f, 0.9f, 0.3f), new Vector3(-25, 0, 8));
+                pb.Box("StoneStatue", new Vector3(0.12f, 3.15f, 0.05f), new Vector3(0.5f, 0.45f, 0.5f), new Vector3(0, 20, 18)); // cracked, tilted head
+                pb.Box("StoneDark", new Vector3(0.75f, 0.35f, -1.6f), new Vector3(0.5f, 0.3f, 0.45f), new Vector3(10, 30, 20)); // broken-off arm in the water
+                pb.Octa("GemGreen", new Vector3(0, 2.55f, -0.36f), new Vector3(0.35f, 0.5f, 0.12f));
             }, 1f, Col.Mesh);
-            PointLight("Fountain_Glow", fountain, new Vector3(0f, 3f, -26f), new Color(0.35f, 1f, 0.55f), 16f, 3f, true);
+            PointLight("Fountain_Glow", fountain, new Vector3(0f, 1.5f, -26f), Hex("6aff9a"), 12f, 1.5f, true);
 
-            // Rain over the courtyard
-            CreateRain(new Vector3(0f, 20f, 0f), new Vector3(90f, 1f, 90f));
+            // Rain that follows the hero (about 600 streaks), so it is dense on screen but cheap
+            GameObject hero = Find("PlayerHero");
+            if (hero != null)
+            {
+                Transform oldRain = hero.transform.Find("Rain");
+                if (oldRain != null) Object.DestroyImmediate(oldRain.gameObject);
+                CreateRain(hero.transform, new Vector3(0f, 16f, 4f), new Vector3(36f, 1f, 36f));
+            }
         }
 
-        private static void CreateRain(Vector3 pos, Vector3 area)
+        private static void CreateRain(Transform parent, Vector3 localPos, Vector3 area)
         {
             var go = new GameObject("Rain");
-            go.transform.SetParent(root, false);
-            go.transform.position = pos;
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = localPos;
             var ps = go.AddComponent<ParticleSystem>();
             var main = ps.main;
             main.loop = true;
@@ -1197,11 +1268,11 @@ namespace CastleOfTheD20.Editor
             main.startSizeX = 0.05f;
             main.startSizeY = 0.9f;
             main.startSizeZ = 0.05f;
-            main.startColor = new Color(0.75f, 0.82f, 0.95f, 0.45f);
-            main.maxParticles = 2500;
+            main.startColor = new Color(0.784f, 0.831f, 0.91f, 0.35f);
+            main.maxParticles = 600;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             var emission = ps.emission;
-            emission.rateOverTime = 1800f;
+            emission.rateOverTime = 540f;
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Box;
             shape.scale = area;
@@ -1226,6 +1297,11 @@ namespace CastleOfTheD20.Editor
                 AssetDatabase.CreateAsset(m, path);
             }
             m.SetColor("_BaseColor", c);
+            if (key == "Mote")
+            {
+                Texture2D soft = AssetDatabase.GetBuiltinExtraResource<Texture2D>("Default-Particle.psd");
+                if (soft != null) m.SetTexture("_BaseMap", soft);
+            }
             m.SetFloat("_Surface", 1f);
             m.SetFloat("_Blend", 0f);
             m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
@@ -1281,10 +1357,14 @@ namespace CastleOfTheD20.Editor
         private static void DressLibrary()
         {
             SetFloor("Library_Floor", "Library");
-            // Mood A: arcane violet
-            Mood(new Color(0.62f, 0.52f, 0.90f), 0.8f, new Vector3(60f, -25f, 0f),
-                new Color(0.40f, 0.33f, 0.58f), new Color(0.28f, 0.22f, 0.40f), new Color(0.12f, 0.09f, 0.17f),
-                new Color(0.10f, 0.07f, 0.16f), 35f, 110f, new Color(0.06f, 0.04f, 0.10f));
+            // Mood A: arcane violet (spec: dim sun, flat ambient, exponential fog) plus mood B's moonlit window
+            Mood(Hex("5a4a8a"), 0.35f, new Vector3(60f, -25f, 0f),
+                Hex("22163a"), Hex("22163a"), Hex("22163a"),
+                Hex("1a1030"), 35f, 110f, new Color(0.06f, 0.04f, 0.10f));
+            RenderSettings.ambientMode = AmbientMode.Flat;
+            RenderSettings.ambientLight = Hex("22163a");
+            RenderSettings.fogMode = FogMode.ExponentialSquared;
+            RenderSettings.fogDensity = 0.012f;
 
             // Existing bookshelves: keep their colliders, swap the plain blocks for full shelves
             Transform shelves = Group("Bookshelves").transform;
@@ -1302,7 +1382,7 @@ namespace CastleOfTheD20.Editor
                 }
             }
 
-            // Shelf aisles in all four corners (green proposals)
+            // Shelf aisles in all four corners: 2.5 x 7 x 18 each, four 4.5 m units end to end
             Transform aisles = Group("Shelf_Aisles").transform;
             foreach (float x in new[] { -36f, -30f, 30f, 36f })
             {
@@ -1311,19 +1391,9 @@ namespace CastleOfTheD20.Editor
                     for (int i = 0; i < 4; i++)
                     {
                         float z = zc - 6.75f + i * 4.5f;
-                        Spawn(Bookshelf((i + (x > 0 ? 1 : 0)) % 2), "Aisle_Shelf", aisles, new Vector3(x, 0f, z), 90f);
+                        GameObject s = Spawn(Bookshelf((i + (x > 0 ? 1 : 0)) % 2), "Aisle_Shelf", aisles, new Vector3(x, 0f, z), 90f);
+                        s.transform.localScale = new Vector3(1f, 1.4f, 2.08f);
                     }
-                }
-            }
-
-            // Low shelves flanking both entrances, with a gap for the walkway
-            Transform entry = Group("Entrance_Shelves").transform;
-            foreach (float x in new[] { -32f, 32f })
-            {
-                foreach (float z in new[] { -3.4f, 3.4f })
-                {
-                    GameObject s = Spawn(Bookshelf(1), "Low_Shelf", entry, new Vector3(x, 0f, z), 90f);
-                    s.transform.localScale = new Vector3(1f, 0.45f, 1f);
                 }
             }
 
@@ -1338,38 +1408,51 @@ namespace CastleOfTheD20.Editor
                 pb.Box("WoodDark", new Vector3(7.8f, 2.5f, -1.4f), new Vector3(0.3f, 5f, 0.3f));
                 for (int i = 0; i < 4; i++) pb.Box(BookMats[i], new Vector3(-6f + i * 4f, 5.5f, 0.6f), new Vector3(1.6f, 0.6f, 0.5f));
             }, 1f, Col.None);
-            Prop("Library_Ladder", "Ladder", gallery, new Vector3(-40.2f, 0f, 37.8f), 0f, pb =>
+            // Ladder leaning 12 degrees against the west aisle shelf (no collider)
+            Prop("Library_Ladder", "Ladder", gallery, new Vector3(-37.8f, 0f, 36f), 90f, pb =>
             {
-                pb.Box("Wood", new Vector3(-0.32f, 2.7f, 0), new Vector3(0.1f, 5.6f, 0.1f), new Vector3(14, 0, 0));
-                pb.Box("Wood", new Vector3(0.32f, 2.7f, 0), new Vector3(0.1f, 5.6f, 0.1f), new Vector3(14, 0, 0));
-                for (int i = 0; i < 13; i++)
+                float t = Mathf.Tan(12f * Mathf.Deg2Rad);
+                pb.Box("Wood", new Vector3(-0.32f, 3f, 0), new Vector3(0.1f, 6.1f, 0.1f), new Vector3(12, 0, 0));
+                pb.Box("Wood", new Vector3(0.32f, 3f, 0), new Vector3(0.1f, 6.1f, 0.1f), new Vector3(12, 0, 0));
+                for (int i = 0; i < 14; i++)
                 {
                     float y = 0.35f + i * 0.4f;
-                    pb.Box("Wood", new Vector3(0, y, Mathf.Tan(14f * Mathf.Deg2Rad) * (y - 2.7f)), new Vector3(0.66f, 0.06f, 0.06f));
+                    pb.Box("Wood", new Vector3(0, y, t * (y - 3f)), new Vector3(0.66f, 0.06f, 0.06f));
                 }
-            });
+            }, 1f, Col.None);
 
-            // Great stained-glass window on the north wall
+            // Great stained-glass window on the north wall (14 x 6.5, centre y 4.25) with the moonlight spot of mood B
             Transform window = Group("Stained_Glass_Window").transform;
             Prop("Library_StainedGlass", "Window", window, new Vector3(0f, 0f, 43.95f), 0f, pb =>
             {
-                pb.Box("StoneLight", new Vector3(0, 1.3f, -0.1f), new Vector3(13f, 0.5f, 0.6f));
-                for (int i = 0; i <= 4; i++) pb.Box("StoneLight", new Vector3(-6f + i * 3f, 4.3f, -0.1f), new Vector3(i == 0 || i == 4 ? 0.6f : 0.3f, 5.6f, 0.45f));
-                string[] glass = { "GlassPurple", "GlassBlue", "GlassGold", "GlassRed" };
+                pb.Box("StoneLight", new Vector3(0, 0.85f, -0.1f), new Vector3(14.4f, 0.4f, 0.6f));
+                for (int i = 0; i <= 4; i++) pb.Box("StoneLight", new Vector3(-6.9f + i * 3.45f, 3.9f, -0.1f), new Vector3(i == 0 || i == 4 ? 0.6f : 0.3f, 5.8f, 0.45f));
+                string[] glass = { "GlassBlue", "GlassPurple", "GlassRed", "GlassTeal", "GlassGold" };
                 for (int l = 0; l < 4; l++)
                 {
-                    float cx = -4.5f + l * 3f;
+                    float cx = -5.175f + l * 3.45f;
                     for (int row = 0; row < 4; row++)
                     {
-                        pb.Box(glass[(l + row) % 4], new Vector3(cx - 0.68f, 1.85f + row * 1.25f, -0.05f), new Vector3(1.32f, 1.2f, 0.04f));
-                        pb.Box(glass[(l + row + 2) % 4], new Vector3(cx + 0.68f, 1.85f + row * 1.25f, -0.05f), new Vector3(1.32f, 1.2f, 0.04f));
+                        pb.Box(glass[(l + row) % 5], new Vector3(cx - 0.8f, 1.65f + row * 1.25f, -0.05f), new Vector3(1.55f, 1.2f, 0.04f));
+                        pb.Box(glass[(l + row + 2) % 5], new Vector3(cx + 0.8f, 1.65f + row * 1.25f, -0.05f), new Vector3(1.55f, 1.2f, 0.04f));
                     }
-                    pb.Box("GlassGold", new Vector3(cx, 7.05f, -0.05f), new Vector3(1.9f, 1.9f, 0.04f), new Vector3(0, 0, 45));
-                    pb.Box("StoneLight", new Vector3(cx - 0.75f, 7.1f, -0.12f), new Vector3(1.9f, 0.25f, 0.3f), new Vector3(0, 0, 45));
-                    pb.Box("StoneLight", new Vector3(cx + 0.75f, 7.1f, -0.12f), new Vector3(1.9f, 0.25f, 0.3f), new Vector3(0, 0, -45));
+                    pb.Box("GlassGold", new Vector3(cx, 6.6f, -0.05f), new Vector3(1.75f, 1.75f, 0.04f), new Vector3(0, 0, 45));
+                    pb.Box("StoneLight", new Vector3(cx - 0.75f, 6.7f, -0.12f), new Vector3(1.9f, 0.25f, 0.3f), new Vector3(0, 0, 45));
+                    pb.Box("StoneLight", new Vector3(cx + 0.75f, 6.7f, -0.12f), new Vector3(1.9f, 0.25f, 0.3f), new Vector3(0, 0, -45));
                 }
             }, 1f, Col.None, false);
-            PointLight("Window_Glow", window, new Vector3(0f, 5f, 40f), new Color(0.7f, 0.5f, 1f), 18f, 2.2f);
+            PointLight("Window_Glow", window, new Vector3(0f, 5f, 40f), new Color(0.7f, 0.6f, 1f), 14f, 1.4f);
+            var moonGo = new GameObject("Window_Moon_Spot");
+            moonGo.transform.SetParent(window, false);
+            moonGo.transform.position = new Vector3(0f, 7.5f, 42f);
+            moonGo.transform.rotation = Quaternion.Euler(35f, 180f, 0f);
+            Light moon = moonGo.AddComponent<Light>();
+            moon.type = LightType.Spot;
+            moon.color = Hex("9ab8ff");
+            moon.range = 30f;
+            moon.spotAngle = 50f;
+            moon.intensity = 2f;
+            moon.shadows = LightShadows.None;
 
             // Spell circle under Malakor's spot at the north end of the grid
             Transform circle = Group("Spell_Circle").transform;
@@ -1390,17 +1473,22 @@ namespace CastleOfTheD20.Editor
                     pb.Box("Arcane", new Vector3(Mathf.Cos(a) * 4.65f, 0.01f, Mathf.Sin(a) * 4.65f), new Vector3(0.18f, 0.02f, 0.18f), new Vector3(0, a * Mathf.Rad2Deg + 45f, 0));
                 }
             }, 1f, Col.None, false);
-            PointLight("Circle_Glow", circle, new Vector3(0f, 1.6f, 18f), new Color(0.7f, 0.42f, 1f), 12f, 3f, true);
+            Light circleGlow = PointLight("Circle_Glow", circle, new Vector3(0f, 1.2f, 18f), Hex("c070ff"), 10f, 2f);
+            var pulse = circleGlow.gameObject.AddComponent<ZoneAmbientMotion>();
+            pulse.kind = ZoneAmbientMotion.MotionKind.Pulse;
+            pulse.amount = 0.35f;
+            pulse.speed = 0.6f;
+            Particles("Arcane_Sparks", circle, new Vector3(0f, 2.5f, 18f), new Vector3(9f, 3f, 9f), 40, 3f, 0.3f, 0.05f, 0.12f, Hex("d8a8ff"), 0.4f);
 
-            // Floating spell books around the circle
+            // Fourteen floating spell books circling 3-7 m out, 2-5 m up
             Transform books = Group("Floating_Books", circle).transform;
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 14; i++)
             {
-                float a = i * Mathf.PI * 2f / 10f + Rand(-0.2f, 0.2f);
-                float rad = Rand(3.2f, 6f);
+                float a = i * Mathf.PI * 2f / 14f + Rand(-0.15f, 0.15f);
+                float rad = Rand(3f, 7f);
                 string mat = BookMats[i % BookMats.Length];
                 GameObject b = Prop("FloatingBook_" + mat, "Floating_Book", books,
-                    new Vector3(Mathf.Cos(a) * rad, Rand(2.2f, 4.2f), 18f + Mathf.Sin(a) * rad), Rand(0f, 360f), pb =>
+                    new Vector3(Mathf.Cos(a) * rad, Rand(2f, 5f), 18f + Mathf.Sin(a) * rad), Rand(0f, 360f), pb =>
                     {
                         pb.Box(mat, new Vector3(-0.17f, 0, 0), new Vector3(0.34f, 0.04f, 0.46f), new Vector3(0, 0, 12));
                         pb.Box(mat, new Vector3(0.17f, 0, 0), new Vector3(0.34f, 0.04f, 0.46f), new Vector3(0, 0, -12));
@@ -1411,8 +1499,8 @@ namespace CastleOfTheD20.Editor
                 Float(b, Rand(0.2f, 0.4f), Rand(0.8f, 1.4f), Rand(-25f, 25f));
             }
 
-            // Candles at the front of the circle, as in the concept
-            foreach (Vector3 p in new[] { new Vector3(-5.2f, 0f, 12.2f), new Vector3(5.2f, 0f, 12.2f) })
+            // Four candle clusters around the circle (emissive only, no lights)
+            foreach (Vector3 p in new[] { new Vector3(-6.5f, 0f, 13f), new Vector3(6.5f, 0f, 13f), new Vector3(-6.5f, 0f, 23f), new Vector3(6.5f, 0f, 23f) })
             {
                 Prop("CandleCluster", "Candles", circle, p, Rand(0f, 360f), pb =>
                 {
@@ -1425,38 +1513,47 @@ namespace CastleOfTheD20.Editor
                         pb.Cone("Flame", os[i] + Vector3.up * (0.12f + hs[i]), 0.05f, 0.14f);
                     }
                 }, 1f, Col.None);
-                PointLight("Candle_Light", circle, p + new Vector3(0f, 1.3f, 0f), new Color(1f, 0.75f, 0.45f), 6f, 1.4f, true);
             }
 
-            // Reading table with candles and scattered scrolls (south)
+            // Reading table, 14 x 0.9 x 3, with benches on both sides, books, scrolls and candles (south)
             Transform reading = Group("Reading_Table").transform;
             Prop("Library_ReadingTable", "Table", reading, new Vector3(0f, 0f, -34f), 0f, pb =>
             {
-                pb.Box("Wood", new Vector3(0, 0.92f, 0), new Vector3(6f, 0.14f, 2f));
-                foreach (float x in new[] { -2.7f, 2.7f }) foreach (float z in new[] { -0.8f, 0.8f }) pb.Box("WoodDark", new Vector3(x, 0.45f, z), new Vector3(0.16f, 0.9f, 0.16f));
-                for (int i = 0; i < 5; i++)
+                pb.Box("Wood", new Vector3(0, 0.83f, 0), new Vector3(14f, 0.14f, 3f));
+                foreach (float x in new[] { -6.5f, 0f, 6.5f })
                 {
-                    float x = -2.2f + i * 1.1f;
+                    pb.Box("WoodDark", new Vector3(x, 0.4f, 0), new Vector3(0.25f, 0.8f, 2.2f));
+                    pb.Box("WoodDark", new Vector3(x, 0.08f, 0), new Vector3(0.5f, 0.16f, 2.6f));
+                }
+                foreach (float z in new[] { -1.85f, 1.85f })
+                {
+                    pb.Box("Wood", new Vector3(0, 0.45f, z), new Vector3(13f, 0.1f, 0.55f));
+                    foreach (float x in new[] { -6f, 0f, 6f }) pb.Box("WoodDark", new Vector3(x, 0.2f, z), new Vector3(0.18f, 0.4f, 0.4f));
+                }
+                for (int i = 0; i < 7; i++)
+                {
+                    float x = -6f + i * 2f;
                     float h = 0.25f + (i % 2) * 0.12f;
-                    pb.Prism("Gold", new Vector3(x, 0.99f, 0.55f), 0.1f, 0.04f);
-                    pb.Prism("Candle", new Vector3(x, 1.03f, 0.55f), 0.06f, h);
-                    pb.Cone("Flame", new Vector3(x, 1.03f + h, 0.55f), 0.05f, 0.13f);
+                    pb.Prism("Gold", new Vector3(x, 0.9f, 0.9f), 0.1f, 0.04f);
+                    pb.Prism("Candle", new Vector3(x, 0.94f, 0.9f), 0.06f, h);
+                    pb.Cone("Flame", new Vector3(x, 0.94f + h, 0.9f), 0.05f, 0.13f);
                 }
-                pb.Box("Paper", new Vector3(-1.2f, 1.0f, -0.3f), new Vector3(0.7f, 0.03f, 0.5f), new Vector3(0, 8, 0));
-                pb.Box("BookRed", new Vector3(-1.2f, 0.985f, -0.3f), new Vector3(0.76f, 0.03f, 0.54f), new Vector3(0, 8, 0));
-                pb.Box("Paper", new Vector3(1.1f, 1.0f, -0.25f), new Vector3(0.6f, 0.03f, 0.45f), new Vector3(0, -15, 0));
-                pb.Box("BookBlue", new Vector3(0.2f, 1.08f, -0.1f), new Vector3(0.5f, 0.16f, 0.4f), new Vector3(0, 25, 0));
-                foreach (float x in new[] { -1.6f, 1.6f })
+                string[] open = { "BookRed", "BookBlue", "BookGreen", "BookPurple" };
+                for (int i = 0; i < 4; i++)
                 {
-                    pb.Box("Wood", new Vector3(x, 0.5f, -1.5f), new Vector3(0.6f, 0.08f, 0.6f));
-                    pb.Box("WoodDark", new Vector3(x, 0.25f, -1.5f), new Vector3(0.12f, 0.5f, 0.12f));
+                    float x = -5f + i * 3.3f;
+                    pb.Box(open[i], new Vector3(x, 0.905f, -0.6f), new Vector3(0.76f, 0.03f, 0.54f), new Vector3(0, 8 - i * 9, 0));
+                    pb.Box("Paper", new Vector3(x, 0.92f, -0.6f), new Vector3(0.7f, 0.03f, 0.5f), new Vector3(0, 8 - i * 9, 0));
                 }
+                pb.Box("BookTan", new Vector3(1.6f, 0.98f, 0.1f), new Vector3(0.5f, 0.16f, 0.4f), new Vector3(0, 25, 0));
+                pb.Box("BookBlue", new Vector3(1.62f, 1.13f, 0.1f), new Vector3(0.45f, 0.14f, 0.36f), new Vector3(0, 40, 0));
+                pb.Prism("Paper", new Vector3(-2.4f, 0.96f, 0.2f), 0.06f, 0.55f, 6, new Vector3(0, 0, 90));
             });
-            PointLight("Table_Candles", reading, new Vector3(0f, 2.2f, -33.4f), new Color(1f, 0.75f, 0.45f), 8f, 1.6f, true);
-            for (int i = 0; i < 9; i++)
+            PointLight("Reading_Candles", reading, new Vector3(0f, 1.6f, -34f), Hex("ffbf6a"), 10f, 1.2f, true);
+            for (int i = 0; i < 12; i++)
             {
-                Vector3 p = new Vector3(Rand(-6f, 6f), 0.05f, Rand(-38.5f, -30f));
-                if (Mathf.Abs(p.x) < 3.4f && p.z > -35.3f && p.z < -32.7f) continue;
+                Vector3 p = new Vector3(Rand(-9f, 9f), 0.05f, Rand(-39f, -29f));
+                if (Mathf.Abs(p.x) < 7.6f && p.z > -36.6f && p.z < -31.4f) continue;
                 Prop("Scroll", "Scroll", reading, p, Rand(0f, 360f), pb =>
                 {
                     pb.Prism("Paper", new Vector3(0, 0, 0), 0.06f, 0.55f, 6, new Vector3(0, 0, 90));
@@ -1472,27 +1569,35 @@ namespace CastleOfTheD20.Editor
         private static void DressHall()
         {
             SetFloor("CentralHall_Floor", "Hall");
-            // Mood A: dark stone hall, warm torches, the cyan rune crystal
-            Mood(new Color(1f, 0.86f, 0.66f), 0.55f, new Vector3(55f, -30f, 0f),
-                new Color(0.42f, 0.37f, 0.33f), new Color(0.30f, 0.26f, 0.24f), new Color(0.12f, 0.10f, 0.10f),
+            // Warm safe haven with morning sun through the west windows (spec default)
+            Mood(Hex("ffe0a0"), 1.3f, new Vector3(30f, 90f, 0f),
+                Hex("5a4a48"), Color.Lerp(Hex("5a4a48"), Hex("3a3034"), 0.5f), Hex("3a3034"),
                 new Color(0.12f, 0.10f, 0.10f), 40f, 120f, new Color(0.08f, 0.07f, 0.07f));
 
-            // Pillar rows guiding the eye from the altar north to the Throne Room gate
+            // Nave pillars, scaled like the existing hall pillars
             Transform pillars = Group("Pillar_Rows").transform;
             foreach (float x in new[] { -12f, 12f })
             {
                 foreach (float z in new[] { -30f, -20f, -10f, 10f, 20f, 30f })
                 {
-                    Place("Pillar", pillars, new Vector3(x, 0f, z), 0f, new Vector3(1.4f, 1.9f, 1.4f));
+                    Place("Pillar", pillars, new Vector3(x, 0f, z), 0f, new Vector3(1.2f, 1.6f, 1.2f));
                 }
             }
 
-            // Red carpet north and south of the altar ring
-            Transform carpet = Group("Red_Carpet").transform;
-            Carpet("Carpet_North", carpet, new Vector3(0f, 0f, 22f), 6f, 30f, "CarpetRed");
-            Carpet("Carpet_South", carpet, new Vector3(0f, 0f, -22f), 6f, 30f, "CarpetRed");
+            // Blue banners on the nave side of the end pillars
+            Transform banners = Group("Nave_Banners").transform;
+            foreach (Vector3 p in new[] { new Vector3(-10.9f, 0f, -30f), new Vector3(10.9f, 0f, -30f), new Vector3(-10.9f, 0f, 30f), new Vector3(10.9f, 0f, 30f) })
+            {
+                // the banner's front is its local -Z: turn it to face the nave
+                HallBanner("Nave_Banner", banners, new Vector3(p.x, 7f, p.z), p.x < 0 ? -90f : 90f, 1.6f, 4f);
+            }
 
-            // Rune altar: glowing ring, light pillar and the big crystal (HP to full + save)
+            // Red carpets north and south of the altar ring
+            Transform carpet = Group("Red_Carpet").transform;
+            Carpet("Carpet_North", carpet, new Vector3(0f, 0f, 22.5f), 6f, 31f, "CarpetRed", "CarpetTrim");
+            Carpet("Carpet_South", carpet, new Vector3(0f, 0f, -22.5f), 6f, 31f, "CarpetRed", "CarpetTrim");
+
+            // Rune altar: glowing ring, light pillar (r 0.8, 10 m) with rising motes, and the big crystal
             Transform altar = Group("Altar_Light_Pillar").transform;
             Prop("Hall_AltarRing", "Rune_Ring", altar, new Vector3(0f, 0.02f, 0f), 0f, pb =>
             {
@@ -1504,124 +1609,145 @@ namespace CastleOfTheD20.Editor
                     pb.Octa("Cyan", new Vector3(Mathf.Cos(a) * 6.65f, 0.02f, Mathf.Sin(a) * 6.65f), new Vector3(0.45f, 0.04f, 0.45f));
                 }
             }, 1f, Col.None, false);
-            Beam("Light_Pillar", altar, new Vector3(0f, 0f, 0f), 1.5f, 10f, "CyanBeam");
+            Beam("Light_Pillar", altar, new Vector3(0f, 0f, 0f), 0.8f, 10f, "CyanBeam");
+            Particles("Rising_Motes", altar, new Vector3(0f, 1f, 0f), new Vector3(1.4f, 0.5f, 1.4f), 40, 5f, 0.05f, 0.05f, 0.12f, Hex("aaf4ff"), 1.6f);
             GameObject crystal = Prop("Hall_RuneCrystal", "Rune_Crystal_Large", altar, new Vector3(0f, 3.6f, 0f), 0f, pb =>
             {
                 pb.Octa("Cyan", Vector3.zero, new Vector3(1.1f, 2.6f, 1.1f));
             }, 1f, Col.None);
             Float(crystal, 0.2f, 1.2f, 30f);
-            PointLight("Crystal_Glow", altar, new Vector3(0f, 4f, 0f), new Color(0.35f, 0.9f, 1f), 16f, 3f);
+            PointLight("Crystal_Glow", altar, new Vector3(0f, 4f, 0f), Hex("5ad8ff"), 14f, 2.2f);
 
-            // Standing torches between the pillars, wall sconces around the hall
+            // Standing torches between the pillars, plus unlit wall sconces around the hall
             Transform torches = Group("Torches").transform;
             foreach (Vector3 p in new[] { new Vector3(-12f, 0f, 25f), new Vector3(12f, 0f, 25f), new Vector3(-12f, 0f, -25f), new Vector3(12f, 0f, -25f) })
             {
-                StandingTorch("Standing_Torch", torches, p, true);
+                StandingTorch("Standing_Torch", torches, p, false);
+                PointLight("Torch_Light", torches, p + new Vector3(0f, 2.2f, 0f), Hex("ffb347"), 9f, 1.4f, true);
             }
-            Color warm = new Color(1f, 0.66f, 0.32f);
-            foreach (float z in new[] { -30f, -14f, 6f, 34f }) Sconce("Wall_Torch_E", torches, new Vector3(38.95f, 3.2f, z), 90f, "Flame", z == -14f ? warm : (Color?)null);
-            foreach (float z in new[] { -22f, -6f, 6f, 22f }) Sconce("Wall_Torch_W", torches, new Vector3(-38.95f, 3.2f, z), -90f, "Flame", z == -6f || z == 22f ? warm : (Color?)null);
+            foreach (float z in new[] { -30f, -10f, 6f, 34f }) Sconce("Wall_Torch_E", torches, new Vector3(38.95f, 3.2f, z), 90f, "Flame", null);
+            foreach (float z in new[] { -22f, -6f, 6f, 22f }) Sconce("Wall_Torch_W", torches, new Vector3(-38.95f, 3.2f, z), -90f, "Flame", null);
             foreach (float x in new[] { -28f, -15f, 15f, 28f })
             {
-                Sconce("Wall_Torch_N", torches, new Vector3(x, 3.2f, 38.95f), 0f, "Flame", Mathf.Abs(x) == 15f ? warm : (Color?)null);
-                Sconce("Wall_Torch_S", torches, new Vector3(x, 3.2f, -38.95f), 180f, "Flame", Mathf.Abs(x) == 15f ? warm : (Color?)null);
+                Sconce("Wall_Torch_N", torches, new Vector3(x, 3.2f, 38.95f), 0f, "Flame", null);
+                Sconce("Wall_Torch_S", torches, new Vector3(x, 3.2f, -38.95f), 180f, "Flame", null);
             }
 
-            // Tall windows on the west wall (dawn light falls across the table and the altar)
+            // Tall windows on the west wall (3.5 x 6, centre y 4.5) with a shaft of morning light falling east
             Transform windows = Group("West_Windows").transform;
             foreach (float z in new[] { 30f, 14f, -14f, -30f })
             {
-                Prop("Hall_Window", "Tall_Window", windows, new Vector3(-38.95f, 0f, z), -90f, pb =>
+                Prop("Hall_Window", "Tall_Window", windows, new Vector3(-38.9f, 0f, z), -90f, pb =>
                 {
-                    pb.Box("StoneLight", new Vector3(-1.25f, 4f, -0.1f), new Vector3(0.4f, 5.6f, 0.4f));
-                    pb.Box("StoneLight", new Vector3(1.25f, 4f, -0.1f), new Vector3(0.4f, 5.6f, 0.4f));
-                    pb.Box("StoneLight", new Vector3(0, 1.15f, -0.15f), new Vector3(3f, 0.3f, 0.5f));
-                    pb.Box("WindowWarm", new Vector3(0, 4f, -0.04f), new Vector3(2.1f, 5.4f, 0.04f));
-                    pb.Box("WindowWarm", new Vector3(0, 6.7f, -0.04f), new Vector3(1.5f, 1.5f, 0.04f), new Vector3(0, 0, 45));
-                    pb.Box("Iron", new Vector3(0, 4.2f, -0.07f), new Vector3(0.08f, 5.8f, 0.04f));
-                    pb.Box("Iron", new Vector3(0, 3.4f, -0.07f), new Vector3(2.1f, 0.08f, 0.04f));
-                    pb.Box("Iron", new Vector3(0, 5.2f, -0.07f), new Vector3(2.1f, 0.08f, 0.04f));
+                    pb.Box("StoneLight", new Vector3(-1.95f, 4.5f, -0.1f), new Vector3(0.4f, 6.4f, 0.4f));
+                    pb.Box("StoneLight", new Vector3(1.95f, 4.5f, -0.1f), new Vector3(0.4f, 6.4f, 0.4f));
+                    pb.Box("StoneLight", new Vector3(0, 1.4f, -0.15f), new Vector3(4.3f, 0.3f, 0.5f));
+                    pb.Box("WindowWarm", new Vector3(0, 4.2f, -0.04f), new Vector3(3.5f, 5.4f, 0.04f));
+                    pb.Box("WindowWarm", new Vector3(0, 6.9f, -0.04f), new Vector3(2.47f, 2.47f, 0.04f), new Vector3(0, 0, 45));
+                    pb.Box("Iron", new Vector3(0, 4.5f, -0.07f), new Vector3(0.08f, 6f, 0.04f));
+                    pb.Box("Iron", new Vector3(0, 3.4f, -0.07f), new Vector3(3.5f, 0.08f, 0.04f));
+                    pb.Box("Iron", new Vector3(0, 5.4f, -0.07f), new Vector3(3.5f, 0.08f, 0.04f));
+                    // light shaft: a thin translucent slab from the window down to the floor about 7 m east
+                    pb.Box("GoldBeam", new Vector3(0, 3.2f, -4.2f), new Vector3(3.2f, 0.05f, 9.6f), new Vector3(-36, 0, 0));
                 }, 1f, Col.None, false);
-                PointLight("Window_Light", windows, new Vector3(-35.5f, 4.5f, z), new Color(1f, 0.88f, 0.65f), 12f, 1.3f);
             }
+            Particles("Window_Dust", windows, new Vector3(-33f, 3f, 0f), new Vector3(8f, 4f, 64f), 80, 8f, 0.1f, 0.04f, 0.09f, Hex("fff0c8"), 0f);
 
-            // Rest area (north-west)
+            // Rest area (north-west): rug, two bedrolls, a barrel, a crate and a low table
             Transform rest = Group("Rest_Area").transform;
-            Prop("Hall_RestRug", "Rug", rest, new Vector3(-25f, 0f, 26f), 0f, pb =>
+            Prop("Hall_RestArea", "Rug_And_Bedrolls", rest, new Vector3(-25f, 0f, 26f), 0f, pb =>
             {
                 pb.Box("CarpetDark", new Vector3(0, 0.015f, 0), new Vector3(10f, 0.03f, 6f));
                 pb.Box("Gold", new Vector3(0, 0.032f, 2.7f), new Vector3(9.4f, 0.01f, 0.12f));
                 pb.Box("Gold", new Vector3(0, 0.032f, -2.7f), new Vector3(9.4f, 0.01f, 0.12f));
-                foreach (float x in new[] { -3.2f, 0f, 3.2f })
+                foreach (float x in new[] { -3f, -0.6f })
                 {
                     pb.Box("Cloth", new Vector3(x, 0.12f, 0.6f), new Vector3(1.3f, 0.22f, 2.6f));
                     pb.Box("BannerBlue", new Vector3(x, 0.16f, 0.1f), new Vector3(1.32f, 0.24f, 1.6f));
                     pb.Box("Cloth", new Vector3(x, 0.3f, 1.65f), new Vector3(0.9f, 0.22f, 0.5f));
                 }
+                // low table with a jug and bread
+                pb.Box("Wood", new Vector3(2.4f, 0.45f, 0.4f), new Vector3(1.8f, 0.1f, 1.1f));
+                foreach (float x in new[] { 1.65f, 3.15f }) foreach (float z in new[] { -0.05f, 0.85f }) pb.Box("WoodDark", new Vector3(x, 0.2f, z), new Vector3(0.1f, 0.4f, 0.1f));
+                pb.Prism("Iron", new Vector3(2.1f, 0.5f, 0.4f), 0.13f, 0.32f, 6);
+                pb.Box("Hay", new Vector3(2.75f, 0.56f, 0.5f), new Vector3(0.45f, 0.14f, 0.28f), new Vector3(0, 20, 0));
             }, 1f, Col.None, false);
-            Place("Village/Village_Bench", rest, new Vector3(-25f, 0f, 21.8f), 0f, 1f);
-            Place("Village/Village_Bench", rest, new Vector3(-29.8f, 0f, 26f), 90f, 1f);
-            Place("Village/Village_HayBale", rest, new Vector3(-20.5f, 0f, 29.2f), 20f, 1f);
-            Place("Barrel", rest, new Vector3(-30.5f, 0f, 29.8f), 0f, 0.8f);
-            PlaceVisual("Chest", rest, new Vector3(-21f, 0f, 22.6f), 200f, 0.7f);
+            Place("Barrel", rest, new Vector3(-29f, 0f, 28.2f), 0f, 0.8f);
+            Place("Box_2", rest, new Vector3(-21.4f, 0f, 28.3f), 15f, 0.8f);
 
-            // Feast table with benches (south-west)
-            Transform feast = Group("Feast_Table").transform;
-            Prop("Hall_FeastTable", "Feast_Table", feast, new Vector3(-25f, 0f, -18f), 0f, pb =>
+            // Banquet table (moved west to x -28.5 so it clears the inner column at (-18, -18))
+            Transform feast = Group("Banquet_Table").transform;
+            Prop("Hall_BanquetTable", "Banquet_Table", feast, new Vector3(-28.5f, 0f, -18f), 0f, pb =>
             {
-                pb.Box("Wood", new Vector3(0, 0.95f, 0), new Vector3(15f, 0.15f, 2.3f));
-                foreach (float x in new[] { -6.5f, 0f, 6.5f })
+                pb.Box("Wood", new Vector3(0, 0.85f, 0), new Vector3(13f, 0.12f, 2.2f));
+                foreach (float x in new[] { -5.6f, 0f, 5.6f })
                 {
-                    pb.Box("WoodDark", new Vector3(x, 0.45f, 0), new Vector3(0.25f, 0.9f, 1.6f));
-                    pb.Box("WoodDark", new Vector3(x, 0.1f, 0), new Vector3(0.5f, 0.2f, 2f));
+                    pb.Box("WoodDark", new Vector3(x, 0.4f, 0), new Vector3(0.25f, 0.8f, 1.5f));
+                    pb.Box("WoodDark", new Vector3(x, 0.08f, 0), new Vector3(0.5f, 0.16f, 1.9f));
                 }
-                foreach (float z in new[] { -1.7f, 1.7f })
+                foreach (float z in new[] { -1.65f, 1.65f })
                 {
-                    pb.Box("Wood", new Vector3(0, 0.5f, z), new Vector3(14f, 0.12f, 0.5f));
-                    foreach (float x in new[] { -6f, 0f, 6f }) pb.Box("WoodDark", new Vector3(x, 0.22f, z), new Vector3(0.2f, 0.45f, 0.4f));
+                    pb.Box("Wood", new Vector3(0, 0.45f, z), new Vector3(13f, 0.1f, 0.6f));
+                    foreach (float x in new[] { -5.6f, 0f, 5.6f }) pb.Box("WoodDark", new Vector3(x, 0.2f, z), new Vector3(0.2f, 0.4f, 0.45f));
                 }
-                for (int i = 0; i < 12; i++)
+                for (int i = 0; i < 10; i++)
                 {
-                    float x = -6.2f + (i / 2) * 2.45f;
+                    float x = -5.4f + (i / 2) * 2.7f;
                     float z = i % 2 == 0 ? -0.6f : 0.6f;
-                    pb.Prism("Iron", new Vector3(x, 1.03f, z), 0.22f, 0.03f);
-                    pb.Prism("Gold", new Vector3(x + 0.4f, 1.03f, z * 0.8f), 0.07f, 0.22f, 6);
+                    pb.Prism("Iron", new Vector3(x, 0.91f, z), 0.22f, 0.03f);
+                    pb.Prism("Gold", new Vector3(x + 0.4f, 0.91f, z * 0.8f), 0.07f, 0.22f, 6);
                 }
-                for (int i = 0; i < 5; i++) pb.Box("Hay", new Vector3(-5f + i * 2.5f, 1.1f, 0), new Vector3(0.5f, 0.2f, 0.3f), new Vector3(0, i * 37f, 0));
-                foreach (float x in new[] { -4f, 0.2f, 4.4f })
+                for (int i = 0; i < 4; i++) pb.Box("Hay", new Vector3(-4.2f + i * 2.8f, 0.98f, 0), new Vector3(0.5f, 0.2f, 0.3f), new Vector3(0, i * 37f, 0));
+                foreach (float x in new[] { -2.7f, 2.7f })
                 {
-                    pb.Prism("Gold", new Vector3(x, 1.03f, 0), 0.12f, 0.5f, 6);
-                    pb.Box("Gold", new Vector3(x, 1.5f, 0), new Vector3(0.7f, 0.05f, 0.05f));
+                    pb.Prism("Iron", new Vector3(x + 0.6f, 0.91f, 0.1f), 0.14f, 0.4f, 6); // jug
+                    pb.Prism("Gold", new Vector3(x, 0.91f, 0), 0.12f, 0.5f, 6);
+                    pb.Box("Gold", new Vector3(x, 1.38f, 0), new Vector3(0.7f, 0.05f, 0.05f));
                     foreach (float o in new[] { -0.33f, 0f, 0.33f })
                     {
-                        pb.Prism("Candle", new Vector3(x + o, 1.52f, 0), 0.04f, 0.22f, 6);
-                        pb.Cone("Flame", new Vector3(x + o, 1.74f, 0), 0.04f, 0.1f);
+                        pb.Prism("Candle", new Vector3(x + o, 1.4f, 0), 0.04f, 0.22f, 6);
+                        pb.Cone("Flame", new Vector3(x + o, 1.62f, 0), 0.04f, 0.1f);
                     }
                 }
             });
-            PlaceVisual("Village/Village_Pumpkin", feast, new Vector3(-27.6f, 1.03f, -17.9f), 30f, 0.8f);
-            PlaceVisual("Village/Village_Cabbage", feast, new Vector3(-21.4f, 1.03f, -18.2f), 0f, 0.7f);
-            PointLight("Feast_Candles", feast, new Vector3(-25f, 2.6f, -18f), new Color(1f, 0.78f, 0.48f), 11f, 1.6f, true);
+            PlaceVisual("Village/Village_Pumpkin", feast, new Vector3(-29.9f, 0.91f, -17.9f), 30f, 0.8f);
+            PlaceVisual("Village/Village_Cabbage", feast, new Vector3(-25.6f, 0.91f, -18.2f), 0f, 0.7f);
+            PointLight("Banquet_Candles", feast, new Vector3(-28.5f, 2.4f, -18f), new Color(1f, 0.78f, 0.48f), 10f, 1.2f, true);
 
-            // Fireplace on the east wall
+            // Stone fireplace on the east wall: 3 deep, 5 high, 10 long, opening west, with a banner above
             Transform fire = Group("Fireplace").transform;
-            Prop("Hall_Fireplace", "Fireplace", fire, new Vector3(38.9f, 0f, 24f), 90f, pb =>
+            Prop("Hall_Fireplace", "Fireplace", fire, new Vector3(39f, 0f, 24f), 90f, pb =>
             {
-                pb.Box("Stone", new Vector3(-2.6f, 1.6f, -0.8f), new Vector3(1.2f, 3.2f, 1.6f));
-                pb.Box("Stone", new Vector3(2.6f, 1.6f, -0.8f), new Vector3(1.2f, 3.2f, 1.6f));
-                pb.Box("StoneLight", new Vector3(0, 3.5f, -0.9f), new Vector3(6.8f, 0.6f, 1.9f));
-                pb.Box("StoneDark", new Vector3(0, 5.9f, -0.5f), new Vector3(5.2f, 4.2f, 1.1f));
-                pb.Box("Black", new Vector3(0, 1.6f, -0.15f), new Vector3(4.1f, 3.2f, 0.3f));
-                pb.Box("StoneDark", new Vector3(0, 0.08f, -1.1f), new Vector3(6.2f, 0.16f, 2.4f));
-                pb.Box("Wood", new Vector3(0, 0.35f, -0.8f), new Vector3(2.2f, 0.3f, 0.3f), new Vector3(0, 15, 0));
-                pb.Box("Wood", new Vector3(0.1f, 0.5f, -0.75f), new Vector3(2f, 0.28f, 0.28f), new Vector3(0, -20, 0));
-                pb.Prism("Coals", new Vector3(0, 0.16f, -0.8f), 0.9f, 0.12f, 6);
-                pb.Cone("Flame", new Vector3(0, 0.4f, -0.8f), 0.55f, 1.4f);
-                pb.Cone("Flame", new Vector3(-0.55f, 0.4f, -0.85f), 0.35f, 1f, new Vector3(0, 0, 8));
-                pb.Cone("Flame", new Vector3(0.6f, 0.4f, -0.7f), 0.38f, 1.1f, new Vector3(0, 0, -8));
-                pb.Box("Gold", new Vector3(0, 4.6f, -1.1f), new Vector3(0.9f, 0.9f, 0.08f), new Vector3(0, 0, 45));
+                pb.Box("Stone", new Vector3(-4.1f, 1.75f, -1.5f), new Vector3(1.8f, 3.5f, 3f));
+                pb.Box("Stone", new Vector3(4.1f, 1.75f, -1.5f), new Vector3(1.8f, 3.5f, 3f));
+                pb.Box("StoneLight", new Vector3(0, 3.8f, -1.55f), new Vector3(10f, 0.6f, 3.1f));
+                pb.Box("StoneDark", new Vector3(0, 4.55f, -1.1f), new Vector3(8f, 0.9f, 2.2f));
+                pb.Box("Black", new Vector3(0, 1.75f, -0.35f), new Vector3(6.4f, 3.5f, 0.7f));
+                pb.Box("StoneDark", new Vector3(0, 0.08f, -1.6f), new Vector3(9.6f, 0.16f, 3f));
+                pb.Box("Wood", new Vector3(0, 0.35f, -1.3f), new Vector3(2.6f, 0.3f, 0.3f), new Vector3(0, 15, 0));
+                pb.Box("Wood", new Vector3(0.1f, 0.5f, -1.25f), new Vector3(2.4f, 0.28f, 0.28f), new Vector3(0, -20, 0));
+                pb.Prism("Coals", new Vector3(0, 0.16f, -1.3f), 1.1f, 0.12f, 6);
+                pb.Cone("Flame", new Vector3(0, 0.4f, -1.3f), 0.65f, 1.6f);
+                pb.Cone("Flame", new Vector3(-0.7f, 0.4f, -1.35f), 0.4f, 1.1f, new Vector3(0, 0, 8));
+                pb.Cone("Flame", new Vector3(0.75f, 0.4f, -1.2f), 0.42f, 1.2f, new Vector3(0, 0, -8));
             });
-            PointLight("Fire_Light", fire, new Vector3(37f, 1.6f, 24f), new Color(1f, 0.58f, 0.25f), 16f, 3.2f, true);
+            HallBanner("Fireplace_Banner", fire, new Vector3(38.8f, 7.6f, 24f), 90f, 1.8f, 2.6f);
+            PointLight("Fireplace_Fire", fire, new Vector3(36f, 1.2f, 24f), Hex("ff9a3a"), 12f, 2f, true);
+        }
+
+        /// <summary>Blue hall banner with a gold emblem; origin at the hanging rod, front faces local -Z.</summary>
+        private static GameObject HallBanner(string name, Transform parent, Vector3 top, float yaw, float width, float height)
+        {
+            string mesh = "HallBanner_" + width.ToString("0.#") + "x" + height.ToString("0.#");
+            return Prop(mesh, name, parent, top, yaw, pb =>
+            {
+                pb.Box("Iron", Vector3.zero, new Vector3(width + 0.3f, 0.08f, 0.08f));
+                pb.Box("BannerBlue", new Vector3(0, -height * 0.45f, -0.08f), new Vector3(width, height * 0.9f, 0.05f));
+                float tip = width * 0.5f / Mathf.Sqrt(2f) * 2f;
+                pb.Box("BannerBlue", new Vector3(0, -height * 0.9f, -0.08f), new Vector3(tip, tip, 0.05f), new Vector3(0, 0, 45));
+                pb.Box("BannerGold", new Vector3(0, -height * 0.05f, -0.1f), new Vector3(width, 0.12f, 0.03f));
+                pb.Octa("BannerGold", new Vector3(0, -height * 0.45f, -0.12f), new Vector3(width * 0.45f, width * 0.6f, 0.06f));
+            }, 1f, Col.None);
         }
 
         #endregion
@@ -1631,102 +1757,114 @@ namespace CastleOfTheD20.Editor
         private static void DressTower()
         {
             SetFloor("Tower_Floor", "Tower");
-            // Treasure chamber mood: dark stone, one warm shaft of light from the roof window
+            // Mood B: treasure chamber, dark stone and one warm shaft of light from the roof window
             Mood(new Color(1f, 0.82f, 0.58f), 0.35f, new Vector3(60f, -40f, 0f),
                 new Color(0.36f, 0.31f, 0.26f), new Color(0.26f, 0.22f, 0.18f), new Color(0.10f, 0.08f, 0.06f),
                 new Color(0.08f, 0.07f, 0.06f), 30f, 80f, new Color(0.07f, 0.06f, 0.05f));
-            SetLight("TowerLight_Center", new Color(1f, 0.82f, 0.55f), 1.4f);
+            SetLight("TowerLight_Center", new Color(0.55f, 0.85f, 1f), 1.0f); // cool fill under the warm beam
 
-            // Gold hoard along the north wall
+            // Fix: the four diagonal walls ran radially (corner gaps to the floor's edge); turn them to close the corners
+            SetYaw("Wall_NE", -45f);
+            SetYaw("Wall_NW", 45f);
+            SetYaw("Wall_SE", 45f);
+            SetYaw("Wall_SW", -45f);
+
+            // Gold piles along the north wall (one static mesh, no colliders, no pickups)
             Transform hoard = Group("Gold_Hoard").transform;
             Prop("Tower_GoldHoard", "Gold_Piles", hoard, new Vector3(0f, 0f, 11.4f), 0f, pb =>
             {
-                var mounds = new[] { new Vector4(-3.6f, 0.2f, 6.4f, 3.4f), new Vector4(3.4f, 0.4f, 6f, 3.2f), new Vector4(0f, -0.9f, 4.4f, 2.6f) };
-                foreach (Vector4 m in mounds) pb.Sphere("Gold", new Vector3(m.x, -0.25f, m.y), new Vector3(m.z, 2.2f, m.w));
+                var mounds = new[] { new Vector4(-3.8f, 0.1f, 7.6f, 3.4f), new Vector4(3.8f, 0.1f, 7.6f, 3.4f), new Vector4(0f, 0.6f, 5.6f, 3.4f) };
+                foreach (Vector4 m in mounds) pb.Sphere("Gold", new Vector3(m.x, -0.3f, m.y), new Vector3(m.z, 2.1f, m.w));
                 for (int i = 0; i < 90; i++)
                 {
                     Vector4 m = mounds[i % 3];
                     float dx = Rand(-0.45f, 0.45f), dz = Rand(-0.45f, 0.45f);
                     float k = 1f - (dx * dx + dz * dz) / 0.2025f;
                     if (k <= 0.05f) continue;
-                    float y = -0.25f + 1.1f * Mathf.Sqrt(k);
+                    float y = -0.3f + 1.05f * Mathf.Sqrt(k);
                     pb.Prism("GoldGlow", new Vector3(m.x + dx * m.z, y, m.y + dz * m.w), 0.14f, 0.03f, 8, new Vector3(Rand(-25f, 25f), 0, Rand(-25f, 25f)));
                 }
-                pb.Prism("Gold", new Vector3(-1.3f, 0.6f, -0.8f), 0.12f, 0.35f, 6);
-                pb.Prism("Gold", new Vector3(1.8f, 0.55f, -0.4f), 0.12f, 0.35f, 6);
-                pb.Ring("Gold", new Vector3(0.3f, 0.75f, 0.4f), 0.32f, 0.08f, 0.18f, 10);
+                pb.Prism("Gold", new Vector3(-1.3f, 0.55f, -0.4f), 0.12f, 0.35f, 6);
+                pb.Prism("Gold", new Vector3(1.8f, 0.55f, -0.2f), 0.12f, 0.35f, 6);
+                pb.Ring("Gold", new Vector3(0.3f, 0.7f, 0.6f), 0.32f, 0.08f, 0.18f, 10);
                 for (int i = 0; i < 5; i++)
                 {
                     float a = i * Mathf.PI * 2f / 5f;
-                    pb.Cone("GoldGlow", new Vector3(0.3f + Mathf.Cos(a) * 0.3f, 0.93f, 0.4f + Mathf.Sin(a) * 0.3f), 0.07f, 0.22f);
+                    pb.Cone("GoldGlow", new Vector3(0.3f + Mathf.Cos(a) * 0.3f, 0.88f, 0.6f + Mathf.Sin(a) * 0.3f), 0.07f, 0.22f);
                 }
-            });
-            PlaceVisual("Chest", hoard, new Vector3(-6.2f, 0f, 10.6f), 150f, 0.75f);
-            PlaceVisual("Chest", hoard, new Vector3(6.2f, 0f, 10.4f), 210f, 0.75f);
-            PointLight("Hoard_Glow", hoard, new Vector3(0f, 2.5f, 9.5f), new Color(1f, 0.8f, 0.35f), 10f, 1.6f);
+            }, 1f, Col.None);
+            PlaceVisual("Chest", hoard, new Vector3(-6.4f, 0f, 9.6f), 150f, 0.7f);
+            PlaceVisual("Chest", hoard, new Vector3(6.4f, 0f, 9.6f), 210f, 0.7f);
+            PointLight("Gold_Glow", hoard, new Vector3(0f, 1.5f, 11f), Hex("ffcc4a"), 8f, 1.2f);
 
-            // Potion shelves on the west and east walls
+            // Potion shelves on the west and east walls: 1.2 x 3 x 8, two shelves of six bottles
             Transform potions = Group("Potion_Shelves").transform;
-            string[] potionMats = { "PotionPurple", "PotionBlue", "PotionGreen", "PotionRed" };
+            string[] potionMats = { "PotionRed", "PotionBlue", "PotionGreen", "PotionPurple" };
             foreach (float side in new[] { -1f, 1f })
             {
                 int seed = side < 0 ? 11 : 23;
-                Prop("Tower_PotionShelf_" + seed, "Potion_Shelf", potions, new Vector3(side * 13.6f, 0f, 2f), side < 0 ? -90f : 90f, pb =>
+                Prop("Tower_PotionShelf_" + seed, "Potion_Shelf", potions, new Vector3(side * 13.4f, 0f, 2f), side < 0 ? -90f : 90f, pb =>
                 {
                     var r = new System.Random(seed);
-                    pb.Box("WoodDark", new Vector3(0, 1.6f, 0.2f), new Vector3(7.8f, 3.2f, 0.1f));
-                    foreach (float x in new[] { -3.9f, 3.9f }) pb.Box("WoodDark", new Vector3(x, 1.6f, 0), new Vector3(0.12f, 3.2f, 0.6f));
-                    foreach (float y in new[] { 0.9f, 1.8f, 2.7f })
+                    pb.Box("WoodDark", new Vector3(0, 1.5f, 0.55f), new Vector3(8f, 3f, 0.1f));
+                    foreach (float x in new[] { -3.95f, 3.95f }) pb.Box("WoodDark", new Vector3(x, 1.5f, 0), new Vector3(0.12f, 3f, 1.2f));
+                    pb.Box("WoodDark", new Vector3(0, 2.95f, 0), new Vector3(8f, 0.1f, 1.2f));
+                    pb.Box("Wood", new Vector3(0, 0.15f, 0), new Vector3(7.8f, 0.3f, 1.2f));
+                    foreach (float y in new[] { 1.0f, 2.0f })
                     {
-                        pb.Box("Wood", new Vector3(0, y, 0), new Vector3(7.8f, 0.07f, 0.6f));
-                        for (int i = 0; i < 12; i++)
+                        pb.Box("Wood", new Vector3(0, y, 0), new Vector3(7.8f, 0.07f, 1.2f));
+                        for (int i = 0; i < 6; i++)
                         {
-                            float x = -3.5f + i * 0.63f + (float)(r.NextDouble() - 0.5) * 0.15f;
-                            string pm = potionMats[r.Next(potionMats.Length)];
-                            float h = 0.22f + (float)r.NextDouble() * 0.14f;
-                            pb.Prism(pm, new Vector3(x, y + 0.035f, -0.05f), 0.11f, h, 6);
-                            pb.Prism(pm, new Vector3(x, y + 0.035f + h, -0.05f), 0.04f, 0.1f, 6);
-                            pb.Prism("Wood", new Vector3(x, y + 0.135f + h, -0.05f), 0.045f, 0.05f, 6);
+                            float x = -3.1f + i * 1.24f + (float)(r.NextDouble() - 0.5) * 0.2f;
+                            string pm = potionMats[(i + (y > 1.5f ? 2 : 0)) % potionMats.Length];
+                            float h = 0.28f + (float)r.NextDouble() * 0.16f;
+                            pb.Prism(pm, new Vector3(x, y + 0.035f, -0.1f), 0.15f, h, 6);
+                            pb.Prism(pm, new Vector3(x, y + 0.035f + h, -0.1f), 0.05f, 0.13f, 6);
+                            pb.Prism("Wood", new Vector3(x, y + 0.165f + h, -0.1f), 0.055f, 0.06f, 6);
                         }
                     }
                 });
             }
 
-            // Light shaft from the roof window onto the pedestal in the middle
+            // Skylight: a cone of light (r 2.6, 9.5 m) and a spot straight down onto the pedestal, with dust in the beam
             Transform shaft = Group("Skylight").transform;
-            Beam("Light_Shaft", shaft, new Vector3(0f, 0f, 4f), 2.2f, 9f, "GoldBeam");
+            Prop("Tower_SkylightBeam", "Skylight_Beam", shaft, new Vector3(0f, 0f, 4f), 0f, pb =>
+            {
+                pb.Cone("GoldBeam", Vector3.zero, 2.6f, 9.5f);
+            }, 1f, Col.None, false).GetComponent<MeshRenderer>().receiveShadows = false;
             var spotGo = new GameObject("Skylight_Spot");
             spotGo.transform.SetParent(shaft, false);
-            spotGo.transform.position = new Vector3(0f, 13f, 4f);
+            spotGo.transform.position = new Vector3(0f, 9.5f, 4f);
             spotGo.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             Light spot = spotGo.AddComponent<Light>();
             spot.type = LightType.Spot;
-            spot.color = new Color(1f, 0.92f, 0.7f);
-            spot.range = 20f;
-            spot.spotAngle = 32f;
-            spot.intensity = 9f;
-            spot.shadows = LightShadows.Soft;
+            spot.color = Hex("fff0c0");
+            spot.range = 14f;
+            spot.spotAngle = 35f;
+            spot.intensity = 3f;
+            spot.shadows = LightShadows.None;
+            Particles("Beam_Dust", shaft, new Vector3(0f, 4f, 4f), new Vector3(3.2f, 7f, 3.2f), 90, 7f, 0.08f, 0.03f, 0.08f, Hex("fff0c0"), 0.15f);
 
-            // The Giant's Elixir moves into the light on a stone plinth (the ring stays in its chest)
+            // The Giant's Elixir pedestal moves into the beam, and Othelia's signet ring moves from the chest onto it
             GameObject elixir = Find("GiantElixir_Pedestal");
-            if (elixir != null) elixir.transform.position = new Vector3(0f, 0.9f, 4f);
-            Prop("Tower_Plinth", "Elixir_Plinth", shaft, new Vector3(0f, 0f, 4f), 22.5f, pb =>
+            if (elixir != null) elixir.transform.position = new Vector3(0f, 0.5f, 4f);
+            Prop("Tower_Plinth", "Pedestal_Base", shaft, new Vector3(0f, 0f, 4f), 22.5f, pb =>
             {
-                pb.Prism("StoneLight", Vector3.zero, 1.6f, 0.2f);
-                pb.Prism("Stone", new Vector3(0, 0.2f, 0), 1.25f, 0.2f);
-                pb.Ring("Gold", new Vector3(0, 0.2f, 0), 1.45f, 0.08f, 0.02f, 16);
+                pb.Prism("StoneLight", Vector3.zero, 1.35f, 0.12f);
+                pb.Ring("Gold", new Vector3(0, 0.12f, 0), 1.2f, 0.08f, 0.02f, 16);
             }, 1f, Col.None);
+            PlaceSignetRing(new Vector3(0f, 1.15f, 4.5f));
 
-            // Spiral stairs in the south-west
+            // Spiral stairs in the south-west (r 2.2, 6 m, decorative)
             Transform stairs = Group("Spiral_Stairs").transform;
             Prop("Tower_SpiralStairs", "Spiral_Stairs", stairs, new Vector3(-6.5f, 0f, -6.5f), 0f, pb =>
             {
-                pb.Prism("Stone", Vector3.zero, 0.35f, 8.6f);
-                for (int i = 0; i < 19; i++)
+                pb.Prism("Stone", Vector3.zero, 0.35f, 6f);
+                for (int i = 0; i < 14; i++)
                 {
-                    float a = i * 24f * Mathf.Deg2Rad;
-                    float y = 0.2f + i * 0.42f;
-                    pb.Box(i % 2 == 0 ? "Stone" : "StoneLight", new Vector3(Mathf.Cos(a) * 1.2f, y, Mathf.Sin(a) * 1.2f), new Vector3(1.9f, 0.2f, 0.8f), new Vector3(0, -i * 24f, 0));
+                    float a = i * 26f * Mathf.Deg2Rad;
+                    float y = 0.2f + i * 0.41f;
+                    pb.Box(i % 2 == 0 ? "Stone" : "StoneLight", new Vector3(Mathf.Cos(a) * 1.2f, y, Mathf.Sin(a) * 1.2f), new Vector3(1.9f, 0.2f, 0.8f), new Vector3(0, -i * 26f, 0));
                     pb.Box("Iron", new Vector3(Mathf.Cos(a) * 2.1f, y + 0.55f, Mathf.Sin(a) * 2.1f), new Vector3(0.06f, 1.1f, 0.06f));
                 }
             });
@@ -1738,6 +1876,41 @@ namespace CastleOfTheD20.Editor
             Sconce("Wall_Torch_SE", torches, new Vector3(9.9f, 3f, -9.9f), 135f, "Flame", warm);
         }
 
+        private static void SetYaw(string name, float yaw)
+        {
+            GameObject go = Find(name);
+            if (go == null) { Debug.LogWarning("[ZoneDressingBuilder] Not found: " + name); return; }
+            go.transform.rotation = Quaternion.Euler(0f, yaw, 0f);
+        }
+
+        /// <summary>Othelia's signet ring as a pickup on the pedestal; the tower chest keeps its 50 gold.</summary>
+        private static void PlaceSignetRing(Vector3 pos)
+        {
+            ItemSO ring = AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_SignetRing.asset");
+            GameObject chest = Find("Tower_Reward_Chest");
+            if (chest != null)
+            {
+                ChestRewardInteraction c = chest.GetComponent<ChestRewardInteraction>();
+                if (c != null) { c.ItemReward = null; EditorUtility.SetDirty(c); }
+            }
+
+            GameObject old = Find("SignetRing_Pickup");
+            if (old != null) Object.DestroyImmediate(old);
+            GameObject pickup = Prop("Tower_SignetRing", "SignetRing_Pickup", null, pos, 30f, pb =>
+            {
+                pb.Ring("GoldGlow", Vector3.zero, 0.13f, 0.05f, 0.05f, 12);
+                pb.Octa("GemGreen", new Vector3(0f, 0.08f, -0.14f), new Vector3(0.1f, 0.13f, 0.1f));
+            }, 1.4f, Col.None);
+            pickup.transform.SetParent(null, true);
+            ChestRewardInteraction reward = pickup.AddComponent<ChestRewardInteraction>();
+            reward.GoldReward = 0;
+            reward.ItemReward = ring;
+            reward.PromptMessage = "Take Othelia's Signet Ring";
+            reward.HideWhenLooted = true;
+            reward.EnsureChestCollider();
+            PointLight("SignetRing_Glow", pickup.transform, pos + new Vector3(0f, 0.5f, 0f), Hex("8affb0"), 3f, 0.8f);
+        }
+
         #endregion
 
         #region Zone 7: Throne Room
@@ -1745,54 +1918,52 @@ namespace CastleOfTheD20.Editor
         private static void DressThroneRoom()
         {
             SetFloor("ThroneRoom_Floor", "Throne");
-            // Mood A: petrified court in cold turquoise light
-            Mood(new Color(0.58f, 0.82f, 0.80f), 0.7f, new Vector3(58f, -20f, 0f),
-                new Color(0.32f, 0.44f, 0.45f), new Color(0.22f, 0.30f, 0.31f), new Color(0.07f, 0.10f, 0.10f),
-                new Color(0.09f, 0.15f, 0.16f), 40f, 130f, new Color(0.05f, 0.08f, 0.09f));
+            // Phase 1 (A): petrified court in cold turquoise light; phase 2 (B) is switched on by LavaCracksReveal
+            Mood(Hex("9fc8c0"), 0.8f, new Vector3(50f, -30f, 0f),
+                Hex("2a3436"), Color.Lerp(Hex("2a3436"), Hex("1a2224"), 0.5f), Hex("1a2224"),
+                Hex("9ac8c0"), 30f, 120f, new Color(0.05f, 0.08f, 0.09f));
             SetLight("CrownLight_Center", new Color(0.45f, 0.92f, 0.86f), 2.4f);
-            SetLight("CrownLight_Throne", new Color(1f, 0.86f, 0.42f), 2.4f);
+            SetLight("CrownLight_Throne", Hex("6af0d0"), 2.4f);
+            Particles("Court_Dust", root, new Vector3(0f, 3f, -5f), new Vector3(40f, 5f, 80f), 120, 9f, 0.1f, 0.04f, 0.09f, Hex("d8fff4"), 0f);
 
-            // Two pillar rows
+            // Two rows of hall columns
             Transform pillars = Group("Pillar_Rows").transform;
             foreach (float x in new[] { -30f, 30f })
             {
                 foreach (float z in new[] { 35f, 20f, 5f, -10f, -25f, -40f })
                 {
-                    Place("Pillar", pillars, new Vector3(x, 0f, z), 0f, new Vector3(1.6f, 2.2f, 1.6f));
+                    Place("Pillar", pillars, new Vector3(x, 0f, z), 0f, new Vector3(1.6f, 1.8f, 1.6f));
                 }
             }
 
-            // Long entrance carpet from the door to the dialogue spot
-            Carpet("Entrance_Carpet", Group("Carpet").transform, new Vector3(0f, 0f, -26f), 6f, 44f, "CarpetDark");
+            // Red carpet from the door to the front of the dais (z -48..27)
+            Carpet("Carpet", Group("Carpet").transform, new Vector3(0f, 0f, -10.5f), 6f, 75f, "CarpetRed", "CarpetTrim");
 
-            // Petrified knights lining the carpet
+            // Petrified knights lining the carpet, facing it; alternating helmet-and-shield and hooded poses
             Transform knights = Group("Petrified_Knights").transform;
-            foreach (float z in new[] { -8f, -18f, -28f, -38f })
+            int k = 0;
+            foreach (float z in new[] { -38f, -28f, -18f, -8f })
             {
-                StoneKnight(knights, new Vector3(-14f, 0f, z), -90f);
-                StoneKnight(knights, new Vector3(14f, 0f, z), 90f);
+                StoneKnight(knights, new Vector3(-14f, 0f, z), -90f, k++ % 2);
+                StoneKnight(knights, new Vector3(14f, 0f, z), 90f, k % 2);
             }
 
-            // Throne behind the existing dais
+            // High-backed stone throne at the back of the dais, facing south
+            // (z 36 rather than 35.6, so it clears the royal chest at z 34 that appears after the fight)
             Transform throne = Group("Throne").transform;
-            Prop("Throne_Platform", "Throne_Platform", throne, new Vector3(0f, 0f, 39.6f), 0f, pb =>
+            Prop("Throne_Seat", "Throne", throne, new Vector3(0f, 1.2f, 36f), 0f, pb =>
             {
-                pb.Box("StoneDark", new Vector3(0, 0.8f, 0), new Vector3(9f, 1.6f, 5f));
-                pb.Box("Gold", new Vector3(0, 1.62f, -2.45f), new Vector3(9f, 0.06f, 0.12f));
-            });
-            Prop("Throne_Seat", "Throne_Seat", throne, new Vector3(0f, 1.6f, 40.2f), 0f, pb =>
-            {
-                pb.Box("StoneStatue", new Vector3(0, 0.45f, 0), new Vector3(2.6f, 0.9f, 1.9f));
-                pb.Box("CarpetRed", new Vector3(0, 0.95f, -0.05f), new Vector3(2f, 0.12f, 1.5f));
-                pb.Box("StoneStatue", new Vector3(0, 3.1f, 0.8f), new Vector3(2.6f, 5.2f, 0.5f));
-                pb.Box("CarpetRed", new Vector3(0, 2.6f, 0.53f), new Vector3(1.8f, 3.2f, 0.06f));
-                foreach (float x in new[] { -1.3f, 1.3f })
+                pb.Box("StoneStatue", new Vector3(0, 0.45f, 0), new Vector3(3.2f, 0.9f, 2.2f));
+                pb.Box("CarpetRed", new Vector3(0, 0.95f, -0.1f), new Vector3(2.3f, 0.12f, 1.6f));
+                pb.Box("StoneStatue", new Vector3(0, 2.5f, 0.85f), new Vector3(3.2f, 4.0f, 0.5f));
+                pb.Box("CarpetRed", new Vector3(0, 2.3f, 0.58f), new Vector3(2.2f, 2.8f, 0.06f));
+                foreach (float x in new[] { -1.8f, 1.8f })
                 {
-                    pb.Box("StoneStatue", new Vector3(x, 1.25f, 0), new Vector3(0.4f, 0.7f, 1.9f));
-                    pb.Octa("Gold", new Vector3(x, 1.7f, -0.85f), new Vector3(0.35f, 0.35f, 0.35f));
+                    pb.Box("StoneStatue", new Vector3(x, 0.8f, 0), new Vector3(0.4f, 1.6f, 2.2f));
+                    pb.Octa("Gold", new Vector3(x, 1.75f, -0.95f), new Vector3(0.35f, 0.35f, 0.35f));
                 }
-                for (int i = -2; i <= 2; i++) pb.Cone("Gold", new Vector3(i * 0.55f, 5.7f, 0.8f), 0.2f, i == 0 ? 1.1f : 0.7f);
-                pb.Box("Gold", new Vector3(0, 5.7f, 0.8f), new Vector3(2.7f, 0.15f, 0.55f));
+                for (int i = -2; i <= 2; i++) pb.Cone("Gold", new Vector3(i * 0.6f, 4.55f, 0.85f), 0.2f, i == 0 ? 0.45f : 0.3f);
+                pb.Box("Gold", new Vector3(0, 4.5f, 0.85f), new Vector3(3.3f, 0.15f, 0.55f));
             });
 
             // Teal wall torches along the side walls
@@ -1804,49 +1975,72 @@ namespace CastleOfTheD20.Editor
                 Sconce("Wall_Torch_E", torches, new Vector3(48.95f, 4f, z), 90f, "FlameTeal", (z == -17.5f || z == 17.5f) ? teal : (Color?)null);
             }
 
-            // Lava cracks on the fight grid, revealed when the Gargoyle King turns to stone (phase 2)
+            // Phase 2: lava cracks, ember sparks, lava light and the red-orange sun, switched on when the golem turns to stone
             var revealGo = Group("Lava_Cracks");
             var cracks = Group("Cracks_Phase2", revealGo.transform);
             var lines = new List<List<Vector3>>
             {
-                new List<Vector3> { new Vector3(-7.8f, 0, 16.2f), new Vector3(-3.9f, 0, 19.1f), new Vector3(1.9f, 0, 17.9f) },
-                new List<Vector3> { new Vector3(-0.3f, 0, 15.8f), new Vector3(-3.9f, 0, 13f), new Vector3(-2.6f, 0, 9.1f), new Vector3(-5.8f, 0, 6.1f) },
-                new List<Vector3> { new Vector3(3f, 0, 14f), new Vector3(6.9f, 0, 16.9f), new Vector3(8.8f, 0, 19.9f) },
-                new List<Vector3> { new Vector3(6.1f, 0, 11.9f), new Vector3(8.2f, 0, 7.8f), new Vector3(5.2f, 0, 4.2f) }
+                new List<Vector3> { new Vector3(-6f, 0, 6f), new Vector3(-3f, 0, 9f), new Vector3(-4f, 0, 13f), new Vector3(0f, 0, 16f) },
+                new List<Vector3> { new Vector3(5f, 0, 4f), new Vector3(8f, 0, 8f), new Vector3(6f, 0, 12f) },
+                new List<Vector3> { new Vector3(-8f, 0, 16f), new Vector3(-4f, 0, 19f), new Vector3(2f, 0, 18f) },
+                new List<Vector3> { new Vector3(3f, 0, 14f), new Vector3(7f, 0, 17f), new Vector3(9f, 0, 20f) }
             };
             for (int i = 0; i < lines.Count; i++)
             {
-                Ribbon("Crack_Edge_" + i, cracks.transform, lines[i], 1.0f, 0.03f, "Charred", 0.45f);
-                Ribbon("Lava_Crack_" + i, cracks.transform, lines[i], 0.38f, 0.04f, "Lava", 0.4f);
+                Ribbon("Crack_Edge_" + i, cracks.transform, lines[i], 0.9f, 0.03f, "Charred", 0.45f);
+                Ribbon("Lava_Crack_" + i, cracks.transform, lines[i], 0.4f, 0.04f, "Lava", 0.25f);
             }
-            PointLight("Lava_Glow_W", cracks.transform, new Vector3(-4f, 1f, 13f), new Color(1f, 0.4f, 0.1f), 8f, 2.6f, true);
-            PointLight("Lava_Glow_E", cracks.transform, new Vector3(6.5f, 1f, 12f), new Color(1f, 0.4f, 0.1f), 8f, 2.6f, true);
+            PointLight("Lava_Glow_W", cracks.transform, new Vector3(-4f, 1f, 12f), Hex("ff9a3a"), 8f, 2.2f, true);
+            PointLight("Lava_Glow_E", cracks.transform, new Vector3(6.5f, 1f, 11f), Hex("ff9a3a"), 8f, 2.2f, true);
+            Particles("Lava_Sparks", cracks.transform, new Vector3(0f, 0.5f, 12f), new Vector3(18f, 0.5f, 16f), 60, 2.5f, 0.4f, 0.05f, 0.12f, Hex("ffa04a"), 1.2f);
             var reveal = revealGo.AddComponent<LavaCracksReveal>();
             reveal.cracks = cracks;
+            GameObject center = Find("CrownLight_Center");
+            reveal.centerLight = center != null ? center.GetComponent<Light>() : null;
+            reveal.centerPhase2Color = Hex("ff5a1a");
+            reveal.centerPhase2Intensity = 3f;
+            GameObject sun = Find("Directional Light");
+            reveal.sun = sun != null ? sun.GetComponent<Light>() : null;
+            reveal.sunPhase2Color = new Color(1f, 0.40f, 0.20f);
+            reveal.sunPhase2Intensity = 1.3f;
             cracks.SetActive(false);
         }
 
-        private static void StoneKnight(Transform parent, Vector3 pos, float yaw)
+        private static void StoneKnight(Transform parent, Vector3 pos, float yaw, int variant)
         {
-            Prop("PetrifiedKnight", "Petrified_Knight", parent, pos, yaw, pb =>
+            // Plinth 2 x 0.5 x 2 and a grey stone statue about 1.2 x 3.2 x 1.2 (3.7 m in all)
+            Prop("PetrifiedKnight_" + variant, "Petrified_Knight", parent, pos, yaw, pb =>
             {
-                pb.Box("StoneDark", new Vector3(0, 0.4f, 0), new Vector3(1.8f, 0.8f, 1.8f));
-                pb.Box("StoneStatue", new Vector3(-0.22f, 1.35f, 0), new Vector3(0.34f, 1.1f, 0.4f));
-                pb.Box("StoneStatue", new Vector3(0.22f, 1.35f, 0), new Vector3(0.34f, 1.1f, 0.4f));
-                pb.Box("StoneStatue", new Vector3(0, 2.45f, 0), new Vector3(1.0f, 1.15f, 0.6f));
-                pb.Box("StoneDark", new Vector3(0, 1.92f, 0), new Vector3(1.04f, 0.14f, 0.64f));
-                pb.Box("StoneStatue", new Vector3(-0.62f, 2.95f, 0), new Vector3(0.45f, 0.3f, 0.7f));
-                pb.Box("StoneStatue", new Vector3(0.62f, 2.95f, 0), new Vector3(0.45f, 0.3f, 0.7f));
-                pb.Box("StoneStatue", new Vector3(-0.62f, 2.35f, -0.1f), new Vector3(0.26f, 0.9f, 0.3f));
-                pb.Box("StoneStatue", new Vector3(0.62f, 2.35f, -0.1f), new Vector3(0.26f, 0.9f, 0.3f));
-                pb.Box("StoneStatue", new Vector3(0, 3.35f, 0), new Vector3(0.56f, 0.62f, 0.58f));
-                pb.Box("Black", new Vector3(0, 3.38f, -0.29f), new Vector3(0.44f, 0.07f, 0.02f));
-                pb.Cone("StoneStatue", new Vector3(0, 3.66f, 0), 0.3f, 0.25f);
-                pb.Box("StoneStatue", new Vector3(-0.85f, 2.2f, -0.35f), new Vector3(0.1f, 1.1f, 0.8f));
-                pb.Box("StoneStatue", new Vector3(0, 1.4f, -0.55f), new Vector3(0.1f, 1.6f, 0.04f));
-                pb.Box("StoneStatue", new Vector3(0, 2.25f, -0.55f), new Vector3(0.45f, 0.08f, 0.08f));
-                pb.Box("StoneDark", new Vector3(0, 2.45f, -0.55f), new Vector3(0.08f, 0.32f, 0.08f));
-            }, 1.15f);
+                pb.Box("StoneDark", new Vector3(0, 0.25f, 0), new Vector3(2f, 0.5f, 2f));
+                pb.Box("StoneStatue", new Vector3(-0.2f, 1.05f, 0), new Vector3(0.32f, 1.1f, 0.38f));
+                pb.Box("StoneStatue", new Vector3(0.2f, 1.05f, 0), new Vector3(0.32f, 1.1f, 0.38f));
+                pb.Box("StoneStatue", new Vector3(0, 2.1f, 0), new Vector3(0.95f, 1.05f, 0.58f));
+                pb.Box("StoneDark", new Vector3(0, 1.6f, 0), new Vector3(0.98f, 0.12f, 0.6f));
+                pb.Box("StoneStatue", new Vector3(-0.58f, 2.0f, -0.1f), new Vector3(0.24f, 0.85f, 0.28f));
+                pb.Box("StoneStatue", new Vector3(0.58f, 2.0f, -0.1f), new Vector3(0.24f, 0.85f, 0.28f));
+                if (variant == 0)
+                {
+                    // helmet, pauldrons, kite shield and a planted sword
+                    pb.Box("StoneStatue", new Vector3(-0.58f, 2.55f, 0), new Vector3(0.42f, 0.28f, 0.66f));
+                    pb.Box("StoneStatue", new Vector3(0.58f, 2.55f, 0), new Vector3(0.42f, 0.28f, 0.66f));
+                    pb.Box("StoneStatue", new Vector3(0, 2.95f, 0), new Vector3(0.52f, 0.58f, 0.54f));
+                    pb.Box("Black", new Vector3(0, 2.98f, -0.275f), new Vector3(0.42f, 0.07f, 0.02f));
+                    pb.Cone("StoneStatue", new Vector3(0, 3.24f, 0), 0.28f, 0.3f);
+                    pb.Box("StoneStatue", new Vector3(-0.8f, 1.85f, -0.32f), new Vector3(0.1f, 1.05f, 0.75f));
+                    pb.Box("StoneStatue", new Vector3(0, 1.1f, -0.52f), new Vector3(0.1f, 1.5f, 0.04f));
+                    pb.Box("StoneStatue", new Vector3(0, 1.9f, -0.52f), new Vector3(0.45f, 0.08f, 0.08f));
+                    pb.Box("StoneDark", new Vector3(0, 2.1f, -0.52f), new Vector3(0.08f, 0.3f, 0.08f));
+                }
+                else
+                {
+                    // hooded figure with a cloak and a spear
+                    pb.Cone("StoneStatue", new Vector3(0, 2.6f, 0.02f), 0.42f, 1.1f);
+                    pb.Box("Black", new Vector3(0, 2.92f, -0.2f), new Vector3(0.28f, 0.3f, 0.02f));
+                    pb.Box("StoneStatue", new Vector3(0, 1.6f, 0.22f), new Vector3(1.05f, 2.1f, 0.2f), new Vector3(-6, 0, 0));
+                    pb.Box("StoneStatue", new Vector3(0.62f, 1.9f, -0.3f), new Vector3(0.07f, 3.4f, 0.07f));
+                    pb.Cone("StoneStatue", new Vector3(0.62f, 3.6f, -0.3f), 0.09f, 0.35f);
+                }
+            });
         }
 
         #endregion

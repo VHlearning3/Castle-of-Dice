@@ -630,13 +630,13 @@ namespace CastleOfTheD20.Editor
 
             // Diagonal corner braces
             GameObject dNE = CreateCube("Wall_NE", new Vector3(10.6f, 4f, 10.6f), new Vector3(2f, 8f, 10f), wallMat, walls.transform);
-            dNE.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+            dNE.transform.rotation = Quaternion.Euler(0f, -45f, 0f); // long axis runs NW-SE so the wall closes the corner
             GameObject dNW = CreateCube("Wall_NW", new Vector3(-10.6f, 4f, 10.6f), new Vector3(2f, 8f, 10f), wallMat, walls.transform);
-            dNW.transform.rotation = Quaternion.Euler(0f, -45f, 0f);
+            dNW.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
             GameObject dSE = CreateCube("Wall_SE", new Vector3(10.6f, 4f, -10.6f), new Vector3(2f, 8f, 10f), wallMat, walls.transform);
-            dSE.transform.rotation = Quaternion.Euler(0f, -45f, 0f);
+            dSE.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
             GameObject dSW = CreateCube("Wall_SW", new Vector3(-10.6f, 4f, -10.6f), new Vector3(2f, 8f, 10f), wallMat, walls.transform);
-            dSW.transform.rotation = Quaternion.Euler(0f, 45f, 0f);
+            dSW.transform.rotation = Quaternion.Euler(0f, -45f, 0f);
 
             // Starlight / Celestial Lighting
             CreatePointLight("TowerLight_Center", null, new Vector3(0f, 6.5f, 0f), new Color(0.55f, 0.85f, 1.0f), 24f, 2.5f);

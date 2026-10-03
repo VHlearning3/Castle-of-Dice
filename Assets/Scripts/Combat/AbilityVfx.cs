@@ -191,6 +191,14 @@ namespace CastleOfTheD20.Combat
             vfx.Shake(0.28f, 0.14f);
         }
 
+        /// <summary>Short camera shake for scripted moments, such as the Gargoyle King turning to stone.</summary>
+        public static void PlayCameraShake(float duration, float amplitude)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null) return;
+            vfx.Shake(duration, amplitude);
+        }
+
         /// <summary>
         /// War Cry knockback: the pushed unit's tile has already changed; slide its body back from
         /// <paramref name="fromWorld"/> to where it now stands, kicking up dust.

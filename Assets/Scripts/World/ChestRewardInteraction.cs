@@ -45,6 +45,9 @@ namespace CastleOfTheD20.World
         [Tooltip("Optional audio clip played upon opening.")]
         [SerializeField] private AudioClip openSound;
 
+        [Tooltip("Hide this object's meshes and lights once looted (for loose pickups such as the signet ring).")]
+        [SerializeField] private bool hideWhenLooted = false;
+
         #endregion
 
         #region Public Properties
@@ -65,6 +68,13 @@ namespace CastleOfTheD20.World
 
         /// <summary>Whether this chest has been opened.</summary>
         public bool IsOpen => isOpen;
+
+        /// <summary>Hide the pickup's meshes and lights once it is looted.</summary>
+        public bool HideWhenLooted
+        {
+            get => hideWhenLooted;
+            set => hideWhenLooted = value;
+        }
 
         #endregion
 
@@ -109,6 +119,11 @@ namespace CastleOfTheD20.World
             if (isOpen && chestLid != null)
             {
                 chestLid.localEulerAngles = openLidRotation;
+            }
+
+            if (isOpen && hideWhenLooted)
+            {
+                HideVisuals();
             }
         }
 
@@ -174,6 +189,19 @@ namespace CastleOfTheD20.World
 
             OnChestOpened?.Invoke(goldReward);
             OnAnyChestOpened?.Invoke(this, goldReward);
+
+            if (hideWhenLooted)
+            {
+                HideVisuals();
+            }
+        }
+
+        /// <summary>Turns off renderers, lights and the collider so a looted pickup disappears (one-off, on loot).</summary>
+        private void HideVisuals()
+        {
+            foreach (Renderer r in GetComponentsInChildren<Renderer>()) r.enabled = false;
+            foreach (Light l in GetComponentsInChildren<Light>()) l.enabled = false;
+            foreach (Collider c in GetComponents<Collider>()) c.enabled = false;
         }
 
         #endregion
