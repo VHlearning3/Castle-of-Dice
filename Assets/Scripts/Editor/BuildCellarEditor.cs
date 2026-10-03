@@ -429,6 +429,13 @@ namespace CastleOfTheD20.Editor
         [MenuItem("CastleOfDice/Build Cellar and Door")]
         public static void BuildCellarAndDoorMenu()
         {
+            if (GameObject.Find("Cellar_Chamber") != null && !EditorUtility.DisplayDialog("Build Cellar and Door",
+                    "This deletes the cellar and builds it again, so hand edits inside the cellar are lost.\n\n" +
+                    "The village cellar hatch and the ladder landing spot keep their current places.",
+                    "Rebuild cellar", "Cancel"))
+            {
+                return;
+            }
             BuildCellarAndDoor(true);
         }
 
@@ -456,17 +463,30 @@ namespace CastleOfTheD20.Editor
             {
                 Undo.DestroyObjectImmediate(existingCellar);
             }
+            // The hatch and the ladder landing spot belong to the village layout (possibly placed by hand): remember where they are
             GameObject existingHatch = GameObject.Find("Village_Cellar_Hatch");
+            bool keepHatchSpot = existingHatch != null;
+            Vector3 hatchPos = keepHatchSpot ? existingHatch.transform.position : Vector3.zero;
+            Quaternion hatchRot = keepHatchSpot ? existingHatch.transform.rotation : Quaternion.identity;
             if (existingHatch != null)
             {
                 Undo.DestroyObjectImmediate(existingHatch);
             }
             // Clean up all existing Village_PlayerExitPoint objects to prevent duplicates
+            bool keepExitSpot = false;
+            Vector3 exitPos = Vector3.zero;
+            Quaternion exitRot = Quaternion.identity;
             GameObject[] allObjects = Object.FindObjectsByType<GameObject>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             foreach (var ep in allObjects)
             {
                 if (ep != null && ep.name == "Village_PlayerExitPoint")
                 {
+                    if (!keepExitSpot)
+                    {
+                        keepExitSpot = true;
+                        exitPos = ep.transform.position;
+                        exitRot = ep.transform.rotation;
+                    }
                     Undo.DestroyObjectImmediate(ep);
                 }
             }
@@ -656,8 +676,8 @@ namespace CastleOfTheD20.Editor
             // Barnaby is at approx (-0.1, 1.2, -5.5). We place the hatch right next to him at (2.2, 0.05, -5.5).
             GameObject villageHatch = new GameObject("Village_Cellar_Hatch");
             Undo.RegisterCreatedObjectUndo(villageHatch, "Create Village Cellar Hatch");
-            villageHatch.transform.position = new Vector3(2.2f, 0.05f, -5.5f);
-            villageHatch.transform.rotation = Quaternion.Euler(0f, -15f, 0f);
+            villageHatch.transform.position = keepHatchSpot ? hatchPos : new Vector3(2.2f, 0.05f, -5.5f);
+            villageHatch.transform.rotation = keepHatchSpot ? hatchRot : Quaternion.Euler(0f, -15f, 0f);
 
             // Hatch frame & angled wooden doors built from cubes
             CreateCube("Hatch_Frame", new Vector3(0f, 0.08f, 0f), new Vector3(2.0f, 0.16f, 2.2f), woodMat, villageHatch.transform);
@@ -677,8 +697,8 @@ namespace CastleOfTheD20.Editor
 
             // Landing spot in the village when climbing up the cellar ladder
             GameObject villageExitPoint = new GameObject("Village_PlayerExitPoint");
-            villageExitPoint.transform.position = new Vector3(2.2f, 1.2f, -3.8f);
-            villageExitPoint.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
+            villageExitPoint.transform.position = keepExitSpot ? exitPos : new Vector3(2.2f, 1.2f, -3.8f);
+            villageExitPoint.transform.rotation = keepExitSpot ? exitRot : Quaternion.Euler(0f, 180f, 0f);
             Undo.RegisterCreatedObjectUndo(villageExitPoint, "Create Village Player Exit Point");
 
             // Wire up the cellar ladder destination to this village landing spot

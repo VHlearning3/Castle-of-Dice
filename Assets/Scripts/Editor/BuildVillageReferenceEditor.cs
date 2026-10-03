@@ -14,7 +14,8 @@ namespace CastleOfTheD20.Editor
     /// crop beds and market stalls, the forge, well and cart (W), cottages around the ring, a dirt arrival road
     /// leaving to the SW with banner posts, the forest gate up the north path, and a ring of trees.
     /// Gameplay objects (NPCs, practice chest, save shrine, cellar hatch, spawns, gate trigger) are kept and moved;
-    /// the cellar at y = -50 is not touched. Safe to run again: it replaces the previous Village_Reference root.
+    /// the cellar at y = -50 is not touched. Running it again replaces the previous Village_Reference root, which
+    /// throws away hand edits made to the village since, so the menu asks first and the batch entry needs a flag.
     /// </summary>
     public static class BuildVillageReferenceEditor
     {
@@ -49,15 +50,40 @@ namespace CastleOfTheD20.Editor
                 EditorUtility.DisplayDialog("Rebuild Village", "Open " + ScenePath + " first.", "OK");
                 return;
             }
+            if (HasVillage() && !EditorUtility.DisplayDialog("Rebuild Village",
+                    "This deletes the current village (Village_Reference) and builds it again from the script.\n\n" +
+                    "Every hand edit made to the village since it was built is lost. NPCs and the cellar hatch are moved back to their scripted spots.",
+                    "Rebuild and lose hand edits", "Cancel"))
+            {
+                return;
+            }
             Build();
             EditorSceneManager.MarkSceneDirty(scene);
             Debug.Log("[BuildVillageReferenceEditor] Village rebuilt in the open scene (save to keep).");
         }
 
-        /// <summary>Batch-mode entry: opens Zone 1, rebuilds the village and saves the scene.</summary>
+        /// <summary>True when the active scene already holds the built village, which may carry hand edits.</summary>
+        public static bool HasVillage()
+        {
+            foreach (GameObject root in SceneManager.GetActiveScene().GetRootGameObjects())
+            {
+                if (root.name == RootName) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Batch-mode entry: opens Zone 1, rebuilds the village and saves the scene. Refuses to replace an existing
+        /// village (and its hand edits) unless the command line carries -forceVillageRebuild.
+        /// </summary>
         public static void BatchBuild()
         {
             Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            if (HasVillage() && System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-forceVillageRebuild") < 0)
+            {
+                Debug.LogError("[BuildVillageReferenceEditor] Zone 1 already has a village, possibly hand-edited. Not rebuilding; pass -forceVillageRebuild to replace it.");
+                return;
+            }
             Build();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

@@ -77,9 +77,18 @@ namespace CastleOfTheD20.Editor
                 ? EditorSceneManager.OpenScene(zone1Path, OpenSceneMode.Single)
                 : EditorSceneManager.NewScene(NewSceneSetup.DefaultGameObjects, NewSceneMode.Single);
 
-            // Ensure complete village layout & cellar
-            BuildVillageEditor.BuildCompleteVillage();
-            BuildCellarEditor.BuildCellarAndDoor(false);
+            // The built village may carry hand edits: keep it, its cellar and its NPC spots as they are.
+            // Only a scene without it gets the village and cellar generated.
+            bool keepVillage = BuildVillageReferenceEditor.HasVillage();
+            if (keepVillage)
+            {
+                Debug.Log("[ZoneSceneBuilder] Zone 1 already has its village; keeping the village, cellar and NPC spots untouched.");
+            }
+            else
+            {
+                BuildVillageEditor.BuildCompleteVillage(false);
+                BuildCellarEditor.BuildCellarAndDoor(false);
+            }
             BuildHUDEditor.RebuildAndStyleHUD();
             BuildDialogueAndShopEditor.RebuildAndStyleDialogueAndShop();
 
@@ -129,7 +138,7 @@ namespace CastleOfTheD20.Editor
             LockpickPracticeChestEditor.EnsurePracticeChest();
 
             // Replace the generic layout above with the reference-picture village and move the gameplay objects into it
-            BuildVillageReferenceEditor.Build();
+            if (!keepVillage) BuildVillageReferenceEditor.Build();
 
             // Save as Zone_1_VillageAndCellar.unity
             EditorSceneManager.MarkSceneDirty(scene);

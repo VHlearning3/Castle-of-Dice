@@ -240,14 +240,31 @@ namespace CastleOfTheD20.Editor
         /// <summary>
         /// Puts the prefab on open floor near <paramref name="anchorName"/>: tries a ring of spots at
         /// <paramref name="distance"/> and keeps the first one with ground below and nothing in the way.
+        /// An object already in the scene was placed on purpose (maybe by hand), so it is refreshed on its own spot.
         /// </summary>
         private static void Place(string prefabPath, string objectName, string anchorName, float distance)
         {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             GameObject existing = Find(objectName);
+            if (existing != null && prefab != null)
+            {
+                // Already an instance of this prefab: prefab changes reach it on their own, so leave it alone
+                if (PrefabUtility.GetCorrespondingObjectFromSource(existing) == prefab) return;
+
+                Vector3 keptPos = existing.transform.position;
+                Quaternion keptRot = existing.transform.rotation;
+                Transform keptParent = existing.transform.parent;
+                Scene keptScene = existing.scene;
+                Object.DestroyImmediate(existing);
+                GameObject refreshed = (GameObject)PrefabUtility.InstantiatePrefab(prefab, keptScene);
+                refreshed.name = objectName;
+                if (keptParent != null) refreshed.transform.SetParent(keptParent, true);
+                refreshed.transform.SetPositionAndRotation(keptPos, keptRot);
+                return;
+            }
             if (existing != null) Object.DestroyImmediate(existing);
 
             GameObject anchor = Find(anchorName);
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (anchor == null || prefab == null)
             {
                 Debug.LogWarning($"[SetupWorldPropsEditor] Could not place {objectName}: anchor '{anchorName}' or prefab missing.");

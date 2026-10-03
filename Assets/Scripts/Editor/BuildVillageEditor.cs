@@ -16,8 +16,26 @@ namespace CastleOfTheD20.Editor
     public static class BuildVillageEditor
     {
         [MenuItem("CastleOfDice/Build Complete Village Layout & NPCs", false, 10)]
-        public static void BuildCompleteVillage()
+        public static void BuildCompleteVillageMenu()
         {
+            BuildCompleteVillage(true);
+        }
+
+        /// <param name="askBeforeReplacingVillage">
+        /// When the scene already holds the reference village (which may carry hand edits), ask before building
+        /// this older layout over it and moving the NPCs; in batch mode the answer is always no.
+        /// </param>
+        public static void BuildCompleteVillage(bool askBeforeReplacingVillage = true)
+        {
+            if (askBeforeReplacingVillage && BuildVillageReferenceEditor.HasVillage())
+            {
+                bool proceed = !Application.isBatchMode && EditorUtility.DisplayDialog("Build Village Layout",
+                    "This scene already has the finished village (Village_Reference), possibly with hand edits.\n\n" +
+                    "Building the old layout adds a second village on top and moves Baldur, Barnaby, Othelia and Mirabel to their old spots.",
+                    "Build anyway", "Cancel");
+                if (!proceed) return;
+            }
+
             var activeScene = EditorSceneManager.GetActiveScene();
 
             // 1. Ensure game data assets exist (Othelia, Mirabel, Quests, Items) when run standalone
