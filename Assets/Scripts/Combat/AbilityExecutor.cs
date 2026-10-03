@@ -93,8 +93,9 @@ namespace CastleOfTheD20.Combat
                 caster.FaceTowards(grid.GetWorldPosition(targetGridPos));
             }
 
-            // Trigger animation on caster
-            if (caster.UnitAnimator != null)
+            // Trigger animation on caster: the ability's own clip when the model has one (Elira's
+            // mage_fireball etc.), otherwise the generic cast or swing
+            if (caster.UnitAnimator != null && !caster.TrySetAnimatorTrigger(ability.AbilityID))
             {
                 if (ability.TargetType == AbilityTargetType.Self || id.Contains("cast") || id.Contains("spell") || id.Contains("fireball") || id.Contains("frost") || id.Contains("shield") || id.Contains("blink") || id.Contains("mana"))
                 {

@@ -24,6 +24,10 @@ namespace CastleOfTheD20.Editor
         private const string Attack = "Attack";
         private const string Die = "Die";
         private const string Victory = "Victory";
+        // Hero extras: Run plays while exploring, Walk on the combat grid (CombatUnit sets IsWalking)
+        private const string Run = "Run";
+        private const string TakeHit = "TakeHit";
+        private const string DrinkPotion = "DrinkPotion";
 
         private const string TripoHips = "Hips";
         private const string MixamoHips = "mixamorig:Hips";
@@ -56,6 +60,8 @@ namespace CastleOfTheD20.Editor
             public Dictionary<string, (string key, string role)> Borrowed = new Dictionary<string, (string, string)>();
             // role -> playback speed (1 when missing)
             public Dictionary<string, float> Speeds = new Dictionary<string, float>();
+            // One-shot roles played by a trigger of the same name (e.g. an ability ID like mage_fireball)
+            public List<string> TriggeredRoles = new List<string>();
 
             public string MaterialPath => $"Assets/Characters/Materials/M_{Key}.mat";
             public string ControllerPath => $"Assets/Characters/Animators/{Key}_Animator.controller";
@@ -134,11 +140,21 @@ namespace CastleOfTheD20.Editor
             new ModelSpec
             {
                 Key = "Hero_Mage_Elira",
-                FbxPath = "Assets/Characters/Player_mage_3dmodel/tripo_convert_5c76580c-ce77-43cb-9f75-7e91f7e5cc0d.fbx",
-                TexturePath = "Assets/Characters/Player_mage_3dmodel/tripo_convert_5c76580c-ce77-43cb-9f75-7e91f7e5cc0d.fbm/tripo_rgb_d1b77ddc-7baa-4fa6-bf83-2fa07a8ae717.jpg",
+                FbxPath = "Assets/Characters/Player_mage_new/Mage_Unity.fbx",
+                TexturePath = "Assets/Characters/Player_mage_new/tripo_rgb_70139358-154f-4f40-b28c-91fc93740886.png",
+                MotionNode = MixamoHips,
                 TargetHeight = 3.0f,
                 HeroParameters = true,
-                Takes = { [Idle] = "idle.001", [Walk] = "walk.001", [Attack] = "cast_a_spell.001", [Die] = "fall.001", [Victory] = "clap.001" },
+                // Vili's own Blender export: one take per ability. Unused takes: fall, standing_idle.
+                Takes =
+                {
+                    [Idle] = "Armature|idle", [Walk] = "Armature|walk", [Run] = "Armature|run",
+                    [Attack] = "Armature|FrostRay", [Die] = "Armature|death",
+                    [TakeHit] = "Armature|afraid", [DrinkPotion] = "Armature|drink potion",
+                    ["mage_fireball"] = "Armature|Fireball", ["mage_frostbite"] = "Armature|FrostRay",
+                    ["mage_mana_shield"] = "Armature|ManaShield", ["mage_blink"] = "Armature|Blink",
+                },
+                TriggeredRoles = { TakeHit, DrinkPotion, "mage_fireball", "mage_frostbite", "mage_mana_shield", "mage_blink" },
             },
             new ModelSpec
             {
@@ -195,6 +211,20 @@ namespace CastleOfTheD20.Editor
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>Re-imports only Elira's model and puts her on the hero prefab; enemies and zone scenes are left alone.</summary>
+        [MenuItem("CastleOfDice/Setup Hero Mage Model")]
+        public static void SetupMage()
+        {
+            ModelSpec mage = Find("Hero_Mage_Elira");
+            ConfigureImporter(mage);
+            AssetDatabase.Refresh();
+            SetupMaterial(mage);
+            BuildController(mage);
+            SetupHeroPrefab(rogueToo: false);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SetupRiggedEnemiesEditor] Elira's model set up on the hero prefab.");
+        }
+
         #region Import
 
         private static ModelSpec Find(string key)
@@ -220,17 +250,19 @@ namespace CastleOfTheD20.Editor
             importer.materialImportMode = ModelImporterMaterialImportMode.None;
 
             var clips = new List<ModelImporterClipAnimation>();
-            foreach (ModelImporterClipAnimation source in importer.defaultClipAnimations)
+            // One clip per role; two roles may share a take (the mage's FrostRay is also her plain cast)
+            foreach (KeyValuePair<string, string> kv in spec.Takes)
             {
-                string role = null;
-                foreach (KeyValuePair<string, string> kv in spec.Takes)
+                ModelImporterClipAnimation source = null;
+                foreach (ModelImporterClipAnimation take in importer.defaultClipAnimations)
                 {
-                    if (kv.Value == source.takeName) { role = kv.Key; break; }
+                    if (take.takeName == kv.Value) { source = take; break; }
                 }
-                if (role == null) continue;
+                if (source == null) continue;
 
+                string role = kv.Key;
                 source.name = role;
-                bool loops = role == Idle || role == Walk || role == Victory;
+                bool loops = role == Idle || role == Walk || role == Run || role == Victory;
                 source.loopTime = loops;
                 source.loopPose = loops;
                 source.lockRootRotation = true;
@@ -341,15 +373,41 @@ namespace CastleOfTheD20.Editor
             AnimatorState walkState = AddState(sm, spec, Walk, walk, new Vector3(300f, 120f, 0f));
             sm.defaultState = idleState;
 
-            AnimatorStateTransition toWalk = idleState.AddTransition(walkState);
-            toWalk.hasExitTime = false;
-            toWalk.duration = 0.15f;
-            toWalk.AddCondition(AnimatorConditionMode.If, 0f, "IsMoving");
+            AnimationClip run = ClipFor(spec, Run);
+            if (run == null)
+            {
+                AddLocomotion(idleState, walkState, null);
+                AddLocomotion(walkState, idleState, null, moving: false);
+            }
+            else
+            {
+                // Free exploration runs; tile-by-tile combat movement also sets IsWalking and walks
+                controller.AddParameter("IsWalking", AnimatorControllerParameterType.Bool);
+                AnimatorState runState = AddState(sm, spec, Run, run, new Vector3(60f, 120f, 0f));
+                AddLocomotion(idleState, walkState, true);
+                AddLocomotion(idleState, runState, false);
+                AddLocomotion(walkState, idleState, null, moving: false);
+                AddLocomotion(runState, idleState, null, moving: false);
+                AddLocomotion(walkState, runState, false);
+                AddLocomotion(runState, walkState, true);
+            }
 
-            AnimatorStateTransition toIdle = walkState.AddTransition(idleState);
-            toIdle.hasExitTime = false;
-            toIdle.duration = 0.15f;
-            toIdle.AddCondition(AnimatorConditionMode.IfNot, 0f, "IsMoving");
+            float slot = 0f;
+            foreach (string role in spec.TriggeredRoles)
+            {
+                AnimationClip clip = ClipFor(spec, role);
+                if (clip == null) continue;
+                bool hasParameter = false;
+                foreach (AnimatorControllerParameter p in controller.parameters) hasParameter |= p.name == role;
+                if (!hasParameter) controller.AddParameter(role, AnimatorControllerParameterType.Trigger);
+                AnimatorState state = AddState(sm, spec, role, clip, new Vector3(820f, slot, 0f));
+                slot += 60f;
+                AddAnyTransition(sm, state, role);
+                AnimatorStateTransition back = state.AddTransition(idleState);
+                back.hasExitTime = true;
+                back.exitTime = 0.95f;
+                back.duration = 0.15f;
+            }
 
             if (attack != null)
             {
@@ -389,6 +447,16 @@ namespace CastleOfTheD20.Editor
             state.motion = clip;
             if (spec.Speeds.TryGetValue(role, out float speed)) state.speed = speed;
             return state;
+        }
+
+        /// <summary>Locomotion edge on IsMoving (<paramref name="moving"/>), optionally also on IsWalking (<paramref name="walking"/>).</summary>
+        private static void AddLocomotion(AnimatorState from, AnimatorState to, bool? walking, bool moving = true)
+        {
+            AnimatorStateTransition t = from.AddTransition(to);
+            t.hasExitTime = false;
+            t.duration = 0.15f;
+            t.AddCondition(moving ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, "IsMoving");
+            if (walking.HasValue) t.AddCondition(walking.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, "IsWalking");
         }
 
         private static void AddAnyTransition(AnimatorStateMachine sm, AnimatorState target, string trigger)
@@ -521,7 +589,7 @@ namespace CastleOfTheD20.Editor
             }
         }
 
-        private static void SetupHeroPrefab()
+        private static void SetupHeroPrefab(bool rogueToo = true)
         {
             ModelSpec mage = Find("Hero_Mage_Elira");
             ModelSpec rogue = Find("Hero_Rogue_Corvo");
@@ -538,7 +606,8 @@ namespace CastleOfTheD20.Editor
                 }
 
                 GameObject mageModel = ReplaceChild(visuals, "Mage_Model", mage);
-                GameObject rogueModel = ReplaceChild(visuals, "Rogue_Model", rogue);
+                Transform oldRogue = visuals.Find("Rogue_Model");
+                GameObject rogueModel = rogueToo || oldRogue == null ? ReplaceChild(visuals, "Rogue_Model", rogue) : oldRogue.gameObject;
                 mageModel.SetActive(false);
                 rogueModel.SetActive(false);
 

@@ -163,6 +163,7 @@ namespace CastleOfTheD20.UI
             {
                 SFXManager.Instance?.PlaySFX(SFXClipType.PotionDrink, player.transform.position);
                 AbilityVfx.PlayPotionHeal(player);
+                player.TrySetAnimatorTrigger("DrinkPotion");
                 FloatingCombatText.Instance?.ShowText(player.transform.position + Vector3.up * 2.2f, "+" + healed + " HP", HealGreen);
             }
 

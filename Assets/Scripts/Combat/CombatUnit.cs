@@ -43,6 +43,8 @@ namespace CastleOfTheD20.Combat
         protected bool isDead = false;
 
         private static readonly int IsMovingHash = Animator.StringToHash("IsMoving");
+        // Only animators with both a walk and a run (Elira) have it: grid steps walk, exploring runs
+        private static readonly int IsWalkingHash = Animator.StringToHash("IsWalking");
         private readonly List<Vector3> walkWaypoints = new List<Vector3>(8);
         private Coroutine walkRoutine;
         private Action walkArrivedCallback;
@@ -510,12 +512,32 @@ namespace CastleOfTheD20.Combat
             AnimatorControllerParameter[] parameters = animator.parameters;
             for (int i = 0; i < parameters.Length; i++)
             {
-                if (parameters[i].nameHash == IsMovingHash && parameters[i].type == AnimatorControllerParameterType.Bool)
+                if (parameters[i].type != AnimatorControllerParameterType.Bool) continue;
+                if (parameters[i].nameHash == IsWalkingHash) animator.SetBool(IsWalkingHash, moving);
+                if (parameters[i].nameHash == IsMovingHash) animator.SetBool(IsMovingHash, moving);
+            }
+        }
+
+        /// <summary>
+        /// Fires <paramref name="trigger"/> on the unit's animator if its controller has that trigger
+        /// (e.g. Elira's per-ability casts). Returns false when it does not, so the caller can fall back.
+        /// </summary>
+        public bool TrySetAnimatorTrigger(string trigger)
+        {
+            Animator animator = UnitAnimator;
+            if (animator == null || animator.runtimeAnimatorController == null || string.IsNullOrEmpty(trigger)) return false;
+
+            int hash = Animator.StringToHash(trigger);
+            AnimatorControllerParameter[] parameters = animator.parameters;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].nameHash == hash && parameters[i].type == AnimatorControllerParameterType.Trigger)
                 {
-                    animator.SetBool(IsMovingHash, moving);
-                    return;
+                    animator.SetTrigger(hash);
+                    return true;
                 }
             }
+            return false;
         }
 
         /// <summary>Places the unit's transform standing on top of <paramref name="tile"/>.</summary>
