@@ -1446,8 +1446,8 @@ MonoBehaviour:
   secretPassageOrChest: {fileID: 1489484580}
   generateGridOnCombat: 1
   gridCenterOffset: {x: 0, y: 0, z: 0}
-  gridWidth: 12
-  gridHeight: 12
+  gridWidth: 20
+  gridHeight: 20
   gridTileSize: 1.6
   clearGridOnCombatResolved: 1
 --- !u!65 &680944846

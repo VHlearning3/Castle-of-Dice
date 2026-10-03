@@ -348,15 +348,21 @@ namespace CastleOfTheD20.Editor
             chestObj.SetActive(false);
 
             // Encounter Controller Trigger
+            // The Commander guards the Castle Hall door: the trigger runs wall to wall (x -44..44) from
+            // z -6 up to the north wall, so nobody reaches the hall without starting the fight.
             GameObject triggerObj = new GameObject("Courtyard_Encounter_Trigger");
             triggerObj.transform.position = new Vector3(0f, 2.5f, 10f);
             BoxCollider trigCol = triggerObj.AddComponent<BoxCollider>();
-            trigCol.size = new Vector3(32f, 6f, 32f);
+            trigCol.size = new Vector3(88f, 6f, 50f);
+            trigCol.center = new Vector3(0f, 0f, 9f);
             trigCol.isTrigger = true;
 
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "Courtyard";
             room.bossIdentifier = "CursedCommander";
+            room.gridCenterOffset = new Vector3(0f, 0f, 9f);
+            room.gridWidth = 32;
+            room.gridHeight = 32;
             room.roomEnemies = enemyList;
             room.secretPassageOrChest = chestObj;
             room.exitBarriers = new List<GameObject> { barrierSouth, barrierNorth };
@@ -471,6 +477,8 @@ namespace CastleOfTheD20.Editor
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "Library";
             room.bossIdentifier = "ShadowMageMalakor";
+            room.gridWidth = 20;
+            room.gridHeight = 20;
             room.roomEnemies = enemyList;
             room.secretPassageOrChest = chestObj;
             room.exitBarriers = new List<GameObject> { barrierWest, barrierEast };
@@ -748,6 +756,8 @@ namespace CastleOfTheD20.Editor
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "CrownHall";
             room.bossIdentifier = "GargoyleKing";
+            room.gridWidth = 20;
+            room.gridHeight = 20;
             room.roomEnemies = enemyList;
             room.secretPassageOrChest = chestObj;
             room.exitBarriers = new List<GameObject> { barrierSouth };

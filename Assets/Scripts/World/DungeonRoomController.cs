@@ -30,6 +30,12 @@ namespace CastleOfTheD20.World
     [RequireComponent(typeof(BoxCollider))]
     public class DungeonRoomController : MonoBehaviour
     {
+        /// <summary>Largest grid side length an encounter may request.</summary>
+        public const int MaxGridSize = 32;
+
+        /// <summary>Tiles kept between the hero and the grid edge when the grid slides to fit them.</summary>
+        private const int PlayerEdgeMarginTiles = 2;
+
         #region Inspector Variables
 
         [Header("Room Identity")]
@@ -58,11 +64,19 @@ namespace CastleOfTheD20.World
         [Tooltip("Optional custom grid center offset relative to this room or cellar root.")]
         public Vector3 gridCenterOffset = Vector3.zero;
 
-        [Tooltip("Grid column count.")]
+        [Tooltip("Grid column count (1-32).")]
+        [Range(1, MaxGridSize)]
         public int gridWidth = 12;
 
-        [Tooltip("Grid row count.")]
+        [Tooltip("Grid row count (1-32).")]
+        [Range(1, MaxGridSize)]
         public int gridHeight = 12;
+
+        [Tooltip("If true, the grid slides toward the hero so they start on it instead of being teleported, staying inside the grid area.")]
+        public bool fitGridAroundPlayer = true;
+
+        [Tooltip("Walkable floor rectangle (world X/Z) the grid must stay inside. Zero size = use this room's trigger box.")]
+        public Rect gridAreaXZ = new Rect(0f, 0f, 0f, 0f);
 
         [Tooltip("Size of each grid tile in world units.")]
         public float gridTileSize = 1.6f;
@@ -248,8 +262,13 @@ namespace CastleOfTheD20.World
                 GridManager.Instance = grid;
             }
 
+            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+
             if (generateGridOnCombat && grid != null)
             {
+                int width = Mathf.Clamp(gridWidth, 1, MaxGridSize);
+                int height = Mathf.Clamp(gridHeight, 1, MaxGridSize);
+
                 // Detect exact floor elevation dynamically via downward raycast from room center
                 Vector3 rayOrigin = transform.position + Vector3.up * 2.0f;
                 float floorY = transform.position.y;
@@ -263,8 +282,13 @@ namespace CastleOfTheD20.World
                 }
 
                 Vector3 center = new Vector3(transform.position.x, floorY, transform.position.z) + gridCenterOffset;
-                grid.GenerateGridAt(center, gridWidth, gridHeight, gridTileSize);
-                Debug.Log($"[DungeonRoomController] Generated {gridWidth}x{gridHeight} combat grid centered at {center} for '{roomLocation}'.");
+                if (fitGridAroundPlayer && player != null)
+                {
+                    float tile = gridTileSize > 0.1f ? gridTileSize : 1.6f;
+                    center = ComputeGridCenter(center, player.transform.position, width, height, tile, GetGridArea());
+                }
+                grid.GenerateGridAt(center, width, height, gridTileSize);
+                Debug.Log($"[DungeonRoomController] Generated {width}x{height} combat grid centered at {center} for '{roomLocation}'.");
             }
 
             // 2. Enable all GameObjects in the exitBarriers list (locking the doors)
@@ -273,7 +297,6 @@ namespace CastleOfTheD20.World
             // 3. Enable all GameObjects in the roomEnemies list and gather combatants
             List<CombatUnit> activeParticipants = new List<CombatUnit>();
 
-            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             if (player != null && player.IsAlive)
             {
                 activeParticipants.Add(player);
@@ -466,6 +489,54 @@ namespace CastleOfTheD20.World
         #endregion
 
         #region Helper Methods
+
+        /// <summary>
+        /// Floor rectangle (world X/Z) the combat grid must stay inside: the authored gridAreaXZ,
+        /// or this room's trigger box when none is set. Read from the collider's shape, so it also
+        /// works after the trigger has been disabled.
+        /// </summary>
+        public Rect GetGridArea()
+        {
+            if (gridAreaXZ.width > 0f && gridAreaXZ.height > 0f) return gridAreaXZ;
+
+            BoxCollider box = triggerCollider != null ? triggerCollider : GetComponent<BoxCollider>();
+            if (box == null) return new Rect(0f, 0f, 0f, 0f);
+
+            Vector3 c = transform.TransformPoint(box.center);
+            Vector3 lossy = transform.lossyScale;
+            float sizeX = Mathf.Abs(box.size.x * lossy.x);
+            float sizeZ = Mathf.Abs(box.size.z * lossy.z);
+            return new Rect(c.x - sizeX * 0.5f, c.z - sizeZ * 0.5f, sizeX, sizeZ);
+        }
+
+        /// <summary>
+        /// Picks a grid center that keeps the hero at least two tiles inside the grid, so large rooms do
+        /// not teleport them to a far edge, while the grid stays inside <paramref name="area"/>.
+        /// An axis on which the grid is already as large as the area keeps its authored center.
+        /// </summary>
+        public static Vector3 ComputeGridCenter(Vector3 desiredCenter, Vector3 playerPos, int width, int height, float tileSize, Rect area)
+        {
+            bool hasArea = area.width > 0f && area.height > 0f;
+            float x = FitAxis(desiredCenter.x, playerPos.x, (width - 1) * 0.5f * tileSize, tileSize,
+                hasArea, area.xMin, area.xMax);
+            float z = FitAxis(desiredCenter.z, playerPos.z, (height - 1) * 0.5f * tileSize, tileSize,
+                hasArea, area.yMin, area.yMax);
+            return new Vector3(x, desiredCenter.y, z);
+        }
+
+        private static float FitAxis(float center, float player, float halfSpan, float tileSize, bool hasArea, float areaMin, float areaMax)
+        {
+            // Outer tile edges must stay within the area: tile centers sit half a tile inside it
+            float minCenter = areaMin + halfSpan + tileSize * 0.5f;
+            float maxCenter = areaMax - halfSpan - tileSize * 0.5f;
+            if (hasArea && minCenter > maxCenter) return center; // grid already spans the whole area
+
+            float margin = Mathf.Min(PlayerEdgeMarginTiles * tileSize, halfSpan);
+            if (player > center + halfSpan - margin) center = player - halfSpan + margin;
+            else if (player < center - halfSpan + margin) center = player + halfSpan - margin;
+
+            return hasArea ? Mathf.Clamp(center, minCenter, maxCenter) : center;
+        }
 
         private void SetBarriersLocked(bool locked)
         {
