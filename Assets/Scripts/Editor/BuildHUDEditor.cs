@@ -318,8 +318,9 @@ namespace CastleOfTheD20.Editor
                 RectTransform mbRt = mapBtnObj.GetComponent<RectTransform>();
                 mbRt.anchorMin = new Vector2(1f, 1f);
                 mbRt.anchorMax = new Vector2(1f, 1f);
+                mbRt.pivot = new Vector2(1f, 1f);
                 mbRt.sizeDelta = new Vector2(110f, 32f);
-                mbRt.anchoredPosition = new Vector2(-410f, -22f);
+                mbRt.anchoredPosition = new Vector2(PlayerHUD.MapButtonRightEdge, -18f); // left of the quest card
 
                 Image mbImg = mapBtnObj.GetComponent<Image>();
                 mbImg.sprite = slotFrame ?? panelDark;

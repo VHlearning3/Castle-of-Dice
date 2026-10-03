@@ -127,6 +127,23 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Sprite crestMageSprite;
         [SerializeField] private Sprite crestRogueSprite;
 
+        [Tooltip("The user-provided CoinIcon.png shown in the gold purse.")]
+        [SerializeField] private Sprite coinSprite;
+
+        [Tooltip("The user-provided HealthPotionIcon.png shown in the bottom-left flask slots.")]
+        [SerializeField] private Sprite potionSprite;
+
+        #endregion
+
+        #region Layout Constants
+
+        /// <summary>Gold purse position inside the Hero_Status_Card: top-right, beside the hero's name.</summary>
+        public static readonly Vector2 GoldPursePosition = new Vector2(300f, -12f);
+        public static readonly Vector2 GoldPurseSize = new Vector2(146f, 32f);
+
+        /// <summary>Right edge of the MAP (M) button, measured from the screen's right edge, left of the quest card.</summary>
+        public const float MapButtonRightEdge = -436f;
+
         #endregion
 
         #region Private State
@@ -248,10 +265,11 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // 4. Quick Potion Hotkey [Q]
+            // 4. Quick Potion Hotkey [Q] (exploration and combat; never while talking or shopping)
             if (GameInput.IsQuickPotionHotkeyPressed())
             {
-                if (quickPotionButton != null && quickPotionButton.interactable)
+                GameManager gm = GameManager.Instance;
+                if (gm == null || gm.CurrentMode == GamePlayMode.Exploration || gm.CurrentMode == GamePlayMode.Combat)
                 {
                     OnQuickPotionClicked();
                 }
@@ -287,6 +305,10 @@ namespace CastleOfTheD20.UI
 
             if (scrapOreSprite == null)
                 scrapOreSprite = UITheme.GetSprite("Assets/UI/Sprites/UI_Icon_ScrapOre.png");
+            if (coinSprite == null)
+                coinSprite = UITheme.GetSprite("Assets/ICONSART/CoinIcon.png");
+            if (potionSprite == null)
+                potionSprite = UITheme.GetSprite("Assets/ICONSART/HealthPotionIcon.png");
 
 #if UNITY_EDITOR
             if (healthPotionItem == null)
@@ -520,7 +542,8 @@ namespace CastleOfTheD20.UI
             nameRect.anchorMax = new Vector2(0f, 1f);
             nameRect.pivot = new Vector2(0f, 1f);
             nameRect.anchoredPosition = new Vector2(92f, -14f);
-            nameRect.sizeDelta = new Vector2(250f, 22f);
+            nameRect.sizeDelta = new Vector2(GoldPursePosition.x - 92f - 6f, 22f); // gold purse sits to the right
+            heroNameText.overflowMode = TextOverflowModes.Ellipsis;
 
             Transform classTr = heroCardObj.transform.Find("Hero_Class_Text");
             GameObject classObj = classTr != null ? classTr.gameObject : new GameObject("Hero_Class_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
@@ -534,7 +557,7 @@ namespace CastleOfTheD20.UI
             classRect.anchorMax = new Vector2(0f, 1f);
             classRect.pivot = new Vector2(0f, 1f);
             classRect.anchoredPosition = new Vector2(92f, -34f);
-            classRect.sizeDelta = new Vector2(250f, 18f);
+            classRect.sizeDelta = new Vector2(GoldPursePosition.x - 92f - 6f, 18f);
 
             // 1D. Health Bar Slider
             Transform hpContainer = transform.Find("HP_Container") ?? heroCardObj.transform.Find("HP_Container");
@@ -676,8 +699,24 @@ namespace CastleOfTheD20.UI
                 qText.color = new Color(0.85f, 0.70f, 0.35f, 1f);
             }
 
-            // 1F. Gold Purse Banner (Fixed: Coin and text never overlap, coin size contained to 24x24)
+            // 1F. Gold Purse (top-right of the card, beside the hero's name; built here when the scene has none)
             Transform goldContainer = transform.Find("Gold_Container") ?? heroCardObj.transform.Find("Gold_Container");
+            if (goldContainer == null)
+            {
+                GameObject purseObj = new GameObject("Gold_Container", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                purseObj.transform.SetParent(heroCardObj.transform, false);
+                goldContainer = purseObj.transform;
+
+                GameObject coinObj = new GameObject("Gold_Icon", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                coinObj.transform.SetParent(goldContainer, false);
+                coinObj.GetComponent<Image>().sprite = coinSprite;
+
+                GameObject goldTextObj = new GameObject("Gold_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                goldTextObj.transform.SetParent(goldContainer, false);
+                goldCounterText = goldTextObj.GetComponent<TMP_Text>();
+                goldCounterText.textWrappingMode = TextWrappingModes.NoWrap;
+                goldCounterText.text = "0 Gold";
+            }
             if (goldContainer != null)
             {
                 goldContainer.SetParent(heroCardObj.transform, false);
@@ -685,8 +724,8 @@ namespace CastleOfTheD20.UI
                 gRect.anchorMin = new Vector2(0f, 1f);
                 gRect.anchorMax = new Vector2(0f, 1f);
                 gRect.pivot = new Vector2(0f, 1f);
-                gRect.anchoredPosition = new Vector2(148f, -86f);
-                gRect.sizeDelta = new Vector2(150f, 36f);
+                gRect.anchoredPosition = GoldPursePosition;
+                gRect.sizeDelta = GoldPurseSize;
 
                 Image gBg = goldContainer.GetComponent<Image>();
                 if (gBg == null) gBg = goldContainer.gameObject.AddComponent<Image>();
@@ -721,6 +760,7 @@ namespace CastleOfTheD20.UI
                     coinIconImage = coinImgTr.GetComponent<Image>();
                     if (coinIconImage != null)
                     {
+                        if (coinIconImage.sprite == null) coinIconImage.sprite = coinSprite;
                         coinIconImage.preserveAspect = true;
                         coinIconImage.raycastTarget = false;
                         RectTransform cRect = coinIconImage.GetComponent<RectTransform>();
@@ -991,6 +1031,26 @@ namespace CastleOfTheD20.UI
             {
                 combatStatsHUD.SetPlayer(trackedPlayer);
             }
+
+            // ========================================================
+            // 5. BOTTOM-LEFT: FLASK SLOTS (small and large health potion)
+            // ========================================================
+            // Parented to the canvas: this HUD's own rect is only the top strip of the screen
+            RectTransform canvasRect = transform.parent as RectTransform;
+            PotionQuickBar.EnsureBar(canvasRect != null ? canvasRect : hudRect, slotFrameSprite, pillBadgeSprite, potionSprite);
+
+            // ========================================================
+            // 6. MAP (M) BUTTON: left of the quest card, clear of its header
+            // ========================================================
+            Transform mapBtnTr = transform.Find("Button_Map_Toggle");
+            if (mapBtnTr != null)
+            {
+                RectTransform mbRect = mapBtnTr.GetComponent<RectTransform>();
+                mbRect.anchorMin = new Vector2(1f, 1f);
+                mbRect.anchorMax = new Vector2(1f, 1f);
+                mbRect.pivot = new Vector2(1f, 1f);
+                mbRect.anchoredPosition = new Vector2(MapButtonRightEdge, -18f);
+            }
         }
 
         #endregion
@@ -1144,7 +1204,8 @@ namespace CastleOfTheD20.UI
             if (inventory == null) return;
 
             // Small and greater potions share the quick slot
-            int count = (healthPotionItem != null) ? inventory.GetItemCount(healthPotionItem) : 0;
+            ItemSO smallPotion = healthPotionItem != null ? healthPotionItem : inventory.FindItemByID(ShopManager.SMALL_POTION_ID);
+            int count = smallPotion != null ? inventory.GetItemCount(smallPotion) : 0;
             ItemSO greaterPotion = inventory.FindItemByID(ShopManager.GREATER_POTION_ID);
             if (greaterPotion != null) count += inventory.GetItemCount(greaterPotion);
 
@@ -1260,18 +1321,12 @@ namespace CastleOfTheD20.UI
 
         #region Hotbar Actions
 
+        /// <summary>[Q]: drinks a small potion (a large one when the small ones are gone) under the potion rules.</summary>
         public void OnQuickPotionClicked()
         {
             LocatePlayer();
-            if (trackedPlayer == null) return;
-
-            InventoryManager inventory = InventoryManager.Instance;
-            ItemSO potion = inventory != null ? ResolveQuickPotion(inventory) : null;
-            if (potion != null)
-            {
-                inventory.UseItem(potion, trackedPlayer);
-                UpdatePotionDisplay();
-            }
+            PotionQuickBar.TryDrinkQuick(trackedPlayer);
+            UpdatePotionDisplay();
         }
 
         /// <summary>

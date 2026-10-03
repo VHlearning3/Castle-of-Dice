@@ -988,12 +988,14 @@ namespace CastleOfTheD20.UI
             if (GameManager.Instance == null || GameManager.Instance.CurrentMode != GamePlayMode.Combat)
             {
                 ClearHoveredTile();
+                EnemyFocus.TileHovered = null;
                 return;
             }
 
             if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != TurnState.PlayerTurn)
             {
                 ClearHoveredTile();
+                EnemyFocus.TileHovered = null;
                 return;
             }
 
@@ -1002,21 +1004,26 @@ namespace CastleOfTheD20.UI
 
         private bool IsEnemyOnTile(GridTile tile)
         {
-            if (tile == null) return false;
-            if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit is EnemyUnit) return true;
+            return GetEnemyOnTile(tile) != null;
+        }
+
+        private EnemyUnit GetEnemyOnTile(GridTile tile)
+        {
+            if (tile == null) return null;
+            if (tile.IsOccupied && tile.OccupyingUnit is EnemyUnit occupant && occupant != null) return occupant;
 
             if (TurnManager.Instance != null)
             {
                 foreach (var unit in TurnManager.Instance.ActiveUnits)
                 {
-                    if (unit != null && unit.IsAlive && unit is EnemyUnit && unit.GridPosition == tile.GridPosition)
+                    if (unit != null && unit.IsAlive && unit is EnemyUnit enemy && unit.GridPosition == tile.GridPosition)
                     {
                         unit.EnsureTilePosition(); // unit re-registers its own tile
-                        return true;
+                        return enemy;
                     }
                 }
             }
-            return false;
+            return null;
         }
 
         private void ClearHoveredTile()
@@ -1034,6 +1041,7 @@ namespace CastleOfTheD20.UI
             if (IsPointerOverUI())
             {
                 ClearHoveredTile();
+                EnemyFocus.TileHovered = null;
                 return;
             }
 
@@ -1138,6 +1146,7 @@ namespace CastleOfTheD20.UI
                 }
 
                 lastHoveredTile = targetTile;
+                EnemyFocus.TileHovered = GetEnemyOnTile(targetTile);
             }
 
             // Detect left click on tile
@@ -1178,6 +1187,7 @@ namespace CastleOfTheD20.UI
                 }
 
                 if (obj.GetComponentInParent<Selectable>() != null ||
+                    obj.GetComponentInParent<EnemyCardPointer>() != null ||
                     obj.GetComponentInParent<Button>() != null ||
                     obj.GetComponentInParent<TMP_InputField>() != null)
                 {
@@ -1355,6 +1365,17 @@ namespace CastleOfTheD20.UI
             UpdateMovementHighlights();
         }
 
+        /// <summary>
+        /// The hero used their action without the ability bar (drinking a potion): drop any half-picked
+        /// ability and grey out the ability cards. Movement is left as it was.
+        /// </summary>
+        public void OnHeroActionSpentOutsideBar()
+        {
+            selectedAbilitySlot = -1;
+            RefreshAbilityBar();
+            UpdateMovementHighlights();
+        }
+
         private void OnAbilitySlotClicked(int slotIndex)
         {
             LocatePlayer();
@@ -1453,6 +1474,10 @@ namespace CastleOfTheD20.UI
         private void HandleTileClicked(GridTile tile)
         {
             if (tile == null) return;
+
+            // Clicking an enemy lights up its stat card; clicking anywhere else clears that
+            EnemyFocus.Selected = GetEnemyOnTile(tile);
+
             if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != TurnState.PlayerTurn) return;
             if (Time.frameCount == lastClickFrame && lastClickTile == tile) return;
             lastClickFrame = Time.frameCount;
@@ -1780,6 +1805,7 @@ namespace CastleOfTheD20.UI
         private void HandleCombatEnded(bool isVictory)
         {
             SetCombatBarVisible(false);
+            EnemyFocus.Clear();
             string outcome = isVictory ? "VICTORY! All foes vanquished." : "DEFEAT! Party defeated.";
             LogCombatMessage(outcome);
             RefreshAbilityBar();

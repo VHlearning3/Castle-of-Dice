@@ -10,7 +10,7 @@ namespace CastleOfTheD20.Combat
     /// Short, purely visual effects for the combat moves that relocate a unit instantly:
     /// Blink (arcane flash out and in), Shadow Step (dark smoke at both ends), War Cry
     /// (shockwave ring, camera shake, pushed enemies sliding back) and Malakor's teleport (purple vortex).
-    /// Also the mage's Fireball (flying orb and fiery 3x3 blast) and Frostbite (ice ray and shards), plus
+    /// Also the mage's Fireball (flying orb and fiery 3x3 blast) and Frostbite (icy bolt and shards), the potion heal glow, plus
     /// lasting status auras: frost around a slowed unit and a glowing bubble while Mana Shield is up.
     /// Game logic has already moved the unit when an effect starts; the effect only animates the
     /// unit's model and plays particles, so it never delays turns or changes occupancy.
@@ -47,8 +47,11 @@ namespace CastleOfTheD20.Combat
         private static readonly Color IceBlue = new Color(0.35f, 0.75f, 1f, 1f);
         private static readonly Color FrostMist = new Color(0.55f, 0.85f, 1f, 0.35f);
         private static readonly Color ShieldBubbleColor = new Color(0.35f, 0.7f, 1f, 0.2f);
+        private static readonly Color HealRed = new Color(1f, 0.35f, 0.35f, 1f);
+        private static readonly Color HealGlow = new Color(1f, 0.85f, 0.75f, 1f);
 
         private const float FireballFlightDuration = 0.22f;
+        private const float FrostboltFlightDuration = 0.3f;
         private const float ShieldPopInDuration = 0.25f;
 
         #endregion
@@ -217,7 +220,10 @@ namespace CastleOfTheD20.Combat
             PlaySound(SFXClipType.SpellCast, caster.transform.position, 0.8f);
         }
 
-        /// <summary>Mage Frostbite: an icy ray to the target; on a hit, ice shards burst around it.</summary>
+        /// <summary>
+        /// Mage Frostbite: an icy bolt flies from the mage's hands to the target, trailing frost; on a hit it
+        /// shatters into ice shards around the target, on a miss it sails past and fizzles into snow.
+        /// </summary>
         public static void PlayFrostbite(CombatUnit caster, CombatUnit target, bool hit)
         {
             AbilityVfx vfx = GetOrCreate();
@@ -225,12 +231,32 @@ namespace CastleOfTheD20.Combat
 
             Vector3 from = caster.transform.position + Vector3.up * 1.2f + caster.transform.forward * 0.4f;
             Vector3 to = target.transform.position + Vector3.up * 1f;
-            vfx.EmitFrostRay(from, to);
-            if (hit)
-            {
-                vfx.EmitIceBurst(vfx.GroundPoint(target, target.transform.position));
-            }
+            Vector3 ground = vfx.GroundPoint(target, target.transform.position);
+            vfx.StartCoroutine(vfx.FrostboltRoutine(from, to, ground, hit));
             PlaySound(SFXClipType.SpellCast, caster.transform.position, 0.6f);
+        }
+
+        /// <summary>A health potion was drunk: a red flash and warm motes rising around the hero.</summary>
+        public static void PlayPotionHeal(CombatUnit unit)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || unit == null) return;
+
+            Vector3 ground = vfx.GroundPoint(unit, unit.transform.position);
+            vfx.flash.Emit(vfx.FlashParams(ground + Vector3.up * 1f, HealRed, 1.8f), 1);
+            for (int i = 0; i < 18; i++)
+            {
+                Vector2 disc = Random.insideUnitCircle * 0.45f;
+                ParticleSystem.EmitParams mote = new ParticleSystem.EmitParams
+                {
+                    position = ground + new Vector3(disc.x, Random.Range(0.1f, 0.9f), disc.y),
+                    velocity = Vector3.up * Random.Range(1.2f, 2.4f),
+                    startColor = i % 3 == 0 ? HealGlow : HealRed,
+                    startSize = Random.Range(0.08f, 0.16f),
+                    startLifetime = Random.Range(0.5f, 0.8f)
+                };
+                vfx.sparks.Emit(mote, 1);
+            }
         }
 
         /// <summary>Mana Shield absorbed a hit: the bubble flares and shatters into arcane sparks.</summary>
@@ -721,23 +747,63 @@ namespace CastleOfTheD20.Combat
             Shake(0.3f, 0.16f);
         }
 
-        private void EmitFrostRay(Vector3 from, Vector3 to)
+        private IEnumerator FrostboltRoutine(Vector3 from, Vector3 to, Vector3 ground, bool hit)
         {
-            const int steps = 16;
-            for (int i = 0; i <= steps; i++)
-            {
-                Vector3 pos = Vector3.Lerp(from, to, i / (float)steps);
-                ParticleSystem.EmitParams p = new ParticleSystem.EmitParams
-                {
-                    position = pos + Random.insideUnitSphere * 0.06f,
-                    velocity = Random.insideUnitSphere * 0.3f,
-                    startColor = i % 2 == 0 ? IceBlue : IceWhite,
-                    startSize = Random.Range(0.12f, 0.24f),
-                    startLifetime = Random.Range(0.25f, 0.4f)
-                };
-                iceShards.Emit(p, 1);
-            }
             flash.Emit(FlashParams(from, IceBlue, 0.8f), 1);
+
+            // A miss sails a little past the target before it fizzles
+            Vector3 axis = (to - from).sqrMagnitude > 0.0001f ? (to - from).normalized : Vector3.forward;
+            Vector3 end = hit ? to : to + axis * 0.9f + Vector3.up * 0.3f;
+            Vector3 side = Vector3.Cross(axis, Vector3.up);
+            side = side.sqrMagnitude > 0.001f ? side.normalized : Vector3.right;
+
+            float t = 0f;
+            while (t < FrostboltFlightDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / FrostboltFlightDuration);
+                Vector3 pos = Vector3.Lerp(from, end, p) + Vector3.up * Mathf.Sin(p * Mathf.PI) * 0.25f;
+
+                if ((Time.frameCount & 1) == 0) flash.Emit(FlashParams(pos, IceBlue, 0.7f), 1);
+
+                // Bright icy core
+                ParticleSystem.EmitParams core = new ParticleSystem.EmitParams
+                {
+                    position = pos,
+                    velocity = Random.insideUnitSphere * 0.2f,
+                    startColor = IceWhite,
+                    startSize = Random.Range(0.24f, 0.34f),
+                    startLifetime = Random.Range(0.12f, 0.2f)
+                };
+                iceShards.Emit(core, 1);
+
+                // Two shards spiralling around the bolt, left behind as a frosty trail
+                Vector3 orbit = Quaternion.AngleAxis(t * 1600f, axis) * side * 0.18f;
+                for (int k = 0; k < 2; k++)
+                {
+                    ParticleSystem.EmitParams trail = new ParticleSystem.EmitParams
+                    {
+                        position = pos + (k == 0 ? orbit : -orbit),
+                        velocity = -axis * 0.6f + Random.insideUnitSphere * 0.25f,
+                        startColor = k == 0 ? IceBlue : IceWhite,
+                        startSize = Random.Range(0.1f, 0.18f),
+                        startLifetime = Random.Range(0.25f, 0.4f)
+                    };
+                    iceShards.Emit(trail, 1);
+                }
+                yield return null;
+            }
+
+            if (hit)
+            {
+                EmitIceBurst(ground);
+            }
+            else
+            {
+                flash.Emit(FlashParams(end, IceBlue, 0.9f), 1);
+                ParticleSystem.EmitParams puff = new ParticleSystem.EmitParams { position = end, applyShapeToPosition = true, startColor = IceWhite };
+                iceShards.Emit(puff, 12);
+            }
         }
 
         private void EmitIceBurst(Vector3 ground)

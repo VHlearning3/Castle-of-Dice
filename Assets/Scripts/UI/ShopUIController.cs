@@ -1770,9 +1770,9 @@ namespace CastleOfTheD20.UI
             switch (item.ItemID)
             {
                 case ShopManager.SMALL_POTION_ID:
-                    return $"Restores {item.StatBonusValue} HP. Drink with [Q].";
+                    return $"Restores {item.StatBonusValue} HP. Drink from the bottom-left slot or with [Q].";
                 case ShopManager.GREATER_POTION_ID:
-                    return $"Restores {item.StatBonusValue} HP. [Q] drinks it when small potions run out.";
+                    return $"Restores {item.StatBonusValue} HP. Drink from the bottom-left slot.";
                 case ShopManager.POISON_VIAL_ID:
                     return $"Coats your blade when a fight starts: first hit deals +{item.StatBonusValue} damage.";
                 case ShopManager.REROLL_RUNE_ID:

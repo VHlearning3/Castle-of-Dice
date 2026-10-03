@@ -46,6 +46,13 @@ namespace CastleOfTheD20.UI
         private static readonly Color CardFallbackColor = new Color(0.08f, 0.10f, 0.15f, 0.94f);
         private static readonly Color ActiveTurnTint = new Color(1f, 0.86f, 0.55f, 1f);
 
+        /// <summary>Border of the highlighted enemy's card and the ring under its model.</summary>
+        public static readonly Color FocusColor = new Color(0.30f, 0.90f, 1f, 1f);
+
+        private const float FocusFrameThickness = 5f;
+        private const float FocusFrameOutset = 4f;
+        private const int FocusRingSegments = 40;
+
         /// <summary>Every displayable status effect, in the order they are listed.</summary>
         private static readonly StatusEffectType[] DisplayedEffects =
         {
@@ -72,6 +79,7 @@ namespace CastleOfTheD20.UI
             public TMP_Text VitalsText;
             public TMP_Text StatsText;
             public TMP_Text EffectsText;
+            public GameObject FocusFrame;
             public EnemyUnit Unit;
             public long Signature;
         }
@@ -105,6 +113,10 @@ namespace CastleOfTheD20.UI
 
         private readonly StringBuilder sb = new StringBuilder(160);
 
+        private EnemyUnit shownFocus;
+        private LineRenderer focusRing;
+        private Material focusRingMaterial;
+
         #endregion
 
         #region Public API
@@ -117,6 +129,23 @@ namespace CastleOfTheD20.UI
 
         /// <summary>Number of enemy cards currently shown.</summary>
         public int ShownEnemyCount => shownEnemyCount < 0 ? 0 : shownEnemyCount;
+
+        /// <summary>The enemy whose card is lit up right now (null when none).</summary>
+        public EnemyUnit FocusedEnemy => shownFocus;
+
+        /// <summary>The enemy shown on card <paramref name="index"/>, or null when that card is hidden.</summary>
+        public EnemyUnit GetCardEnemy(int index)
+        {
+            if (index < 0 || index >= enemyCards.Count || index >= ShownEnemyCount) return null;
+            return enemyCards[index].Unit;
+        }
+
+        /// <summary>Whether card <paramref name="index"/> currently shows its highlight border.</summary>
+        public bool IsCardHighlighted(int index)
+        {
+            return index >= 0 && index < enemyCards.Count && enemyCards[index].FocusFrame != null
+                && enemyCards[index].FocusFrame.activeSelf;
+        }
 
         /// <summary>
         /// Builds (or re-links) both readouts. <paramref name="heroCard"/> is the Hero_Status_Card; the enemy
@@ -174,6 +203,7 @@ namespace CastleOfTheD20.UI
             RefreshHero();
 
             TurnManager tm = TurnManager.Instance;
+            bool combatActive = tm != null && tm.IsCombatActive;
             if (tm != null)
             {
                 RefreshEnemies(tm.ActiveUnits, tm.CurrentActiveUnit, tm.IsCombatActive);
@@ -181,6 +211,96 @@ namespace CastleOfTheD20.UI
             else
             {
                 RefreshEnemies(null, null, false);
+            }
+
+            if (!combatActive && (EnemyFocus.Selected != null || EnemyFocus.CardHovered != null || EnemyFocus.TileHovered != null))
+            {
+                EnemyFocus.Clear();
+            }
+            RefreshFocus(combatActive ? EnemyFocus.Highlighted : null);
+        }
+
+        private void OnDestroy()
+        {
+            if (focusRing != null) Destroy(focusRing.gameObject);
+            if (focusRingMaterial != null) Destroy(focusRingMaterial);
+        }
+
+        #endregion
+
+        #region Enemy Focus
+
+        /// <summary>
+        /// Lights up the card of <paramref name="focus"/> with a bright border and puts a matching ring under
+        /// its model, so it is clear which card belongs to which enemy. Null turns both off.
+        /// </summary>
+        public void RefreshFocus(EnemyUnit focus)
+        {
+            shownFocus = focus;
+
+            int shown = ShownEnemyCount;
+            for (int i = 0; i < enemyCards.Count; i++)
+            {
+                EnemyCard card = enemyCards[i];
+                if (card.FocusFrame == null) continue;
+                bool on = focus != null && i < shown && card.Unit == focus;
+                if (card.FocusFrame.activeSelf != on) card.FocusFrame.SetActive(on);
+            }
+
+            UpdateFocusRing(focus);
+        }
+
+        private void UpdateFocusRing(EnemyUnit focus)
+        {
+            if (focus == null || !Application.isPlaying)
+            {
+                if (focusRing != null && focusRing.gameObject.activeSelf) focusRing.gameObject.SetActive(false);
+                return;
+            }
+
+            if (focusRing == null) BuildFocusRing();
+            if (!focusRing.gameObject.activeSelf) focusRing.gameObject.SetActive(true);
+
+            Vector3 feet = focus.transform.position;
+            GridManager grid = GridManager.Instance;
+            if (grid != null) feet.y = grid.GetWorldPosition(focus.GridPosition).y;
+            focusRing.transform.position = feet + Vector3.up * 0.07f;
+
+            // Gentle pulse so the ring catches the eye without flickering
+            float pulse = 0.85f + 0.15f * Mathf.Sin(Time.unscaledTime * 5f);
+            focusRing.transform.localScale = new Vector3(pulse, 1f, pulse);
+        }
+
+        private void BuildFocusRing()
+        {
+            GameObject ringObj = new GameObject("Enemy_Focus_Ring");
+            focusRing = ringObj.AddComponent<LineRenderer>();
+            focusRing.useWorldSpace = false;
+            focusRing.loop = true;
+            focusRing.positionCount = FocusRingSegments;
+            focusRing.widthMultiplier = 0.09f;
+            focusRing.numCornerVertices = 2;
+            focusRing.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            focusRing.receiveShadows = false;
+
+            // Sprites/Default is in Always Included Shaders, so it survives WebGL shader stripping
+            // (the ring lives in the battle scene and is rebuilt after a scene change; the material is kept)
+            if (focusRingMaterial == null)
+            {
+                Shader shader = Shader.Find("Sprites/Default");
+                if (shader == null) shader = Shader.Find("Universal Render Pipeline/Unlit");
+                if (shader != null) focusRingMaterial = new Material(shader) { name = "Enemy_Focus_Ring" };
+            }
+            if (focusRingMaterial != null) focusRing.sharedMaterial = focusRingMaterial;
+            focusRing.startColor = FocusColor;
+            focusRing.endColor = FocusColor;
+
+            float tile = GridManager.Instance != null ? GridManager.Instance.EffectiveTileSize : 1.6f;
+            float radius = tile * 0.42f;
+            for (int i = 0; i < FocusRingSegments; i++)
+            {
+                float angle = i * Mathf.PI * 2f / FocusRingSegments;
+                focusRing.SetPosition(i, new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius));
             }
         }
 
@@ -583,7 +703,42 @@ namespace CastleOfTheD20.UI
             card.EffectsText.richText = true;
             card.EffectsText.overflowMode = TextOverflowModes.Ellipsis;
 
+            // Highlight border: four bright edges drawn over the card while its enemy is pointed at
+            GameObject frameObj = EnsureChild(cardObj.transform, "Foe_Focus_Frame");
+            RectTransform frameRect = frameObj.GetComponent<RectTransform>();
+            Stretch(frameRect);
+            frameRect.offsetMin = new Vector2(-FocusFrameOutset, -FocusFrameOutset); // hugs the card from outside
+            frameRect.offsetMax = new Vector2(FocusFrameOutset, FocusFrameOutset);
+            BuildFrameEdge(frameObj.transform, "Edge_Top", new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, FocusFrameThickness));
+            BuildFrameEdge(frameObj.transform, "Edge_Bottom", new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0.5f, 0f), new Vector2(0f, FocusFrameThickness));
+            BuildFrameEdge(frameObj.transform, "Edge_Left", new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(0f, 0.5f), new Vector2(FocusFrameThickness, 0f));
+            BuildFrameEdge(frameObj.transform, "Edge_Right", new Vector2(1f, 0f), new Vector2(1f, 1f), new Vector2(1f, 0.5f), new Vector2(FocusFrameThickness, 0f));
+            frameObj.transform.SetAsLastSibling();
+            frameObj.SetActive(false);
+            card.FocusFrame = frameObj;
+
+            // Hovering or clicking the card lights up its enemy's model too
+            EnemyCardPointer pointer = cardObj.GetComponent<EnemyCardPointer>();
+            if (pointer == null) pointer = cardObj.AddComponent<EnemyCardPointer>();
+            pointer.Owner = this;
+            pointer.Index = index;
+            card.Background.raycastTarget = true;
+
             return card;
+        }
+
+        private static void BuildFrameEdge(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 pivot, Vector2 size)
+        {
+            GameObject edge = EnsureChild(parent, name, typeof(CanvasRenderer), typeof(Image));
+            RectTransform rect = edge.GetComponent<RectTransform>();
+            rect.anchorMin = anchorMin;
+            rect.anchorMax = anchorMax;
+            rect.pivot = pivot;
+            rect.anchoredPosition = Vector2.zero;
+            rect.sizeDelta = size;
+            Image img = edge.GetComponent<Image>();
+            img.color = FocusColor;
+            img.raycastTarget = false;
         }
 
         private void BuildHeroPanel(RectTransform heroCard)
