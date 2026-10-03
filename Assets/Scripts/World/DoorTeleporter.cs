@@ -47,6 +47,9 @@ namespace CastleOfTheD20.World
 
         #region Private State
 
+        /// <summary>Shown when the hero tries the Throne Room gate before both wing bosses are beaten.</summary>
+        public const string SealedThroneRoomMessage = "The Throne Room gate is sealed by the curse.\nDefeat the Cursed Commander and Shadow Mage Malakor first.";
+
         private static float s_lastGlobalTeleportTime = -10f;
 
         #endregion
@@ -174,6 +177,15 @@ namespace CastleOfTheD20.World
         public void PerformTeleport(GameObject playerObj)
         {
             if (playerObj == null) return;
+
+            // The Throne Room's gate stays sealed until both wing bosses have fallen
+            if (!string.IsNullOrEmpty(DestinationZone) && GameManager.Instance != null
+                && Enum.TryParse<GameLocation>(DestinationZone, true, out GameLocation sealedCheck)
+                && !GameManager.Instance.CanEnterLocation(sealedCheck))
+            {
+                CastleOfTheD20.UI.LockpickMinigameUI.ShowToast(SealedThroneRoomMessage);
+                return;
+            }
 
             // Prevent teleportation during initial level load
             if (Time.timeSinceLevelLoad < 0.6f)

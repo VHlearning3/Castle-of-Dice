@@ -35,6 +35,7 @@ namespace CastleOfTheD20.Bosses
         private bool isRealMalakorRevealed = false;
         private bool hasSpawnedIllusions = false;
         private readonly List<EnemyUnit> activeDecoys = new List<EnemyUnit>();
+        private readonly List<EnemyUnit> conjuredDecoys = new List<EnemyUnit>();
 
         #endregion
 
@@ -70,10 +71,24 @@ namespace CastleOfTheD20.Bosses
             attackBonus = 5;
             movementRange = 3;
 
+            // A retry after the hero falls starts the fight over: the first hit casts Mirror Image again
+            hasSpawnedIllusions = false;
+            activeDecoys.Clear();
+
             base.InitializeUnit();
 
             CheckArcaneHeresyDebuff();
             AdoptStandingDecoys();
+
+            // Illusions conjured in an earlier attempt vanish; decoys placed in the room are revived with it
+            for (int i = 0; i < conjuredDecoys.Count; i++)
+            {
+                if (conjuredDecoys[i] == null) continue;
+                conjuredDecoys[i].gameObject.SetActive(false); // leaves this frame's combat roll-call at once
+                if (Application.isPlaying) Destroy(conjuredDecoys[i].gameObject);
+                else DestroyImmediate(conjuredDecoys[i].gameObject);
+            }
+            conjuredDecoys.Clear();
         }
 
         /// <summary>Name an illusion shows: Malakor's own unless Arcane Heresy exposed the trick.</summary>
@@ -85,11 +100,12 @@ namespace CastleOfTheD20.Bosses
         /// </summary>
         private void AdoptStandingDecoys()
         {
-            EnemyUnit[] enemies = FindObjectsByType<EnemyUnit>(FindObjectsSortMode.None);
+            // Inactive ones too: the room may wake the decoy after the boss, or revive it after him on a retry
+            EnemyUnit[] enemies = FindObjectsByType<EnemyUnit>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             for (int i = 0; i < enemies.Length; i++)
             {
                 EnemyUnit unit = enemies[i];
-                if (unit == null || unit == this || unit is ShadowMageMalakorBoss || !unit.IsAlive) continue;
+                if (unit == null || unit == this || unit is ShadowMageMalakorBoss || conjuredDecoys.Contains(unit)) continue;
                 if (unit.name.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) < 0) continue;
 
                 unit.SetDisplayName(DecoyDisplayName);
@@ -115,7 +131,11 @@ namespace CastleOfTheD20.Bosses
                 isRealMalakorRevealed = true;
                 dialogue.ConsumeCombatDebuff(arcaneHeresyTag);
                 dialogue.ConsumeCombatDebuff("MalakorRevealed");
+            }
 
+            // Once pierced, the glamour stays pierced on a retry
+            if (isRealMalakorRevealed)
+            {
                 unitName = "[True] Shadow Mage Malakor";
                 Debug.Log("[ShadowMageMalakor] Arcane Heresy check succeeded! Malakor's true form is pierced through his glamour!");
             }
@@ -257,6 +277,7 @@ namespace CastleOfTheD20.Bosses
             decoyUnit.InitializeUnit();
             decoyUnit.MoveToTile(tile);
             activeDecoys.Add(decoyUnit);
+            conjuredDecoys.Add(decoyUnit);
 
             TurnManager.Instance?.AddCombatant(decoyUnit);
         }

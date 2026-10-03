@@ -20,8 +20,22 @@ namespace CastleOfTheD20.Bosses
             ShowStage(boss != null && boss.IsStoneFormActive ? 2 : 1);
         }
 
-        private void OnEnable() => GargoyleKingBoss.OnStoneFormActivated += HandleStoneForm;
-        private void OnDisable() => GargoyleKingBoss.OnStoneFormActivated -= HandleStoneForm;
+        private void OnEnable()
+        {
+            GargoyleKingBoss.OnStoneFormActivated += HandleStoneForm;
+            GargoyleKingBoss.OnStoneFormReset += HandleStoneFormReset;
+        }
+
+        private void OnDisable()
+        {
+            GargoyleKingBoss.OnStoneFormActivated -= HandleStoneForm;
+            GargoyleKingBoss.OnStoneFormReset -= HandleStoneFormReset;
+        }
+
+        private void HandleStoneFormReset(GargoyleKingBoss source)
+        {
+            if (source == boss) ShowStage(1);
+        }
 
         private void HandleStoneForm(GargoyleKingBoss source)
         {

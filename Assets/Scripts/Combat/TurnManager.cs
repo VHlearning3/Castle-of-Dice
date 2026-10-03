@@ -97,6 +97,9 @@ namespace CastleOfTheD20.Combat
         /// <summary>Whether combat is currently in progress.</summary>
         public bool IsCombatActive => isCombatActive;
 
+        /// <summary>False for the running (or last) fight when it pays no scrap, e.g. a village brawl.</summary>
+        public bool AwardsVictoryScrap => awardScrapOnVictory;
+
         #endregion
 
         #region Events

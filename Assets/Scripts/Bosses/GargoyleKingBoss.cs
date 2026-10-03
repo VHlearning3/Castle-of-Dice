@@ -41,6 +41,7 @@ namespace CastleOfTheD20.Bosses
 
         private int remainingIntimidationTurns = 0;
         private bool hasEnteredPhase2 = false;
+        private bool wasIntimidated = false;
 
         #endregion
 
@@ -71,6 +72,9 @@ namespace CastleOfTheD20.Bosses
         /// <summary>Fired when the boss transitions into Phase 2 Stone Form.</summary>
         public static event Action<GargoyleKingBoss> OnStoneFormActivated;
 
+        /// <summary>Fired when a retry puts the boss back from Stone Form into his first phase.</summary>
+        public static event Action<GargoyleKingBoss> OnStoneFormReset;
+
         /// <summary>Fired when ground stomp triggers rockfalls: (boss, targetedTiles).</summary>
         public static event Action<GargoyleKingBoss, List<Vector2Int>> OnGroundStompTriggered;
 
@@ -88,6 +92,16 @@ namespace CastleOfTheD20.Bosses
             attackBonus = 5;
             movementRange = 2;
 
+            // A retry after the hero falls faces the first-phase King again, not the Stone Form
+            bool wasInStoneForm = isStoneFormActive;
+            hasEnteredPhase2 = false;
+            isStoneFormActive = false;
+            remainingIntimidationTurns = 0;
+            if (wasInStoneForm)
+            {
+                OnStoneFormReset?.Invoke(this);
+            }
+
             base.InitializeUnit();
 
             CheckIntimidationDebuff();
@@ -98,9 +112,15 @@ namespace CastleOfTheD20.Bosses
             DialogueController dialogue = DialogueController.Instance;
             if (dialogue != null && (dialogue.HasCombatDebuff(intimidationTag) || dialogue.HasCombatDebuff("IntimidateBoss")))
             {
-                remainingIntimidationTurns = intimidationDurationTurns;
+                wasIntimidated = true;
                 dialogue.ConsumeCombatDebuff(intimidationTag);
                 dialogue.ConsumeCombatDebuff("IntimidateBoss");
+            }
+
+            // The hero who won the intimidation check keeps that edge when retrying the fight
+            if (wasIntimidated)
+            {
+                remainingIntimidationTurns = intimidationDurationTurns;
                 Debug.Log($"[GargoyleKing] Intimidation succeeded! The Gargoyle King hesitates (-3 DMG) for {remainingIntimidationTurns} turns.");
             }
         }

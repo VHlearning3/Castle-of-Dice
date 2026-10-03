@@ -243,6 +243,8 @@ namespace CastleOfTheD20.Core
                 Economy.QuestManager.Instance.ResetAllQuests();
             }
 
+            AdventureStats.Reset();
+
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.RestoreCampaignProgress(null, null);
