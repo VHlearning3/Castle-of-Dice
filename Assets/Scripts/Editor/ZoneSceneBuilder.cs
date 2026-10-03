@@ -128,6 +128,9 @@ namespace CastleOfTheD20.Editor
             // Rogue's lockpick practice chest beside Baldur's forge
             LockpickPracticeChestEditor.EnsurePracticeChest();
 
+            // Replace the generic layout above with the reference-picture village and move the gameplay objects into it
+            BuildVillageReferenceEditor.Build();
+
             // Save as Zone_1_VillageAndCellar.unity
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, zone1Path);
