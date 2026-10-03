@@ -1,0 +1,5823 @@
+{
+ "units": "metres",
+ "axes": "Unity world: X east, Y up, Z north; rot = Y degrees",
+ "source": "Assets/Scripts/Editor/ZoneSceneBuilder.cs + SetupRiggedEnemiesEditor.cs (DressZone2) @ GitHub master 8ae7140",
+ "statuses": {
+  "nykyinen": "exists on GitHub master",
+  "uusi": "new, from concept art",
+  "korjaus": "existing object, corrected value",
+  "paikallinen": "owned by local master (commander-door-grid); keep local values"
+ },
+ "zones": [
+  {
+   "key": "02_forest_path",
+   "num": 2,
+   "scene": "Zone_2_ForestPath",
+   "fi": "Metsäpolku",
+   "en": "Forest Path",
+   "extent": [
+    80,
+    110
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 5,
+   "subtitle": "Forest Path · 80 × 110 m · valinnainen zombitaistelu",
+   "concepts": [
+    "02a_forest_path_day",
+    "02b_forest_path_night"
+   ],
+   "summary": "Mutkitteleva metsäpolku kylästä (etelä) linnan alapihalle (pohjoinen). Länteen haarautuu sivupolku tiirikoitavalle salaportille (DC 13), jonka takaa aukeaa salareitti kirjastoon.",
+   "directional": {
+    "color": "#bfe0b2",
+    "intensity": 1.1,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    0,
+    0.5,
+    -44
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "Forest_Ground",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      80,
+      1,
+      110
+     ],
+     "rot": 0,
+     "build": "Cube, M_Fern.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_West",
+     "status": "nykyinen",
+     "pos": [
+      -40,
+      3,
+      0
+     ],
+     "size": [
+      2,
+      6,
+      110
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_East",
+     "status": "nykyinen",
+     "pos": [
+      40,
+      3,
+      0
+     ],
+     "size": [
+      2,
+      6,
+      110
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_South_L",
+     "status": "nykyinen",
+     "pos": [
+      -24,
+      3,
+      -54
+     ],
+     "size": [
+      32,
+      6,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_South_R",
+     "status": "nykyinen",
+     "pos": [
+      24,
+      3,
+      -54
+     ],
+     "size": [
+      32,
+      6,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_North_L",
+     "status": "nykyinen",
+     "pos": [
+      -24,
+      3,
+      54
+     ],
+     "size": [
+      32,
+      6,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Forest_Wall_North_R",
+     "status": "nykyinen",
+     "pos": [
+      24,
+      3,
+      54
+     ],
+     "size": [
+      32,
+      6,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (1)",
+     "status": "nykyinen",
+     "pos": [
+      -18,
+      0,
+      -35
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (2)",
+     "status": "nykyinen",
+     "pos": [
+      -28,
+      0,
+      -15
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (3)",
+     "status": "nykyinen",
+     "pos": [
+      -20,
+      0,
+      10
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (4)",
+     "status": "nykyinen",
+     "pos": [
+      -25,
+      0,
+      35
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (5)",
+     "status": "nykyinen",
+     "pos": [
+      18,
+      0,
+      -38
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (6)",
+     "status": "nykyinen",
+     "pos": [
+      26,
+      0,
+      -12
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (7)",
+     "status": "nykyinen",
+     "pos": [
+      22,
+      0,
+      15
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (8)",
+     "status": "nykyinen",
+     "pos": [
+      28,
+      0,
+      38
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (9)",
+     "status": "nykyinen",
+     "pos": [
+      -12,
+      0,
+      -10
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_tree (10)",
+     "status": "nykyinen",
+     "pos": [
+      14,
+      0,
+      2
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Pine_tree (nykyiset)",
+     "build": "Pine_tree.prefab (Flora_And_Flanks)",
+     "collider": true
+    },
+    {
+     "kind": "pickup",
+     "id": "SwampHerb_1",
+     "status": "nykyinen",
+     "pos": [
+      -12,
+      0.4,
+      -20
+     ],
+     "rot": 0,
+     "label": "Suoyrtti",
+     "group": "SwampHerb",
+     "build": "Sphere 0.8 + ChestRewardInteraction (Item_SwampHerb), Mirabelin tehtävä"
+    },
+    {
+     "kind": "pickup",
+     "id": "SwampHerb_2",
+     "status": "nykyinen",
+     "pos": [
+      15,
+      0.4,
+      8
+     ],
+     "rot": 0,
+     "group": "SwampHerb",
+     "build": "sama"
+    },
+    {
+     "kind": "pickup",
+     "id": "SwampHerb_3",
+     "status": "nykyinen",
+     "pos": [
+      -8,
+      0.4,
+      32
+     ],
+     "rot": 0,
+     "group": "SwampHerb",
+     "build": "sama"
+    },
+    {
+     "kind": "light",
+     "id": "ForestLight_South",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      -25
+     ],
+     "rot": 0,
+     "color": "#8cd973",
+     "range": 30,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "ForestLight_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      25
+     ],
+     "rot": 0,
+     "color": "#73bfa6",
+     "range": 30,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Village",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      -44
+     ],
+     "rot": 0,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Courtyard",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      44
+     ],
+     "rot": 180,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Library",
+     "status": "nykyinen",
+     "pos": [
+      -28,
+      0.5,
+      15
+     ],
+     "rot": 90,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Forest_Village",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      -53
+     ],
+     "rot": 180,
+     "target": "Zone_1_VillageAndCellar",
+     "spawn": "Spawn_From_Forest",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Return to Oakhaven Village (Village)",
+     "label": "↓ Kylä",
+     "axis": "x",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Forest_Courtyard",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      53
+     ],
+     "rot": 0,
+     "target": "Zone_3_CastleCourtyard",
+     "spawn": "Spawn_From_Forest",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Enter Castle Courtyard (Wing 1)",
+     "label": "↑ Linnan alapiha",
+     "axis": "x",
+     "outward": 1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Forest_Library_Secret",
+     "status": "nykyinen",
+     "pos": [
+      -33,
+      0,
+      15
+     ],
+     "rot": -90,
+     "target": "Zone_4_Library",
+     "spawn": "Spawn_From_SecretPath",
+     "width": 6,
+     "gap": 6,
+     "prompt": "Slip into the Grand Archives (Secret Path)",
+     "label": "Kirjasto (salareitti)",
+     "axis": "z",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 6 x 4 x 3 m",
+     "desc": "SetActive(false) kunnes portti on tiirikoitu (LockpickInteraction.hiddenPathObject)."
+    },
+    {
+     "kind": "gate",
+     "id": "Locked_Secret_Gate",
+     "status": "nykyinen",
+     "pos": [
+      -25,
+      2.5,
+      15
+     ],
+     "size": [
+      1.2,
+      5,
+      6
+     ],
+     "rot": 0,
+     "label": "Lukittu salaportti (DC 13)",
+     "build": "Cube + LockpickInteraction: DC 13, rewardGold 25, hasTrap, trapDamage 4",
+     "collider": true
+    },
+    {
+     "kind": "grid",
+     "id": "CombatGrid_Forest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.05,
+      -24
+     ],
+     "rot": 0,
+     "tiles": 12,
+     "tile": 1.6,
+     "build": "CombatGrid.prefab, Forest_Zombie_Encounter-objektin alla (SetupRiggedEnemiesEditor.DressZone2)",
+     "desc": "Pidä ruudukon alue (x -9.6…9.6, z -33.6…-14.4) vapaana uusista kiinteistä esineistä."
+    },
+    {
+     "kind": "enemy",
+     "id": "Forest_Zombie",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      1.5,
+      -18
+     ],
+     "rot": 180,
+     "label": "Zombi",
+     "build": "Enemy_Zombie.prefab \"Rotting Zombie\" HP 20, AC 11, DMG 4; StandOnGround; SetActive(false) kunnes taistelu (DressZone2)"
+    },
+    {
+     "kind": "trigger",
+     "id": "Forest_Zombie_Trigger",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      2.5,
+      -24
+     ],
+     "size": [
+      20,
+      6,
+      14
+     ],
+     "rot": 0,
+     "label": "zombin laukaisualue",
+     "build": "BoxCollider trigger + DungeonRoomController (roomLocation \"Forest\", ei pomoa) (DressZone2)"
+    },
+    {
+     "kind": "path",
+     "id": "Forest_Path_Main",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "pts": [
+      [
+       0,
+       -54
+      ],
+      [
+       3,
+       -40
+      ],
+      [
+       -4,
+       -25
+      ],
+      [
+       2,
+       -8
+      ],
+      [
+       -3,
+       5
+      ],
+      [
+       -6,
+       15
+      ],
+      [
+       0,
+       30
+      ],
+      [
+       4,
+       42
+      ],
+      [
+       0,
+       54
+      ]
+     ],
+     "width": 6,
+     "label": "Mutkitteleva metsäpolku",
+     "build": "Tasainen polkumateriaali (ruskea #c89a5c) maahan: litteät kuutiot 0.02 m tai Tile_*.prefab-kivet; reunoille Grass/Fern",
+     "collider": false,
+     "desc": "Leveys 6 m, kulkee ovelta ovelle."
+    },
+    {
+     "kind": "path",
+     "id": "Forest_Path_Branch",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "pts": [
+      [
+       -6,
+       15
+      ],
+      [
+       -14,
+       17
+      ],
+      [
+       -22,
+       15
+      ],
+      [
+       -33,
+       15
+      ]
+     ],
+     "width": 3.5,
+     "label": "Sivupolku",
+     "build": "sama kuin pääpolku, kapeampi",
+     "collider": false,
+     "desc": "Haarautuu pääpolulta (-6, 15) salaportille ja salaovelle."
+    },
+    {
+     "kind": "prop",
+     "id": "Gate_Arch_Ivy",
+     "status": "uusi",
+     "pos": [
+      -25,
+      0,
+      15
+     ],
+     "size": [
+      8,
+      6.5,
+      2
+     ],
+     "rot": 90,
+     "build": "Arch.prefab (rot 90 kuten sivuovien kaaret) skaala ~1.5 portin ympärille + Leaves_*/Bush_*-muratti; lukko kultaisena (emissive)",
+     "collider": false,
+     "desc": "Pelkkä kehys: Locked_Secret_Gate on edelleen se, joka estää kulun."
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_01",
+     "status": "uusi",
+     "pos": [
+      -33,
+      0,
+      -45
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_02",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      -28
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_03",
+     "status": "uusi",
+     "pos": [
+      -34,
+      0,
+      0
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_04",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      28
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_05",
+     "status": "uusi",
+     "pos": [
+      -34,
+      0,
+      45
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_06",
+     "status": "uusi",
+     "pos": [
+      33,
+      0,
+      -45
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_07",
+     "status": "uusi",
+     "pos": [
+      31,
+      0,
+      -25
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_08",
+     "status": "uusi",
+     "pos": [
+      34,
+      0,
+      0
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_09",
+     "status": "uusi",
+     "pos": [
+      32,
+      0,
+      26
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_10",
+     "status": "uusi",
+     "pos": [
+      34,
+      0,
+      46
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_11",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      40
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_12",
+     "status": "uusi",
+     "pos": [
+      14,
+      0,
+      30
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_13",
+     "status": "uusi",
+     "pos": [
+      13.5,
+      0,
+      -20
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_14",
+     "status": "uusi",
+     "pos": [
+      -14,
+      0,
+      -42
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_15",
+     "status": "uusi",
+     "pos": [
+      16,
+      0,
+      -48
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "tree",
+     "id": "Pine_Cluster_16",
+     "status": "uusi",
+     "pos": [
+      -20,
+      0,
+      46
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "group": "Pine_Cluster (uudet)",
+     "build": "2–3 kpl Pine_tree.prefab / Pine_tree_2.prefab r ≤ 3 m sisällä, satunnainen rot, skaala 0.9–1.3",
+     "collider": true
+    },
+    {
+     "kind": "rock",
+     "id": "Rock_Group_1",
+     "status": "uusi",
+     "pos": [
+      12.5,
+      0,
+      -35
+     ],
+     "size": [
+      3,
+      1.5,
+      2
+     ],
+     "rot": 0,
+     "group": "Rock_Group",
+     "build": "Rock_1…4.prefab",
+     "collider": true,
+     "label": "kiviä"
+    },
+    {
+     "kind": "rock",
+     "id": "Rock_Group_2",
+     "status": "uusi",
+     "pos": [
+      -8,
+      0,
+      22
+     ],
+     "size": [
+      2.4,
+      1.5,
+      1.8
+     ],
+     "rot": 0,
+     "group": "Rock_Group",
+     "build": "Rock_1…4.prefab",
+     "collider": true
+    },
+    {
+     "kind": "rock",
+     "id": "Rock_Group_3",
+     "status": "uusi",
+     "pos": [
+      9,
+      0,
+      20
+     ],
+     "size": [
+      2,
+      1.5,
+      1.6
+     ],
+     "rot": 0,
+     "group": "Rock_Group",
+     "build": "Rock_1…4.prefab",
+     "collider": true
+    },
+    {
+     "kind": "rock",
+     "id": "Rock_Group_4",
+     "status": "uusi",
+     "pos": [
+      -9,
+      0,
+      -44
+     ],
+     "size": [
+      3,
+      1.5,
+      2.2
+     ],
+     "rot": 0,
+     "group": "Rock_Group",
+     "build": "Rock_1…4.prefab",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Lantern_Post",
+     "status": "uusi",
+     "pos": [
+      4.5,
+      0,
+      -2
+     ],
+     "size": [
+      0.6,
+      3.2,
+      0.6
+     ],
+     "rot": 0,
+     "build": "Lamppost.prefab tai street_light.prefab",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "Lantern_Light",
+     "status": "uusi",
+     "pos": [
+      4.5,
+      2.8,
+      -2
+     ],
+     "rot": 0,
+     "color": "#ffb04a",
+     "range": 10,
+     "intensity": 1.6,
+     "ltype": "point",
+     "variant": "B (yö)",
+     "desc": "Päällä vain yöversiossa; shadows None",
+     "label": "Lyhtypylväs"
+    },
+    {
+     "kind": "light",
+     "id": "Gate_Lock_Glow",
+     "status": "uusi",
+     "pos": [
+      -24.2,
+      2.6,
+      15
+     ],
+     "rot": 0,
+     "color": "#ffd76a",
+     "range": 6,
+     "intensity": 1.2,
+     "ltype": "point",
+     "variant": "A kulta / B syaani #5ae0ff",
+     "desc": "Lukon hehku; shadows None"
+    },
+    {
+     "kind": "scatter",
+     "id": "Path_Edge_Scatter",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "draw": false,
+     "build": "~20 kpl Mushroom_1…4, Flowers_1/2, Fern, Grass_1…3 polun reunoille 1–5 m päähän reunasta",
+     "collider": false,
+     "desc": "Ei collidereita (ei estä kävelyä)."
+    }
+   ],
+   "local": [
+    "Tiirikointi on paikallisessa masterissa minipeli (PR #10). Portin paikka ja DC pysyvät samoina."
+   ],
+   "gameplay": [
+    "Zombin taistelu (Forest_Zombie_Encounter: ruudukko, zombi ja laukaisualue) tulee SetupRiggedEnemiesEditor.DressZone2:sta, ei ZoneSceneBuilderista. Jos Zone 2 rakennetaan uudelleen, aja sen jälkeen CastleOfDice/Setup Rigged Enemies, Bosses & Heroes, muuten zombi puuttuu.",
+    "Älä sulje salaportin takaista käytävää pensailla tai kivillä. Kirjaston kautta saapuva sankari ilmestyy pisteeseen (-28, 15) portin taakse, ja hänen on päästävä pois myös silloin, kun porttia ei ole tiirikoitu (tiirikointi on vain Varkaalle).",
+    "Pidä polku ja ovien edustat (16 m aukot) vapaina kiinteistä esineistä.",
+    "Kamera seuraa lounaasta (offset -6, 12, -12). Yli 4 m korkeat esineet polun eteläpuolella voivat peittää sankarin."
+   ],
+   "mood": {
+    "default": "A · Päivä",
+    "items": [
+     [
+      "A · Päivä (oletus)",
+      [
+       "Directional: väri #fff1cc, intensiteetti 1.25, rotaatio (45, -35, 0).",
+       "Ambient (Gradient): taivas #9ccbea, horisontti #bfd8a0, maa #4e6b3a.",
+       "Sumu: Linear #dce8d2, alku 40 m, loppu 130 m.",
+       "Nykyiset vihreät pistevalot jäävät, intensiteetti 2.0 → 1.2.",
+       "Auringonsäteet: 5–7 additiivista läpinäkyvää tasoa (#fff6cf, alpha ≈ 0.12) lounaasta koilliseen.",
+       "Partikkelit: leijuva siitepöly/lehdet, 20–40 kpl, hidas."
+      ]
+     ],
+     [
+      "B · Kuutamoyö",
+      [
+       "Directional (kuu): #8fa6e0, intensiteetti 0.35, rotaatio (35, 150, 0).",
+       "Ambient: Flat #1c2244. Skybox tumma #0b1430 + tähdet.",
+       "Sumu: Exponential Squared #5a6a98, tiheys 0.03.",
+       "Lantern_Light päälle (#ffb04a, range 10, int 1.6); portin riimut syaanina #5ae0ff.",
+       "Tulikärpäset: 30 partikkelia #d8ff7a, koko 0.06–0.12."
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "key": "03_courtyard",
+   "num": 3,
+   "scene": "Zone_3_CastleCourtyard",
+   "fi": "Linnan alapiha",
+   "en": "Castle Courtyard",
+   "extent": [
+    90,
+    90
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 5,
+   "subtitle": "Castle Courtyard · 90 × 90 m · 1. pomo: Kirottu Komentaja",
+   "concepts": [
+    "03a_courtyard_storm",
+    "03b_courtyard_sunset"
+   ],
+   "summary": "Muurien ympäröimä piha. Kirottu Komentaja vartioi pohjoisovea keskushalliin, ja taistelun laukaisualue ulottuu seinästä seinään ja ovelle asti. Etelässä kirottu suihkulähde, sivuilla harjoituspiha.",
+   "directional": {
+    "color": "#fff2d9",
+    "intensity": 1.2,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    0,
+    0.5,
+    -42
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "Courtyard_Floor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      90,
+      1,
+      90
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_West",
+     "status": "nykyinen",
+     "pos": [
+      -45,
+      4,
+      0
+     ],
+     "size": [
+      2,
+      8,
+      90
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_East",
+     "status": "nykyinen",
+     "pos": [
+      45,
+      4,
+      0
+     ],
+     "size": [
+      2,
+      8,
+      90
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_South_L",
+     "status": "nykyinen",
+     "pos": [
+      -25,
+      4,
+      -45
+     ],
+     "size": [
+      40,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_South_R",
+     "status": "nykyinen",
+     "pos": [
+      25,
+      4,
+      -45
+     ],
+     "size": [
+      40,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_North_L",
+     "status": "nykyinen",
+     "pos": [
+      -25,
+      4,
+      45
+     ],
+     "size": [
+      40,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Courtyard_Wall_North_R",
+     "status": "nykyinen",
+     "pos": [
+      25,
+      4,
+      45
+     ],
+     "size": [
+      40,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "pillar",
+     "id": "Courtyard_Pillar_0",
+     "status": "nykyinen",
+     "pos": [
+      -42,
+      0,
+      42
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Courtyard_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Courtyard_Pillar_1",
+     "status": "nykyinen",
+     "pos": [
+      42,
+      0,
+      42
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Courtyard_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Courtyard_Pillar_2",
+     "status": "nykyinen",
+     "pos": [
+      -42,
+      0,
+      -42
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Courtyard_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Courtyard_Pillar_3",
+     "status": "nykyinen",
+     "pos": [
+      42,
+      0,
+      -42
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Courtyard_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "CourtyardLight_Center",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      7,
+      0
+     ],
+     "rot": 0,
+     "color": "#ffbf73",
+     "range": 35,
+     "intensity": 2.5,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "CourtyardLight_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      25
+     ],
+     "rot": 0,
+     "color": "#ffa659",
+     "range": 28,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Forest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      -40
+     ],
+     "rot": 0,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Hall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      40
+     ],
+     "rot": 180,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Courtyard_Forest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      -44.5
+     ],
+     "rot": 180,
+     "target": "Zone_2_ForestPath",
+     "spawn": "Spawn_From_Courtyard",
+     "width": 8,
+     "gap": 10,
+     "prompt": "Return to Forest Path (Forest)",
+     "label": "↓ Metsäpolku",
+     "axis": "x",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Courtyard_CastleHall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      44.5
+     ],
+     "rot": 0,
+     "target": "Zone_5_CastleHall",
+     "spawn": "Spawn_From_Courtyard",
+     "width": 8,
+     "gap": 10,
+     "prompt": "Enter Great Central Hall (Safe Haven Hub)",
+     "label": "↑ Keskushalli",
+     "axis": "x",
+     "outward": 1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "barrier",
+     "id": "Barrier_South",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      3.5,
+      -44
+     ],
+     "size": [
+      10,
+      7,
+      1.5
+     ],
+     "rot": 0,
+     "build": "Cube M_HammerJAanvil, SetActive(false) kunnes taistelu alkaa"
+    },
+    {
+     "kind": "barrier",
+     "id": "Barrier_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      3.5,
+      44
+     ],
+     "size": [
+      10,
+      7,
+      1.5
+     ],
+     "rot": 0,
+     "build": "sama; ehdotus: ulkoasu rautaristikoksi (portcullis)"
+    },
+    {
+     "kind": "grid",
+     "id": "CombatGrid_Courtyard",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.05,
+      10
+     ],
+     "rot": 0,
+     "tiles": 12,
+     "tile": 1.6,
+     "build": "CombatGrid.prefab",
+     "desc": "Paikallisessa masterissa 32 × 32 ja liukuu sankarin luo (ks. erot)."
+    },
+    {
+     "kind": "enemy",
+     "id": "Courtyard_Skeleton",
+     "status": "nykyinen",
+     "pos": [
+      -6,
+      0.9,
+      12
+     ],
+     "rot": 0,
+     "label": "Luurankovartija",
+     "build": "EnemyUnit \"Armored Skeleton Guard\" HP 20, AC 12, DMG 4; SetActive(false) kunnes taistelu"
+    },
+    {
+     "kind": "boss",
+     "id": "Boss_CursedCommander",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      1.2,
+      18
+     ],
+     "rot": 0,
+     "label": "Kirottu Komentaja",
+     "build": "CursedCommanderBoss; SetActive(false) kunnes taistelu"
+    },
+    {
+     "kind": "npc",
+     "id": "NPC_CursedCommander",
+     "status": "paikallinen",
+     "pos": [
+      0,
+      1.0,
+      -12
+     ],
+     "rot": 0,
+     "label": "dialogi-NPC (paik. masterissa pomon paikalla)",
+     "build": "VillageNPC + Commander_Intro.asset",
+     "desc": "Paikallisessa masterissa NPC seisoo pomon taistelupaikalla ja dialogi alkaa automaattisesti laukaisualueelle astuttaessa."
+    },
+    {
+     "kind": "chest",
+     "id": "Courtyard_Reward_Chest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.4,
+      30
+     ],
+     "rot": 0,
+     "label": "Arkku (40 g)",
+     "build": "Chest.prefab + ChestRewardInteraction 40 g; näkyy voiton jälkeen"
+    },
+    {
+     "kind": "trigger",
+     "id": "Courtyard_Encounter_Trigger",
+     "status": "paikallinen",
+     "pos": [
+      0,
+      2.5,
+      19
+     ],
+     "size": [
+      88,
+      6,
+      50
+     ],
+     "rot": 0,
+     "build": "BoxCollider trigger + DungeonRoomController (CursedCommander)",
+     "desc": "GitHub masterissa (0, 2.5, 10) koko 32 × 6 × 32. Paikallisessa masterissa seinästä seinään x -44…44, z -6…44, eli ovelle asti (Vilin pyyntö 3.10.).",
+     "label": "taistelun laukaisualue: seinästä seinään, ovelle asti"
+    },
+    {
+     "kind": "tower",
+     "id": "Corner_Tower_NW",
+     "status": "uusi",
+     "pos": [
+      -41,
+      0,
+      41
+     ],
+     "size": [
+      9,
+      14,
+      9
+     ],
+     "rot": 0,
+     "label": "Torni",
+     "group": "Corner_Tower",
+     "build": "Tower.prefab tai kuutiot + harjakaiteet; ympäröi kulmapilarin",
+     "collider": true
+    },
+    {
+     "kind": "tower",
+     "id": "Corner_Tower_NE",
+     "status": "uusi",
+     "pos": [
+      41,
+      0,
+      41
+     ],
+     "size": [
+      9,
+      14,
+      9
+     ],
+     "rot": 0,
+     "label": "Torni",
+     "group": "Corner_Tower",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "tower",
+     "id": "Corner_Tower_SW",
+     "status": "uusi",
+     "pos": [
+      -41,
+      0,
+      -41
+     ],
+     "size": [
+      9,
+      14,
+      9
+     ],
+     "rot": 0,
+     "label": "Torni",
+     "group": "Corner_Tower",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "tower",
+     "id": "Corner_Tower_SE",
+     "status": "uusi",
+     "pos": [
+      41,
+      0,
+      -41
+     ],
+     "size": [
+      9,
+      14,
+      9
+     ],
+     "rot": 0,
+     "label": "Torni",
+     "group": "Corner_Tower",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "tower",
+     "id": "Gatehouse_Tower_W",
+     "status": "uusi",
+     "pos": [
+      -7,
+      0,
+      41
+     ],
+     "size": [
+      4,
+      10,
+      6
+     ],
+     "rot": 0,
+     "group": "Gatehouse_Tower",
+     "build": "kuutiot + harjakaiteet, oven molemmin puolin",
+     "collider": true
+    },
+    {
+     "kind": "tower",
+     "id": "Gatehouse_Tower_E",
+     "status": "uusi",
+     "pos": [
+      7,
+      0,
+      41
+     ],
+     "size": [
+      4,
+      10,
+      6
+     ],
+     "rot": 0,
+     "label": "Porttitorni",
+     "group": "Gatehouse_Tower",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Cursed_Fountain",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      -26
+     ],
+     "size": [
+      11,
+      0.8,
+      11
+     ],
+     "rot": 0,
+     "r": 5.5,
+     "color": "#6affb0",
+     "label": "Kirottu suihkulähde",
+     "build": "Allas: matala sylinteri r 5.5, korkeus 0.8; keskellä murtunut patsas 3.5 m; vesi vihreä emissive #3aa86a",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "Fountain_Glow",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.5,
+      -26
+     ],
+     "rot": 0,
+     "color": "#6aff9a",
+     "range": 12,
+     "intensity": 1.5,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None"
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_North_1",
+     "status": "uusi",
+     "pos": [
+      -30,
+      4.5,
+      43.8
+     ],
+     "size": [
+      3,
+      6,
+      0.2
+     ],
+     "rot": 0,
+     "group": "Banner_North",
+     "color": "#c89bff",
+     "build": "Revitty viiri #3a1f4a, vihreä tunnus #8affb0; riippuu 1.5–7.5 m korkeudella seinässä",
+     "collider": false,
+     "label": "revityt viirit"
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_North_2",
+     "status": "uusi",
+     "pos": [
+      -18,
+      4.5,
+      43.8
+     ],
+     "size": [
+      3,
+      6,
+      0.2
+     ],
+     "rot": 0,
+     "group": "Banner_North",
+     "color": "#c89bff",
+     "build": "Revitty viiri #3a1f4a, vihreä tunnus #8affb0; riippuu 1.5–7.5 m korkeudella seinässä",
+     "collider": false
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_North_3",
+     "status": "uusi",
+     "pos": [
+      18,
+      4.5,
+      43.8
+     ],
+     "size": [
+      3,
+      6,
+      0.2
+     ],
+     "rot": 0,
+     "group": "Banner_North",
+     "color": "#c89bff",
+     "build": "Revitty viiri #3a1f4a, vihreä tunnus #8affb0; riippuu 1.5–7.5 m korkeudella seinässä",
+     "collider": false,
+     "label": "revityt viirit"
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_North_4",
+     "status": "uusi",
+     "pos": [
+      30,
+      4.5,
+      43.8
+     ],
+     "size": [
+      3,
+      6,
+      0.2
+     ],
+     "rot": 0,
+     "group": "Banner_North",
+     "color": "#c89bff",
+     "build": "Revitty viiri #3a1f4a, vihreä tunnus #8affb0; riippuu 1.5–7.5 m korkeudella seinässä",
+     "collider": false
+    },
+    {
+     "kind": "circle",
+     "id": "Training_Dummy_1",
+     "status": "uusi",
+     "pos": [
+      -36,
+      0,
+      -30
+     ],
+     "size": [
+      1.2,
+      2.2,
+      1.2
+     ],
+     "rot": 90,
+     "r": 1.3,
+     "group": "Training_Dummy",
+     "build": "Tolppa + poikkipuu + olkivartalo (Log-, Box-prefabit tai kuutiot)",
+     "collider": true,
+     "label": "olkinuket"
+    },
+    {
+     "kind": "circle",
+     "id": "Training_Dummy_2",
+     "status": "uusi",
+     "pos": [
+      -36,
+      0,
+      -20
+     ],
+     "size": [
+      1.2,
+      2.2,
+      1.2
+     ],
+     "rot": 90,
+     "r": 1.3,
+     "group": "Training_Dummy",
+     "build": "Tolppa + poikkipuu + olkivartalo (Log-, Box-prefabit tai kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Training_Dummy_3",
+     "status": "uusi",
+     "pos": [
+      -36,
+      0,
+      -10
+     ],
+     "size": [
+      1.2,
+      2.2,
+      1.2
+     ],
+     "rot": 90,
+     "r": 1.3,
+     "group": "Training_Dummy",
+     "build": "Tolppa + poikkipuu + olkivartalo (Log-, Box-prefabit tai kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Weapon_Rack_W",
+     "status": "uusi",
+     "pos": [
+      -42,
+      0,
+      12
+     ],
+     "size": [
+      1.2,
+      2.2,
+      12
+     ],
+     "rot": 0,
+     "label": "asetelineet",
+     "group": "Weapon_Rack",
+     "build": "Puuteline + miekat/keihäät (Log + ohuet kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Weapon_Rack_E",
+     "status": "uusi",
+     "pos": [
+      42,
+      0,
+      12
+     ],
+     "size": [
+      1.2,
+      2.2,
+      12
+     ],
+     "rot": 0,
+     "label": "asetelineet",
+     "group": "Weapon_Rack",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "brazier",
+     "id": "Brazier_1",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      -2
+     ],
+     "size": [
+      1.2,
+      1.4,
+      1.2
+     ],
+     "rot": 0,
+     "group": "Brazier",
+     "build": "Maljahiillos: Cauldron.prefab tai sylinteri + tulipartikkelit",
+     "collider": true
+    },
+    {
+     "kind": "brazier",
+     "id": "Brazier_2",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      -2
+     ],
+     "size": [
+      1.2,
+      1.4,
+      1.2
+     ],
+     "rot": 0,
+     "group": "Brazier",
+     "build": "Maljahiillos: Cauldron.prefab tai sylinteri + tulipartikkelit",
+     "collider": true
+    },
+    {
+     "kind": "brazier",
+     "id": "Brazier_3",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      22
+     ],
+     "size": [
+      1.2,
+      1.4,
+      1.2
+     ],
+     "rot": 0,
+     "group": "Brazier",
+     "build": "Maljahiillos: Cauldron.prefab tai sylinteri + tulipartikkelit",
+     "collider": true
+    },
+    {
+     "kind": "brazier",
+     "id": "Brazier_4",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      22
+     ],
+     "size": [
+      1.2,
+      1.4,
+      1.2
+     ],
+     "rot": 0,
+     "group": "Brazier",
+     "build": "Maljahiillos: Cauldron.prefab tai sylinteri + tulipartikkelit",
+     "collider": true,
+     "label": "hiillokset"
+    },
+    {
+     "kind": "light",
+     "id": "Brazier_Light_1",
+     "status": "uusi",
+     "pos": [
+      -12,
+      1.8,
+      -2
+     ],
+     "rot": 0,
+     "color": "#ff9a3a",
+     "range": 10,
+     "intensity": 1.6,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Brazier_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Brazier_Light_2",
+     "status": "uusi",
+     "pos": [
+      12,
+      1.8,
+      -2
+     ],
+     "rot": 0,
+     "color": "#ff9a3a",
+     "range": 10,
+     "intensity": 1.6,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Brazier_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Brazier_Light_3",
+     "status": "uusi",
+     "pos": [
+      -12,
+      1.8,
+      22
+     ],
+     "rot": 0,
+     "color": "#ff9a3a",
+     "range": 10,
+     "intensity": 1.6,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Brazier_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Brazier_Light_4",
+     "status": "uusi",
+     "pos": [
+      12,
+      1.8,
+      22
+     ],
+     "rot": 0,
+     "color": "#ff9a3a",
+     "range": 10,
+     "intensity": 1.6,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Brazier_Light",
+     "draw": false
+    },
+    {
+     "kind": "fx",
+     "id": "Rain_And_Lightning",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "draw": false,
+     "variant": "A (myrsky)",
+     "build": "Sadepartikkelit kameran mukana (~600 viirua #c8d4e8, alpha 0.35); salama 8–15 s välein: directional 0.75 → 2.4 kahdesti 0.08 s; ukkosääni SFXManager-poolin kautta",
+     "collider": false
+    }
+   ],
+   "local": [
+    "Laukaisualue on paikallisessa masterissa jo seinästä seinään (x -44…44, z -6…44), joten keskushallin ovelle ei pääse ilman taistelua (ketju \"Commander door trigger and bigger grids\").",
+    "Taisteluruudukko on paikallisessa masterissa 32 × 32 (51,2 m) ja liukuu niin, että sankari on vähintään 2 ruutua reunan sisäpuolella.",
+    "Dialogi-NPC seisoo paikallisessa masterissa pomon taistelupaikalla, ja dialogi alkaa aina, kun sankari astuu laukaisualueelle. Voitetun pomon NPC ei näy.",
+    "Käytä näissä paikallisen masterin arvoja. Tämä piirros ei muuta laukaisualuetta, ruudukkoa, pomoa eikä NPC:tä."
+   ],
+   "gameplay": [
+    "Ruudukon alle jäävä kiinteä esine (collider 0.1–1.9 m korkeudella) tekee ruudusta kulkukelvottoman (GridManager.cs, OverlapBox). Hiillokset ovat tarkoituksella 1 ruudun suojia; muut uudet esineet ovat reunoilla.",
+    "Pidä oven edusta (x -5…5, z 30…44) ja Spawn_From_Hall (0, 40) vapaina.",
+    "Suihkulähde katkaisee suoran linjan etelästä pohjoiseen, mutta sen molemmin puolin jää yli 15 m kulkutilaa.",
+    "Taisteluun ei lisätä vihollisia (sääntö: 1 eliitti tai enintään 2 vihollista, pomolla enintään 1 apulainen).",
+    "Barrier_North voi näyttää rautaristikolta (portcullis), koska se näkyy vain taistelun aikana."
+   ],
+   "mood": {
+    "default": "A · Myrsky",
+    "items": [
+     [
+      "A · Myrsky (oletus)",
+      [
+       "Directional: #9aa8bf, intensiteetti 0.75, rotaatio (50, -30, 0).",
+       "Ambient: taivas #3a4452, maa #2e3440. Skybox harmaa myrsky.",
+       "Sumu: Linear #5e6672, 25–110 m.",
+       "Sade ja salama (Rain_And_Lightning). Suihkulähteen vihreä hehku #6aff9a ja Komentajan vihreä kirous.",
+       "Hiillokset (#ff9a3a) lämpiminä vastapainoina."
+      ]
+     ],
+     [
+      "B · Auringonlasku",
+      [
+       "Directional: #ffb070, intensiteetti 1.2, matala kulma, rotaatio (15, 200, 0), pitkät varjot.",
+       "Ambient: taivas #3a2a5a, horisontti #ffb060, maa #4a3a44.",
+       "Ei sadetta. Kevyt usva #f0a070, 60–160 m."
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "key": "04_library",
+   "num": 4,
+   "scene": "Zone_4_Library",
+   "fi": "Kirjasto",
+   "en": "Library",
+   "extent": [
+    90,
+    90
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 5,
+   "subtitle": "Library · 90 × 90 m · 2. pomo: Varjomaagi Malakor",
+   "concepts": [
+    "04a_library_arcane",
+    "04b_library_moon"
+   ],
+   "summary": "Salatieteen siipi. Sisään lännestä salareitiltä tai idästä keskushallista. Hyllykäytävät kulmissa, loitsupiiri Malakorin alla, suuri lasimaalausikkuna pohjoisseinässä ja pitkä lukupöytä etelässä.",
+   "directional": {
+    "color": "#598cf2",
+    "intensity": 1.0,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    -35,
+    0.5,
+    0
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "Library_Floor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      90,
+      1,
+      90
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      4,
+      45
+     ],
+     "size": [
+      90,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_South",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      4,
+      -45
+     ],
+     "size": [
+      90,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_West_L",
+     "status": "nykyinen",
+     "pos": [
+      -45,
+      4,
+      -25
+     ],
+     "size": [
+      2,
+      8,
+      40
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_West_R",
+     "status": "nykyinen",
+     "pos": [
+      -45,
+      4,
+      25
+     ],
+     "size": [
+      2,
+      8,
+      40
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_East_L",
+     "status": "nykyinen",
+     "pos": [
+      45,
+      4,
+      -25
+     ],
+     "size": [
+      2,
+      8,
+      40
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Library_Wall_East_R",
+     "status": "nykyinen",
+     "pos": [
+      45,
+      4,
+      25
+     ],
+     "size": [
+      2,
+      8,
+      40
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "pillar",
+     "id": "Library_Pillar_0",
+     "status": "nykyinen",
+     "pos": [
+      -40,
+      0,
+      40
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Library_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Library_Pillar_1",
+     "status": "nykyinen",
+     "pos": [
+      40,
+      0,
+      40
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Library_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Library_Pillar_2",
+     "status": "nykyinen",
+     "pos": [
+      -40,
+      0,
+      -40
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Library_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Library_Pillar_3",
+     "status": "nykyinen",
+     "pos": [
+      40,
+      0,
+      -40
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Library_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "wall",
+     "id": "Bookshelf_1",
+     "status": "nykyinen",
+     "pos": [
+      -20,
+      3.5,
+      25
+     ],
+     "size": [
+      12,
+      7,
+      2.5
+     ],
+     "rot": 0,
+     "label": "Kirjahylly",
+     "group": "Bookshelf",
+     "build": "Cube, M_Logs.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Bookshelf_2",
+     "status": "nykyinen",
+     "pos": [
+      20,
+      3.5,
+      25
+     ],
+     "size": [
+      12,
+      7,
+      2.5
+     ],
+     "rot": 0,
+     "label": "Kirjahylly",
+     "group": "Bookshelf",
+     "build": "Cube, M_Logs.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Bookshelf_3",
+     "status": "nykyinen",
+     "pos": [
+      -20,
+      3.5,
+      -25
+     ],
+     "size": [
+      12,
+      7,
+      2.5
+     ],
+     "rot": 0,
+     "group": "Bookshelf",
+     "build": "Cube, M_Logs.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Bookshelf_4",
+     "status": "nykyinen",
+     "pos": [
+      20,
+      3.5,
+      -25
+     ],
+     "size": [
+      12,
+      7,
+      2.5
+     ],
+     "rot": 0,
+     "group": "Bookshelf",
+     "build": "Cube, M_Logs.mat"
+    },
+    {
+     "kind": "light",
+     "id": "ArcaneLight_Center",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6.5,
+      0
+     ],
+     "rot": 0,
+     "color": "#408cff",
+     "range": 32,
+     "intensity": 2.5,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "ArcaneLight_East",
+     "status": "nykyinen",
+     "pos": [
+      20,
+      5,
+      15
+     ],
+     "rot": 0,
+     "color": "#7340f2",
+     "range": 22,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "ArcaneLight_West",
+     "status": "nykyinen",
+     "pos": [
+      -20,
+      5,
+      15
+     ],
+     "rot": 0,
+     "color": "#7340f2",
+     "range": 22,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_SecretPath",
+     "status": "nykyinen",
+     "pos": [
+      -38,
+      0.5,
+      0
+     ],
+     "rot": 90,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Hall",
+     "status": "nykyinen",
+     "pos": [
+      38,
+      0.5,
+      0
+     ],
+     "rot": -90,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Library_SecretPath",
+     "status": "nykyinen",
+     "pos": [
+      -44.5,
+      0,
+      0
+     ],
+     "rot": -90,
+     "target": "Zone_2_ForestPath",
+     "spawn": "Spawn_From_Library",
+     "width": 6,
+     "gap": 10,
+     "prompt": "Slip through Secret Passage to Whispering Woods",
+     "label": "Metsäpolku (salareitti)",
+     "axis": "z",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 6 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Library_CastleHall",
+     "status": "nykyinen",
+     "pos": [
+      44.5,
+      0,
+      0
+     ],
+     "rot": 90,
+     "target": "Zone_5_CastleHall",
+     "spawn": "Spawn_From_Library",
+     "width": 6,
+     "gap": 10,
+     "prompt": "Enter Great Central Hall (Safe Haven Hub)",
+     "label": "Keskushalli",
+     "axis": "z",
+     "outward": 1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 6 x 4 x 3 m"
+    },
+    {
+     "kind": "barrier",
+     "id": "Barrier_West",
+     "status": "nykyinen",
+     "pos": [
+      -44,
+      3.5,
+      0
+     ],
+     "size": [
+      1.5,
+      7,
+      8
+     ],
+     "rot": 0,
+     "build": "Cube M_HammerJAanvil, näkyy taistelun ajan"
+    },
+    {
+     "kind": "barrier",
+     "id": "Barrier_East",
+     "status": "nykyinen",
+     "pos": [
+      44,
+      3.5,
+      0
+     ],
+     "size": [
+      1.5,
+      7,
+      8
+     ],
+     "rot": 0,
+     "build": "sama"
+    },
+    {
+     "kind": "grid",
+     "id": "CombatGrid_Library",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.05,
+      10
+     ],
+     "rot": 0,
+     "tiles": 12,
+     "tile": 1.6,
+     "build": "CombatGrid.prefab",
+     "desc": "Paikallisessa masterissa 20 × 20 ja liukuu sankarin luo."
+    },
+    {
+     "kind": "enemy",
+     "id": "Shadow_Decoy",
+     "status": "nykyinen",
+     "pos": [
+      6,
+      0.9,
+      12
+     ],
+     "rot": 0,
+     "label": "Varjohuijari",
+     "build": "EnemyUnit \"Shadow Decoy\" HP 18, AC 12, DMG 4"
+    },
+    {
+     "kind": "boss",
+     "id": "Boss_ShadowMageMalakor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      1.1,
+      18
+     ],
+     "rot": 0,
+     "label": "Malakor",
+     "build": "ShadowMageMalakorBoss"
+    },
+    {
+     "kind": "npc",
+     "id": "NPC_Malakor",
+     "status": "paikallinen",
+     "pos": [
+      0,
+      1.0,
+      -12
+     ],
+     "rot": 0,
+     "label": "dialogi-NPC (paik. masterissa pomon paikalla)",
+     "build": "VillageNPC + Malakor_Intro.asset"
+    },
+    {
+     "kind": "chest",
+     "id": "Library_Reward_Chest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.4,
+      30
+     ],
+     "rot": 0,
+     "label": "Arkku (60 g + iso juoma)",
+     "build": "Chest.prefab, 60 g + Item_GreaterPotion; näkyy voiton jälkeen"
+    },
+    {
+     "kind": "trigger",
+     "id": "Library_Encounter_Trigger",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      2.5,
+      10
+     ],
+     "size": [
+      32,
+      6,
+      32
+     ],
+     "rot": 0,
+     "build": "BoxCollider trigger + DungeonRoomController (ShadowMageMalakor)",
+     "desc": "Paikallisessa masterissa seinästä seinään (tarkka z-väli siellä).",
+     "label": "laukaisualue (paik. masterissa seinästä seinään)"
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_NW1",
+     "status": "uusi",
+     "pos": [
+      -36,
+      0,
+      32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true,
+     "label": "hyllykäytävät"
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_NW2",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_NE1",
+     "status": "uusi",
+     "pos": [
+      36,
+      0,
+      32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true,
+     "label": "hyllykäytävät"
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_NE2",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_SW1",
+     "status": "uusi",
+     "pos": [
+      -36,
+      0,
+      -32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_SW2",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      -32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_SE1",
+     "status": "uusi",
+     "pos": [
+      36,
+      0,
+      -32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Shelf_Aisle_SE2",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      -32
+     ],
+     "size": [
+      2.5,
+      7,
+      18
+     ],
+     "rot": 0,
+     "group": "Shelf_Aisle",
+     "build": "Kuten Bookshelf_*: runko M_Logs + kirjarivit (ohuet värilliset kuutiot)",
+     "collider": true
+    },
+    {
+     "kind": "window",
+     "id": "Stained_Glass_Window",
+     "status": "uusi",
+     "pos": [
+      0,
+      4.25,
+      43.85
+     ],
+     "size": [
+      14,
+      6.5,
+      0.3
+     ],
+     "rot": 0,
+     "color": "#9ab8ff",
+     "label": "Suuri lasimaalausikkuna",
+     "build": "Kehys + emissive-lasiruudut (#5a7ad0, #8aa8f0, #c87a9a, #7ac0c0, #d0c07a)",
+     "collider": false
+    },
+    {
+     "kind": "light",
+     "id": "Window_Moon_Spot",
+     "status": "uusi",
+     "pos": [
+      0,
+      7.5,
+      42
+     ],
+     "rot": 0,
+     "color": "#9ab8ff",
+     "range": 30,
+     "intensity": 2.0,
+     "ltype": "spot",
+     "variant": "B (kuunvalo)",
+     "desc": "Spot, rot (35, 180, 0), kulma 50°, shadows None",
+     "draw": false
+    },
+    {
+     "kind": "prop",
+     "id": "Reading_Table",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      -34
+     ],
+     "size": [
+      14,
+      0.9,
+      4
+     ],
+     "rot": 0,
+     "label": "Lukupöytä + kynttilät",
+     "build": "Pöytä 14 × 0.9 × 3 + penkit molemmin puolin; kirjoja, kääröjä ja kynttilöitä (emissive)",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "Reading_Candles",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.6,
+      -34
+     ],
+     "rot": 0,
+     "color": "#ffbf6a",
+     "range": 10,
+     "intensity": 1.2,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None"
+    },
+    {
+     "kind": "prop",
+     "id": "Ladder",
+     "status": "uusi",
+     "pos": [
+      -37.8,
+      0,
+      36
+     ],
+     "size": [
+      1,
+      6,
+      0.4
+     ],
+     "rot": 90,
+     "label": "tikkaat",
+     "build": "Puutikkaat nojaamassa hyllyyn (kallistus 12°)",
+     "collider": false
+    },
+    {
+     "kind": "circle",
+     "id": "Magic_Circle",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.02,
+      18
+     ],
+     "size": [
+      10,
+      0.02,
+      10
+     ],
+     "rot": 0,
+     "r": 5,
+     "color": "#c89bff",
+     "build": "Lattiadecal/litteä levy, emissive violetti #b06aff, riimurengas + pentagrammi",
+     "collider": false
+    },
+    {
+     "kind": "light",
+     "id": "Circle_Glow",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.2,
+      18
+     ],
+     "rot": 0,
+     "color": "#c070ff",
+     "range": 10,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "Sykkii 0.6 Hz; shadows None",
+     "draw": false
+    },
+    {
+     "kind": "fx",
+     "id": "Floating_Books",
+     "status": "uusi",
+     "pos": [
+      0,
+      3.5,
+      18
+     ],
+     "rot": 0,
+     "draw": false,
+     "build": "14 kirjaa (0.4 × 0.1 × 0.3) kiertää r 3–7 m, y 2–5 m; kevyt bob-skripti tai Animator; kipinät #d8a8ff (40 partikkelia)",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Candle_Cluster_1",
+     "status": "uusi",
+     "pos": [
+      -6.5,
+      0,
+      13
+     ],
+     "size": [
+      0.8,
+      0.4,
+      0.8
+     ],
+     "rot": 0,
+     "group": "Candle_Cluster",
+     "build": "3–5 kynttilää, emissive, ei valoa",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Candle_Cluster_2",
+     "status": "uusi",
+     "pos": [
+      6.5,
+      0,
+      13
+     ],
+     "size": [
+      0.8,
+      0.4,
+      0.8
+     ],
+     "rot": 0,
+     "group": "Candle_Cluster",
+     "build": "3–5 kynttilää, emissive, ei valoa",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Candle_Cluster_3",
+     "status": "uusi",
+     "pos": [
+      -6.5,
+      0,
+      23
+     ],
+     "size": [
+      0.8,
+      0.4,
+      0.8
+     ],
+     "rot": 0,
+     "group": "Candle_Cluster",
+     "build": "3–5 kynttilää, emissive, ei valoa",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Candle_Cluster_4",
+     "status": "uusi",
+     "pos": [
+      6.5,
+      0,
+      23
+     ],
+     "size": [
+      0.8,
+      0.4,
+      0.8
+     ],
+     "rot": 0,
+     "group": "Candle_Cluster",
+     "build": "3–5 kynttilää, emissive, ei valoa",
+     "collider": false
+    }
+   ],
+   "local": [
+    "Laukaisualue on paikallisessa masterissa seinästä seinään, joten Malakorin ohi ei pääse kiertämällä keskushalliin.",
+    "Ruudukko on paikallisessa masterissa 20 × 20 (32 m) ja liukuu sankarin luo.",
+    "Dialogi-NPC seisoo pomon paikalla ja dialogi alkaa automaattisesti laukaisualueella.",
+    "Käytä näissä paikallisen masterin arvoja."
+   ],
+   "gameplay": [
+    "Pidä sisääntulokäytävät (z -5…5) molemmista ovista keskelle vapaina.",
+    "Loitsupiiri, kynttilät ja leijuvat kirjat ovat ilman collideria, joten ne eivät estä ruutuja.",
+    "Jos laukaisualue kattaa sisääntulot, dialogi alkaa heti saapuessa. Se on paikallisen masterin ratkaisu, ei tämän piirroksen."
+   ],
+   "mood": {
+    "default": "A · Loitsupiiri + B:n ikkuna",
+    "items": [
+     [
+      "A · Loitsupiiri (oletus)",
+      [
+       "Directional: #5a4a8a, intensiteetti 0.35 (sisätila, lähes pois).",
+       "Ambient: Flat #22163a.",
+       "Sumu: Exponential Squared #1a1030, tiheys 0.012.",
+       "Nykyiset siniset ja violetit Arcane-valot jäävät. Loitsupiirin hehku #c070ff sykkii.",
+       "Leijuvat kirjat ja kipinät piirin yllä."
+      ]
+     ],
+     [
+      "B · Kuunvalo (lisänä)",
+      [
+       "Lasimaalausikkuna emissive; Window_Moon_Spot (#9ab8ff, int 2.0) heittää valojuovan lattialle.",
+       "Lukupöydän kynttilät (#ffbf6a) lämpimänä vastavärinä. Pölyhiukkaset #c8d8ff valojuovassa."
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "key": "05_castle_hall",
+   "num": 5,
+   "scene": "Zone_5_CastleHall",
+   "fi": "Keskushalli",
+   "en": "Castle Hall",
+   "extent": [
+    80,
+    80
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 5,
+   "subtitle": "Castle Hall · 80 × 80 m · turva-alue, ei taisteluja",
+   "concepts": [
+    "05a_hall_altar",
+    "05b_hall_dawn"
+   ],
+   "summary": "Turva-alue ja solmukohta: neljä ovea neljään alueeseen ja Ruunikivialttari keskellä. Pilaririvit ja matto johtavat kruununsalin porttiin. Länsiseinän ikkunoista tulee aamuvalo; juhlapöytä, lepopaikka ja takka.",
+   "directional": {
+    "color": "#ffe0a6",
+    "intensity": 1.25,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    0,
+    0.5,
+    -32
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "CentralHall_Floor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      80,
+      1,
+      80
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_South_L",
+     "status": "nykyinen",
+     "pos": [
+      -24,
+      4,
+      -40
+     ],
+     "size": [
+      32,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_South_R",
+     "status": "nykyinen",
+     "pos": [
+      24,
+      4,
+      -40
+     ],
+     "size": [
+      32,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_North_L",
+     "status": "nykyinen",
+     "pos": [
+      -24,
+      4,
+      40
+     ],
+     "size": [
+      32,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_North_R",
+     "status": "nykyinen",
+     "pos": [
+      24,
+      4,
+      40
+     ],
+     "size": [
+      32,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_West_S",
+     "status": "nykyinen",
+     "pos": [
+      -40,
+      4,
+      -24
+     ],
+     "size": [
+      2,
+      8,
+      32
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_West_N",
+     "status": "nykyinen",
+     "pos": [
+      -40,
+      4,
+      24
+     ],
+     "size": [
+      2,
+      8,
+      32
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_East_S",
+     "status": "nykyinen",
+     "pos": [
+      40,
+      4,
+      -24
+     ],
+     "size": [
+      2,
+      8,
+      32
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Hall_Wall_East_N",
+     "status": "nykyinen",
+     "pos": [
+      40,
+      4,
+      24
+     ],
+     "size": [
+      2,
+      8,
+      32
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Pillar_0",
+     "status": "nykyinen",
+     "pos": [
+      -35,
+      0,
+      35
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Pillar_1",
+     "status": "nykyinen",
+     "pos": [
+      35,
+      0,
+      35
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Pillar_2",
+     "status": "nykyinen",
+     "pos": [
+      -35,
+      0,
+      -35
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Pillar_3",
+     "status": "nykyinen",
+     "pos": [
+      35,
+      0,
+      -35
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Inner_Col_0",
+     "status": "nykyinen",
+     "pos": [
+      -18,
+      0,
+      18
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Inner_Col",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Inner_Col_1",
+     "status": "nykyinen",
+     "pos": [
+      18,
+      0,
+      18
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Inner_Col",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Inner_Col_2",
+     "status": "nykyinen",
+     "pos": [
+      -18,
+      0,
+      -18
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Inner_Col",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Inner_Col_3",
+     "status": "nykyinen",
+     "pos": [
+      18,
+      0,
+      -18
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Hall_Inner_Col",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "SanctuaryLight_Center",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      7.5,
+      0
+     ],
+     "rot": 0,
+     "color": "#ffe699",
+     "range": 35,
+     "intensity": 3.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "SanctuaryLight_South",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      -20
+     ],
+     "rot": 0,
+     "color": "#ffcc80",
+     "range": 24,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "SanctuaryLight_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      20
+     ],
+     "rot": 0,
+     "color": "#ffcc80",
+     "range": 24,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "shrine",
+     "id": "Rune_Save_Shrine",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "size": [
+      3,
+      2.5,
+      3
+     ],
+     "rot": 0,
+     "label": "Ruunikivialttari (SavePoint)",
+     "build": "Altar.prefab + SavePoint + BoxCollider (3, 2.5, 3) center y 1.2; Rune_Crystal (0, 1.4, 0) 0.6 × 1.2 × 0.6 rot 45; ShrineGlow (0, 2.2, 0) syaani (0.2, 0.9, 1.0) range 14 int 2.5",
+     "collider": true
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Courtyard",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      -34
+     ],
+     "rot": 0,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Library",
+     "status": "nykyinen",
+     "pos": [
+      -34,
+      0.5,
+      0
+     ],
+     "rot": 90,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Tower",
+     "status": "nykyinen",
+     "pos": [
+      34,
+      0.5,
+      0
+     ],
+     "rot": -90,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_ThroneRoom",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      34
+     ],
+     "rot": 180,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Hall_Courtyard",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      -39.5
+     ],
+     "rot": 180,
+     "target": "Zone_3_CastleCourtyard",
+     "spawn": "Spawn_From_Hall",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Return to Courtyard (Wing 1)",
+     "label": "↓ Linnan alapiha",
+     "axis": "x",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Hall_Library",
+     "status": "nykyinen",
+     "pos": [
+      -39.5,
+      0,
+      0
+     ],
+     "rot": -90,
+     "target": "Zone_4_Library",
+     "spawn": "Spawn_From_Hall",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Enter Arcane Library (Wing 2)",
+     "label": "Kirjasto",
+     "axis": "z",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Hall_Tower",
+     "status": "nykyinen",
+     "pos": [
+      39.5,
+      0,
+      0
+     ],
+     "rot": 90,
+     "target": "Zone_6_Tower",
+     "spawn": "Spawn_From_Hall",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Ascend Spiral Stairs into Treasure Tower",
+     "label": "Torni",
+     "axis": "z",
+     "outward": 1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Hall_ThroneRoom",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      39.5
+     ],
+     "rot": 0,
+     "target": "Zone_7_ThroneRoom",
+     "spawn": "Spawn_From_Hall",
+     "width": 8,
+     "gap": 16,
+     "prompt": "Confront Final Boss in Crown Hall (Wing 3)",
+     "label": "↑ Kruununsali (3. pomo)",
+     "axis": "x",
+     "outward": 1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "prop",
+     "id": "Carpet_South",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.01,
+      -22.5
+     ],
+     "size": [
+      6,
+      0.02,
+      31
+     ],
+     "rot": 0,
+     "color": "#ff5d5d",
+     "label": "Punainen matto",
+     "group": "Carpet",
+     "build": "Litteä levy, punainen #a8242e reunus #8a1a24",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Carpet_North",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.01,
+      22.5
+     ],
+     "size": [
+      6,
+      0.02,
+      31
+     ],
+     "rot": 0,
+     "color": "#ff5d5d",
+     "group": "Carpet",
+     "build": "sama",
+     "collider": false
+    },
+    {
+     "kind": "circle",
+     "id": "Altar_Rune_Ring",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.02,
+      0
+     ],
+     "size": [
+      14,
+      0.02,
+      14
+     ],
+     "rot": 0,
+     "r": 7,
+     "color": "#5fe1ff",
+     "build": "Lattiadecal, syaani #5ad8ff emissive riimurengas",
+     "collider": false
+    },
+    {
+     "kind": "fx",
+     "id": "Altar_Light_Pillar",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "draw": false,
+     "build": "Additiivinen sylinteri r 0.8, korkeus 10 m (#aaf4ff, alpha 0.25) + nousevat hiukkaset",
+     "collider": false
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W30S",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      -30
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W20S",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      -20
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W10S",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      -10
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W10N",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      10
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W20N",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      20
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_W30N",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      30
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E30S",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      -30
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true,
+     "label": "pilaririvi"
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E20S",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      -20
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E10S",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      -10
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E10N",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      10
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E20N",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      20
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Nave_Pillar_E30N",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      30
+     ],
+     "size": [
+      1.2,
+      8,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.4,
+     "group": "Nave_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.6, 1.2) kuten Hall_Pillar",
+     "collider": true
+    },
+    {
+     "kind": "torch",
+     "id": "Torch_Stand_1",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      -25
+     ],
+     "size": [
+      0.5,
+      1.8,
+      0.5
+     ],
+     "rot": 0,
+     "group": "Torch_Stand",
+     "build": "Jalallinen soihtu + liekkipartikkeli",
+     "collider": true
+    },
+    {
+     "kind": "torch",
+     "id": "Torch_Stand_2",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      -25
+     ],
+     "size": [
+      0.5,
+      1.8,
+      0.5
+     ],
+     "rot": 0,
+     "group": "Torch_Stand",
+     "build": "Jalallinen soihtu + liekkipartikkeli",
+     "collider": true
+    },
+    {
+     "kind": "torch",
+     "id": "Torch_Stand_3",
+     "status": "uusi",
+     "pos": [
+      -12,
+      0,
+      25
+     ],
+     "size": [
+      0.5,
+      1.8,
+      0.5
+     ],
+     "rot": 0,
+     "group": "Torch_Stand",
+     "build": "Jalallinen soihtu + liekkipartikkeli",
+     "collider": true
+    },
+    {
+     "kind": "torch",
+     "id": "Torch_Stand_4",
+     "status": "uusi",
+     "pos": [
+      12,
+      0,
+      25
+     ],
+     "size": [
+      0.5,
+      1.8,
+      0.5
+     ],
+     "rot": 0,
+     "group": "Torch_Stand",
+     "build": "Jalallinen soihtu + liekkipartikkeli",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "Torch_Light_1",
+     "status": "uusi",
+     "pos": [
+      -12,
+      2.2,
+      -25
+     ],
+     "rot": 0,
+     "color": "#ffb347",
+     "range": 9,
+     "intensity": 1.4,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Torch_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Torch_Light_2",
+     "status": "uusi",
+     "pos": [
+      12,
+      2.2,
+      -25
+     ],
+     "rot": 0,
+     "color": "#ffb347",
+     "range": 9,
+     "intensity": 1.4,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Torch_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Torch_Light_3",
+     "status": "uusi",
+     "pos": [
+      -12,
+      2.2,
+      25
+     ],
+     "rot": 0,
+     "color": "#ffb347",
+     "range": 9,
+     "intensity": 1.4,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Torch_Light",
+     "draw": false
+    },
+    {
+     "kind": "light",
+     "id": "Torch_Light_4",
+     "status": "uusi",
+     "pos": [
+      12,
+      2.2,
+      25
+     ],
+     "rot": 0,
+     "color": "#ffb347",
+     "range": 9,
+     "intensity": 1.4,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None, värinä",
+     "group": "Torch_Light",
+     "draw": false
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_Nave_1",
+     "status": "uusi",
+     "pos": [
+      -10.9,
+      5,
+      -30
+     ],
+     "size": [
+      1.6,
+      4,
+      0.15
+     ],
+     "rot": 90,
+     "group": "Banner_Nave",
+     "color": "#5f8fff",
+     "build": "Sininen viiri #2a4a9a, kultainen tunnus #e8c35a, pilarin keskilaivan puolella",
+     "collider": false
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_Nave_2",
+     "status": "uusi",
+     "pos": [
+      10.9,
+      5,
+      -30
+     ],
+     "size": [
+      1.6,
+      4,
+      0.15
+     ],
+     "rot": -90,
+     "group": "Banner_Nave",
+     "color": "#5f8fff",
+     "build": "Sininen viiri #2a4a9a, kultainen tunnus #e8c35a, pilarin keskilaivan puolella",
+     "collider": false
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_Nave_3",
+     "status": "uusi",
+     "pos": [
+      -10.9,
+      5,
+      30
+     ],
+     "size": [
+      1.6,
+      4,
+      0.15
+     ],
+     "rot": 90,
+     "group": "Banner_Nave",
+     "color": "#5f8fff",
+     "build": "Sininen viiri #2a4a9a, kultainen tunnus #e8c35a, pilarin keskilaivan puolella",
+     "collider": false
+    },
+    {
+     "kind": "banner",
+     "id": "Banner_Nave_4",
+     "status": "uusi",
+     "pos": [
+      10.9,
+      5,
+      30
+     ],
+     "size": [
+      1.6,
+      4,
+      0.15
+     ],
+     "rot": -90,
+     "group": "Banner_Nave",
+     "color": "#5f8fff",
+     "build": "Sininen viiri #2a4a9a, kultainen tunnus #e8c35a, pilarin keskilaivan puolella",
+     "collider": false
+    },
+    {
+     "kind": "prop",
+     "id": "Banquet_Table",
+     "status": "uusi",
+     "pos": [
+      -28.5,
+      0,
+      -18
+     ],
+     "size": [
+      15,
+      0.9,
+      4
+     ],
+     "rot": 0,
+     "label": "Juhlapöytä + penkit",
+     "build": "Pöytä 13 × 0.9 × 2.2 + 2 penkkiä 13 × 0.5 × 0.6; ruokaa, kynttilät, kannut",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Fireplace",
+     "status": "uusi",
+     "pos": [
+      37.5,
+      0,
+      24
+     ],
+     "size": [
+      3,
+      5,
+      10
+     ],
+     "rot": 0,
+     "color": "#ffab4a",
+     "label": "Takka",
+     "build": "Kivitakka, aukko länteen (-X); tulipartikkelit; viiri yläpuolella (38.8, 6, 24)",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "Fireplace_Fire",
+     "status": "uusi",
+     "pos": [
+      36,
+      1.2,
+      24
+     ],
+     "rot": 0,
+     "color": "#ff9a3a",
+     "range": 12,
+     "intensity": 2.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "Värisee; shadows None",
+     "draw": false
+    },
+    {
+     "kind": "prop",
+     "id": "Rest_Area",
+     "status": "uusi",
+     "pos": [
+      -25,
+      0,
+      26
+     ],
+     "size": [
+      10,
+      1,
+      6
+     ],
+     "rot": 0,
+     "label": "Lepopaikka",
+     "build": "Matto 10 × 6 (ei collideria), 2 makuualustaa, Barrel, Box_2, matala pöytä",
+     "collider": true
+    },
+    {
+     "kind": "window",
+     "id": "Tall_Window_1",
+     "status": "uusi",
+     "pos": [
+      -38.9,
+      4.5,
+      -30
+     ],
+     "size": [
+      0.3,
+      6,
+      3.5
+     ],
+     "rot": 0,
+     "color": "#ffe8b0",
+     "group": "Tall_Window",
+     "build": "Kehys + emissive lasi #ffe8b0; valojuova (additiivinen taso) ikkunasta itään",
+     "collider": false,
+     "label": "korkeat ikkunat (aamuvalo)"
+    },
+    {
+     "kind": "window",
+     "id": "Tall_Window_2",
+     "status": "uusi",
+     "pos": [
+      -38.9,
+      4.5,
+      -14
+     ],
+     "size": [
+      0.3,
+      6,
+      3.5
+     ],
+     "rot": 0,
+     "color": "#ffe8b0",
+     "group": "Tall_Window",
+     "build": "Kehys + emissive lasi #ffe8b0; valojuova (additiivinen taso) ikkunasta itään",
+     "collider": false
+    },
+    {
+     "kind": "window",
+     "id": "Tall_Window_3",
+     "status": "uusi",
+     "pos": [
+      -38.9,
+      4.5,
+      14
+     ],
+     "size": [
+      0.3,
+      6,
+      3.5
+     ],
+     "rot": 0,
+     "color": "#ffe8b0",
+     "group": "Tall_Window",
+     "build": "Kehys + emissive lasi #ffe8b0; valojuova (additiivinen taso) ikkunasta itään",
+     "collider": false
+    },
+    {
+     "kind": "window",
+     "id": "Tall_Window_4",
+     "status": "uusi",
+     "pos": [
+      -38.9,
+      4.5,
+      30
+     ],
+     "size": [
+      0.3,
+      6,
+      3.5
+     ],
+     "rot": 0,
+     "color": "#ffe8b0",
+     "group": "Tall_Window",
+     "build": "Kehys + emissive lasi #ffe8b0; valojuova (additiivinen taso) ikkunasta itään",
+     "collider": false
+    }
+   ],
+   "local": [],
+   "gameplay": [
+    "Ei taisteluita. Pidä neljän oven 16 m aukot ja spawn-pisteet vapaina.",
+    "Pilaririvien välissä on 20 m aukko (z -10…10), joten itä–länsi-akseli kirjastosta torniin pysyy suorana.",
+    "Juhlapöydän ja Hall_Inner_Col_2:n (-18, -18) väliin jää vajaa 1 m. Jos se tuntuu ahtaalta, siirrä pöytää länteen.",
+    "Alttarin SavePoint-collider (3 × 2.5 × 3) säilyy; rengas ja valopilari ovat ilman collideria."
+   ],
+   "mood": {
+    "default": "Lämmin turvapaikka + aamuvalo",
+    "items": [
+     [
+      "Oletus: lämmin turvapaikka ja aamuvalo",
+      [
+       "Nykyiset lämpimät valot jäävät. Directional aamuauringoksi länsi-ikkunoista: #ffe0a0, int 1.3, rotaatio (30, 90, 0).",
+       "Ambient: taivas #5a4a48, maa #3a3034.",
+       "Soihdut #ffb347, takka #ff9a3a, alttarin syaani #5ad8ff (ShrineGlow).",
+       "Pölyhiukkaset ikkunoiden valojuovissa (#fff0c8, ~80 kpl)."
+      ]
+     ],
+     [
+      "Vaihtoehto: soihtuyö (konsepti A)",
+      [
+       "Directional lähes pois (#2a2228, int 0.2); soihdut ja alttari kantavat valaistuksen."
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "key": "06_tower",
+   "num": 6,
+   "scene": "Zone_6_Tower",
+   "fi": "Aarretorni",
+   "en": "Tower",
+   "extent": [
+    30,
+    30
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 2.5,
+   "subtitle": "Tower · 30 × 30 m kahdeksankulmio · ei taisteluja",
+   "concepts": [
+    "06b_tower_treasure",
+    "06a_tower_exterior"
+   ],
+   "summary": "Pieni kahdeksankulmainen aarrekammio, yksi ovi keskushalliin. Kattoikkunan valokeila osuu keskijalustaan, jolla ovat Othelian sormus ja Jättiläisen eliksiiri. Kultakasat pohjoisessa, juomahyllyt sivuilla.",
+   "directional": {
+    "color": "#73a6ff",
+    "intensity": 1.1,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    0,
+    0.5,
+    -9
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "Tower_Floor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      30,
+      1,
+      30
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "Tower_Wall_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      4,
+      15
+     ],
+     "size": [
+      16,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Tower_Wall_East",
+     "status": "nykyinen",
+     "pos": [
+      15,
+      4,
+      0
+     ],
+     "size": [
+      2,
+      8,
+      16
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Tower_Wall_West",
+     "status": "nykyinen",
+     "pos": [
+      -15,
+      4,
+      0
+     ],
+     "size": [
+      2,
+      8,
+      16
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Tower_Wall_South_L",
+     "status": "nykyinen",
+     "pos": [
+      -10,
+      4,
+      -15
+     ],
+     "size": [
+      10,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Tower_Wall_South_R",
+     "status": "nykyinen",
+     "pos": [
+      10,
+      4,
+      -15
+     ],
+     "size": [
+      10,
+      8,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Wall_NE",
+     "status": "korjaus",
+     "pos": [
+      10.6,
+      4,
+      10.6
+     ],
+     "size": [
+      2,
+      8,
+      10
+     ],
+     "rot": -45,
+     "was_rot": 45,
+     "group": "Wall_diag",
+     "build": "Cube",
+     "desc": "Koodissa rot 45, joka kääntää seinän säteittäiseksi: sen kummallekin puolelle jää noin 3 m rako lattian reunalle. Oikea arvo -45."
+    },
+    {
+     "kind": "wall",
+     "id": "Wall_NW",
+     "status": "korjaus",
+     "pos": [
+      -10.6,
+      4,
+      10.6
+     ],
+     "size": [
+      2,
+      8,
+      10
+     ],
+     "rot": 45,
+     "was_rot": -45,
+     "group": "Wall_diag",
+     "build": "Cube",
+     "desc": "Koodissa -45, oikea 45."
+    },
+    {
+     "kind": "wall",
+     "id": "Wall_SE",
+     "status": "korjaus",
+     "pos": [
+      10.6,
+      4,
+      -10.6
+     ],
+     "size": [
+      2,
+      8,
+      10
+     ],
+     "rot": 45,
+     "was_rot": -45,
+     "group": "Wall_diag",
+     "build": "Cube",
+     "desc": "Koodissa -45, oikea 45."
+    },
+    {
+     "kind": "wall",
+     "id": "Wall_SW",
+     "status": "korjaus",
+     "pos": [
+      -10.6,
+      4,
+      -10.6
+     ],
+     "size": [
+      2,
+      8,
+      10
+     ],
+     "rot": -45,
+     "was_rot": 45,
+     "group": "Wall_diag",
+     "build": "Cube",
+     "desc": "Koodissa 45, oikea -45."
+    },
+    {
+     "kind": "light",
+     "id": "TowerLight_Center",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6.5,
+      0
+     ],
+     "rot": 0,
+     "color": "#8cd9ff",
+     "range": 24,
+     "intensity": 2.5,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft; oletustunnelmassa int → 1.0"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Hall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      -9
+     ],
+     "rot": 0,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_Tower_CastleHall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      -14.5
+     ],
+     "rot": 180,
+     "target": "Zone_5_CastleHall",
+     "spawn": "Spawn_From_Tower",
+     "width": 6,
+     "gap": 10,
+     "prompt": "Return to Great Central Hall",
+     "label": "↓ Keskushalli",
+     "axis": "x",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 6 x 4 x 3 m"
+    },
+    {
+     "kind": "chest",
+     "id": "Tower_Reward_Chest",
+     "status": "nykyinen",
+     "pos": [
+      -5,
+      0.4,
+      5
+     ],
+     "rot": 0,
+     "label": "Arkku (50 g)",
+     "build": "Chest.prefab + ChestRewardInteraction 50 g + Item_SignetRing (oletuksessa sormus siirtyy jalustalle, arkkuun jää 50 g)"
+    },
+    {
+     "kind": "pedestal",
+     "id": "GiantElixir_Pedestal",
+     "status": "korjaus",
+     "pos": [
+      0,
+      0.5,
+      4
+     ],
+     "size": [
+      1.5,
+      1,
+      1.5
+     ],
+     "rot": 0,
+     "was_pos": [
+      5,
+      0.5,
+      5
+     ],
+     "label": "Jalusta: eliksiiri + sormus",
+     "build": "Cube M_Rocks_1_2 + GiantElixirInteraction, collider 2.5 × 2 × 2.5; Elixir_Vial (0, 0.8, 0); ElixirGlow (0, 1.5, 0) range 8 int 2",
+     "desc": "Nykyään (5, 0.5, 5). Piirroksen mukaan valokeilan keskelle (0, 0.5, 4)."
+    },
+    {
+     "kind": "pickup",
+     "id": "SignetRing_Pickup",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.15,
+      4.5
+     ],
+     "rot": 0,
+     "build": "Sormusmalli jalustalla + ChestRewardInteraction (gold 0, Item_SignetRing), kuten suoyrtit",
+     "desc": "Sormus pois arkusta (ItemReward → null). Jos tämä tuntuu liian isolta muutokselta, jätä sormus arkkuun."
+    },
+    {
+     "kind": "circle",
+     "id": "Skylight_Beam",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      4
+     ],
+     "size": [
+      5.2,
+      9.5,
+      5.2
+     ],
+     "rot": 0,
+     "r": 2.6,
+     "color": "#fff0c0",
+     "label": "Valokeila kattoikkunasta",
+     "build": "Additiivinen kartio r 2.6 + Spot alla",
+     "collider": false
+    },
+    {
+     "kind": "light",
+     "id": "Skylight_Spot",
+     "status": "uusi",
+     "pos": [
+      0,
+      9.5,
+      4
+     ],
+     "rot": 0,
+     "color": "#fff0c0",
+     "range": 14,
+     "intensity": 3.0,
+     "ltype": "spot",
+     "variant": "both",
+     "desc": "rot (90, 0, 0) suoraan alas, kulma 35°, shadows None",
+     "draw": false
+    },
+    {
+     "kind": "region",
+     "id": "Gold_Piles",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      11
+     ],
+     "rot": 0,
+     "pts": [
+      [
+       -8,
+       11
+      ],
+      [
+       -3,
+       13.4
+      ],
+      [
+       3,
+       13.4
+      ],
+      [
+       8,
+       11
+      ],
+      [
+       4,
+       9.5
+      ],
+      [
+       -4,
+       9.5
+      ]
+     ],
+     "color": "#ffd24a",
+     "label": "Kultakasat",
+     "build": "Matala kultakasa (0.6–1.0 m) + yksittäisiä kolikoita; yhdistä yhdeksi staattiseksi meshiksi, ei Pickup-skriptejä",
+     "collider": false
+    },
+    {
+     "kind": "light",
+     "id": "Gold_Glow",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.5,
+      11
+     ],
+     "rot": 0,
+     "color": "#ffcc4a",
+     "range": 8,
+     "intensity": 1.2,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows None",
+     "draw": false
+    },
+    {
+     "kind": "prop",
+     "id": "Potion_Shelf_W",
+     "status": "uusi",
+     "pos": [
+      -13.4,
+      0,
+      2
+     ],
+     "size": [
+      1.2,
+      3,
+      8
+     ],
+     "rot": 0,
+     "label": "juomahylly",
+     "group": "Potion_Shelf",
+     "build": "Hylly 2 tasoa × 6 pulloa, emissive (#d83a3a, #3a8ad8, #6ad83a, #c83ad8)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Potion_Shelf_E",
+     "status": "uusi",
+     "pos": [
+      13.4,
+      0,
+      2
+     ],
+     "size": [
+      1.2,
+      3,
+      8
+     ],
+     "rot": 0,
+     "label": "juomahylly",
+     "group": "Potion_Shelf",
+     "build": "sama",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Spiral_Stairs",
+     "status": "uusi",
+     "pos": [
+      -6.5,
+      0,
+      -6.5
+     ],
+     "size": [
+      4.4,
+      6,
+      4.4
+     ],
+     "rot": 0,
+     "r": 2.2,
+     "color": "#8ff0a0",
+     "label": "kierreportaat",
+     "build": "Stairs.prefab-kierre tai kuutioaskelmat, johtaa ylös (koriste)",
+     "collider": true
+    }
+   ],
+   "local": [],
+   "gameplay": [
+    "Tarkista ensin kulmat: jos lattian kulmissa on aukot (koodin rotaatioilla on), korjaa vinoseinien rot (NE -45, NW 45, SE 45, SW -45).",
+    "Kulkureitti ovelta (0, -14.5) jalustalle pysyy suorana; kierreportaat ovat sivussa.",
+    "Jos sormus siirretään jalustalle, tarkista, ettei Othelian tehtävä oleta sormuksen tulevan arkusta."
+   ],
+   "mood": {
+    "default": "B · Aarrekammio",
+    "items": [
+     [
+      "B · Aarrekammio (oletus)",
+      [
+       "Skylight_Spot (#fff0c0, int 3) valokeilana jalustalle; TowerLight_Center int 2.5 → 1.0 (viileä täyte).",
+       "Kultakasat emissive + Gold_Glow (#ffcc4a). Juomapullot emissive.",
+       "Eliksiiri: konseptissa punainen lasi #e02a4a ja hehku #ff3a5a (nyt kulta). Valinnainen.",
+       "Pölyhiukkaset valokeilassa (#fff0c0, ~90 kpl)."
+      ]
+     ],
+     [
+      "A · Torni ulkoa hämärässä",
+      [
+       "Ei rakennettavissa tähän sceneen (sisätila). Käytä retkikartan kuvakkeena tai latausruutuna."
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "key": "07_throne_room",
+   "num": 7,
+   "scene": "Zone_7_ThroneRoom",
+   "fi": "Kruununsali",
+   "en": "Throne Room",
+   "extent": [
+    100,
+    100
+   ],
+   "center": [
+    0,
+    0
+   ],
+   "step": 5,
+   "subtitle": "Throne Room · 100 × 100 m · 3. pomo: Kivettymiskuningas",
+   "concepts": [
+    "07a_throne_petrify",
+    "07b_throne_golem"
+   ],
+   "summary": "Pitkä sali etelästä valtaistuimelle. Matto ja kivettyneet ritarit rakentavat jännitettä. Ensimmäisessä vaiheessa kylmä turkoosi valo, golemin toisessa vaiheessa lattia halkeilee laavana.",
+   "directional": {
+    "color": "#ff6633",
+    "intensity": 1.3,
+    "rot": [
+     50,
+     -30,
+     0
+    ]
+   },
+   "player_start": [
+    0,
+    0.5,
+    -42
+   ],
+   "elements": [
+    {
+     "kind": "floor",
+     "id": "ThroneRoom_Floor",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      -0.5,
+      0
+     ],
+     "size": [
+      100,
+      1,
+      100
+     ],
+     "rot": 0,
+     "build": "Cube, M_Ruined_walls.mat"
+    },
+    {
+     "kind": "wall",
+     "id": "ThroneRoom_Wall_North",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      4.5,
+      50
+     ],
+     "size": [
+      100,
+      9,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "ThroneRoom_Wall_West",
+     "status": "nykyinen",
+     "pos": [
+      -50,
+      4.5,
+      0
+     ],
+     "size": [
+      2,
+      9,
+      100
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "ThroneRoom_Wall_East",
+     "status": "nykyinen",
+     "pos": [
+      50,
+      4.5,
+      0
+     ],
+     "size": [
+      2,
+      9,
+      100
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "ThroneRoom_Wall_South_L",
+     "status": "nykyinen",
+     "pos": [
+      -28,
+      4.5,
+      -50
+     ],
+     "size": [
+      44,
+      9,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "ThroneRoom_Wall_South_R",
+     "status": "nykyinen",
+     "pos": [
+      28,
+      4.5,
+      -50
+     ],
+     "size": [
+      44,
+      9,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "dais",
+     "id": "Throne_Dais",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.6,
+      32
+     ],
+     "size": [
+      16,
+      1.2,
+      10
+     ],
+     "rot": 0,
+     "label": "Valtaistuinkoroke",
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Throne_Col_L",
+     "status": "nykyinen",
+     "pos": [
+      -7,
+      4.5,
+      32
+     ],
+     "size": [
+      2,
+      9,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "wall",
+     "id": "Throne_Col_R",
+     "status": "nykyinen",
+     "pos": [
+      7,
+      4.5,
+      32
+     ],
+     "size": [
+      2,
+      9,
+      2
+     ],
+     "rot": 0,
+     "build": "Cube"
+    },
+    {
+     "kind": "pillar",
+     "id": "Throne_Pillar_0",
+     "status": "nykyinen",
+     "pos": [
+      -45,
+      0,
+      45
+     ],
+     "size": [
+      1.2,
+      9,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Throne_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.8, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Throne_Pillar_1",
+     "status": "nykyinen",
+     "pos": [
+      45,
+      0,
+      45
+     ],
+     "size": [
+      1.2,
+      9,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Throne_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.8, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Throne_Pillar_2",
+     "status": "nykyinen",
+     "pos": [
+      -45,
+      0,
+      -45
+     ],
+     "size": [
+      1.2,
+      9,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Throne_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.8, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Throne_Pillar_3",
+     "status": "nykyinen",
+     "pos": [
+      45,
+      0,
+      -45
+     ],
+     "size": [
+      1.2,
+      9,
+      1.2
+     ],
+     "rot": 0,
+     "r": 1.2,
+     "group": "Throne_Pillar",
+     "build": "Pillar.prefab, scale (1.2, 1.8, 1.2)",
+     "collider": true
+    },
+    {
+     "kind": "light",
+     "id": "CrownLight_Center",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      7.5,
+      10
+     ],
+     "rot": 0,
+     "color": "#ff6626",
+     "range": 35,
+     "intensity": 3.0,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "light",
+     "id": "CrownLight_Throne",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      6,
+      32
+     ],
+     "rot": 0,
+     "color": "#ffd940",
+     "range": 28,
+     "intensity": 2.5,
+     "ltype": "point",
+     "variant": "both",
+     "desc": "shadows Soft"
+    },
+    {
+     "kind": "spawn",
+     "id": "Spawn_From_Hall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.5,
+      -42
+     ],
+     "rot": 0,
+     "build": "StartSpawnPoint + trigger 2 x 2 x 2"
+    },
+    {
+     "kind": "door",
+     "id": "Door_ThroneRoom_CastleHall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0,
+      -49.5
+     ],
+     "rot": 180,
+     "target": "Zone_5_CastleHall",
+     "spawn": "Spawn_From_ThroneRoom",
+     "width": 8,
+     "gap": 12,
+     "prompt": "Return to Great Central Hall (Hub)",
+     "label": "↓ Keskushalli",
+     "axis": "x",
+     "outward": -1,
+     "build": "CreateSceneDoorway: Arch.prefab x1.4 + 2x Pillar.prefab, DoorTeleporter-trigger 8 x 4 x 3 m"
+    },
+    {
+     "kind": "barrier",
+     "id": "Barrier_South",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      4,
+      -49
+     ],
+     "size": [
+      12,
+      8,
+      1.5
+     ],
+     "rot": 0,
+     "build": "Cube M_HammerJAanvil, näkyy taistelun ajan"
+    },
+    {
+     "kind": "grid",
+     "id": "CombatGrid_CrownHall",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      0.05,
+      12
+     ],
+     "rot": 0,
+     "tiles": 12,
+     "tile": 1.6,
+     "build": "CombatGrid.prefab",
+     "desc": "Paikallisessa masterissa 20 × 20 ja liukuu sankarin luo."
+    },
+    {
+     "kind": "boss",
+     "id": "Boss_GargoyleKing",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      1.8,
+      28
+     ],
+     "rot": 0,
+     "label": "Kivettymiskuningas / golem",
+     "build": "GargoyleKingBoss (golem vaihtaa 2. vaiheen malliin puolessa HP:ssa)"
+    },
+    {
+     "kind": "npc",
+     "id": "NPC_GargoyleKing",
+     "status": "paikallinen",
+     "pos": [
+      0,
+      1.2,
+      -10
+     ],
+     "rot": 0,
+     "label": "dialogi-NPC (paik. masterissa pomon paikalla)",
+     "build": "VillageNPC + GargoyleKing_Intro.asset"
+    },
+    {
+     "kind": "chest",
+     "id": "CrownHall_Treasure_Chest",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      1.4,
+      34
+     ],
+     "rot": 0,
+     "label": "Arkku (100 g)",
+     "build": "Chest.prefab 100 g; näkyy voiton jälkeen"
+    },
+    {
+     "kind": "trigger",
+     "id": "CrownHall_Encounter_Trigger",
+     "status": "nykyinen",
+     "pos": [
+      0,
+      2.5,
+      15
+     ],
+     "size": [
+      36,
+      6,
+      36
+     ],
+     "rot": 0,
+     "build": "BoxCollider trigger + DungeonRoomController (GargoyleKing)",
+     "desc": "Paikallisessa masterissa seinästä seinään (tarkka z-väli siellä).",
+     "label": "laukaisualue (paik. masterissa seinästä seinään)"
+    },
+    {
+     "kind": "prop",
+     "id": "Carpet",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.01,
+      -10.5
+     ],
+     "size": [
+      6,
+      0.02,
+      75
+     ],
+     "rot": 0,
+     "color": "#ff5d5d",
+     "label": "Matto",
+     "build": "Litteä levy, punainen; ovelta korokkeen eteen (z -48…27)",
+     "collider": false
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_W1",
+     "status": "uusi",
+     "pos": [
+      -14,
+      0,
+      -38
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": 90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true,
+     "label": "kivettyneet ritarit"
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_W2",
+     "status": "uusi",
+     "pos": [
+      -14,
+      0,
+      -28
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": 90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_W3",
+     "status": "uusi",
+     "pos": [
+      -14,
+      0,
+      -18
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": 90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_W4",
+     "status": "uusi",
+     "pos": [
+      -14,
+      0,
+      -8
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": 90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_E1",
+     "status": "uusi",
+     "pos": [
+      14,
+      0,
+      -38
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": -90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true,
+     "label": "kivettyneet ritarit"
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_E2",
+     "status": "uusi",
+     "pos": [
+      14,
+      0,
+      -28
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": -90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_E3",
+     "status": "uusi",
+     "pos": [
+      14,
+      0,
+      -18
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": -90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "circle",
+     "id": "Petrified_Knight_E4",
+     "status": "uusi",
+     "pos": [
+      14,
+      0,
+      -8
+     ],
+     "size": [
+      2,
+      3.7,
+      2
+     ],
+     "rot": -90,
+     "r": 1.6,
+     "color": "#c8d0d0",
+     "group": "Petrified_Knight",
+     "build": "Jalusta 2 × 0.5 × 2 + harmaa kivipatsas 1.2 × 3.2 × 1.2 (#8a9290), vaihtelevat asennot (kilpi/kypärä tai huppu)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W1",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      -40
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true,
+     "label": "pilarit"
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W2",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      -25
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W3",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      -10
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W4",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      5
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W5",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      20
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_W6",
+     "status": "uusi",
+     "pos": [
+      -30,
+      0,
+      35
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E1",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      -40
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true,
+     "label": "pilarit"
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E2",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      -25
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E3",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      -10
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E4",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      5
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E5",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      20
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "pillar",
+     "id": "Hall_Column_E6",
+     "status": "uusi",
+     "pos": [
+      30,
+      0,
+      35
+     ],
+     "size": [
+      1.6,
+      9,
+      1.6
+     ],
+     "rot": 0,
+     "r": 2.0,
+     "group": "Hall_Column",
+     "build": "Pillar.prefab, scale (1.6, 1.8, 1.6)",
+     "collider": true
+    },
+    {
+     "kind": "prop",
+     "id": "Throne",
+     "status": "uusi",
+     "pos": [
+      0,
+      1.2,
+      35.6
+     ],
+     "size": [
+      4,
+      5,
+      2.2
+     ],
+     "rot": 180,
+     "label": "Valtaistuin",
+     "build": "Korkeaselkäinen kivivaltaistuin korokkeen takaosassa, kasvot etelään; 2. vaiheessa rikottu versio (valinnainen)",
+     "collider": true
+    },
+    {
+     "kind": "crack",
+     "id": "Lava_Cracks",
+     "status": "uusi",
+     "pos": [
+      0,
+      0.02,
+      12
+     ],
+     "rot": 0,
+     "polylines": [
+      [
+       [
+        -6,
+        6
+       ],
+       [
+        -3,
+        9
+       ],
+       [
+        -4,
+        13
+       ],
+       [
+        0,
+        16
+       ]
+      ],
+      [
+       [
+        5,
+        4
+       ],
+       [
+        8,
+        8
+       ],
+       [
+        6,
+        12
+       ]
+      ],
+      [
+       [
+        -8,
+        16
+       ],
+       [
+        -4,
+        19
+       ],
+       [
+        2,
+        18
+       ]
+      ],
+      [
+       [
+        3,
+        14
+       ],
+       [
+        7,
+        17
+       ],
+       [
+        9,
+        20
+       ]
+      ]
+     ],
+     "label": "laavahalkeamat (2. vaihe)",
+     "build": "Emissive-halkeamadecalit (#ff6a1a, hehku #ff9a3a) 0.3–0.5 m leveitä; piilossa 1. vaiheessa, päälle kun golem vaihtaa 2. vaiheen malliin",
+     "collider": false
+    },
+    {
+     "kind": "fx",
+     "id": "Phase2_Switch",
+     "status": "uusi",
+     "pos": [
+      0,
+      0,
+      0
+     ],
+     "rot": 0,
+     "draw": false,
+     "build": "Golemin vaihdon hetkellä: Lava_Cracks päälle, valot 2. vaiheen paletille, kipinäpartikkelit (#ffa04a, 60 kpl), lyhyt kameran tärähdys",
+     "collider": false
+    }
+   ],
+   "local": [
+    "Laukaisualue on paikallisessa masterissa seinästä seinään, ja kuninkaan dialogi alkaa aina ennen valtaistuinta.",
+    "Ruudukko on paikallisessa masterissa 20 × 20 (32 m) ja liukuu sankarin luo.",
+    "Dialogi-NPC seisoo pomon paikalla. Käytä näissä paikallisen masterin arvoja."
+   ],
+   "gameplay": [
+    "Pomo seisoo korokkeella (0, 28). Paikallisessa masterissa ruudukko liukuu, joten tarkista, että pomo on ruudukolla taistelun alkaessa.",
+    "Laavahalkeamat ja matto ovat ilman collideria, joten ne eivät estä ruutuja.",
+    "Ritarit ja pilarit ovat collidereineen suojia, jos ruudukko liukuu niiden päälle. Keskikäytävä (x -8…8) pysyy vapaana.",
+    "Ainoa ovi on etelässä ja se lukittuu taistelun ajaksi."
+   ],
+   "mood": {
+    "default": "1. vaihe A, 2. vaihe B",
+    "items": [
+     [
+      "1. vaihe · Kivettynyt hovi (A)",
+      [
+       "Directional: #9fc8c0, int 0.8. Ambient: taivas #2a3436, maa #1a2224.",
+       "Sumu: Linear #9ac8c0, 30–120 m.",
+       "CrownLight_Throne → turkoosi #6af0d0. Kuninkaan silmät #ffe24a. Pölyhiukkaset #d8fff4."
+      ]
+     ],
+     [
+      "2. vaihe · Laavahehku (B), golemin vaihdon hetkellä",
+      [
+       "Lava_Cracks päälle (#ff6a1a / #ff9a3a). CrownLight_Center → #ff5a1a int 3.",
+       "Directional takaisin nykyiseen punaoranssiin (1, 0.40, 0.20) int 1.3.",
+       "Kipinäpartikkelit #ffa04a (60 kpl), lyhyt kameran tärähdys."
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}
