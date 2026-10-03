@@ -525,7 +525,11 @@ namespace CastleOfTheD20.Combat
             GridManager.Instance?.ClearAllHighlights();
             foreach (var unit in activeUnits)
             {
+                if (unit == null) continue;
                 if (unit is PlayerUnit hero) hero.ClearPoisonCoating();
+
+                // Combat buffs and debuffs (and their auras) end with the fight
+                unit.StatusEffects?.ClearAllEffects();
             }
             if (isVictory)
             {

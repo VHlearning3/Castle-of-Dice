@@ -123,6 +123,15 @@ namespace CastleOfTheD20.Data
         /// <summary>Animator trigger parameter name.</summary>
         public string AnimationTriggerName => animationTriggerName;
 
+        /// <summary>
+        /// Teleports (Blink, Shadow Step) target an empty tile, not a unit, even though their assets use SingleTarget.
+        /// </summary>
+        public bool TargetsEmptyTile =>
+            !string.IsNullOrEmpty(abilityID) &&
+            (abilityID.IndexOf("blink", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+             abilityID.IndexOf("shadow_step", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
+             abilityID.IndexOf("shadowstep", System.StringComparison.OrdinalIgnoreCase) >= 0);
+
         #endregion
 
         #region Public Methods

@@ -219,14 +219,14 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
-                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 1 turn.",
+                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 4,
                 aoeRadius: 0,
                 value: 0,
                 checkRequired: true,
                 effect: StatusEffectType.Frostbite,
-                duration: 1,
+                duration: 2,
                 animTrigger: "CastSpell",
                 diceCount: 1,
                 diceSides: 6,
@@ -239,14 +239,14 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageManaShield)) mageManaShield.Initialize(
                 id: "mage_mana_shield",
                 name: "Mana Shield",
-                desc: "Conjure a barrier that completely absorbs the next attack that hits you.",
+                desc: "Conjure a glowing barrier for 3 turns that completely absorbs the next attack that hits you.",
                 target: AbilityTargetType.Self,
                 abilityRange: 0,
                 aoeRadius: 0,
                 value: 0,
                 checkRequired: false,
                 effect: StatusEffectType.ManaShield,
-                duration: 2,
+                duration: 3,
                 animTrigger: "Buff"
             );
             EditorUtility.SetDirty(mageManaShield);

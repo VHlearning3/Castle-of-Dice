@@ -1399,6 +1399,19 @@ namespace CastleOfTheD20.UI
             activePlayer.EnsureTilePosition();
             grid.ClearAllHighlights();
 
+            // Teleports: show only the empty tiles the hero can land on
+            if (ability.TargetsEmptyTile)
+            {
+                List<GridTile> landingTiles = grid.GetTilesInRadius(activePlayer.GridPosition, ability.Range);
+                for (int i = landingTiles.Count - 1; i >= 0; i--)
+                {
+                    GridTile t = landingTiles[i];
+                    if (!t.IsWalkable || t.IsOccupied || t == activePlayer.CurrentTile) landingTiles.RemoveAt(i);
+                }
+                grid.HighlightTiles(landingTiles, TileHighlightType.Reachable);
+                return;
+            }
+
             // 1. Direct attack range
             List<GridTile> targetableTiles = grid.GetTilesInRadius(activePlayer.GridPosition, ability.Range);
             grid.HighlightTiles(targetableTiles, TileHighlightType.TargetArea);
@@ -1560,8 +1573,35 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // A SingleTarget ability clicked on an empty tile does nothing: moving is the Move button's job
             bool isOccupiedUnit = targetOccupant != null;
+
+            // Blink / Shadow Step land on an empty tile within range; they never walk into range first
+            if (ability.TargetsEmptyTile)
+            {
+                if (isOccupiedUnit || !targetTile.IsWalkable || targetTile.IsOccupied)
+                {
+                    LogCombatMessage($"{ability.AbilityName} needs an empty tile to land on.");
+                    return;
+                }
+
+                int teleportDist = grid.GetDistance(casterPos, targetPos);
+                if (teleportDist > ability.Range)
+                {
+                    LogCombatMessage($"Too far for {ability.AbilityName}! (Distance: {teleportDist}, Range: {ability.Range})");
+                    return;
+                }
+
+                if (activePlayer.UseAbility(slotIndex, targetPos, AbilityExecutor.Instance))
+                {
+                    LogCombatMessage($"{activePlayer.UnitName} used {ability.AbilityName}!");
+                    selectedAbilitySlot = -1;
+                    RefreshAbilityBar();
+                    UpdateMovementHighlights();
+                }
+                return;
+            }
+
+            // A SingleTarget ability clicked on an empty tile does nothing: moving is the Move button's job
             if (ability.TargetType == AbilityTargetType.SingleTarget && !isOccupiedUnit)
             {
                 LogCombatMessage($"{ability.AbilityName} requires a target enemy unit.");

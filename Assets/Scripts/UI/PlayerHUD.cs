@@ -1293,6 +1293,10 @@ namespace CastleOfTheD20.UI
         private void HandleHealthChanged(int current, int max)
         {
             UpdateHealthDisplay(current, max);
+
+            // The hero adopts its class (name, crest) in InitializeUnit, which can run after this HUD's
+            // Start; that re-init also raises a health change, so refresh the identity here too.
+            UpdateHeroDisplay();
         }
 
         private void HandleGoldChanged(int newGold)

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Audio;
+using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.Combat
 {
@@ -9,6 +10,8 @@ namespace CastleOfTheD20.Combat
     /// Short, purely visual effects for the combat moves that relocate a unit instantly:
     /// Blink (arcane flash out and in), Shadow Step (dark smoke at both ends), War Cry
     /// (shockwave ring, camera shake, pushed enemies sliding back) and Malakor's teleport (purple vortex).
+    /// Also the mage's Fireball (flying orb and fiery 3x3 blast) and Frostbite (ice ray and shards), plus
+    /// lasting status auras: frost around a slowed unit and a glowing bubble while Mana Shield is up.
     /// Game logic has already moved the unit when an effect starts; the effect only animates the
     /// unit's model and plays particles, so it never delays turns or changes occupancy.
     /// Built at runtime from pooled particle systems and an always-included shader (WebGL safe).
@@ -37,6 +40,16 @@ namespace CastleOfTheD20.Combat
         private static readonly Color VortexCore = new Color(0.95f, 0.7f, 1f, 1f);
         private static readonly Color ShockwaveColor = new Color(1f, 0.8f, 0.45f, 1f);
         private static readonly Color DustColor = new Color(0.55f, 0.47f, 0.38f, 0.75f);
+        private static readonly Color FireCore = new Color(1f, 0.92f, 0.55f, 1f);
+        private static readonly Color FireOrange = new Color(1f, 0.45f, 0.08f, 1f);
+        private static readonly Color FireSmokeColor = new Color(0.18f, 0.14f, 0.12f, 0.7f);
+        private static readonly Color IceWhite = new Color(0.88f, 0.97f, 1f, 1f);
+        private static readonly Color IceBlue = new Color(0.35f, 0.75f, 1f, 1f);
+        private static readonly Color FrostMist = new Color(0.55f, 0.85f, 1f, 0.35f);
+        private static readonly Color ShieldBubbleColor = new Color(0.35f, 0.7f, 1f, 0.2f);
+
+        private const float FireballFlightDuration = 0.22f;
+        private const float ShieldPopInDuration = 0.25f;
 
         #endregion
 
@@ -80,6 +93,29 @@ namespace CastleOfTheD20.Combat
         private ParticleSystem vortexIn;
         private readonly LineRenderer[] rings = new LineRenderer[2];
         private int nextRing;
+        private ParticleSystem fire;
+        private ParticleSystem embers;
+        private ParticleSystem fireSmoke;
+        private ParticleSystem iceShards;
+
+        /// <summary>A lasting effect that follows one unit around while its status effect is active.</summary>
+        private class StatusAura
+        {
+            public GameObject Root;
+            public CombatUnit Unit;
+            public Transform Bubble;
+            public Material BubbleMaterial;
+            public float Height = 1.8f;
+            public float ShownAt;
+
+            public void SetActive(bool active)
+            {
+                if (Root != null && Root.activeSelf != active) Root.SetActive(active);
+            }
+        }
+
+        private readonly Dictionary<CombatUnit, StatusAura> frostAuras = new Dictionary<CombatUnit, StatusAura>();
+        private readonly Dictionary<CombatUnit, StatusAura> shieldAuras = new Dictionary<CombatUnit, StatusAura>();
 
         private Transform shakeCamera;
         private Vector3 shakeOffset;
@@ -145,7 +181,7 @@ namespace CastleOfTheD20.Combat
             Vector3 ground = vfx.GroundPoint(caster, caster.transform.position);
             float tile = GridManager.Instance != null ? GridManager.Instance.EffectiveTileSize : 1.6f;
 
-            vfx.StartCoroutine(vfx.ExpandRing(ground + Vector3.up * 0.08f, 0.3f, tile * 1.7f));
+            vfx.StartCoroutine(vfx.ExpandRing(ground + Vector3.up * 0.08f, 0.3f, tile * 1.7f, ShockwaveColor));
             vfx.EmitDustRing(ground, tile * 0.45f, 28, 3.5f);
             vfx.flash.Emit(vfx.FlashParams(ground + Vector3.up * 0.9f, ShockwaveColor, 2.6f), 1);
             vfx.AnimatePunch(caster, 1.15f, 0.3f);
@@ -169,6 +205,79 @@ namespace CastleOfTheD20.Combat
             vfx.slides[unit] = vfx.StartCoroutine(vfx.SlideRoutine(unit, fromWorld, unit.transform.position));
         }
 
+        /// <summary>Mage Fireball: a flaming orb streaks from the mage's hands and bursts over the 3x3 target area.</summary>
+        public static void PlayFireball(CombatUnit caster, Vector3 targetTileWorld)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || caster == null) return;
+
+            Vector3 from = caster.transform.position + Vector3.up * 1.2f + caster.transform.forward * 0.4f;
+            Vector3 ground = new Vector3(targetTileWorld.x, targetTileWorld.y + 0.05f, targetTileWorld.z);
+            vfx.StartCoroutine(vfx.FireballRoutine(from, ground));
+            PlaySound(SFXClipType.SpellCast, caster.transform.position, 0.8f);
+        }
+
+        /// <summary>Mage Frostbite: an icy ray to the target; on a hit, ice shards burst around it.</summary>
+        public static void PlayFrostbite(CombatUnit caster, CombatUnit target, bool hit)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || caster == null || target == null) return;
+
+            Vector3 from = caster.transform.position + Vector3.up * 1.2f + caster.transform.forward * 0.4f;
+            Vector3 to = target.transform.position + Vector3.up * 1f;
+            vfx.EmitFrostRay(from, to);
+            if (hit)
+            {
+                vfx.EmitIceBurst(vfx.GroundPoint(target, target.transform.position));
+            }
+            PlaySound(SFXClipType.SpellCast, caster.transform.position, 0.6f);
+        }
+
+        /// <summary>Mana Shield absorbed a hit: the bubble flares and shatters into arcane sparks.</summary>
+        public static void PlayManaShieldAbsorb(CombatUnit unit)
+        {
+            AbilityVfx vfx = instance;
+            if (vfx == null || unit == null || !Application.isPlaying) return;
+
+            Vector3 ground = vfx.GroundPoint(unit, unit.transform.position);
+            float height = vfx.shieldAuras.TryGetValue(unit, out StatusAura aura) ? aura.Height : 1.8f;
+            Vector3 center = ground + Vector3.up * height * 0.55f;
+            vfx.flash.Emit(vfx.FlashParams(center, ArcaneCore, height * 1.6f), 1);
+            ParticleSystem.EmitParams p = new ParticleSystem.EmitParams { position = center, applyShapeToPosition = true, startColor = ArcaneBlue };
+            vfx.sparks.Emit(p, 30);
+            p.startColor = ArcaneCore;
+            vfx.sparks.Emit(p, 18);
+            PlaySound(SFXClipType.SpellCast, unit.transform.position, 0.5f);
+        }
+
+        /// <summary>
+        /// Starts the lasting look of a status effect on a unit: a frosty mist and snowflakes while Frostbite
+        /// slows it, a glowing bubble while Mana Shield is up. Called by StatusEffectController.
+        /// </summary>
+        public static void ShowStatusAura(CombatUnit unit, StatusEffectType type)
+        {
+            if (unit == null || (type != StatusEffectType.Frostbite && type != StatusEffectType.ManaShield)) return;
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null) return;
+
+            if (type == StatusEffectType.Frostbite) vfx.ShowFrostAura(unit);
+            else vfx.ShowShieldAura(unit);
+        }
+
+        /// <summary>Ends the lasting look of a status effect when it expires or is removed.</summary>
+        public static void HideStatusAura(CombatUnit unit, StatusEffectType type)
+        {
+            AbilityVfx vfx = instance;
+            if (vfx == null || unit == null) return;
+
+            Dictionary<CombatUnit, StatusAura> auras = type == StatusEffectType.Frostbite ? vfx.frostAuras
+                : type == StatusEffectType.ManaShield ? vfx.shieldAuras : null;
+            if (auras != null && auras.TryGetValue(unit, out StatusAura aura))
+            {
+                aura.SetActive(false);
+            }
+        }
+
         #endregion
 
         #region Unity Lifecycle
@@ -189,6 +298,10 @@ namespace CastleOfTheD20.Combat
             if (instance == this) instance = null;
             if (particleMaterial != null) Destroy(particleMaterial);
             if (lineMaterial != null) Destroy(lineMaterial);
+            foreach (StatusAura aura in shieldAuras.Values)
+            {
+                if (aura.BubbleMaterial != null) Destroy(aura.BubbleMaterial);
+            }
         }
 
         private void OnDisable()
@@ -214,6 +327,9 @@ namespace CastleOfTheD20.Combat
 
         private void LateUpdate()
         {
+            FollowAuras(frostAuras);
+            FollowAuras(shieldAuras);
+
             // Runs after CameraFollow (execution order 1000), so the offset only affects what is rendered
             if (shakeTimeLeft <= 0f) return;
 
@@ -385,6 +501,273 @@ namespace CastleOfTheD20.Combat
 
         #endregion
 
+        #region Status Auras
+
+        private void ShowFrostAura(CombatUnit unit)
+        {
+            if (!frostAuras.TryGetValue(unit, out StatusAura aura) || aura.Root == null)
+            {
+                aura = new StatusAura { Unit = unit, Root = new GameObject("FrostAura_" + unit.name) };
+                aura.Root.transform.SetParent(transform, false);
+                aura.Height = MeasureHeight(unit);
+
+                // Snowflakes swirling up around the body
+                ParticleSystem flakes = CreateAuraSystem(aura.Root.transform, "Snowflakes", 60, rate: 22f,
+                    lifetime: new ParticleSystem.MinMaxCurve(0.9f, 1.4f),
+                    size: new ParticleSystem.MinMaxCurve(0.07f, 0.16f));
+                ParticleSystem.MainModule flakeMain = flakes.main;
+                flakeMain.startColor = new ParticleSystem.MinMaxGradient(IceWhite, IceBlue);
+                SetShapeCircle(flakes, 0.55f);
+                SetOrbit(flakes, up: aura.Height * 0.45f, orbit: 2.2f, radial: 0f);
+                SetFade(flakes, 1f, 0f);
+
+                // Pale blue mist hugging the ground
+                ParticleSystem mist = CreateAuraSystem(aura.Root.transform, "FrostMist", 30, rate: 8f,
+                    lifetime: new ParticleSystem.MinMaxCurve(1.0f, 1.5f),
+                    size: new ParticleSystem.MinMaxCurve(0.7f, 1.1f));
+                ParticleSystem.MainModule mistMain = mist.main;
+                mistMain.startColor = FrostMist;
+                mistMain.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+                SetShapeCircle(mist, 0.45f);
+                SetOrbit(mist, up: 0.08f, orbit: 0.6f, radial: 0.25f);
+                SetFade(mist, 0.35f, 0f);
+
+                // Glittering ice crystals clinging to the body
+                ParticleSystem crystals = CreateAuraSystem(aura.Root.transform, "IceCrystals", 30, rate: 10f,
+                    lifetime: new ParticleSystem.MinMaxCurve(0.5f, 0.8f),
+                    size: new ParticleSystem.MinMaxCurve(0.12f, 0.22f));
+                ParticleSystem.MainModule crystalMain = crystals.main;
+                crystalMain.startColor = IceBlue;
+                SetShapeSphere(crystals, 0.45f);
+                crystals.transform.localPosition = Vector3.up * aura.Height * 0.5f;
+                ParticleSystem.ShapeModule crystalShape = crystals.shape;
+                crystalShape.scale = new Vector3(1f, aura.Height / 0.9f, 1f);
+                SetFade(crystals, 1f, 0f);
+                SetShrink(crystals);
+
+                frostAuras[unit] = aura;
+            }
+
+            aura.ShownAt = Time.time;
+            aura.SetActive(true);
+            aura.Root.transform.position = GroundPoint(unit, unit.transform.position);
+        }
+
+        private void ShowShieldAura(CombatUnit unit)
+        {
+            if (!shieldAuras.TryGetValue(unit, out StatusAura aura) || aura.Root == null)
+            {
+                aura = new StatusAura { Unit = unit, Root = new GameObject("ManaShieldAura_" + unit.name) };
+                aura.Root.transform.SetParent(transform, false);
+                aura.Height = MeasureHeight(unit);
+
+                // The glowing bubble itself
+                GameObject bubble = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                bubble.name = "Bubble";
+                Collider bubbleCollider = bubble.GetComponent<Collider>();
+                if (bubbleCollider != null) Destroy(bubbleCollider);
+                bubble.transform.SetParent(aura.Root.transform, false);
+                bubble.transform.localPosition = Vector3.up * aura.Height * 0.52f;
+                aura.Bubble = bubble.transform;
+
+                aura.BubbleMaterial = new Material(particleMaterial.shader) { name = "ManaShield_Bubble", color = ShieldBubbleColor };
+                aura.BubbleMaterial.renderQueue = 3000;
+                MeshRenderer bubbleRenderer = bubble.GetComponent<MeshRenderer>();
+                bubbleRenderer.sharedMaterial = aura.BubbleMaterial;
+                bubbleRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                bubbleRenderer.receiveShadows = false;
+
+                // Bright motes circling on the bubble's surface
+                ParticleSystem motes = CreateAuraSystem(aura.Root.transform, "ShieldMotes", 60, rate: 18f,
+                    lifetime: new ParticleSystem.MinMaxCurve(0.6f, 1.0f),
+                    size: new ParticleSystem.MinMaxCurve(0.06f, 0.13f));
+                ParticleSystem.MainModule moteMain = motes.main;
+                moteMain.startColor = new ParticleSystem.MinMaxGradient(ArcaneBlue, ArcaneCore);
+                ParticleSystem.ShapeModule moteShape = motes.shape;
+                moteShape.enabled = true;
+                moteShape.shapeType = ParticleSystemShapeType.Sphere;
+                moteShape.radius = 0.5f;
+                moteShape.radiusThickness = 0f;
+                motes.transform.localPosition = bubble.transform.localPosition;
+                SetOrbit(motes, up: 0f, orbit: 1.6f, radial: 0f);
+                SetFade(motes, 1f, 0f);
+
+                shieldAuras[unit] = aura;
+            }
+
+            aura.ShownAt = Time.time;
+            aura.SetActive(true);
+            aura.Root.transform.position = GroundPoint(unit, unit.transform.position);
+            EmitArcaneBurst(GroundPoint(unit, unit.transform.position), ArcaneCore);
+        }
+
+        /// <summary>Keeps each visible aura on its unit, pulses the shield bubbles, and hides auras of fallen units.</summary>
+        private void FollowAuras(Dictionary<CombatUnit, StatusAura> auras)
+        {
+            foreach (StatusAura aura in auras.Values)
+            {
+                if (aura.Root == null || !aura.Root.activeSelf) continue;
+
+                CombatUnit unit = aura.Unit;
+                if (unit == null || !unit.IsAlive || !unit.gameObject.activeInHierarchy)
+                {
+                    aura.Root.SetActive(false);
+                    continue;
+                }
+
+                aura.Root.transform.position = GroundPoint(unit, unit.transform.position);
+
+                if (aura.Bubble != null)
+                {
+                    float width = Mathf.Max(1.4f, aura.Height * 0.75f);
+                    Vector3 size = new Vector3(width, aura.Height * 1.1f, width);
+                    float popIn = Mathf.Clamp01((Time.time - aura.ShownAt) / ShieldPopInDuration);
+                    float grow = 1f - (1f - popIn) * (1f - popIn);
+                    float pulse = 1f + Mathf.Sin(Time.time * 3.2f) * 0.03f;
+                    aura.Bubble.localScale = size * (Mathf.Lerp(0.2f, 1f, grow) * pulse);
+
+                    Color c = ShieldBubbleColor;
+                    c.a = ShieldBubbleColor.a * (0.75f + 0.25f * Mathf.Sin(Time.time * 4.5f)) + 0.25f * (1f - grow);
+                    aura.BubbleMaterial.color = c;
+                }
+            }
+        }
+
+        /// <summary>Approximate standing height of the unit's model, used to size auras.</summary>
+        private static float MeasureHeight(CombatUnit unit)
+        {
+            Renderer[] renderers = unit.GetComponentsInChildren<Renderer>();
+            bool found = false;
+            Bounds bounds = default;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer r = renderers[i];
+                if (r is ParticleSystemRenderer || r is LineRenderer || !r.enabled) continue;
+                if (!found) { bounds = r.bounds; found = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+            return found ? Mathf.Clamp(bounds.size.y, 1.2f, 2.6f) : 1.8f;
+        }
+
+        #endregion
+
+        #region Fire & Ice
+
+        private IEnumerator FireballRoutine(Vector3 from, Vector3 ground)
+        {
+            Vector3 to = ground + Vector3.up * 0.6f;
+            float t = 0f;
+            while (t < FireballFlightDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / FireballFlightDuration);
+                Vector3 pos = Vector3.Lerp(from, to, p) + Vector3.up * Mathf.Sin(p * Mathf.PI) * 0.6f;
+
+                if ((Time.frameCount & 1) == 0) flash.Emit(FlashParams(pos, FireOrange, 0.9f), 1);
+                ParticleSystem.EmitParams trail = new ParticleSystem.EmitParams
+                {
+                    position = pos,
+                    applyShapeToPosition = true,
+                    velocity = Vector3.up * 0.4f,
+                    startSize = Random.Range(0.3f, 0.5f),
+                    startLifetime = Random.Range(0.2f, 0.35f)
+                };
+                fire.Emit(trail, 3);
+                yield return null;
+            }
+
+            EmitFireExplosion(ground);
+        }
+
+        private void EmitFireExplosion(Vector3 ground)
+        {
+            float tile = GridManager.Instance != null ? GridManager.Instance.EffectiveTileSize : 1.6f;
+            Vector3 center = ground + Vector3.up * 0.7f;
+
+            flash.Emit(FlashParams(center, FireCore, tile * 3.2f), 1);
+            flash.Emit(FlashParams(center, FireOrange, tile * 2.4f), 1);
+
+            // Fireballs rolling outward across the 3x3 area
+            for (int i = 0; i < 44; i++)
+            {
+                Vector2 dir = Random.insideUnitCircle.normalized;
+                float speed = Random.Range(1.5f, 4.2f) * tile * 0.6f;
+                ParticleSystem.EmitParams p = new ParticleSystem.EmitParams
+                {
+                    position = ground + new Vector3(dir.x * 0.2f, Random.Range(0.2f, 0.9f), dir.y * 0.2f),
+                    velocity = new Vector3(dir.x * speed, Random.Range(0.6f, 2.2f), dir.y * speed),
+                    startSize = Random.Range(0.55f, 1.05f)
+                };
+                fire.Emit(p, 1);
+            }
+
+            // Glowing embers thrown high
+            ParticleSystem.EmitParams ember = new ParticleSystem.EmitParams { position = center, applyShapeToPosition = true };
+            embers.Emit(ember, 36);
+
+            // Dark smoke rising after the blast
+            for (int i = 0; i < 14; i++)
+            {
+                Vector2 disc = Random.insideUnitCircle * tile * 1.1f;
+                ParticleSystem.EmitParams s = new ParticleSystem.EmitParams
+                {
+                    position = ground + new Vector3(disc.x, Random.Range(0.3f, 1.0f), disc.y),
+                    velocity = Vector3.up * Random.Range(0.6f, 1.3f)
+                };
+                fireSmoke.Emit(s, 1);
+            }
+
+            StartCoroutine(ExpandRing(ground + Vector3.up * 0.08f, 0.3f, tile * 1.6f, FireOrange));
+            Shake(0.3f, 0.16f);
+        }
+
+        private void EmitFrostRay(Vector3 from, Vector3 to)
+        {
+            const int steps = 16;
+            for (int i = 0; i <= steps; i++)
+            {
+                Vector3 pos = Vector3.Lerp(from, to, i / (float)steps);
+                ParticleSystem.EmitParams p = new ParticleSystem.EmitParams
+                {
+                    position = pos + Random.insideUnitSphere * 0.06f,
+                    velocity = Random.insideUnitSphere * 0.3f,
+                    startColor = i % 2 == 0 ? IceBlue : IceWhite,
+                    startSize = Random.Range(0.12f, 0.24f),
+                    startLifetime = Random.Range(0.25f, 0.4f)
+                };
+                iceShards.Emit(p, 1);
+            }
+            flash.Emit(FlashParams(from, IceBlue, 0.8f), 1);
+        }
+
+        private void EmitIceBurst(Vector3 ground)
+        {
+            Vector3 center = ground + Vector3.up * 0.9f;
+            flash.Emit(FlashParams(center, IceWhite, 2.4f), 1);
+
+            ParticleSystem.EmitParams p = new ParticleSystem.EmitParams { position = center, applyShapeToPosition = true, startColor = IceBlue };
+            iceShards.Emit(p, 26);
+            p.startColor = IceWhite;
+            iceShards.Emit(p, 16);
+
+            // A ring of frost crystals spreading over the ground
+            for (int i = 0; i < 20; i++)
+            {
+                float angle = (i / 20f) * Mathf.PI * 2f;
+                Vector3 dir = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                ParticleSystem.EmitParams ring = new ParticleSystem.EmitParams
+                {
+                    position = ground + dir * 0.3f + Vector3.up * 0.1f,
+                    velocity = dir * Random.Range(1.5f, 2.4f) + Vector3.up * 0.3f,
+                    startColor = IceBlue,
+                    startSize = Random.Range(0.15f, 0.28f)
+                };
+                iceShards.Emit(ring, 1);
+            }
+        }
+
+        #endregion
+
         #region Particle Emission
 
         private IEnumerator EmitArcaneBurstLater(Vector3 ground, float delay)
@@ -504,7 +887,7 @@ namespace CastleOfTheD20.Combat
             };
         }
 
-        private IEnumerator ExpandRing(Vector3 center, float startRadius, float endRadius)
+        private IEnumerator ExpandRing(Vector3 center, float startRadius, float endRadius, Color color)
         {
             LineRenderer ring = rings[nextRing];
             nextRing = (nextRing + 1) % rings.Length;
@@ -524,7 +907,7 @@ namespace CastleOfTheD20.Combat
                     ring.SetPosition(i, center + new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius));
                 }
 
-                Color c = ShockwaveColor;
+                Color c = color;
                 c.a = 1f - p;
                 ring.startColor = c;
                 ring.endColor = c;
@@ -605,7 +988,7 @@ namespace CastleOfTheD20.Combat
             sparkRenderer.velocityScale = 0.06f;
             sparkRenderer.lengthScale = 1.5f;
 
-            flash = CreateSystem("Flash", ParticleSystemSimulationSpace.World, 8,
+            flash = CreateSystem("Flash", ParticleSystemSimulationSpace.World, 40,
                 lifetime: new ParticleSystem.MinMaxCurve(0.28f),
                 speed: new ParticleSystem.MinMaxCurve(0f),
                 size: new ParticleSystem.MinMaxCurve(2f),
@@ -657,6 +1040,68 @@ namespace CastleOfTheD20.Combat
 
             vortexOut = CreateVortex("VortexOut");
             vortexIn = CreateVortex("VortexIn");
+
+            fire = CreateSystem("Fire", ParticleSystemSimulationSpace.World, 200,
+                lifetime: new ParticleSystem.MinMaxCurve(0.35f, 0.65f),
+                speed: new ParticleSystem.MinMaxCurve(0f),
+                size: new ParticleSystem.MinMaxCurve(0.5f, 0.9f),
+                gravity: -0.35f);
+            ParticleSystem.MainModule fireMain = fire.main;
+            fireMain.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            SetShapeSphere(fire, 0.12f);
+            ParticleSystem.LimitVelocityOverLifetimeModule fireDrag = fire.limitVelocityOverLifetime;
+            fireDrag.enabled = true;
+            fireDrag.drag = new ParticleSystem.MinMaxCurve(2.5f);
+            SetColorRamp(fire, FireCore, FireOrange, new Color(0.55f, 0.1f, 0.04f, 1f));
+            ParticleSystem.SizeOverLifetimeModule fireSize = fire.sizeOverLifetime;
+            fireSize.enabled = true;
+            fireSize.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(0.3f, 1.1f), new Keyframe(1f, 0.4f)));
+
+            embers = CreateSystem("Embers", ParticleSystemSimulationSpace.World, 120,
+                lifetime: new ParticleSystem.MinMaxCurve(0.6f, 1.1f),
+                speed: new ParticleSystem.MinMaxCurve(3f, 7f),
+                size: new ParticleSystem.MinMaxCurve(0.05f, 0.12f),
+                gravity: 0.9f);
+            ParticleSystem.MainModule emberMain = embers.main;
+            emberMain.startColor = new ParticleSystem.MinMaxGradient(FireCore, FireOrange);
+            SetShapeSphere(embers, 0.4f);
+            SetFade(embers, 1f, 0f);
+            ParticleSystemRenderer emberRenderer = embers.GetComponent<ParticleSystemRenderer>();
+            emberRenderer.renderMode = ParticleSystemRenderMode.Stretch;
+            emberRenderer.velocityScale = 0.05f;
+            emberRenderer.lengthScale = 1.5f;
+
+            fireSmoke = CreateSystem("FireSmoke", ParticleSystemSimulationSpace.World, 60,
+                lifetime: new ParticleSystem.MinMaxCurve(0.9f, 1.4f),
+                speed: new ParticleSystem.MinMaxCurve(0f),
+                size: new ParticleSystem.MinMaxCurve(0.8f, 1.4f),
+                gravity: -0.05f);
+            ParticleSystem.MainModule fireSmokeMain = fireSmoke.main;
+            fireSmokeMain.startColor = FireSmokeColor;
+            fireSmokeMain.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            ParticleSystem.ColorOverLifetimeModule fireSmokeCol = fireSmoke.colorOverLifetime;
+            fireSmokeCol.enabled = true;
+            Gradient smokeFade = new Gradient();
+            smokeFade.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.7f, 0.25f), new GradientAlphaKey(0f, 1f) });
+            fireSmokeCol.color = new ParticleSystem.MinMaxGradient(smokeFade);
+            ParticleSystem.SizeOverLifetimeModule fireSmokeSize = fireSmoke.sizeOverLifetime;
+            fireSmokeSize.enabled = true;
+            fireSmokeSize.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.5f), new Keyframe(1f, 1.6f)));
+
+            iceShards = CreateSystem("IceShards", ParticleSystemSimulationSpace.World, 160,
+                lifetime: new ParticleSystem.MinMaxCurve(0.35f, 0.6f),
+                speed: new ParticleSystem.MinMaxCurve(2f, 4.5f),
+                size: new ParticleSystem.MinMaxCurve(0.08f, 0.18f),
+                gravity: 0.6f);
+            SetShapeSphere(iceShards, 0.35f);
+            SetFade(iceShards, 1f, 0f);
+            SetShrink(iceShards);
+            ParticleSystemRenderer iceRenderer = iceShards.GetComponent<ParticleSystemRenderer>();
+            iceRenderer.renderMode = ParticleSystemRenderMode.Stretch;
+            iceRenderer.velocityScale = 0.05f;
+            iceRenderer.lengthScale = 1.3f;
 
             for (int i = 0; i < rings.Length; i++)
             {
@@ -765,6 +1210,57 @@ namespace CastleOfTheD20.Combat
             gradient.SetKeys(
                 new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
                 new[] { new GradientAlphaKey(startAlpha, 0f), new GradientAlphaKey(startAlpha, 0.35f), new GradientAlphaKey(endAlpha, 1f) });
+            col.color = new ParticleSystem.MinMaxGradient(gradient);
+        }
+
+        /// <summary>A looping, self-emitting system under <paramref name="parent"/> for status auras.</summary>
+        private ParticleSystem CreateAuraSystem(Transform parent, string name, int maxParticles, float rate,
+            ParticleSystem.MinMaxCurve lifetime, ParticleSystem.MinMaxCurve size)
+        {
+            ParticleSystem ps = CreateSystem(name, ParticleSystemSimulationSpace.Local, maxParticles,
+                lifetime, speed: new ParticleSystem.MinMaxCurve(0f), size, gravity: 0f);
+            ps.transform.SetParent(parent, false);
+            ParticleSystem.MainModule main = ps.main;
+            main.playOnAwake = true; // restarts when the aura is shown again
+            ParticleSystem.EmissionModule emission = ps.emission;
+            emission.enabled = true;
+            emission.rateOverTime = rate;
+            return ps;
+        }
+
+        private static void SetShapeCircle(ParticleSystem ps, float radius)
+        {
+            ParticleSystem.ShapeModule shape = ps.shape;
+            shape.enabled = true;
+            shape.shapeType = ParticleSystemShapeType.Circle;
+            shape.radius = radius;
+            shape.rotation = new Vector3(90f, 0f, 0f);
+        }
+
+        /// <summary>Particles drift upward while circling the system's vertical axis.</summary>
+        private static void SetOrbit(ParticleSystem ps, float up, float orbit, float radial)
+        {
+            ParticleSystem.VelocityOverLifetimeModule velocity = ps.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.Local;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(up);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalX = new ParticleSystem.MinMaxCurve(0f);
+            velocity.orbitalY = new ParticleSystem.MinMaxCurve(orbit);
+            velocity.orbitalZ = new ParticleSystem.MinMaxCurve(0f);
+            velocity.radial = new ParticleSystem.MinMaxCurve(radial);
+        }
+
+        /// <summary>Colour shifts from hot to cool through a particle's life and fades out at the end.</summary>
+        private static void SetColorRamp(ParticleSystem ps, Color start, Color middle, Color end)
+        {
+            ParticleSystem.ColorOverLifetimeModule col = ps.colorOverLifetime;
+            col.enabled = true;
+            Gradient gradient = new Gradient();
+            gradient.SetKeys(
+                new[] { new GradientColorKey(start, 0f), new GradientColorKey(middle, 0.35f), new GradientColorKey(end, 1f) },
+                new[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(0.9f, 0.5f), new GradientAlphaKey(0f, 1f) });
             col.color = new ParticleSystem.MinMaxGradient(gradient);
         }
 

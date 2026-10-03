@@ -85,6 +85,7 @@ namespace CastleOfTheD20.Combat
             }
 
             Debug.Log($"[StatusEffect] {ownerUnit?.UnitName ?? name} gained {type} for {durationTurns} turn(s).");
+            AbilityVfx.ShowStatusAura(ownerUnit, type);
             OnEffectApplied?.Invoke(type, activeEffects[type]);
         }
 
@@ -118,6 +119,7 @@ namespace CastleOfTheD20.Combat
                 }
 
                 Debug.Log($"[StatusEffect] {type} expired on {ownerUnit?.UnitName ?? name}.");
+                AbilityVfx.HideStatusAura(ownerUnit, type);
                 OnEffectExpired?.Invoke(type);
             }
         }
@@ -249,6 +251,7 @@ namespace CastleOfTheD20.Combat
                 manaShieldCharges--;
                 Debug.Log($"[StatusEffect] Mana Shield absorbed incoming attack on {ownerUnit?.UnitName ?? name}! Remaining charges: {manaShieldCharges}");
                 OnManaShieldAbsorbed?.Invoke();
+                AbilityVfx.PlayManaShieldAbsorb(ownerUnit);
 
                 if (manaShieldCharges <= 0)
                 {

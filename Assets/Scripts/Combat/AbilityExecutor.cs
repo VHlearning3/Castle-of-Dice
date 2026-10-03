@@ -264,41 +264,70 @@ namespace CastleOfTheD20.Combat
         {
             Debug.Log($"[AbilityExecutor] {caster.UnitName} casts {ability.AbilityName} on 3x3 area centered at {targetGridPos}!");
 
-            List<GridTile> areaTiles = grid.GetArea3x3(targetGridPos);
             int bonus = GetCasterAttributeBonus(caster);
 
             // One damage roll for the whole blast (e.g. Fireball 2d6); a natural 20 doubles it for that target
             int damage = ability.RollDamage(bonus);
 
-            foreach (var tile in areaTiles)
+            if (ability.AbilityID.IndexOf("fireball", StringComparison.OrdinalIgnoreCase) >= 0)
             {
-                if (tile.IsOccupied && tile.OccupyingUnit != null)
+                AbilityVfx.PlayFireball(caster, grid.GetWorldPosition(targetGridPos));
+            }
+
+            List<CombatUnit> targets = CollectHostilesInArea3x3(caster, targetGridPos, grid);
+            foreach (CombatUnit target in targets)
+            {
+                if (ability.RequiresCheck)
                 {
-                    CombatUnit target = tile.OccupyingUnit;
+                    DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass);
+                    Debug.Log($"[AbilityExecutor] {ability.AbilityName} vs {target.UnitName}: {hitCheck}");
 
-                    // Avoid damaging caster in AOE unless specified
-                    if (target == caster) continue;
-
-                    if (ability.RequiresCheck)
+                    if (hitCheck.isSuccess)
                     {
-                        DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass);
-                        Debug.Log($"[AbilityExecutor] {ability.AbilityName} vs {target.UnitName}: {hitCheck}");
-
-                        if (hitCheck.isSuccess)
-                        {
-                            target.TakeDamage(hitCheck.isCriticalSuccess ? damage * 2 : damage, hitCheck.isCriticalSuccess);
-                            ApplyAbilityStatusEffect(target, ability);
-                        }
-                    }
-                    else
-                    {
-                        target.TakeDamage(damage);
+                        target.TakeDamage(hitCheck.isCriticalSuccess ? damage * 2 : damage, hitCheck.isCriticalSuccess);
                         ApplyAbilityStatusEffect(target, ability);
                     }
+                }
+                else
+                {
+                    target.TakeDamage(damage);
+                    ApplyAbilityStatusEffect(target, ability);
                 }
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Living hostile units standing in the 3x3 square around <paramref name="center"/>. Reads unit positions
+        /// as well as tile occupancy, because a tile's OccupyingUnit can lag behind a unit that just moved.
+        /// </summary>
+        private static List<CombatUnit> CollectHostilesInArea3x3(CombatUnit caster, Vector2Int center, GridManager grid)
+        {
+            List<CombatUnit> targets = new List<CombatUnit>();
+
+            foreach (GridTile tile in grid.GetArea3x3(center))
+            {
+                CombatUnit unit = tile.OccupyingUnit;
+                if (unit != null && unit != caster && unit.IsAlive && IsHostileTo(caster, unit) && !targets.Contains(unit))
+                {
+                    targets.Add(unit);
+                }
+            }
+
+            if (TurnManager.Instance != null)
+            {
+                foreach (CombatUnit unit in TurnManager.Instance.ActiveUnits)
+                {
+                    if (unit == null || unit == caster || !unit.IsAlive || !IsHostileTo(caster, unit) || targets.Contains(unit)) continue;
+                    if (grid.GetDistance(center, unit.GridPosition) <= 1)
+                    {
+                        targets.Add(unit);
+                    }
+                }
+            }
+
+            return targets;
         }
 
         #endregion
@@ -447,6 +476,11 @@ namespace CastleOfTheD20.Combat
                 DiceResult hitCheck = DiceSystem.RollD20(bonus, target.ArmorClass, advantage);
                 caster.StatusEffects?.ConsumeAdvantageNextAttack();
                 Debug.Log($"[AbilityExecutor] {caster.UnitName} casts {ability.AbilityName} on {target.UnitName}: {hitCheck}");
+
+                if (ability.AppliedEffect == StatusEffectType.Frostbite)
+                {
+                    AbilityVfx.PlayFrostbite(caster, target, hitCheck.isSuccess);
+                }
 
                 if (hitCheck.isSuccess)
                 {

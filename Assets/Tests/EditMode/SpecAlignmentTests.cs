@@ -156,6 +156,60 @@ namespace CastleOfTheD20.Tests
             Assert.IsFalse(executor.ExecuteAbility(mage, blink, new Vector2Int(0, 1)), "8 tiles is beyond Blink's range.");
         }
 
+        [Test]
+        public void Teleports_TargetEmptyTilesInsteadOfUnits()
+        {
+            Assert.IsTrue(CreateAbility("mage_blink", AbilityTargetType.SingleTarget, 7, 0, 0, 0, false).TargetsEmptyTile);
+            Assert.IsTrue(CreateAbility("rogue_shadow_step", AbilityTargetType.SingleTarget, 3, 0, 0, 0, false).TargetsEmptyTile);
+            Assert.IsFalse(CreateAbility("mage_frostbite", AbilityTargetType.SingleTarget, 4, 0, 1, 6, true).TargetsEmptyTile);
+        }
+
+        [Test]
+        public void Fireball_HitsEveryEnemyInTheThreeByThreeBlastButNotTheHero()
+        {
+            AbilitySO fireball = ScriptableObject.CreateInstance<AbilitySO>();
+            Track(fireball);
+            fireball.Initialize("mage_fireball", "Fireball", "", AbilityTargetType.Area3x3, 4, 1, 5, false,
+                StatusEffectType.None, 0, "CastSpell", null, 0, 0, false);
+
+            PlayerUnit mage = CreatePlayer(new Vector2Int(4, 5));
+            EnemyUnit center = CreateEnemy("Spec_Center", new Vector2Int(5, 5), hp: 20, ac: 10);
+            EnemyUnit corner = CreateEnemy("Spec_Corner", new Vector2Int(6, 6), hp: 20, ac: 10);
+            EnemyUnit outside = CreateEnemy("Spec_Outside", new Vector2Int(7, 5), hp: 20, ac: 10);
+
+            Assert.IsTrue(executor.ExecuteAbility(mage, fireball, new Vector2Int(5, 5)));
+
+            Assert.AreEqual(15, center.CurrentHP, "The enemy on the target tile is burned.");
+            Assert.AreEqual(15, corner.CurrentHP, "An enemy on a corner of the 3x3 area is burned too.");
+            Assert.AreEqual(20, outside.CurrentHP, "Two tiles from the centre is outside the blast.");
+            Assert.AreEqual(mage.MaxHP, mage.CurrentHP, "The mage standing in the blast is not hurt.");
+        }
+
+        [Test]
+        public void MageAssets_FrostbiteSlowsTwoTurns_ManaShieldLastsThree()
+        {
+            AbilitySO frostbite = UnityEditor.AssetDatabase.LoadAssetAtPath<AbilitySO>("Assets/Data/Ability_Mage_Frostbite.asset");
+            AbilitySO manaShield = UnityEditor.AssetDatabase.LoadAssetAtPath<AbilitySO>("Assets/Data/Ability_Mage_ManaShield.asset");
+            Assert.IsNotNull(frostbite);
+            Assert.IsNotNull(manaShield);
+            Assert.AreEqual(2, frostbite.EffectDurationTurns);
+            Assert.AreEqual(3, manaShield.EffectDurationTurns);
+        }
+
+        [Test]
+        public void Frostbite_HalvesMovementForTwoOfTheTargetsTurns()
+        {
+            EnemyUnit enemy = CreateEnemy("Spec_Frozen", new Vector2Int(5, 5), hp: 20, ac: 10);
+            int normal = enemy.MovementRange;
+            enemy.StatusEffects.ApplyEffect(StatusEffectType.Frostbite, 2);
+
+            Assert.AreEqual(Mathf.Max(1, normal / 2), enemy.MovementRange);
+            enemy.StatusEffects.ProcessTurnEndEffects();
+            Assert.AreEqual(Mathf.Max(1, normal / 2), enemy.MovementRange, "Still slowed on its second turn.");
+            enemy.StatusEffects.ProcessTurnEndEffects();
+            Assert.AreEqual(normal, enemy.MovementRange, "The chill wears off after two turns.");
+        }
+
         #endregion
 
         #region Shield Wall
