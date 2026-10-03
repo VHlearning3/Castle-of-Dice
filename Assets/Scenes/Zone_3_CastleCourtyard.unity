@@ -2322,6 +2322,8 @@ MonoBehaviour:
   - {fileID: 597166966}
   - {fileID: 784360747}
   secretPassageOrChest: {fileID: 1302089079}
+  bossDialogueNpc: {fileID: 957057402}
+  stageDialogueNpcAtBoss: 1
   generateGridOnCombat: 1
   gridCenterOffset: {x: 0, y: 0, z: 9}
   gridWidth: 32

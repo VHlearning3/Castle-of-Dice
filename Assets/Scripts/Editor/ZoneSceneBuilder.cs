@@ -340,7 +340,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_CursedCommander", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Commander_Intro.asset", "Challenge the Cursed Commander", null);
+            GameObject bossNpc = CreateBossDialogueNPC("NPC_CursedCommander", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Commander_Intro.asset", "Challenge the Cursed Commander", null);
 
             // Reward Chest
             // Gold only: Othelia's signet ring waits in the Treasure Tower (Zone 6), per the v2.6 spec
@@ -360,6 +360,7 @@ namespace CastleOfTheD20.Editor
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "Courtyard";
             room.bossIdentifier = "CursedCommander";
+            room.bossDialogueNpc = bossNpc.GetComponent<VillageNPC>();
             room.gridCenterOffset = new Vector3(0f, 0f, 9f);
             room.gridWidth = 32;
             room.gridHeight = 32;
@@ -461,7 +462,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_Malakor", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Challenge Shadow Mage Malakor", null);
+            GameObject bossNpc = CreateBossDialogueNPC("NPC_Malakor", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Challenge Shadow Mage Malakor", null);
 
             // Reward Chest
             GameObject chestObj = CreateRewardChest("Library_Reward_Chest", new Vector3(0f, 0.4f, 30f), woodMat, goldMat, chestPrefab, null, 60, greaterPotion);
@@ -471,12 +472,15 @@ namespace CastleOfTheD20.Editor
             GameObject triggerObj = new GameObject("Library_Encounter_Trigger");
             triggerObj.transform.position = new Vector3(0f, 2.5f, 10f);
             BoxCollider trigCol = triggerObj.AddComponent<BoxCollider>();
-            trigCol.size = new Vector3(32f, 6f, 32f);
+            // Wall to wall from x -30 to the east wall: the hall door cannot be reached around Malakor
+            trigCol.size = new Vector3(74f, 6f, 88f);
+            trigCol.center = new Vector3(7f, 0f, -10f);
             trigCol.isTrigger = true;
 
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "Library";
             room.bossIdentifier = "ShadowMageMalakor";
+            room.bossDialogueNpc = bossNpc.GetComponent<VillageNPC>();
             room.gridWidth = 20;
             room.gridHeight = 20;
             room.roomEnemies = enemyList;
@@ -740,7 +744,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            CreateBossDialogueNPC("NPC_GargoyleKing", new Vector3(0f, 1.2f, -10f), wallMat, "Assets/Data/Dialogues/GargoyleKing_Intro.asset", "Challenge the Gargoyle King", null);
+            GameObject bossNpc = CreateBossDialogueNPC("NPC_GargoyleKing", new Vector3(0f, 1.2f, -10f), wallMat, "Assets/Data/Dialogues/GargoyleKing_Intro.asset", "Challenge the Gargoyle King", null);
 
             // Royal Treasure Chest (100 Gold + Campaign Victory!)
             GameObject chestObj = CreateRewardChest("CrownHall_Treasure_Chest", new Vector3(0f, 1.4f, 34f), woodMat, goldMat, chestPrefab, null, 100, null);
@@ -750,12 +754,15 @@ namespace CastleOfTheD20.Editor
             GameObject triggerObj = new GameObject("CrownHall_Encounter_Trigger");
             triggerObj.transform.position = new Vector3(0f, 2.5f, 15f);
             BoxCollider trigCol = triggerObj.AddComponent<BoxCollider>();
-            trigCol.size = new Vector3(36f, 6f, 36f);
+            // Wall to wall from z -3 to the throne wall
+            trigCol.size = new Vector3(98f, 6f, 52f);
+            trigCol.center = new Vector3(0f, 0f, 8f);
             trigCol.isTrigger = true;
 
             DungeonRoomController room = triggerObj.AddComponent<DungeonRoomController>();
             room.roomLocation = "CrownHall";
             room.bossIdentifier = "GargoyleKing";
+            room.bossDialogueNpc = bossNpc.GetComponent<VillageNPC>();
             room.gridWidth = 20;
             room.gridHeight = 20;
             room.roomEnemies = enemyList;

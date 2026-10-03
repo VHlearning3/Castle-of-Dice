@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Combat;
+using CastleOfTheD20.Dialogue;
 
 namespace CastleOfTheD20.World
 {
@@ -57,6 +58,13 @@ namespace CastleOfTheD20.World
         [Tooltip("Reward chest or hidden passageway revealed upon defeating all enemies. Inactive by default.")]
         public GameObject secretPassageOrChest;
 
+        [Header("Boss Dialogue")]
+        [Tooltip("Boss whose intro dialogue plays when the hero walks into this trigger; combat starts when it ends. It cannot be talked to before.")]
+        public VillageNPC bossDialogueNpc;
+
+        [Tooltip("If true, the dialogue NPC waits where the boss will stand instead of its authored spot.")]
+        public bool stageDialogueNpcAtBoss = true;
+
         [Header("Tactical Grid Generation")]
         [Tooltip("If true, automatically generates a combat grid in this room when the encounter begins.")]
         public bool generateGridOnCombat = true;
@@ -91,6 +99,7 @@ namespace CastleOfTheD20.World
         private RoomState currentState = RoomState.Unexplored;
         private BoxCollider triggerCollider;
         private bool isEncounterTriggered = false;
+        private bool isAwaitingBossDialogue = false;
 
         #endregion
 
@@ -163,6 +172,48 @@ namespace CastleOfTheD20.World
             {
                 RestoreClearedState();
             }
+
+            // 6. The boss speaks only when the hero walks into this trigger, never before
+            PrepareBossDialogueNpc();
+        }
+
+        private void PrepareBossDialogueNpc()
+        {
+            if (bossDialogueNpc == null) return;
+
+            if (currentState == RoomState.Cleared)
+            {
+                bossDialogueNpc.gameObject.SetActive(false);
+                return;
+            }
+
+            bossDialogueNpc.IsInteractable = false;
+
+            if (stageDialogueNpcAtBoss)
+            {
+                GameObject boss = FindBossObject();
+                if (boss != null)
+                {
+                    Vector3 spot = boss.transform.position;
+                    bossDialogueNpc.transform.position = new Vector3(spot.x, bossDialogueNpc.transform.position.y, spot.z);
+                    bossDialogueNpc.transform.rotation = boss.transform.rotation;
+                }
+            }
+        }
+
+        /// <summary>The boss among the room's hostiles: the one named "Boss_...", else the last listed.</summary>
+        private GameObject FindBossObject()
+        {
+            if (roomEnemies == null) return null;
+
+            GameObject last = null;
+            foreach (GameObject enemy in roomEnemies)
+            {
+                if (enemy == null) continue;
+                if (enemy.name.StartsWith("Boss_", StringComparison.OrdinalIgnoreCase)) return enemy;
+                last = enemy;
+            }
+            return last;
         }
 
         /// <summary>
@@ -200,6 +251,7 @@ namespace CastleOfTheD20.World
         private void OnDestroy()
         {
             TurnManager.OnCombatEnded -= HandleCombatEnded;
+            DialogueController.OnDialogueEnded -= HandleBossDialogueEnded;
         }
 
         #endregion
@@ -227,8 +279,54 @@ namespace CastleOfTheD20.World
                     if (anyCol != null) anyCol.enabled = false;
                 }
 
+                BeginEncounter(other.GetComponentInParent<PlayerUnit>());
+            }
+        }
+
+        /// <summary>
+        /// Starts this room's encounter for a hero who walked in: the boss's intro dialogue first when the
+        /// room has one (combat follows when it ends), otherwise combat right away.
+        /// </summary>
+        public void BeginEncounter(PlayerUnit player)
+        {
+            if (isEncounterTriggered || isAwaitingBossDialogue || currentState != RoomState.Unexplored) return;
+
+            if (!TryStartBossDialogue(player))
+            {
                 TriggerEncounter();
             }
+        }
+
+        /// <summary>Whether the boss's intro dialogue is playing and combat waits for it to end.</summary>
+        public bool IsAwaitingBossDialogue => isAwaitingBossDialogue;
+
+        private bool TryStartBossDialogue(PlayerUnit player)
+        {
+            if (bossDialogueNpc == null || bossDialogueNpc.StartingDialogueNode == null) return false;
+
+            DialogueController dialogue = DialogueController.Instance;
+            if (dialogue == null) return false;
+            if (dialogue.IsInDialogue) dialogue.EndDialogue();
+
+            isAwaitingBossDialogue = true;
+            DialogueController.OnDialogueEnded += HandleBossDialogueEnded;
+            dialogue.StartDialogue(bossDialogueNpc.StartingDialogueNode, player);
+
+            // A one-line intro may already have ended (and started combat) inside StartDialogue
+            if (dialogue.IsInDialogue || isEncounterTriggered) return true;
+
+            DialogueController.OnDialogueEnded -= HandleBossDialogueEnded;
+            isAwaitingBossDialogue = false;
+            return false;
+        }
+
+        private void HandleBossDialogueEnded()
+        {
+            DialogueController.OnDialogueEnded -= HandleBossDialogueEnded;
+            if (!isAwaitingBossDialogue) return;
+
+            isAwaitingBossDialogue = false;
+            TriggerEncounter();
         }
 
         #endregion
@@ -246,6 +344,9 @@ namespace CastleOfTheD20.World
             isEncounterTriggered = true;
             currentState = RoomState.CombatActive;
             Debug.Log($"[DungeonRoomController] Encounter triggered in '{roomLocation}'! Locking chamber doors.");
+
+            // The fighting boss unit takes the place of its dialogue stand-in
+            if (bossDialogueNpc != null) bossDialogueNpc.gameObject.SetActive(false);
 
             // Disable encounter trigger collider so it does not intercept camera raycasts during combat
             if (triggerCollider != null) triggerCollider.enabled = false;

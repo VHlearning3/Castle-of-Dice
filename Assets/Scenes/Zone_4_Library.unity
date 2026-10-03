@@ -2793,6 +2793,8 @@ MonoBehaviour:
   - {fileID: 597166966}
   - {fileID: 784360747}
   secretPassageOrChest: {fileID: 1302089079}
+  bossDialogueNpc: {fileID: 957057402}
+  stageDialogueNpcAtBoss: 1
   generateGridOnCombat: 1
   gridCenterOffset: {x: 0, y: 0, z: 0}
   gridWidth: 20
@@ -2818,8 +2820,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 32, y: 6, z: 32}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 74, y: 6, z: 88}
+  m_Center: {x: 7, y: 0, z: -10}
 --- !u!4 &1149914912
 Transform:
   m_ObjectHideFlags: 0
