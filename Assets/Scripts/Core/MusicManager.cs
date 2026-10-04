@@ -86,6 +86,41 @@ namespace CastleOfTheD20.Core
         [Tooltip("Optional ZoneMusicSO asset configuring zone exploration and combat music tracks.")]
         [SerializeField] private CastleOfTheD20.Data.ZoneMusicSO zoneMusicConfig;
 
+        [Header("Per-Zone Exploration Music (critical review C10)")]
+        [Tooltip("Own exploration song for each zone. Empty slots fall back to Castle_adventure_song. " +
+                 "An mp3 dropped in Assets/Resources/Music named Explore_Forest, Explore_Courtyard, Explore_Library, " +
+                 "Explore_CastleHall, Explore_Tower or Explore_CrownHall is picked up too, no scene editing needed.")]
+        [SerializeField] private AudioClip forestExplorationClip;
+        [SerializeField] private AudioClip courtyardExplorationClip;
+        [SerializeField] private AudioClip libraryExplorationClip;
+        [SerializeField] private AudioClip castleHallExplorationClip;
+        [SerializeField] private AudioClip towerExplorationClip;
+        [SerializeField] private AudioClip crownHallExplorationClip;
+
+        /// <summary>Resources path prefix for zone songs Vili adds without touching the scenes.</summary>
+        public const string ZoneMusicResourcePrefix = "Music/Explore_";
+
+        /// <summary>
+        /// The zone's own exploration song: its slot, else Resources/Music/Explore_[Zone], else null
+        /// (the caller falls back to the castle adventure theme).
+        /// </summary>
+        public AudioClip GetZoneExplorationClip(GameLocation location)
+        {
+            AudioClip slot = location switch
+            {
+                GameLocation.Forest => forestExplorationClip,
+                GameLocation.Courtyard => courtyardExplorationClip,
+                GameLocation.Library => libraryExplorationClip,
+                GameLocation.CastleHall => castleHallExplorationClip,
+                GameLocation.Tower => towerExplorationClip,
+                GameLocation.CrownHall => crownHallExplorationClip,
+                _ => null
+            };
+            if (slot != null) return slot;
+            if (location == GameLocation.Village) return null;
+            return Resources.Load<AudioClip>(ZoneMusicResourcePrefix + location);
+        }
+
         #endregion
 
         #region Private State
@@ -597,6 +632,14 @@ namespace CastleOfTheD20.Core
 
         public void HandleLocationChanged(GameLocation newLocation)
         {
+            // A zone with its own song plays it; the rest keep the shared castle theme
+            AudioClip zoneClip = GetZoneExplorationClip(newLocation);
+            if (zoneClip != null)
+            {
+                PlayMusic(zoneClip, DEFAULT_FADE_DURATION);
+                return;
+            }
+
             if (zoneMusicConfig != null)
             {
                 MusicTrackType mapped = zoneMusicConfig.GetTrackForLocation(newLocation);
@@ -753,6 +796,14 @@ namespace CastleOfTheD20.Core
             }
 
             restoreDelayCoroutine = null;
+
+            // Back to the zone's own song after a fight, when it has one
+            AudioClip zoneClip = GameManager.Instance != null ? GetZoneExplorationClip(GameManager.Instance.CurrentLocation) : null;
+            if (zoneClip != null)
+            {
+                PlayMusic(zoneClip, DEFAULT_FADE_DURATION);
+                yield break;
+            }
             PlayTrack(targetTrack, DEFAULT_FADE_DURATION);
         }
 
