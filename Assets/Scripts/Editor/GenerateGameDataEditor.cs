@@ -462,9 +462,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(cellarPests)) cellarPests.Initialize(
                 id: "quest_cellar_pests",
                 title: "Cellar Pests",
-                desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's wine cellar.",
+                desc: "Slay the 2 giant rats infesting Innkeeper Barnaby's wine cellar.",
                 state: QuestState.NotStarted,
-                reqAmount: 3,
+                reqAmount: 2, // encounters hold at most 2 regular enemies
                 gold: 30,
                 bonusGold: 15,
                 reward: potionHealth
@@ -763,7 +763,7 @@ namespace CastleOfTheD20.Editor
                 desc: "Rare blue swamp flower that blooms in the damp hollows along the Forest Path.",
                 type: ItemType.QuestItem,
                 buyPrice: 0,
-                sellPrice: 5,
+                sellPrice: 0, // quest item: Baldur never buys it
                 statBonus: 0,
                 consumable: false
             );

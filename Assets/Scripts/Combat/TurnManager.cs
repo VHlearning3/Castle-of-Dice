@@ -181,6 +181,7 @@ namespace CastleOfTheD20.Combat
                 {
                     bool hasBoss = enemies.Exists(e => e is Bosses.CursedCommanderBoss ||
                                                        e is Bosses.ShadowMageMalakorBoss ||
+                                                       e is Bosses.GargoyleKingBoss ||
                                                        (e.name.IndexOf("Boss", StringComparison.OrdinalIgnoreCase) >= 0));
                     if (!hasBoss)
                     {

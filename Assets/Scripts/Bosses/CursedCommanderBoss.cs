@@ -13,7 +13,7 @@ namespace CastleOfTheD20.Bosses
     /// Spawns 2 Skeleton adds when health drops to 50% or below.
     /// Susceptible to pre-combat dialogue check ("Soldier's Honor"): -2 AC for the first 2 combat rounds.
     /// </summary>
-    public class CursedCommanderBoss : EnemyUnit
+    public class CursedCommanderBoss : EnemyUnit, IReinforcementSummoner
     {
         #region Serialized Fields
 
@@ -40,6 +40,9 @@ namespace CastleOfTheD20.Bosses
         private int roundsTracked = 0;
         private bool earnedSoldiersHonor = false;
         private readonly List<EnemyUnit> summonedSkeletons = new List<EnemyUnit>();
+
+        // The Courtyard's own skeleton guard: hidden when the fight starts, called in at 50% HP (spec)
+        private readonly List<EnemyUnit> reserveGuards = new List<EnemyUnit>();
 
         #endregion
 
@@ -189,7 +192,10 @@ namespace CastleOfTheD20.Bosses
             {
                 if (tile != null && tile.IsWalkable && !tile.IsOccupied && tile.GridPosition != gridPosition)
                 {
-                    SpawnSingleSkeleton(tile);
+                    if (!CallInReserveGuard(tile))
+                    {
+                        SpawnSingleSkeleton(tile);
+                    }
                     spawnedCount++;
                     if (spawnedCount >= toSpawn) break;
                 }
@@ -197,6 +203,54 @@ namespace CastleOfTheD20.Bosses
 
             OnReinforcementsSummoned?.Invoke(this);
         }
+
+        #region Reserve Guards
+
+        /// <summary>The Commander holds back every non-boss ally in his room until he is down to half health.</summary>
+        public bool HoldsBackAtStart(EnemyUnit ally)
+        {
+            return ally != null && ally != this && !(ally is CursedCommanderBoss) && skeletonCount > 0;
+        }
+
+        /// <summary>Stores a hidden room ally to call in at 50% HP.</summary>
+        public void AddReserve(EnemyUnit ally)
+        {
+            if (ally != null && !reserveGuards.Contains(ally)) reserveGuards.Add(ally);
+        }
+
+        /// <summary>Hidden allies still waiting to be called in.</summary>
+        public int ReserveCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 0; i < reserveGuards.Count; i++)
+                {
+                    if (reserveGuards[i] != null && !reserveGuards[i].gameObject.activeSelf) count++;
+                }
+                return count;
+            }
+        }
+
+        private bool CallInReserveGuard(GridTile tile)
+        {
+            for (int i = 0; i < reserveGuards.Count; i++)
+            {
+                EnemyUnit guard = reserveGuards[i];
+                if (guard == null || guard.gameObject.activeSelf) continue;
+
+                guard.gameObject.SetActive(true);
+                if (!guard.IsAlive) guard.Revive();
+                guard.MoveToTile(tile);
+                guard.FaceTowards(transform.position + transform.forward);
+                TurnManager.Instance?.AddCombatant(guard);
+                Debug.Log($"[CursedCommander] {guard.UnitName} answers the Commander's call!");
+                return true;
+            }
+            return false;
+        }
+
+        #endregion
 
         private int CountLivingAllies()
         {

@@ -463,11 +463,28 @@ namespace CastleOfTheD20.World
                     }
                 }
 
+                // A boss such as the Cursed Commander keeps his room allies in reserve until he calls them in
+                IReinforcementSummoner summoner = null;
+                foreach (var enemyObj in roomEnemies)
+                {
+                    if (enemyObj == null) continue;
+                    summoner = enemyObj.GetComponent<IReinforcementSummoner>();
+                    if (summoner != null) break;
+                }
+
                 int activeEnemyCount = 0;
                 foreach (var enemyObj in roomEnemies)
                 {
                     if (enemyObj != null)
                     {
+                        EnemyUnit reserve = summoner != null ? enemyObj.GetComponent<EnemyUnit>() : null;
+                        if (reserve != null && !ReferenceEquals(reserve, summoner) && summoner.HoldsBackAtStart(reserve))
+                        {
+                            enemyObj.SetActive(false);
+                            summoner.AddReserve(reserve);
+                            continue;
+                        }
+
                         if (activeEnemyCount < maxAllowedEnemies)
                         {
                             enemyObj.SetActive(true);
