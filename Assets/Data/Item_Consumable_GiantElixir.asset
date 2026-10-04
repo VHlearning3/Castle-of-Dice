@@ -18,6 +18,6 @@ MonoBehaviour:
   itemIcon: {fileID: 0}
   itemType: 0
   buyPriceGold: 0
-  sellPriceGold: 100
+  sellPriceGold: 0
   statBonusValue: 30
   isConsumable: 1
