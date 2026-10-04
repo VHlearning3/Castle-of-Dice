@@ -13,6 +13,7 @@ namespace CastleOfTheD20.UI
     /// - When player possesses a Reroll Scroll, pauses the dice result modal.
     /// - Offers [ Continue ] (Accept result and continue) and [ Use Reroll Scroll (x remaining) ].
     /// - Consumes 1 scroll and triggers an immediate reroll against the same DC/bonus.
+    /// Only failed hero rolls stop here (see <see cref="RerollableRoll"/>); the new result replaces the old one.
     /// </summary>
     public class RuneOfRerollController : MonoBehaviour
     {
@@ -55,10 +56,10 @@ namespace CastleOfTheD20.UI
         #region Public Properties
 
         /// <summary>True if the player possesses at least one reroll scroll.</summary>
-        public bool HasRerollScrollAvailable => InventoryManager.Instance != null && InventoryManager.Instance.HasRerollScroll;
+        public bool HasRerollScrollAvailable => RerollableRoll.AvailableRerolls > 0;
 
-        /// <summary>Current count of reroll scrolls in inventory.</summary>
-        public int AvailableRerollCount => InventoryManager.Instance != null ? InventoryManager.Instance.RerollScrollCount : 0;
+        /// <summary>Rerolls available now: scrolls in the inventory plus the Easy difficulty free reroll.</summary>
+        public int AvailableRerollCount => RerollableRoll.AvailableRerolls;
 
         #endregion
 
@@ -213,12 +214,12 @@ namespace CastleOfTheD20.UI
 
         /// <summary>
         /// Evaluates whether the dice modal should pause for player decision.
-        /// Returns true if player owns at least one scroll and can choose to reroll.
+        /// True only for a failed hero roll that waits on the reroll choice (never enemy rolls or successes).
         /// </summary>
         public bool ShouldPauseForDecision(DiceResult result)
         {
             lastResult = result;
-            return HasRerollScrollAvailable;
+            return !result.isSuccess && RerollableRoll.IsAwaitingDecision;
         }
 
         /// <summary>
@@ -314,16 +315,16 @@ namespace CastleOfTheD20.UI
                 return;
             }
 
-            bool consumed = InventoryManager.Instance.ConsumeRerollScroll();
-            if (!consumed) return;
-
-            Debug.Log($"[RuneOfRerollController] Consumed 1 scroll. Triggering reroll for DC {lastResult.targetDC} with bonus {lastResult.bonus}...");
+            Debug.Log($"[RuneOfRerollController] Rerolling the check vs DC {lastResult.targetDC} with bonus {lastResult.bonus}...");
             HideActionButtons();
 
-            if (onRerollCallback != null)
+            // RerollableRoll spends the free reroll or a scroll and hands the new result to the ability
+            Action reroll = onRerollCallback;
+            onRerollCallback = null;
+            onContinueCallback = null;
+            if (reroll != null)
             {
-                onRerollCallback.Invoke();
-                onRerollCallback = null;
+                reroll.Invoke();
             }
             else if (DiceUIController.Instance != null)
             {

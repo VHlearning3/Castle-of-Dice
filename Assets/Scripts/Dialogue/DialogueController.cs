@@ -217,19 +217,24 @@ namespace CastleOfTheD20.Dialogue
                 ui.SetDialogueVisible(false);
             }
 
-            // 2. Roll D20 and initiate dice UI
-            DiceResult rollResult = DiceSystem.RollD20(bonus, option.TargetDC, advantage);
-            Debug.Log($"[DialogueController] Skill Check for '{option.SkillCheckDescription}' vs DC {option.TargetDC}: {rollResult}");
-
-            // Present the check title in the dice roll overlay
-            if (DiceUIController.Instance != null)
+            // 2. Roll D20 (a failure can be rerolled with the Rune of Reroll; the final result decides the branch)
+            bool resolved = false;
+            DiceResult rollResult = default;
+            DiceResult firstRoll = RerollableRoll.Roll(bonus, option.TargetDC, advantage, final =>
             {
-                DiceUIController.Instance.ShowDiceRoll(rollResult, option.SkillCheckDescription);
+                rollResult = final;
+                resolved = true;
+            }, option.SkillCheckDescription);
+            Debug.Log($"[DialogueController] Skill Check for '{option.SkillCheckDescription}' vs DC {option.TargetDC}: {firstRoll}");
+
+            // 3. Wait for the reroll choice (if any) and until the dice roll modal is dismissed
+            while (!resolved)
+            {
+                yield return null;
             }
 
             OnSkillCheckRolled?.Invoke(rollResult, rollResult.isSuccess);
 
-            // 3. Wait until the dice roll modal animation and outcome presentation are dismissed
             if (DiceUIController.Instance != null)
             {
                 while (DiceUIController.Instance != null && DiceUIController.Instance.IsDisplaying)
@@ -243,12 +248,6 @@ namespace CastleOfTheD20.Dialogue
             }
 
             isResolvingCheck = false;
-
-            // If a reroll took place during modal interaction, adopt the finalized outcome
-            if (DiceUIController.Instance != null && DiceUIController.Instance.LastFinalResult.rawRoll > 0)
-            {
-                rollResult = DiceUIController.Instance.LastFinalResult;
-            }
 
             // 4. Branch to success or failure node and reveal dialogue UI with the NPC's response
             if (rollResult.isSuccess)

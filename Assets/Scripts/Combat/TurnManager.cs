@@ -464,6 +464,13 @@ namespace CastleOfTheD20.Combat
                 return;
             }
 
+            // The hit roll waits on the Rune of Reroll choice; the turn ends once it is made
+            if (RerollableRoll.IsAwaitingDecision)
+            {
+                Debug.Log("[TurnManager] Cannot end player turn while the reroll choice is open.");
+                return;
+            }
+
             GridManager.Instance?.ClearAllHighlights();
             EndActiveUnitTurn();
         }

@@ -147,7 +147,7 @@ namespace CastleOfTheD20.Combat
 
         private static bool IsRank2(AbilitySO ability)
         {
-            return ability != null && ability.AbilityID.EndsWith("_rank2", StringComparison.Ordinal);
+            return ability != null && ability.IsRank2;
         }
 
         #endregion
@@ -300,8 +300,9 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Ability Empowerment (Rank 2): Upgrades the ability in the specified slot (0..3)
-        /// with +3 potency and marked as Rank 2.
+        /// Ability Empowerment (Rank 2): Upgrades the ability in the specified slot (0..3).
+        /// Every ability gains +3 potency; Shield Wall, Mana Shield, Blink, Shadow Step and Smoke Bomb
+        /// get their own upgrade too (see <see cref="AbilitySO.GetRank2Summary"/>).
         /// </summary>
         public bool UpgradeAbilityToRank2(int slotIndex)
         {
@@ -312,31 +313,13 @@ namespace CastleOfTheD20.Combat
             }
 
             AbilitySO original = activeAbilities[slotIndex];
-            if (original.AbilityName.Contains("[Rank 2]"))
+            if (original.IsRank2)
             {
                 Debug.LogWarning($"[PlayerUnit] Ability {original.AbilityName} is already Rank 2.");
                 return false;
             }
 
-            AbilitySO rank2 = ScriptableObject.CreateInstance<AbilitySO>();
-            rank2.Initialize(
-                original.AbilityID + "_rank2",
-                $"{original.AbilityName} [Rank 2]",
-                $"{original.Description}\n<color=#4ade80>[Rank 2] Potency +3</color>",
-                original.TargetType,
-                original.Range,
-                original.AreaOfEffectRadius,
-                original.BaseValue + 3,
-                original.RequiresCheck,
-                original.AppliedEffect,
-                original.EffectDurationTurns,
-                original.AnimationTriggerName,
-                original.AbilityIcon,
-                original.DamageDiceCount,
-                original.DamageDiceSides,
-                original.AddsAttributeToDamage
-            );
-
+            AbilitySO rank2 = original.CreateRank2();
             activeAbilities[slotIndex] = rank2;
             Debug.Log($"[PlayerUnit] Upgraded slot {slotIndex} ({rank2.AbilityName}) to Rank 2! New BaseValue: {rank2.BaseValue}");
             PushProgressionToData();
