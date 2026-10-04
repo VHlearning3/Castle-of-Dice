@@ -30,6 +30,9 @@ namespace CastleOfTheD20.UI
         [Header("UI Root Modal")]
         [SerializeField] private GameObject levelUpModalPanel;
 
+        /// <summary>Whether the level-up screen is open.</summary>
+        public bool IsModalOpen => levelUpModalPanel != null && levelUpModalPanel.activeInHierarchy;
+
         [Header("Headers")]
         [SerializeField] private TMP_Text titleText;
         [SerializeField] private TMP_Text milestoneSubtitleText;
