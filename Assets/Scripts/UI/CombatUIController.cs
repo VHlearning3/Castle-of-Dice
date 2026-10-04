@@ -1320,7 +1320,92 @@ namespace CastleOfTheD20.UI
             }
 
             RefreshMoveButton();
+            RefreshRingButton();
         }
+
+        #region Queen's Ring (critical review C3)
+
+        private const string RingButtonName = "QueensRing_Button";
+        private const string SignetRingItemId = "item_signet_ring";
+        private const string SignetRingQuestId = "quest_lost_signet_ring";
+        private Button ringButton;
+
+        /// <summary>
+        /// The hero can show Queen Isolde's ring to the King: they carry it, or Othelia lent it back after
+        /// her quest.
+        /// </summary>
+        public static bool HeroHasQueensRing()
+        {
+            Economy.InventoryManager inventory = Economy.InventoryManager.Instance;
+            if (inventory != null)
+            {
+                Data.ItemSO ring = inventory.FindItemByID(SignetRingItemId);
+                if (ring != null && inventory.HasItem(ring, 1)) return true;
+            }
+            Economy.QuestManager quests = Economy.QuestManager.Instance;
+            return quests != null && quests.IsQuestCompleted(SignetRingQuestId);
+        }
+
+        private Bosses.GargoyleKingBoss FindRingTarget()
+        {
+            if (TurnManager.Instance == null || !TurnManager.Instance.IsCombatActive) return null;
+            IReadOnlyList<CombatUnit> units = TurnManager.Instance.ActiveUnits;
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] is Bosses.GargoyleKingBoss king && king.CanBeShownTheRing) return king;
+            }
+            return null;
+        }
+
+        /// <summary>Shows the "Show the Queen's Ring" button while it can be used (Stone Form, hero's turn).</summary>
+        private void RefreshRingButton()
+        {
+            bool available = activePlayer != null && !activePlayer.HasActedThisTurn
+                && TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.PlayerTurn
+                && FindRingTarget() != null && HeroHasQueensRing();
+
+            if (!available)
+            {
+                if (ringButton != null) ringButton.gameObject.SetActive(false);
+                return;
+            }
+
+            if (ringButton == null && moveButton != null && combatActionBar != null)
+            {
+                ringButton = Instantiate(moveButton, combatActionBar.transform, false);
+                ringButton.name = RingButtonName;
+                ringButton.onClick.RemoveAllListeners();
+                ringButton.onClick.AddListener(OnRingClicked);
+                RectTransform rect = ringButton.GetComponent<RectTransform>();
+                rect.anchoredPosition = new Vector2(MoveButtonX, 84f);
+                rect.sizeDelta = new Vector2(MoveButtonWidth + 70f, 56f);
+                TMP_Text label = ringButton.GetComponentInChildren<TMP_Text>(true);
+                if (label != null) label.text = "Show the Queen's Ring";
+            }
+            if (ringButton != null)
+            {
+                ringButton.gameObject.SetActive(true);
+                ringButton.interactable = true;
+            }
+        }
+
+        private void OnRingClicked()
+        {
+            LocatePlayer();
+            Bosses.GargoyleKingBoss king = FindRingTarget();
+            if (activePlayer == null || king == null || activePlayer.HasActedThisTurn) return;
+
+            if (king.BreakStoneArmorWithRing(2))
+            {
+                activePlayer.HasActedThisTurn = true;
+                LogCombatMessage($"{activePlayer.UnitName} raises Queen Isolde's ring. The King's stone armour cracks for 2 turns!");
+            }
+            selectedAbilitySlot = -1;
+            RefreshAbilityBar();
+            UpdateMovementHighlights();
+        }
+
+        #endregion
 
         /// <summary>
         /// The level-4 fifth ability (critical review B8) needs a fifth card: clone the last card, wire it to

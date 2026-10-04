@@ -14,7 +14,7 @@ namespace CastleOfTheD20.Bosses
     /// Spawns one illusionary decoy (Mirror Image) that also fires weaker shadow bolts.
     /// Pre-combat hook: If the player passed the DC 14 Arcane Heresy check, the true Malakor is revealed immediately.
     /// </summary>
-    public class ShadowMageMalakorBoss : EnemyUnit
+    public class ShadowMageMalakorBoss : EnemyUnit, IReinforcementSummoner
     {
         #region Serialized Fields
 
@@ -138,6 +138,9 @@ namespace CastleOfTheD20.Bosses
         private void CheckArcaneHeresyDebuff()
         {
             DialogueController dialogue = DialogueController.Instance;
+            // The mage's arcane debate (critical review C8) pierces the glamour too
+            if (StoryFlags.Has(BossChoices.MalakorShakenFlag)) isRealMalakorRevealed = true;
+
             if (dialogue != null && (dialogue.HasCombatDebuff(arcaneHeresyTag) || dialogue.HasCombatDebuff("MalakorRevealed")))
             {
                 isRealMalakorRevealed = true;
@@ -182,6 +185,21 @@ namespace CastleOfTheD20.Bosses
         {
             base.OnTurnActionFinished();
             if (teleportCooldown > 0) teleportCooldown--;
+        }
+
+        /// <summary>
+        /// After the mage's debate his standing mirror image never joins the fight (it waits hidden).
+        /// </summary>
+        public bool HoldsBackAtStart(EnemyUnit ally)
+        {
+            return ally != null && ally != this && StoryFlags.Has(BossChoices.MalakorShakenFlag)
+                && ally.name.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) >= 0;
+        }
+
+        /// <summary>Held-back mirror images are simply left out.</summary>
+        public void AddReserve(EnemyUnit ally)
+        {
+            activeDecoys.Remove(ally);
         }
 
         /// <summary>Turns before Malakor can teleport away from a hit again (0 = he will).</summary>
@@ -246,6 +264,13 @@ namespace CastleOfTheD20.Bosses
         public void SpawnIllusionDecoys()
         {
             hasSpawnedIllusions = true;
+
+            // Shaken by the mage's debate, he cannot hold the mirror spell
+            if (StoryFlags.Has(BossChoices.MalakorShakenFlag))
+            {
+                Debug.Log("[ShadowMageMalakor] Shaken, Malakor's mirror spell fizzles.");
+                return;
+            }
 
             // Only one mirror image at a time (solo hero pacing); a standing decoy already fills the slot
             int toSpawn = decoyCount - CountLivingDecoys();

@@ -175,6 +175,13 @@ namespace CastleOfTheD20.Bosses
         {
             hasSpawnedAdds = true;
 
+            // The warrior's honour duel (critical review C8): the Commander keeps his word and fights alone
+            if (StoryFlags.Has(BossChoices.HonorDuelFlag))
+            {
+                Debug.Log("[CursedCommander] True to the duel, the Commander calls no one.");
+                return;
+            }
+
             int toSpawn = skeletonCount - CountLivingAllies();
             if (toSpawn <= 0)
             {
