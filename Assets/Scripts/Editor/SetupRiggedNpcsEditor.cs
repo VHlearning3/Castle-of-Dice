@@ -105,7 +105,7 @@ namespace CastleOfTheD20.Editor
             Debug.Log("[SetupRiggedNpcsEditor] Rigged Barnaby, Mirabel and Othelia prefabs updated and placed in Zone 1.");
         }
 
-        /// <summary>Entry point used by SetupNpcPrefabsEditor so re-running it keeps the rigged models.</summary>
+        /// <summary>Rebuilds the rigged NPC prefabs without placing them in Zone 1.</summary>
         public static void SetupPrefabsOnly()
         {
             foreach (RiggedNpc npc in Npcs) ConfigureImporter(npc);

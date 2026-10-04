@@ -47,7 +47,7 @@ namespace CastleOfTheD20.Combat
         /// enemy rolls them (bosses).
         /// </summary>
         public int AttackDamage => HasDamageDice
-            ? Mathf.RoundToInt(damageDiceCount * (damageDiceSides + 1) * 0.5f) + damageDiceBonus
+            ? Mathf.FloorToInt(damageDiceCount * (damageDiceSides + 1) * 0.5f) + damageDiceBonus
             : attackDamage;
 
         /// <summary>Hit check modifier added to D20 (Hard difficulty adds +2).</summary>

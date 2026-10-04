@@ -1708,6 +1708,9 @@ namespace CastleOfTheD20.UI
         /// <summary>Whether the Sell tab is showing.</summary>
         public bool IsSellTabActive => showingSellTab;
 
+        /// <summary>Whether Baldur's shop window is on screen.</summary>
+        public bool IsShopOpen => shopPanel != null && shopPanel.activeInHierarchy;
+
         #endregion
 
         #region Item Lookup & Row Text

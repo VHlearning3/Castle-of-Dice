@@ -348,6 +348,9 @@ namespace CastleOfTheD20.Combat
                     if (u is PlayerUnit hero)
                     {
                         InventoryManager.Instance.TryCoatWithPoisonVial(hero);
+
+                        // Pip's spell scrolls are read as the fight begins (critical review C4)
+                        CombatScrolls.UseAtFightStart(hero, activeUnits);
                     }
                 }
             }

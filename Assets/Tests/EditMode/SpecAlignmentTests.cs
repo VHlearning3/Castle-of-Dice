@@ -139,6 +139,17 @@ namespace CastleOfTheD20.Tests
             PlayerUnit warrior = CreatePlayer(new Vector2Int(5, 5));
             EnemyUnit enemy = CreateEnemy("Spec_Enemy", new Vector2Int(6, 5), hp: 20, ac: 12);
 
+            // War Cry rolls to hit since the critical review (B3): seed a plain hit (not a natural 20)
+            for (int seed = 1; seed < 10000; seed++)
+            {
+                int roll = new System.Random(seed).Next(1, 21);
+                if (roll >= 12 && roll < 20)
+                {
+                    DiceSystem.SetSeed(seed);
+                    break;
+                }
+            }
+
             Assert.IsTrue(executor.ExecuteAbility(warrior, warCry, warrior.GridPosition));
 
             Assert.AreEqual(new Vector2Int(8, 5), enemy.GridPosition, "War Cry pushes up to 2 tiles when the way is clear.");

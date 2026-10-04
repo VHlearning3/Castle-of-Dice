@@ -124,7 +124,11 @@ namespace CastleOfTheD20.Tests
         [Test]
         public void NonRogue_GetsCantLockpickPopup_AndLockStaysShut()
         {
+            // A plain locked chest; secret gates also open to the warrior's strength and the mage's lore (C6)
             LockpickInteraction lockpick = CreateLock(out _);
+            SerializedObject so = new SerializedObject(lockpick);
+            so.FindProperty("hiddenPathObject").objectReferenceValue = null;
+            so.ApplyModifiedPropertiesWithoutUndo();
             PlayerUnit warrior = CreatePlayer(CharacterClassType.Warrior);
             int hpBefore = warrior.CurrentHP;
 

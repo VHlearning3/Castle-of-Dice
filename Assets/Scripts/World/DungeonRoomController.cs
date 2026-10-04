@@ -46,6 +46,13 @@ namespace CastleOfTheD20.World
         [Tooltip("Leave empty for normal encounters; specifies boss ID for major chambers (e.g., 'CursedCommander', 'ShadowMageMalakor', 'GargoyleKing').")]
         public string bossIdentifier = "";
 
+        [Tooltip("Optional own save key for a second encounter in a zone (e.g. 'ForestAmbush'). When set, this room " +
+                 "remembers being cleared on its own instead of through its zone's wing.")]
+        public string roomKey = "";
+
+        /// <summary>Reward key under which a keyed room records being cleared.</summary>
+        public string ClearedKey => string.IsNullOrEmpty(roomKey) ? string.Empty : "room:" + roomKey;
+
         [Header("Encounter Boundaries & Barriers")]
         [Tooltip("Exit doors or iron gates enabled during combat to lock the player in.")]
         public List<GameObject> exitBarriers = new List<GameObject>();
@@ -251,6 +258,11 @@ namespace CastleOfTheD20.World
                 return gm.IsBossDefeated(bossIdentifier);
             }
 
+            if (!string.IsNullOrEmpty(roomKey))
+            {
+                return gm.IsRewardClaimed(ClearedKey);
+            }
+
             return Enum.TryParse<GameLocation>(roomLocation, true, out GameLocation location) && gm.IsWingCleared(location);
         }
 
@@ -332,7 +344,7 @@ namespace CastleOfTheD20.World
 
             isAwaitingBossDialogue = true;
             DialogueController.OnDialogueEnded += HandleBossDialogueEnded;
-            dialogue.StartDialogue(bossDialogueNpc.StartingDialogueNode, player);
+            dialogue.StartDialogue(bossDialogueNpc.StartingDialogueNode, player, BossChoices.BuildOptions(bossIdentifier, player));
 
             // A one-line intro may already have ended (and started combat) inside StartDialogue
             if (dialogue.IsInDialogue || isEncounterTriggered) return true;
@@ -348,7 +360,72 @@ namespace CastleOfTheD20.World
             if (!isAwaitingBossDialogue) return;
 
             isAwaitingBossDialogue = false;
+
+            // Released from his oath, or spared: the boss leaves without a fight (critical review C9)
+            if (BossChoices.ResolvedPeacefully(bossIdentifier))
+            {
+                ResolvePeacefully();
+                return;
+            }
             TriggerEncounter();
+        }
+
+        /// <summary>
+        /// An elite enemy fights alone in a regular encounter (solo-hero pacing): 25+ HP or a typical hit of 5+.
+        /// </summary>
+        public static bool IsElite(EnemyUnit enemy)
+        {
+            return enemy != null && (enemy.MaxHP >= 25 || enemy.AttackDamage >= 5);
+        }
+
+        /// <summary>
+        /// How many of this regular room's enemies join the fight: all of them up to 2, or 1 when one is elite.
+        /// Boss rooms have no cap.
+        /// </summary>
+        public int CountEnemiesThatJoin()
+        {
+            if (roomEnemies == null) return 0;
+            int listed = 0;
+            bool elite = false;
+            foreach (GameObject enemyObj in roomEnemies)
+            {
+                if (enemyObj == null) continue;
+                EnemyUnit unit = enemyObj.GetComponent<EnemyUnit>();
+                if (unit == null) continue;
+                listed++;
+                if (IsElite(unit)) elite = true;
+            }
+            if (!string.IsNullOrEmpty(bossIdentifier)) return listed;
+            return Mathf.Min(listed, elite ? 1 : 2);
+        }
+
+        /// <summary>
+        /// Ends the boss encounter without combat: the boss and his dialogue stand-in leave, the doors stay
+        /// open, the boss counts as overcome for the campaign, and the reward chest holds half its gold.
+        /// </summary>
+        public void ResolvePeacefully()
+        {
+            if (currentState == RoomState.Cleared) return;
+            isEncounterTriggered = true;
+
+            if (bossDialogueNpc != null) bossDialogueNpc.gameObject.SetActive(false);
+            if (roomEnemies != null)
+            {
+                foreach (GameObject enemy in roomEnemies)
+                {
+                    if (enemy != null) enemy.SetActive(false);
+                }
+            }
+            if (triggerCollider != null) triggerCollider.enabled = false;
+
+            if (secretPassageOrChest != null)
+            {
+                ChestRewardInteraction chest = secretPassageOrChest.GetComponent<ChestRewardInteraction>();
+                if (chest != null) chest.GoldReward = Mathf.Max(0, chest.GoldReward / 2);
+            }
+
+            Debug.Log($"[DungeonRoomController] '{roomLocation}' resolved without a fight.");
+            OnCombatResolved();
         }
 
         #endregion
@@ -454,7 +531,7 @@ namespace CastleOfTheD20.World
                         if (enemyObj != null)
                         {
                             EnemyUnit eu = enemyObj.GetComponent<EnemyUnit>();
-                            if (eu != null && (eu.MaxHP >= 25 || eu.AttackDamage >= 5))
+                            if (IsElite(eu))
                             {
                                 maxAllowedEnemies = 1; // Solo hero pacing: 1 elite max
                                 break;
@@ -584,7 +661,12 @@ namespace CastleOfTheD20.World
             {
                 GameManager.Instance.SetState(GamePlayMode.Exploration);
 
-                if (Enum.TryParse<GameLocation>(roomLocation, true, out GameLocation parsedLocation))
+                if (!string.IsNullOrEmpty(roomKey))
+                {
+                    // A second encounter in a zone keeps its own record, so it never marks the zone's main fight done
+                    GameManager.Instance.MarkRewardClaimed(ClearedKey);
+                }
+                else if (Enum.TryParse<GameLocation>(roomLocation, true, out GameLocation parsedLocation))
                 {
                     GameManager.Instance.NotifyRoomCleared(parsedLocation);
                 }

@@ -144,9 +144,15 @@ namespace CastleOfTheD20.World
                 return;
             }
 
-            // Tiirikointi is the Rogue's exploration passive: nobody else can even try
+            // Tiirikointi is the Rogue's exploration passive. A secret gate also gives way to the other
+            // classes their own way (critical review C6): the warrior breaks it, the mage reads its rune.
             if (!CanPickLocks(player))
             {
+                if (OffersClassAlternative(player))
+                {
+                    TryClassAlternative(player);
+                    return;
+                }
                 Debug.Log($"[LockpickInteraction] {player.UnitName} can't pick locks (Rogue only).");
                 LockpickMinigameUI.ShowToast(CannotLockpickMessage);
                 return;
@@ -158,6 +164,55 @@ namespace CastleOfTheD20.World
             Debug.Log($"[LockpickInteraction] {player.UnitName} starts picking '{name}' (DC {lockpickDC}, {pinCount} pins, {maxSlips} slips allowed).");
             string title = chestLid != null ? "Pick the Chest Lock" : "Pick the Lock";
             LockpickMinigameUI.Open(minigame, title, outcome => HandleMinigameFinished(player, outcome));
+        }
+
+        /// <summary>STR check for the warrior to break a secret gate.</summary>
+        public const int ForceGateDC = 15;
+
+        /// <summary>INT check for the mage to read a secret gate's warding rune.</summary>
+        public const int ReadRuneDC = 14;
+
+        /// <summary>Secret gates (they hide a passage) can be opened by every class; chests stay the Rogue's.</summary>
+        public bool OffersClassAlternative(PlayerUnit player)
+        {
+            if (player == null || player.CharacterClass == null || hiddenPathObject == null) return false;
+            CharacterClassType type = player.CharacterClass.ClassType;
+            return type == CharacterClassType.Warrior || type == CharacterClassType.Mage;
+        }
+
+        private bool resolvingAlternative;
+
+        /// <summary>
+        /// Warrior: d20 + STR vs DC 15 to break the gate. Mage: d20 + INT vs DC 14 to read the rune.
+        /// A failed attempt can be tried again; the warrior bruises a shoulder (1 damage).
+        /// </summary>
+        public void TryClassAlternative(PlayerUnit player)
+        {
+            if (resolvingAlternative || !isLocked) return;
+
+            bool warrior = player.CharacterClass.ClassType == CharacterClassType.Warrior;
+            HeroAttribute attribute = warrior ? HeroAttribute.Strength : HeroAttribute.Intelligence;
+            int dc = warrior ? ForceGateDC : ReadRuneDC;
+            string title = warrior ? "Break the Gate / Strength" : "Read the Warding Rune / Intelligence";
+
+            resolvingAlternative = true;
+            RerollableRoll.Roll(HeroAttributes.GetModifier(player, attribute), dc, AdvantageType.None, result =>
+            {
+                resolvingAlternative = false;
+                if (!isLocked) return;
+
+                if (result.isSuccess)
+                {
+                    LockpickMinigameUI.ShowToast(warrior ? "The gate gives way!" : "The rune fades and the lock opens!");
+                    HandleLockpickSuccess(player);
+                    OnLockpickAttempt?.Invoke(true);
+                }
+                else
+                {
+                    LockpickMinigameUI.ShowToast(warrior ? "The gate holds. Try again." : "The rune resists you. Try again.");
+                    if (warrior) player.TakeDamage(1);
+                }
+            }, title);
         }
 
         /// <summary>Only the Rogue (Varjo-Corvo) can pick locks.</summary>

@@ -299,10 +299,21 @@ namespace CastleOfTheD20.World
                 $"Ours. Oakhaven's. And yours, {heroName}. Come, the Great Hall is waking, and every soul in it wants to thank the one who rolled the dice for them.");
             third.SetOptions(new List<DialogueOption> { new DialogueOption("[End] Lead the way.", null) });
 
+            // The choices made on the way get their own line (critical review C9)
+            DialogueNodeSO afterSecond = third;
+            string epilogue = BossChoices.BuildEpilogue();
+            if (!string.IsNullOrEmpty(epilogue))
+            {
+                DialogueNodeSO choices = ScriptableObject.CreateInstance<DialogueNodeSO>();
+                choices.Initialize(OtheliaName, epilogue);
+                choices.SetOptions(new List<DialogueOption> { new DialogueOption("It was a long road.", third) });
+                afterSecond = choices;
+            }
+
             DialogueNodeSO second = ScriptableObject.CreateInstance<DialogueNodeSO>();
             second.Initialize(OtheliaName,
-                "He ruled these lands justly once, before he sought to live forever. Thanks to you, that is how he will be remembered, not for the shadows.");
-            second.SetOptions(new List<DialogueOption> { new DialogueOption("The castle is yours again, Elder.", third) });
+                "He ruled these lands justly once, before he sought to live forever. My family kept Queen Isolde's ring for him all these years. Thanks to you, he will be remembered for that, not for the shadows.");
+            second.SetOptions(new List<DialogueOption> { new DialogueOption("The castle is yours again, Elder.", afterSecond) });
 
             DialogueNodeSO first = ScriptableObject.CreateInstance<DialogueNodeSO>();
             first.Initialize(OtheliaName,

@@ -31,5 +31,5 @@ MonoBehaviour:
   inProgressText: 'Have you reached the castle''s tower yet? The creatures serving the curse hoard their plunder up there.'
   readyText: 'Is that a glint of gold in your hand? Please, tell me you found it!'
   turnInOptionText: 'Your family''s signet ring, returned to you.'
-  thanksText: 'My ancestors'' seal, home at last! Take this Rune of Fate. May it turn the dice in your favour when it matters most.'
-  completedText: 'I wear the ring every day now. Oakhaven owes you more than it can ever repay.'
+  thanksText: 'My ancestors'' seal, home at last! Take this Rune of Fate. And carry the ring back to the castle for me: our family says the old King could refuse its wearer nothing. Show it to him when his stone is thickest.'
+  completedText: 'The ring is yours to carry until the curse is broken. Oakhaven owes you more than it can ever repay.'

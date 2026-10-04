@@ -123,6 +123,7 @@ namespace CastleOfTheD20.Tests
             inventory.RestoreFromSave(0, 0, rerollScrolls: 2);
 
             int calls = 0;
+            SeedSoFirstRollIs(r1 => r1 > 1); // a natural 1 always fails
             RerollableRoll.Roll(0, -50, AdvantageType.None, r => calls++);
             Assert.AreEqual(1, calls, "A success resolves at once.");
 

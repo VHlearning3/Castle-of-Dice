@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: rogue_shadow_step
   abilityName: Shadow Step
-  description: Slip through the shadows up to 3 tiles to an unoccupied space. Grants Advantage on your next attack.
-  abilityIcon: {fileID: 21300000, guid: a11a11a110010001000100000000001c, type: 3}
+  description: Slip through the shadows up to 3 tiles to an unoccupied space. Grants
+    Advantage on your next attack.
+  abilityIcon: {fileID: 21300000, guid: ae71f60f577d5f14d8675c63987172f2, type: 3}
   targetType: 0
   range: 3
   areaOfEffectRadius: 0
