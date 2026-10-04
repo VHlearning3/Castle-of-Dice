@@ -124,8 +124,24 @@ namespace CastleOfTheD20.Economy
                     return candidate;
                 }
             }
+
+            // Items added after the scenes' catalogs were made (Pip's scrolls) live in Resources/Items
+            if (s_resourceItems == null)
+            {
+                s_resourceItems = Resources.LoadAll<ItemSO>("Items");
+            }
+            for (int i = 0; i < s_resourceItems.Length; i++)
+            {
+                ItemSO candidate = s_resourceItems[i];
+                if (candidate != null && string.Equals(candidate.ItemID, itemId, StringComparison.OrdinalIgnoreCase))
+                {
+                    return candidate;
+                }
+            }
             return null;
         }
+
+        private static ItemSO[] s_resourceItems;
 
         #endregion
 

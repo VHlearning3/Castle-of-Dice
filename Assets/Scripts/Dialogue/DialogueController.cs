@@ -173,11 +173,32 @@ namespace CastleOfTheD20.Dialogue
         /// Selects an interactive choice option from the current dialogue node.
         /// Resolves D20 skill checks if required and branches to the appropriate next node.
         /// </summary>
+        /// <summary>
+        /// Lets an option's action send the conversation somewhere else than its next node (e.g. a purchase the
+        /// hero cannot afford goes to the merchant's "gold first" line). Consumed by the option being selected.
+        /// </summary>
+        public void RedirectTo(DialogueNodeSO node)
+        {
+            redirectNode = node;
+            hasRedirect = true;
+        }
+
+        private DialogueNodeSO redirectNode;
+        private bool hasRedirect;
+
         public void SelectOption(DialogueOption option)
         {
             if (!isInDialogue || option == null || isResolvingCheck) return;
 
+            hasRedirect = false;
             OnOptionSelected?.Invoke(option);
+            if (!isInDialogue) return;
+            if (hasRedirect)
+            {
+                hasRedirect = false;
+                AdvanceToNode(redirectNode);
+                return;
+            }
 
             if (option.RequiresCheck)
             {

@@ -117,11 +117,60 @@ namespace CastleOfTheD20.Dialogue
                 ExecuteCompleteQuest(tag, text);
             }
 
+            // Castle Hall (C4): Pip's goods and the ghost's vault
+            if (ContainsAction(tag, text, "ACTION_BUY:"))
+            {
+                ExecuteBuy(option, tag);
+            }
+            if (ContainsAction(tag, text, "ACTION_OPEN_VAULT"))
+            {
+                World.HallVault.OpenInScene();
+            }
+
+            // Story choices (C8, C9): "[ACTION_FLAG:Name]" remembers a choice in the save
+            int flagIndex = tag.IndexOf("ACTION_FLAG:", StringComparison.OrdinalIgnoreCase);
+            if (flagIndex >= 0)
+            {
+                string rest = tag.Substring(flagIndex + "ACTION_FLAG:".Length);
+                int end = rest.IndexOf(']');
+                string flag = end >= 0 ? rest.Substring(0, end) : rest;
+                StoryFlags.Set(flag.Trim());
+            }
+
             // 4. Check for Explicit Dialogue Close
             if (ContainsAction(tag, text, TAG_CLOSE_DIALOGUE) || ContainsAction(tag, text, "ACTION_CLOSE_DIALOGUE") || text.StartsWith("[Exit]", StringComparison.OrdinalIgnoreCase))
             {
                 DialogueController.Instance?.EndDialogue();
             }
+        }
+
+        /// <summary>
+        /// "[ACTION_BUY:item_id:price]": pays the gold and hands over the item, or sends the conversation to the
+        /// option's failure node when the hero cannot afford it.
+        /// </summary>
+        private static void ExecuteBuy(DialogueOption option, string tag)
+        {
+            int start = tag.IndexOf("ACTION_BUY:", StringComparison.OrdinalIgnoreCase) + "ACTION_BUY:".Length;
+            int end = tag.IndexOf(']', start);
+            string[] parts = (end > start ? tag.Substring(start, end - start) : tag.Substring(start)).Split(':');
+            if (parts.Length < 2 || !int.TryParse(parts[1], out int price)) return;
+
+            Economy.InventoryManager inventory = Economy.InventoryManager.Instance;
+            Data.ItemSO item = inventory != null ? inventory.FindItemByID(parts[0]) : null;
+            if (inventory == null || item == null)
+            {
+                Debug.LogWarning($"[DialogueActionTrigger] Cannot sell '{parts[0]}': no inventory or unknown item.");
+                return;
+            }
+
+            if (!inventory.RemoveGold(price))
+            {
+                DialogueController.Instance?.RedirectTo(option.NextNodeFailure);
+                return;
+            }
+
+            inventory.AddItem(item, 1);
+            Debug.Log($"[DialogueActionTrigger] Bought {item.ItemName} for {price} gold.");
         }
 
         private static bool ContainsAction(string tag, string text, string actionKey)
