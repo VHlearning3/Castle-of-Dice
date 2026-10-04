@@ -344,6 +344,24 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(rogueLockpicking);
             assetCount++;
 
+            // Lockpicking is an exploration passive; Corvo's fourth combat ability is Shadow Step
+            AbilitySO rogueShadowStep = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_ShadowStep.asset");
+            if (ShouldInitialize(rogueShadowStep)) rogueShadowStep.Initialize(
+                id: "rogue_shadow_step",
+                name: "Shadow Step",
+                desc: "Slip through the shadows up to 3 tiles to an unoccupied space. Grants Advantage on your next attack.",
+                target: AbilityTargetType.SingleTarget,
+                abilityRange: 3,
+                aoeRadius: 0,
+                value: 0,
+                checkRequired: false,
+                effect: StatusEffectType.AdvantageNextAttack,
+                duration: 1,
+                animTrigger: "Attack"
+            );
+            EditorUtility.SetDirty(rogueShadowStep);
+            assetCount++;
+
             // 3. Generate 3 CharacterClasses and assign respective 4 abilities
             // --- Warrior: Sir Roland ---
             CharacterClassSO warriorClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Warrior_SirRoland.asset");
@@ -385,7 +403,7 @@ namespace CastleOfTheD20.Editor
                 ac: 13,
                 move: 5,
                 bonus: 3,
-                abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueLockpicking }
+                abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueShadowStep }
             );
             EditorUtility.SetDirty(rogueClass);
             assetCount++;

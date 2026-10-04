@@ -24,6 +24,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa5ca85fff9dd2b4bbb47c49494dad9d, type: 2}
   - {fileID: 11400000, guid: 092c135d746643c408b18283b5c633e7, type: 2}
   - {fileID: 11400000, guid: 300d28da2e23a81498609e076a25df3c, type: 2}
-  - {fileID: 11400000, guid: 4cce6a6038a1be74383fca55614478ee, type: 2}
+  - {fileID: 11400000, guid: 6654bec97edd4687b0b1c7d1385780b7, type: 2}
   characterPortrait: {fileID: 0}
   characterPrefab: {fileID: 0}
