@@ -102,7 +102,7 @@ namespace CastleOfTheD20.Combat
             // mage_fireball etc.), otherwise the generic cast or swing
             if (caster.UnitAnimator != null && !caster.TrySetAnimatorTrigger(ability.BaseAbilityID))
             {
-                if (ability.TargetType == AbilityTargetType.Self || id.Contains("cast") || id.Contains("spell") || id.Contains("fireball") || id.Contains("frost") || id.Contains("shield") || id.Contains("blink") || id.Contains("mana"))
+                if (ability.TargetType == AbilityTargetType.Self || id.Contains("cast") || id.Contains("spell") || id.Contains("fireball") || id.Contains("frost") || id.Contains("shield") || id.Contains("blink") || id.Contains("mana") || id.Contains("chains"))
                 {
                     caster.UnitAnimator.SetTrigger("CastSpell");
                 }
@@ -200,8 +200,10 @@ namespace CastleOfTheD20.Combat
         {
             Debug.Log($"[AbilityExecutor] {caster.UnitName} roars with War Cry!");
 
-            // Spec: 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage
-            int damage = ability.RollDamage(GetCasterAttributeBonus(caster));
+            // Spec: 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage.
+            // Critical review B3: each enemy is rolled against (d20 + STR vs AC); only a hit pushes and hurts.
+            int bonus = GetCasterAttributeBonus(caster);
+            int damage = ability.RollDamage(bonus);
             AbilityVfx.PlayWarCry(caster);
 
             // Collect first: pushing units moves them between tiles while we iterate
@@ -215,12 +217,33 @@ namespace CastleOfTheD20.Combat
                 }
             }
 
-            foreach (CombatUnit target in targets)
-            {
-                PushAndDamage(caster, target, damage, grid);
-            }
-
+            ResolveWarCryTargets(caster, targets, 0, damage, bonus, grid);
             return true;
+        }
+
+        private void ResolveWarCryTargets(CombatUnit caster, List<CombatUnit> targets, int index, int damage, int bonus, GridManager grid)
+        {
+            for (; index < targets.Count; index++)
+            {
+                CombatUnit target = targets[index];
+                if (target == null || !target.IsAlive) continue;
+
+                int next = index + 1;
+                RollToHit(caster, bonus, target.ArmorClass, AdvantageType.None, hitCheck =>
+                {
+                    Debug.Log($"[AbilityExecutor] War Cry vs {target.UnitName}: {hitCheck}");
+                    if (hitCheck.isSuccess && target.IsAlive)
+                    {
+                        PushAndDamage(caster, target, hitCheck.isCriticalSuccess ? damage * 2 : damage, grid);
+                    }
+                    else
+                    {
+                        Debug.Log($"[AbilityExecutor] {target.UnitName} stands firm against the War Cry.");
+                    }
+                    ResolveWarCryTargets(caster, targets, next, damage, bonus, grid);
+                });
+                return;
+            }
         }
 
         private static void PushAndDamage(CombatUnit caster, CombatUnit target, int damage, GridManager grid)
@@ -309,13 +332,20 @@ namespace CastleOfTheD20.Combat
             // One damage roll for the whole blast (e.g. Fireball 2d6); a natural 20 doubles it for that target
             int damage = ability.RollDamage(bonus);
 
-            if (ability.AbilityID.IndexOf("fireball", StringComparison.OrdinalIgnoreCase) >= 0)
+            bool isFireball = ability.AbilityID.IndexOf("fireball", StringComparison.OrdinalIgnoreCase) >= 0;
+            if (isFireball)
             {
                 AbilityVfx.PlayFireball(caster, grid.GetWorldPosition(targetGridPos));
             }
 
             List<CombatUnit> targets = CollectHostilesInArea3x3(caster, targetGridPos, grid);
             ResolveAreaTargets(caster, ability, targets, 0, damage, bonus);
+
+            // Fireball leaves the ground burning and sets off any barrel it catches (B6)
+            if (isFireball)
+            {
+                CombatTerrain.IgniteArea(grid, targetGridPos, CombatTerrain.FireballBurnRounds);
+            }
             return true;
         }
 
@@ -403,8 +433,10 @@ namespace CastleOfTheD20.Combat
             bool fromShadowStep = caster.StatusEffects != null && caster.StatusEffects.HasEffect(StatusEffectType.AdvantageNextAttack);
             bool targetBlinded = target.StatusEffects != null && target.StatusEffects.HasEffect(StatusEffectType.Blind);
 
+            // Critical review B3: no free Advantage; it comes from Shadow Step (and Blind gives Disadvantage)
+            AdvantageType advantage = caster.StatusEffects != null ? caster.StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
             caster.StatusEffects?.ConsumeAdvantageNextAttack();
-            RollToHit(caster, bonus, target.ArmorClass, AdvantageType.Advantage, hitCheck =>
+            RollToHit(caster, bonus, target.ArmorClass, advantage, hitCheck =>
             {
                 Debug.Log($"[AbilityExecutor] {caster.UnitName} executes Backstab on {target.UnitName}: {hitCheck}");
                 if (!hitCheck.isSuccess || !target.IsAlive) return;
@@ -522,16 +554,32 @@ namespace CastleOfTheD20.Combat
             int bonus = GetCasterAttributeBonus(caster);
             AdvantageType advantage = caster.StatusEffects != null ? caster.StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
 
+            // Ranged attacks need a line of sight; half cover adds +2 AC (critical review B6)
+            if (!grid.HasLineOfSight(caster.GridPosition, target.GridPosition))
+            {
+                Debug.Log($"[AbilityExecutor] {ability.AbilityName}: no line of sight to {target.UnitName} (full cover).");
+                if (caster is PlayerUnit)
+                {
+                    UI.CombatUIController.Instance?.LogCombatMessage($"{target.UnitName} is behind full cover. Find a clear line of sight.");
+                }
+                return false;
+            }
+            int coverBonus = grid.GetCoverArmorBonus(caster.GridPosition, target.GridPosition);
+
             if (ability.RequiresCheck)
             {
                 caster.StatusEffects?.ConsumeAdvantageNextAttack();
-                RollToHit(caster, bonus, target.ArmorClass, advantage, hitCheck =>
+                RollToHit(caster, bonus, target.ArmorClass + coverBonus, advantage, hitCheck =>
                 {
                     Debug.Log($"[AbilityExecutor] {caster.UnitName} casts {ability.AbilityName} on {target.UnitName}: {hitCheck}");
 
                     if (ability.AppliedEffect == StatusEffectType.Frostbite)
                     {
                         AbilityVfx.PlayFrostbite(caster, target, hitCheck.isSuccess);
+                    }
+                    else if (ability.AppliedEffect == StatusEffectType.Immobilized)
+                    {
+                        AbilityVfx.PlayRangedBolt(caster, target, hitCheck.isSuccess); // Arcane Chains
                     }
 
                     if (!hitCheck.isSuccess || !target.IsAlive)
@@ -550,6 +598,12 @@ namespace CastleOfTheD20.Combat
 
                     target.TakeDamage(damage, hitCheck.isCriticalSuccess);
                     ApplyAbilityStatusEffect(target, ability);
+
+                    // Frostbite leaves slippery ice around the target (B6)
+                    if (ability.AppliedEffect == StatusEffectType.Frostbite)
+                    {
+                        CombatTerrain.FreezePlus(grid, target.GridPosition, CombatTerrain.FrostIceRounds);
+                    }
 
                     // Sword Slash (spec): half of the damage also cleaves an enemy next to the warrior
                     if (ability.AbilityID.IndexOf("sword_slash", StringComparison.OrdinalIgnoreCase) >= 0)

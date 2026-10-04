@@ -282,13 +282,8 @@ namespace CastleOfTheD20.Combat
                 return;
             }
 
-            // Sort turn order: Player units act first, followed by enemies
-            activeUnits.Sort((a, b) =>
-            {
-                if (a is PlayerUnit && b is not PlayerUnit) return -1;
-                if (b is PlayerUnit && a is not PlayerUnit) return 1;
-                return 0;
-            });
+            // Turn order (critical review B7): everyone rolls initiative, d20 + DEX, so an enemy can strike first
+            RollInitiative();
 
             // Ensure tactical grid is generated around combatants if no tiles exist
             if (GridManager.Instance != null && GridManager.Instance.Tiles.Count == 0 && activeUnits.Count > 0)
@@ -328,8 +323,21 @@ namespace CastleOfTheD20.Combat
                     {
                         u.EnsureTilePosition();
                     }
-                    if (u is PlayerUnit p) p.ResetTurnFlags();
+                    if (u is PlayerUnit p)
+                    {
+                        p.ResetTurnFlags();
+                        p.ResetCooldowns();
+                    }
                 }
+            }
+
+            // Easy difficulty's free reroll comes back every fight
+            DifficultySettings.OnCombatStarted();
+
+            // A real fight gets an explosive barrel on the grid (B6); village brawls stay plain
+            if (awardVictoryScrap)
+            {
+                CombatTerrain.PrepareBattlefield(GridManager.Instance, activeUnits);
             }
 
             // A Poison Vial is used up automatically at the start of a real fight (not a village brawl)
@@ -351,6 +359,54 @@ namespace CastleOfTheD20.Combat
             NextTurn();
         }
 
+        /// <summary>Last initiative totals, by unit (shown in the combat log).</summary>
+        private readonly Dictionary<CombatUnit, int> initiativeRolls = new Dictionary<CombatUnit, int>();
+
+        /// <summary>Initiative total a unit rolled for the running fight (0 when not rolled).</summary>
+        public int GetInitiative(CombatUnit unit)
+        {
+            return unit != null && initiativeRolls.TryGetValue(unit, out int total) ? total : 0;
+        }
+
+        /// <summary>Initiative modifier: the hero's DEX, an enemy's own initiative bonus.</summary>
+        public static int GetInitiativeBonus(CombatUnit unit)
+        {
+            if (unit is PlayerUnit hero) return HeroAttributes.GetModifier(hero, HeroAttribute.Dexterity);
+            if (unit is EnemyUnit enemy) return enemy.InitiativeBonus;
+            return 0;
+        }
+
+        private void RollInitiative()
+        {
+            initiativeRolls.Clear();
+            for (int i = 0; i < activeUnits.Count; i++)
+            {
+                CombatUnit unit = activeUnits[i];
+                initiativeRolls[unit] = DiceSystem.RollDice(20) + GetInitiativeBonus(unit);
+            }
+
+            // Highest first; the hero wins ties
+            activeUnits.Sort((a, b) =>
+            {
+                int byRoll = initiativeRolls[b].CompareTo(initiativeRolls[a]);
+                if (byRoll != 0) return byRoll;
+                if (a is PlayerUnit && b is not PlayerUnit) return -1;
+                if (b is PlayerUnit && a is not PlayerUnit) return 1;
+                return 0;
+            });
+
+            if (CombatUIController.Instance != null)
+            {
+                System.Text.StringBuilder order = new System.Text.StringBuilder("Initiative: ");
+                for (int i = 0; i < activeUnits.Count; i++)
+                {
+                    if (i > 0) order.Append(", ");
+                    order.Append(activeUnits[i].UnitName).Append(' ').Append(initiativeRolls[activeUnits[i]]);
+                }
+                CombatUIController.Instance.LogCombatMessage(order.ToString());
+            }
+        }
+
         #endregion
 
         #region Turn Progression
@@ -370,6 +426,12 @@ namespace CastleOfTheD20.Combat
                 if (currentUnitIndex == 0)
                 {
                     turnCounter++;
+
+                    // Flames and ice burn out round by round
+                    if (turnCounter > 1)
+                    {
+                        GridManager.Instance?.TickTerrain();
+                    }
                 }
 
                 currentActiveUnit = activeUnits[currentUnitIndex];
@@ -390,8 +452,9 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[TurnManager] Round {turnCounter} - Starting turn for: {currentActiveUnit.UnitName}");
             OnUnitTurnStarted?.Invoke(currentActiveUnit);
 
-            // 1. Process turn start status effects (e.g. Poison d6 damage ticks)
+            // 1. Process turn start status effects (e.g. Poison d6 damage ticks) and the ground underfoot
             currentActiveUnit.StatusEffects?.ProcessTurnStartEffects();
+            CombatTerrain.ApplyTurnStart(currentActiveUnit, GridManager.Instance);
 
             // Verify unit survived turn start effects
             if (!currentActiveUnit.IsAlive)
@@ -409,6 +472,7 @@ namespace CastleOfTheD20.Combat
                 CombatUIController.Instance?.EnsureActiveAndReady(true);
                 player.EnsureTilePosition();
                 player.ResetTurnFlags();
+                player.TickCooldowns();
                 SetTurnState(TurnState.PlayerTurn);
 
                 // Highlight valid movement cells
@@ -437,6 +501,9 @@ namespace CastleOfTheD20.Combat
                 // The enemy walks tile by tile and attacks when it arrives
                 while (enemy != null && enemy.IsWalking) yield return null;
             }
+
+            // A hero's saving throw against this enemy may wait on the Rune of Reroll choice
+            while (RerollableRoll.IsAwaitingDecision) yield return null;
 
             yield return new WaitForSeconds(0.3f);
 
@@ -534,10 +601,15 @@ namespace CastleOfTheD20.Combat
             UnsubscribeFromUnitDeaths();
             SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
             GridManager.Instance?.ClearAllHighlights();
+            CombatTerrain.Cleanup(GridManager.Instance);
             foreach (var unit in activeUnits)
             {
                 if (unit == null) continue;
-                if (unit is PlayerUnit hero) hero.ClearPoisonCoating();
+                if (unit is PlayerUnit hero)
+                {
+                    hero.ClearPoisonCoating();
+                    hero.ResetCooldowns();
+                }
 
                 // Combat buffs and debuffs (and their auras) end with the fight
                 unit.StatusEffects?.ClearAllEffects();

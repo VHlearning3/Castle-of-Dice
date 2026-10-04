@@ -127,6 +127,16 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// Applies an effect at the start of the owner's own turn that ends with that same turn
+        /// (e.g. slipping on ice: no moving this turn).
+        /// </summary>
+        public void ApplyEffectForThisTurn(StatusEffectType type)
+        {
+            ApplyEffect(type, 1);
+            appliedDuringOwnTurn.Remove(type);
+        }
+
+        /// <summary>
         /// Checks whether a specific status effect is currently active.
         /// </summary>
         public bool HasEffect(StatusEffectType type)
@@ -231,6 +241,10 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public int GetEffectiveMovementRange(int baseMovement)
         {
+            if (HasEffect(StatusEffectType.Immobilized))
+            {
+                return 0;
+            }
             if (HasEffect(StatusEffectType.Frostbite))
             {
                 return Mathf.Max(1, baseMovement / 2);

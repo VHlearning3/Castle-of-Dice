@@ -161,7 +161,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorWarCry)) warriorWarCry.Initialize(
                 id: "warrior_war_cry",
                 name: "War Cry",
-                desc: "A 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage.",
+                desc: "Roll d20 + STR against each adjacent enemy: a hit pushes it back 1-2 tiles and deals 1d4 + STR damage.",
                 target: AbilityTargetType.Area3x3,
                 abilityRange: 1,
                 aoeRadius: 1,
@@ -199,7 +199,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFireball)) mageFireball.Initialize(
                 id: "mage_fireball",
                 name: "Fireball",
-                desc: "Hurl a sphere of flame up to 4 tiles, dealing 2d6 fire damage to everything in a 3x3 area.",
+                desc: "Hurl a sphere of flame up to 4 tiles, dealing 2d6 + INT fire damage in a 3x3 area and leaving it burning for 2 rounds.",
                 target: AbilityTargetType.Area3x3,
                 abilityRange: 4,
                 aoeRadius: 1,
@@ -210,7 +210,7 @@ namespace CastleOfTheD20.Editor
                 animTrigger: "CastSpell",
                 diceCount: 2,
                 diceSides: 6,
-                addAttribute: false
+                addAttribute: true
             );
             EditorUtility.SetDirty(mageFireball);
             assetCount++;
@@ -219,7 +219,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
-                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns.",
+                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns and ices the ground around it.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 4,
                 aoeRadius: 0,
@@ -274,7 +274,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(rogueBackstab)) rogueBackstab.Initialize(
                 id: "rogue_backstab",
                 name: "Backstab",
-                desc: "Attack with Advantage for 2d6 + AGI damage, doubled if the target is blinded or you just used Shadow Step.",
+                desc: "Strike for 2d6 + AGI damage, doubled against a blinded target or straight out of a Shadow Step (which also gives Advantage).",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 1,
                 aoeRadius: 0,

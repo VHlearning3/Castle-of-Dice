@@ -25,5 +25,6 @@ MonoBehaviour:
   - {fileID: 11400000, guid: def4359233e01b740b655f50b59fbcfd, type: 2}
   - {fileID: 11400000, guid: 6ef9c4d9373b70245acec353dfb2aa39, type: 2}
   - {fileID: 11400000, guid: 9da57b8b8347dc74aa4356f2ded89b64, type: 2}
+  level4Ability: {fileID: 11400000, guid: f926fc275f4b310337222ac7ba6230af, type: 2}
   characterPortrait: {fileID: 0}
   characterPrefab: {fileID: 0}

@@ -1072,8 +1072,19 @@ namespace CastleOfTheD20.UI
                     hits[j + 1] = key;
                 }
 
-                // Priority 1: Direct GridTile hit
+                // Priority 0: an explosive barrel resolves to the tile it stands on
                 for (int i = 0; i < hitCount; i++)
+                {
+                    ExplosiveBarrel hitBarrel = hits[i].collider.GetComponentInParent<ExplosiveBarrel>();
+                    if (hitBarrel != null && hitBarrel.Tile != null)
+                    {
+                        targetTile = hitBarrel.Tile;
+                        break;
+                    }
+                }
+
+                // Priority 1: Direct GridTile hit
+                for (int i = 0; i < hitCount && targetTile == null; i++)
                 {
                     GridTile directTile = hits[i].collider.GetComponentInParent<GridTile>();
                     if (directTile != null)
@@ -1239,6 +1250,7 @@ namespace CastleOfTheD20.UI
             if (activePlayer == null) return;
 
             IReadOnlyList<AbilitySO> abilities = activePlayer.ActiveAbilities;
+            EnsureAbilityButtonCount(abilities.Count);
 
             for (int i = 0; i < abilityButtons.Count; i++)
             {
@@ -1279,8 +1291,10 @@ namespace CastleOfTheD20.UI
                         }
                     }
 
-                    // Enable/disable based on whether action has already been used
-                    abilityButtons[i].interactable = !activePlayer.HasActedThisTurn && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
+                    // Enable/disable based on whether action has already been used, or the ability is cooling down
+                    int cooldown = activePlayer.GetCooldownRemaining(i);
+                    SetCooldownBadge(i, cooldown);
+                    abilityButtons[i].interactable = !activePlayer.HasActedThisTurn && cooldown <= 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
 
                     // Highlight selected ability button state
                     Image btnImg = abilityButtons[i].GetComponent<Image>();
@@ -1306,6 +1320,109 @@ namespace CastleOfTheD20.UI
             }
 
             RefreshMoveButton();
+        }
+
+        /// <summary>
+        /// The level-4 fifth ability (critical review B8) needs a fifth card: clone the last card, wire it to
+        /// its slot and narrow every card so the row still fits the action bar.
+        /// </summary>
+        private void EnsureAbilityButtonCount(int count)
+        {
+            if (abilityButtons.Count == 0) return;
+
+            Button template = abilityButtons[abilityButtons.Count - 1];
+            if (template == null) return;
+
+            bool cloned = false;
+            while (abilityButtons.Count < count)
+            {
+                int slotIndex = abilityButtons.Count;
+                Button clone = Instantiate(template, template.transform.parent, false);
+                clone.name = $"Ability_Button_{slotIndex + 1}";
+                clone.onClick.RemoveAllListeners();
+                clone.onClick.AddListener(() => OnAbilitySlotClicked(slotIndex));
+
+                Transform badge = clone.transform.Find(CooldownBadgeName);
+                if (badge != null) badge.gameObject.SetActive(false);
+
+                abilityButtons.Add(clone);
+                abilityIcons.Add(null);
+                abilityNames.Add(null);
+                abilityRanges.Add(null);
+                cloned = true;
+            }
+
+            // Re-find the icon / name / range texts of the new card
+            if (cloned) AutoLocateComponents();
+
+            float width = count > 4 ? 170f : 210f;
+            for (int i = 0; i < abilityButtons.Count; i++)
+            {
+                if (abilityButtons[i] == null) continue;
+                RectTransform rect = abilityButtons[i].GetComponent<RectTransform>();
+                if (rect != null) rect.sizeDelta = new Vector2(width, rect.sizeDelta.y);
+            }
+        }
+
+        private const string CooldownBadgeName = "Cooldown_Badge";
+        private static readonly string[] CooldownStrings = { "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
+
+        /// <summary>
+        /// Shows the turns left on an ability's cooldown as a big number over its icon (critical review B1).
+        /// </summary>
+        private void SetCooldownBadge(int slot, int turns)
+        {
+            if (slot < 0 || slot >= abilityButtons.Count || abilityButtons[slot] == null) return;
+
+            Transform host = abilityIcons.Count > slot && abilityIcons[slot] != null ? abilityIcons[slot].transform : abilityButtons[slot].transform;
+            Transform badge = host.Find(CooldownBadgeName);
+
+            if (turns <= 0)
+            {
+                if (badge != null) badge.gameObject.SetActive(false);
+                return;
+            }
+
+            if (badge == null)
+            {
+                GameObject badgeObj = new GameObject(CooldownBadgeName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                badgeObj.transform.SetParent(host, false);
+                RectTransform rect = (RectTransform)badgeObj.transform;
+                rect.anchorMin = Vector2.zero;
+                rect.anchorMax = Vector2.one;
+                rect.offsetMin = Vector2.zero;
+                rect.offsetMax = Vector2.zero;
+                Image shade = badgeObj.GetComponent<Image>();
+                shade.color = new Color(0.05f, 0.05f, 0.08f, 0.7f);
+                shade.raycastTarget = false;
+
+                GameObject textObj = new GameObject("Cooldown_Turns", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
+                textObj.transform.SetParent(badgeObj.transform, false);
+                RectTransform textRect = (RectTransform)textObj.transform;
+                textRect.anchorMin = Vector2.zero;
+                textRect.anchorMax = Vector2.one;
+                textRect.offsetMin = Vector2.zero;
+                textRect.offsetMax = Vector2.zero;
+                TextMeshProUGUI label = textObj.GetComponent<TextMeshProUGUI>();
+                label.alignment = TextAlignmentOptions.Center;
+                label.fontStyle = FontStyles.Bold;
+                label.enableAutoSizing = true;
+                label.fontSizeMin = 14f;
+                label.fontSizeMax = 40f;
+                label.color = UITheme.CoinGold;
+                label.outlineWidth = 0.2f;
+                label.outlineColor = new Color32(0, 0, 0, 255);
+                label.raycastTarget = false;
+                badge = badgeObj.transform;
+            }
+
+            badge.gameObject.SetActive(true);
+            badge.SetAsLastSibling();
+            TMP_Text turnsText = badge.GetComponentInChildren<TMP_Text>(true);
+            if (turnsText != null)
+            {
+                turnsText.text = turns < CooldownStrings.Length ? CooldownStrings[turns] : turns.ToString();
+            }
         }
 
         private bool CanMoveNow()
@@ -1380,6 +1497,15 @@ namespace CastleOfTheD20.UI
         {
             LocatePlayer();
             if (activePlayer == null || activePlayer.HasActedThisTurn || activePlayer.IsWalking) return;
+
+            int cooldown = activePlayer.GetCooldownRemaining(slotIndex);
+            if (cooldown > 0)
+            {
+                AbilitySO cooling = activePlayer.GetAbility(slotIndex);
+                LogCombatMessage($"{(cooling != null ? cooling.AbilityName : "That ability")} is recharging ({cooldown} turn{(cooldown > 1 ? "s" : "")}).");
+                return;
+            }
+
             activePlayer.EnsureTilePosition();
             moveModeActive = false;
 
@@ -1506,6 +1632,24 @@ namespace CastleOfTheD20.UI
             }
             bool isEnemy = occupyingUnit != null && occupyingUnit is EnemyUnit;
 
+            // An explosive barrel: hit it with the selected ability, or the main attack (B6)
+            if (tile.Barrel != null && !activePlayer.HasActedThisTurn)
+            {
+                int slot = selectedAbilitySlot >= 0 ? selectedAbilitySlot : 0;
+                if (activePlayer.AttackBarrel(slot, tile.Barrel))
+                {
+                    LogCombatMessage($"{activePlayer.UnitName} sets off the explosive barrel!");
+                    selectedAbilitySlot = -1;
+                    RefreshAbilityBar();
+                    UpdateMovementHighlights();
+                }
+                else
+                {
+                    LogCombatMessage("The barrel is out of reach of that ability.");
+                }
+                return;
+            }
+
             // 1. If an ability is actively selected, execute it or move into range to execute
             if (selectedAbilitySlot >= 0)
             {
@@ -1562,6 +1706,12 @@ namespace CastleOfTheD20.UI
 
             AbilitySO ability = activePlayer.GetAbility(slotIndex);
             if (ability == null) return;
+
+            if (activePlayer.GetCooldownRemaining(slotIndex) > 0)
+            {
+                LogCombatMessage($"{ability.AbilityName} is recharging.");
+                return;
+            }
 
             GridManager grid = GridManager.Instance;
             if (grid == null) return;

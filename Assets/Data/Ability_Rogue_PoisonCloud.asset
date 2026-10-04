@@ -10,20 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 572b656da3536bf41b5acdac8e62357b, type: 3}
-  m_Name: Ability_Warrior_WarCry
+  m_Name: Ability_Rogue_PoisonCloud
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
-  abilityID: warrior_war_cry
-  abilityName: War Cry
-  description: 'Roll d20 + STR against each adjacent enemy: a hit pushes it back 1-2 tiles and deals 1d4 + STR damage.'
-  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000012, type: 3}
+  abilityID: rogue_poison_cloud
+  abilityName: Poison Cloud
+  description: 'Burst a vial of toxic smoke up to 3 tiles away: every enemy in the 3x3 cloud takes 1d4 and is poisoned for 3 turns. Cooldown 3.'
+  abilityIcon: {fileID: 21300000, guid: a11a11a110010001000100000000001a, type: 3}
   targetType: 1
-  range: 1
+  range: 3
   areaOfEffectRadius: 1
   baseValue: 0
   damageDiceCount: 1
   damageDiceSides: 4
-  addsAttributeToDamage: 1
+  addsAttributeToDamage: 0
   requiresCheck: 0
-  appliedEffect: 0
-  effectDurationTurns: 0
-  animationTriggerName: Buff
+  appliedEffect: 1
+  effectDurationTurns: 3
+  animationTriggerName: Attack

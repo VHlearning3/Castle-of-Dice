@@ -101,7 +101,13 @@ namespace CastleOfTheD20.Core
         AdvantageNextAttack,
 
         /// <summary>Warrior Shield Wall: +4 Armor Class and a counterattack against adjacent melee attackers.</summary>
-        ShieldWall
+        ShieldWall,
+
+        /// <summary>Cannot move this turn (the Gargoyle King's petrifying gaze, slipping on ice, Arcane Chains).</summary>
+        Immobilized,
+
+        /// <summary>Warrior Retaliation: every enemy that swings at the warrior in melee is struck back.</summary>
+        Retaliation
     }
 
     /// <summary>

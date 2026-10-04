@@ -81,12 +81,14 @@ namespace CastleOfTheD20.Bosses
         public override void InitializeUnit()
         {
             unitName = "Cursed Commander";
-            maxHP = 50;
+            maxHP = 54; // critical review B3: a little more health
             currentHP = maxHP;
             armorClass = 16; // High base AC with Heavy Shield
             attackDamage = 6;
             attackBonus = 4;
             movementRange = 2;
+            ConfigureDamageDice(1, 8, 2); // average 6.5 on dice instead of a flat 6
+            ConfigureInitiative(1);
 
             // A retry after the hero falls starts the fight over: no leftover summons, reinforcements again at 50%
             hasSpawnedAdds = false;

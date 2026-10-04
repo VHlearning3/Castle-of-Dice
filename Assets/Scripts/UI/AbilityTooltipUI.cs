@@ -166,7 +166,11 @@ namespace CastleOfTheD20.UI
                     dmgStr = "Defensive Stance / Status Buff";
                 }
 
-                formulaText.text = $"<color=#E67E22>Hit Check:</color> {checkStr}\n<color=#E74C3C>Potency:</color> {dmgStr}";
+                int cooldownTurns = AbilityCooldowns.GetCooldownTurns(ability);
+                string cooldownStr = cooldownTurns > 0
+                    ? $"\n<color=#8FB8DE>Cooldown:</color> {cooldownTurns} turns"
+                    : string.Empty;
+                formulaText.text = $"<color=#E67E22>Hit Check:</color> {checkStr}\n<color=#E74C3C>Potency:</color> {dmgStr}{cooldownStr}";
             }
 
             // 5. Full Ability Description (Generously wrapped, never clipped)

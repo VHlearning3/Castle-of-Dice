@@ -160,13 +160,25 @@ namespace CastleOfTheD20.UI
 
         #region Public Modal API
 
+        /// <summary>Name of each milestone level shown on the level-up screen.</summary>
+        public static string GetMilestoneName(int level)
+        {
+            switch (level)
+            {
+                case 2: return "Castle Veteran";
+                case 3: return "Arcane Crusher";
+                case 4: return "Tower Champion";
+                default: return level >= PlayerUnit.MaxLevel ? "Curse Breaker (Max Level)" : "Adventurer";
+            }
+        }
+
         /// <summary>
         /// Displays the Milestone Level-Up Modal for target level (2 or 3).
         /// Suspends exploration input while open.
         /// </summary>
         public void ShowLevelUpModal(int newLevel, PlayerUnit player = null)
         {
-            pendingMilestoneLevel = Mathf.Clamp(newLevel, 2, 3);
+            pendingMilestoneLevel = Mathf.Clamp(newLevel, 2, PlayerUnit.MaxLevel);
             cachedPlayerUnit = player != null ? player : FindAnyObjectByType<PlayerUnit>();
 
             EnsureUIHierarchy();
@@ -184,9 +196,15 @@ namespace CastleOfTheD20.UI
                 abilitySubmenuPanel.SetActive(false);
             }
 
-            string milestoneName = (pendingMilestoneLevel == 2)
-                ? "Castle Veteran"
-                : "Arcane Crusher (Max Level)";
+            string milestoneName = GetMilestoneName(pendingMilestoneLevel);
+
+            // Level 4 also teaches the class's fifth ability
+            if (pendingMilestoneLevel >= PlayerUnit.FifthAbilityLevel && cachedPlayerUnit != null
+                && cachedPlayerUnit.CharacterClass != null && cachedPlayerUnit.CharacterClass.Level4Ability != null
+                && pendingMilestoneLevel == PlayerUnit.FifthAbilityLevel)
+            {
+                milestoneName += $"\nNew ability: {cachedPlayerUnit.CharacterClass.Level4Ability.AbilityName}";
+            }
 
             if (titleText != null)
             {

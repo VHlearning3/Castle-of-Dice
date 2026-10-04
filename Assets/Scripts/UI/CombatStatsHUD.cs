@@ -61,7 +61,9 @@ namespace CastleOfTheD20.UI
             StatusEffectType.AdvantageNextAttack,
             StatusEffectType.Poison,
             StatusEffectType.Frostbite,
-            StatusEffectType.Blind
+            StatusEffectType.Blind,
+            StatusEffectType.Immobilized,
+            StatusEffectType.Retaliation
         };
 
         #endregion
@@ -396,7 +398,7 @@ namespace CastleOfTheD20.UI
             sb.Clear();
             sb.Append("<color=#D1AD59>To hit</color> ");
             AppendSigned(sb, enemy.AttackBonus);
-            sb.Append("   <color=#D1AD59>Dmg</color> ").Append(enemy.AttackDamage);
+            sb.Append("   <color=#D1AD59>Dmg</color> ").Append(enemy.DamageFormula);
             sb.Append("   <color=#D1AD59>Reach</color> ").Append(enemy.AttackRange);
             sb.Append("   <color=#D1AD59>Move</color> ").Append(enemy.MovementRange);
             card.StatsText.text = sb.ToString();
@@ -549,6 +551,8 @@ namespace CastleOfTheD20.UI
                 case StatusEffectType.ManaShield: return "Mana Shield";
                 case StatusEffectType.AdvantageNextAttack: return "Advantage";
                 case StatusEffectType.ShieldWall: return "Shield Wall";
+                case StatusEffectType.Immobilized: return "Can't move";
+                case StatusEffectType.Retaliation: return "Retaliation";
                 default: return type.ToString();
             }
         }
@@ -561,6 +565,7 @@ namespace CastleOfTheD20.UI
                 case StatusEffectType.Poison: return "#8BE36B";
                 case StatusEffectType.Frostbite: return "#8CCBFF";
                 case StatusEffectType.Blind: return "#B8A6D9";
+                case StatusEffectType.Immobilized: return "#C9C2B4";
                 default: return "#F6D57A";
             }
         }

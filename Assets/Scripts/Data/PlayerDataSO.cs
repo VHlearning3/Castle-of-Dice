@@ -50,7 +50,7 @@ namespace CastleOfTheD20.Data
         [SerializeField] private CharacterClassSO selectedClass;
 
         [Header("Milestone Progression")]
-        [Range(1, 3)]
+        [Range(1, 5)]
         [SerializeField] private int currentLevel = 1;
 
         [Header("Permanent Stat Bonuses")]
@@ -84,7 +84,7 @@ namespace CastleOfTheD20.Data
         public int CurrentLevel
         {
             get => currentLevel;
-            set => currentLevel = Mathf.Clamp(value, 1, 3);
+            set => currentLevel = Mathf.Clamp(value, 1, PlayerUnit.MaxLevel);
         }
 
         public int MaxHPBonus
