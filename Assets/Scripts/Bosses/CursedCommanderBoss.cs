@@ -38,6 +38,8 @@ namespace CastleOfTheD20.Bosses
         private bool hasSpawnedAdds = false;
         private int remainingDebuffRounds = 0;
         private int roundsTracked = 0;
+        private bool earnedSoldiersHonor = false;
+        private readonly List<EnemyUnit> summonedSkeletons = new List<EnemyUnit>();
 
         #endregion
 
@@ -83,9 +85,27 @@ namespace CastleOfTheD20.Bosses
             attackBonus = 4;
             movementRange = 2;
 
+            // A retry after the hero falls starts the fight over: no leftover summons, reinforcements again at 50%
+            hasSpawnedAdds = false;
+            roundsTracked = 0;
+            remainingDebuffRounds = 0;
+            DestroySummonedSkeletons();
+
             base.InitializeUnit();
 
             CheckDialogueDebuff();
+        }
+
+        private void DestroySummonedSkeletons()
+        {
+            for (int i = 0; i < summonedSkeletons.Count; i++)
+            {
+                if (summonedSkeletons[i] == null) continue;
+                summonedSkeletons[i].gameObject.SetActive(false); // leaves this frame's combat roll-call at once
+                if (Application.isPlaying) Destroy(summonedSkeletons[i].gameObject);
+                else DestroyImmediate(summonedSkeletons[i].gameObject);
+            }
+            summonedSkeletons.Clear();
         }
 
         private void CheckDialogueDebuff()
@@ -93,9 +113,15 @@ namespace CastleOfTheD20.Bosses
             DialogueController dialogue = DialogueController.Instance;
             if (dialogue != null && (dialogue.HasCombatDebuff(dialogueDebuffTag) || dialogue.HasCombatDebuff("SoldiersHonor")))
             {
-                remainingDebuffRounds = debuffDurationRounds;
+                earnedSoldiersHonor = true;
                 dialogue.ConsumeCombatDebuff(dialogueDebuffTag);
                 dialogue.ConsumeCombatDebuff("SoldiersHonor");
+            }
+
+            // The hero who won the honor check keeps that edge when retrying the fight
+            if (earnedSoldiersHonor)
+            {
+                remainingDebuffRounds = debuffDurationRounds;
                 Debug.Log($"[CursedCommander] Soldier's Honor check succeeded! Commander's armor is weakened (-2 AC) for {remainingDebuffRounds} rounds.");
             }
         }
@@ -215,6 +241,7 @@ namespace CastleOfTheD20.Bosses
 
             skeleton.InitializeUnit();
             skeleton.MoveToTile(tile);
+            summonedSkeletons.Add(skeleton);
 
             // Register with TurnManager if combat is actively running
             TurnManager.Instance?.AddCombatant(skeleton);

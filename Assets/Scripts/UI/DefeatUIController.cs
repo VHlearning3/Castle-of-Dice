@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using TMPro;
 using CastleOfTheD20.Core;
@@ -220,6 +221,22 @@ namespace CastleOfTheD20.UI
             if (brawl != null)
             {
                 brawl.Recover();
+            }
+
+            // The lost fight waits, unlocked, until the hero walks back in
+            DungeonRoomController[] rooms = FindObjectsByType<DungeonRoomController>(FindObjectsSortMode.None);
+            for (int i = 0; i < rooms.Length; i++)
+            {
+                rooms[i].ResetEncounter();
+            }
+
+            // Fell in a castle zone: travel back to Oakhaven itself (the zone resets when next visited)
+            string villageScene = VillageNPC.StartingVillageSceneName;
+            if (SceneManager.GetActiveScene().name != villageScene && SceneLoader.Instance != null
+                && Application.CanStreamedLevelBeLoaded(villageScene))
+            {
+                SceneLoader.Instance.LoadScene(villageScene, "StartSpawn");
+                return;
             }
 
             if (GameManager.Instance != null)

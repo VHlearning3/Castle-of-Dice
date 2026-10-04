@@ -165,7 +165,18 @@ namespace CastleOfTheD20.UI
         {
             if (instance != null && instance != this)
             {
-                Destroy(gameObject);
+                // Back in the village the scene brings a second copy of the whole persistent Canvas (HUD,
+                // map, dialogue, shop...). Drop all of it, not just this HUD, so no stale panel ever draws on
+                // top of the live UI (Destroy lands before the frame renders).
+                GameObject duplicateRoot = transform.root.gameObject;
+                if (duplicateRoot != instance.transform.root.gameObject)
+                {
+                    Destroy(duplicateRoot);
+                }
+                else
+                {
+                    Destroy(gameObject);
+                }
                 return;
             }
 

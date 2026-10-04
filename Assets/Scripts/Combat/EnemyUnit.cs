@@ -292,12 +292,36 @@ namespace CastleOfTheD20.Combat
             // The corpse must not block clicks or grid raycasts while it falls
             Collider col = GetComponent<Collider>();
             if (col != null) col.enabled = false;
-            StartCoroutine(HideAfterDeathClip());
+            hideAfterDeathRoutine = StartCoroutine(HideAfterDeathClip());
+        }
+
+        private Coroutine hideAfterDeathRoutine;
+
+        /// <summary>
+        /// Brings the enemy back for an encounter retry as it stood when the fight first began: full stats
+        /// (a boss also leaves its second phase and forgets summons), a clickable collider again, and no
+        /// pending death clip that would hide it a moment later.
+        /// </summary>
+        public override void Revive()
+        {
+            if (hideAfterDeathRoutine != null)
+            {
+                StopCoroutine(hideAfterDeathRoutine);
+                hideAfterDeathRoutine = null;
+            }
+
+            Collider col = GetComponent<Collider>();
+            if (col != null) col.enabled = true;
+
+            base.Revive();
+            InitializeUnit();
+            NotifyHealthChanged();
         }
 
         private System.Collections.IEnumerator HideAfterDeathClip()
         {
             yield return new WaitForSeconds(deathClipDuration);
+            hideAfterDeathRoutine = null;
             base.HideOnDeath();
         }
 

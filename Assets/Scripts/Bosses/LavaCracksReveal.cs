@@ -21,13 +21,55 @@ namespace CastleOfTheD20.Bosses
         public Color sunPhase2Color = new Color(1f, 0.4f, 0.2f);
         public float sunPhase2Intensity = 1.3f;
 
+        private Color centerStartColor;
+        private float centerStartIntensity;
+        private Color sunStartColor;
+        private float sunStartIntensity;
+
         private void Awake()
         {
             if (cracks != null) cracks.SetActive(false);
+            if (centerLight != null)
+            {
+                centerStartColor = centerLight.color;
+                centerStartIntensity = centerLight.intensity;
+            }
+            if (sun != null)
+            {
+                sunStartColor = sun.color;
+                sunStartIntensity = sun.intensity;
+            }
         }
 
-        private void OnEnable() => GargoyleKingBoss.OnStoneFormActivated += HandleStoneForm;
-        private void OnDisable() => GargoyleKingBoss.OnStoneFormActivated -= HandleStoneForm;
+        private void OnEnable()
+        {
+            GargoyleKingBoss.OnStoneFormActivated += HandleStoneForm;
+            GargoyleKingBoss.OnStoneFormReset += HandleStoneFormReset;
+        }
+
+        private void OnDisable()
+        {
+            GargoyleKingBoss.OnStoneFormActivated -= HandleStoneForm;
+            GargoyleKingBoss.OnStoneFormReset -= HandleStoneFormReset;
+        }
+
+        private void HandleStoneFormReset(GargoyleKingBoss boss) => Restore();
+
+        /// <summary>Closes the cracks and gives the room its first-phase lights back (a retry, or the curse breaking).</summary>
+        public void Restore()
+        {
+            if (cracks != null) cracks.SetActive(false);
+            if (centerLight != null)
+            {
+                centerLight.color = centerStartColor;
+                centerLight.intensity = centerStartIntensity;
+            }
+            if (sun != null)
+            {
+                sun.color = sunStartColor;
+                sun.intensity = sunStartIntensity;
+            }
+        }
 
         private void HandleStoneForm(GargoyleKingBoss boss)
         {

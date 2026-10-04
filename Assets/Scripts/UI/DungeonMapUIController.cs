@@ -350,6 +350,7 @@ namespace CastleOfTheD20.UI
             bool isCourtyardCleared = gm != null && (gm.IsCommanderDefeated || gm.IsWingCleared(GameLocation.Courtyard));
             bool isLibraryCleared = gm != null && (gm.IsMalakorDefeated || gm.IsWingCleared(GameLocation.Library));
             bool isCrownHallCleared = gm != null && (gm.IsGargoyleKingDefeated || gm.IsWingCleared(GameLocation.CrownHall));
+            bool isThroneGateOpen = gm == null || gm.CanEnterLocation(GameLocation.CrownHall) || curKey == KeyCrownHall;
 
             // The Great Hall, Tower and Throne Room are only reached through the hall.
             bool isInnerCastleOpen = isCourtyardCleared || isLibraryCleared
@@ -407,8 +408,9 @@ namespace CastleOfTheD20.UI
                         break;
 
                     case KeyCrownHall:
-                        isUnlocked = isInnerCastleOpen;
-                        statusText = isCrownHallCleared ? "VANQUISHED" : (isUnlocked ? "FINAL BOSS: GARGOYLE KING" : "LOCKED - FINAL BOSS");
+                        // Same rule as the Great Hall's gate: sealed until both wing bosses fall
+                        isUnlocked = isInnerCastleOpen && isThroneGateOpen;
+                        statusText = isCrownHallCleared ? "VANQUISHED" : (isUnlocked ? "FINAL BOSS: GARGOYLE KING" : "LOCKED - DEFEAT BOTH WING BOSSES");
                         statusColor = isCrownHallCleared ? "#6ee78f" : (isUnlocked ? "#ff5c5c" : "#8b8f99");
                         break;
 

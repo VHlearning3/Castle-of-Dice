@@ -135,6 +135,18 @@ namespace CastleOfTheD20.Core
         /// <summary>Whether the Crown Hall boss (The Gargoyle King) has been defeated.</summary>
         public bool IsGargoyleKingDefeated => defeatedBosses.Contains("GargoyleKing");
 
+        /// <summary>
+        /// Whether the Throne Room's sealed gate has opened: both wing bosses (the Cursed Commander and
+        /// Shadow Mage Malakor) must fall before the hero may face the Gargoyle King.
+        /// </summary>
+        public bool IsThroneRoomOpen => IsCommanderDefeated && IsMalakorDefeated;
+
+        /// <summary>
+        /// Whether the hero may travel into <paramref name="location"/>. Only the Throne Room is sealed.
+        /// The expedition map and the Great Hall's gate both follow this rule.
+        /// </summary>
+        public bool CanEnterLocation(GameLocation location) => location != GameLocation.CrownHall || IsThroneRoomOpen;
+
         /// <summary>Whether a specific dungeon wing or location has been cleared of hostiles.</summary>
         public bool IsWingCleared(GameLocation location) => clearedLocations.Contains(location);
 

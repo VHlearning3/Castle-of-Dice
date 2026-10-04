@@ -100,6 +100,8 @@ namespace CastleOfTheD20.World
         private BoxCollider triggerCollider;
         private bool isEncounterTriggered = false;
         private bool isAwaitingBossDialogue = false;
+        private readonly List<Pose> enemyStartPoses = new List<Pose>();
+        private Pose bossDialogueNpcStartPose;
 
         #endregion
 
@@ -142,6 +144,8 @@ namespace CastleOfTheD20.World
 
         private void Start()
         {
+            RecordStartPoses();
+
             // 1. Ensure exit barriers are unlocked (disabled) initially
             SetBarriersLocked(false);
 
@@ -175,6 +179,24 @@ namespace CastleOfTheD20.World
 
             // 6. The boss speaks only when the hero walks into this trigger, never before
             PrepareBossDialogueNpc();
+        }
+
+        /// <summary>Remembers where the hostiles and the boss's dialogue stand-in wait, for an encounter reset.</summary>
+        private void RecordStartPoses()
+        {
+            enemyStartPoses.Clear();
+            if (roomEnemies != null)
+            {
+                foreach (GameObject enemy in roomEnemies)
+                {
+                    enemyStartPoses.Add(enemy != null ? new Pose(enemy.transform.position, enemy.transform.rotation) : Pose.identity);
+                }
+            }
+
+            if (bossDialogueNpc != null)
+            {
+                bossDialogueNpcStartPose = new Pose(bossDialogueNpc.transform.position, bossDialogueNpc.transform.rotation);
+            }
         }
 
         private void PrepareBossDialogueNpc()
@@ -577,6 +599,66 @@ namespace CastleOfTheD20.World
             }
             chestReward.EnsureChestCollider();
             return chestReward;
+        }
+
+        /// <summary>
+        /// Puts a room whose fight the hero lost back to how it was before they walked in: doors open,
+        /// hostiles revived at full strength and hidden on their starting spots, the grid cleared and
+        /// the trigger (and the boss's intro dialogue) ready to start the fight again.
+        /// Does nothing for a room that was never entered or is already cleared.
+        /// </summary>
+        public void ResetEncounter()
+        {
+            if (currentState != RoomState.CombatActive && !isAwaitingBossDialogue) return;
+
+            if (isAwaitingBossDialogue)
+            {
+                DialogueController.OnDialogueEnded -= HandleBossDialogueEnded;
+                isAwaitingBossDialogue = false;
+            }
+
+            currentState = RoomState.Unexplored;
+            isEncounterTriggered = false;
+
+            SetBarriersLocked(false);
+
+            if (roomEnemies != null)
+            {
+                for (int i = 0; i < roomEnemies.Count; i++)
+                {
+                    GameObject enemyObj = roomEnemies[i];
+                    if (enemyObj == null) continue;
+
+                    EnemyUnit enemy = enemyObj.GetComponent<EnemyUnit>();
+                    if (enemy != null)
+                    {
+                        enemy.Revive();
+                        enemy.ClearTile();
+                    }
+
+                    if (i < enemyStartPoses.Count)
+                    {
+                        enemyObj.transform.SetPositionAndRotation(enemyStartPoses[i].position, enemyStartPoses[i].rotation);
+                    }
+                    enemyObj.SetActive(false);
+                }
+            }
+
+            if (generateGridOnCombat && GridManager.Instance != null)
+            {
+                GridManager.Instance.ClearGrid();
+            }
+
+            if (bossDialogueNpc != null)
+            {
+                bossDialogueNpc.transform.SetPositionAndRotation(bossDialogueNpcStartPose.position, bossDialogueNpcStartPose.rotation);
+                bossDialogueNpc.gameObject.SetActive(true);
+                PrepareBossDialogueNpc();
+            }
+
+            if (triggerCollider != null) triggerCollider.enabled = true;
+
+            Debug.Log($"[DungeonRoomController] Encounter in '{roomLocation}' reset after a defeat; the fight starts again when the hero walks in.");
         }
 
         /// <summary>

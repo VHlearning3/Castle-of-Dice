@@ -43,6 +43,10 @@ namespace CastleOfTheD20.Core
         public List<string> claimedRewards = new List<string>();
         /// <summary>Quests whose giver agreed to a bonus reward in dialogue. Missing in older v3 saves.</summary>
         public List<string> questBonuses = new List<string>();
+        /// <summary>Adventure tallies for the ending's stats screen. Missing (0) in older v3 saves.</summary>
+        public int statTurnsTaken = 0;
+        public int statNaturalTwenties = 0;
+        public int statDeaths = 0;
     }
 
     /// <summary>
@@ -117,6 +121,9 @@ namespace CastleOfTheD20.Core
             }
 
             save.sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            save.statTurnsTaken = AdventureStats.TurnsTaken;
+            save.statNaturalTwenties = AdventureStats.NaturalTwenties;
+            save.statDeaths = AdventureStats.Deaths;
 
             string json = JsonUtility.ToJson(save, true);
             PlayerPrefs.SetString(SaveKey, json);
@@ -185,6 +192,8 @@ namespace CastleOfTheD20.Core
             {
                 GameManager.Instance.RestoreCampaignProgress(save.defeatedBosses, save.clearedWings, save.claimedRewards);
             }
+
+            AdventureStats.Restore(save.statTurnsTaken, save.statNaturalTwenties, save.statDeaths);
 
             Debug.Log($"[SaveSystem] Game loaded successfully! Level: {save.currentLevel}");
             return save;
