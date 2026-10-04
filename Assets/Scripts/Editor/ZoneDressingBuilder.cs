@@ -1910,6 +1910,7 @@ namespace CastleOfTheD20.Editor
             reward.PromptMessage = "Take Othelia's Signet Ring";
             reward.HideWhenLooted = true;
             reward.EnsureChestCollider();
+            SetupLowPolyItemsEditor.DressSignetRing(pickup);
             PointLight("SignetRing_Glow", pickup.transform, pos + new Vector3(0f, 0.5f, 0f), Hex("8affb0"), 3f, 0.8f);
         }
 

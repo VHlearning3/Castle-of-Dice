@@ -14,6 +14,8 @@ namespace CastleOfTheD20.World
         private const string TablePath = "LootDropTable";
         private static LootDropTableSO s_table;
         private static bool s_tableLoaded;
+        private static Vector3 s_lastFallen;
+        private static bool s_hasFallen;
 
         public static LootDropTableSO Table
         {
@@ -34,6 +36,9 @@ namespace CastleOfTheD20.World
             s_tableLoaded = false;
             EnemyUnit.OnLootDropped -= DropForEnemy;
             EnemyUnit.OnLootDropped += DropForEnemy;
+            s_hasFallen = false;
+            TurnManager.OnCombatVictoryScrapAwarded -= LeaveScrapRemains;
+            TurnManager.OnCombatVictoryScrapAwarded += LeaveScrapRemains;
         }
 
         /// <summary>Drops gold (and maybe a potion) where <paramref name="enemy"/> fell.</summary>
@@ -50,6 +55,21 @@ namespace CastleOfTheD20.World
             Vector3 origin = GroundBelow(enemy.transform.position);
             if (gold > 0) SpawnCoin(origin, gold, 0);
             if (Random.value < potionChance) SpawnPotion(origin, 1);
+
+            s_lastFallen = origin;
+            s_hasFallen = true;
+        }
+
+        /// <summary>After a won fight, leaves a scrap heap where the last enemy fell (the scrap is already in the purse).</summary>
+        private static void LeaveScrapRemains(int scrap)
+        {
+            LootDropTableSO table = Table;
+            if (!s_hasFallen || table == null || table.scrapRemainsPrefab == null) return;
+            s_hasFallen = false;
+
+            // Beside the coins rather than under them
+            Vector3 spot = GroundBelow(s_lastFallen + new Vector3(Random.Range(-0.6f, 0.6f), 0f, Random.Range(-0.6f, 0.6f)));
+            Object.Instantiate(table.scrapRemainsPrefab, spot, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
         }
 
         /// <summary>

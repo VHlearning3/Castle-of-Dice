@@ -1,4 +1,5 @@
 using CastleOfTheD20.Core;
+using CastleOfTheD20.Data;
 using CastleOfTheD20.World;
 using UnityEngine;
 
@@ -24,6 +25,10 @@ namespace CastleOfTheD20.Combat
             SetActive(warriorModel, warriorModel == chosen);
             SetActive(mageModel, mageModel == chosen);
             SetActive(rogueModel, rogueModel == chosen);
+
+            // Elira's staff and Corvo's daggers hang on their hand bones (the knight's sword and shield live in the prefab)
+            HeroWeaponMountsSO weapons = HeroWeaponMountsSO.Instance;
+            if (weapons != null) weapons.AttachTo(chosen, chosen == warriorModel ? CharacterClassType.Warrior : classType);
 
             Animator animator = chosen.GetComponentInChildren<Animator>(true);
             if (animator == null) return;

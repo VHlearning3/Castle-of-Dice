@@ -13,6 +13,8 @@ namespace CastleOfTheD20.Data
         public GameObject coinPrefab;
         public GameObject potionPrefab;
         public ItemSO potionItem;
+        [Tooltip("Scrap heap left on the field where the last enemy of a won fight fell (decoration; the scrap itself is awarded by TurnManager).")]
+        public GameObject scrapRemainsPrefab;
 
         [Header("Regular Enemies")]
         [Min(0)] public int enemyGoldMin = 3;
