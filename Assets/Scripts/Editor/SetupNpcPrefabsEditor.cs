@@ -528,12 +528,10 @@ namespace CastleOfTheD20.Editor
             anim.applyRootMotion = false;
             anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
 
-            // Save Prefab in Assets/PREFABS/NPCs/ and Assets/PREFABS/
+            // Save Prefab in Assets/PREFABS/NPCs/ (the copies in Assets/PREFABS/ were unused duplicates, removed 2026-10-04)
             string npcsFolderPrefab = $"Assets/PREFABS/NPCs/{prefabName}.prefab";
-            string rootFolderPrefab = $"Assets/PREFABS/{prefabName}.prefab";
 
             GameObject savedPrefab = PrefabUtility.SaveAsPrefabAsset(root, npcsFolderPrefab);
-            PrefabUtility.SaveAsPrefabAsset(root, rootFolderPrefab);
 
             UnityEngine.Object.DestroyImmediate(root);
 
