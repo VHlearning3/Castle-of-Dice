@@ -356,12 +356,12 @@ namespace CastleOfTheD20.Editor
             so.FindProperty("maxHP").intValue = 16;
             so.FindProperty("currentHP").intValue = 16;
             so.FindProperty("armorClass").intValue = 12;
-            so.FindProperty("attackDamage").intValue = 5;
+            so.FindProperty("attackDamage").intValue = 4;
             so.FindProperty("attackBonus").intValue = 4;
             so.FindProperty("attackRange").intValue = 5;
             so.FindProperty("damageDiceCount").intValue = 1;
             so.FindProperty("damageDiceSides").intValue = 8;
-            so.FindProperty("damageDiceBonus").intValue = 1;
+            so.FindProperty("damageDiceBonus").intValue = 0; // 1d8 (typical hit 4): not elite, so both ambushers fight
             so.FindProperty("initiativeBonus").intValue = 2;
             so.ApplyModifiedPropertiesWithoutUndo();
             archer.SetActive(false);

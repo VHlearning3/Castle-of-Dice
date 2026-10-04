@@ -371,6 +371,35 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>
+        /// An elite enemy fights alone in a regular encounter (solo-hero pacing): 25+ HP or a typical hit of 5+.
+        /// </summary>
+        public static bool IsElite(EnemyUnit enemy)
+        {
+            return enemy != null && (enemy.MaxHP >= 25 || enemy.AttackDamage >= 5);
+        }
+
+        /// <summary>
+        /// How many of this regular room's enemies join the fight: all of them up to 2, or 1 when one is elite.
+        /// Boss rooms have no cap.
+        /// </summary>
+        public int CountEnemiesThatJoin()
+        {
+            if (roomEnemies == null) return 0;
+            int listed = 0;
+            bool elite = false;
+            foreach (GameObject enemyObj in roomEnemies)
+            {
+                if (enemyObj == null) continue;
+                EnemyUnit unit = enemyObj.GetComponent<EnemyUnit>();
+                if (unit == null) continue;
+                listed++;
+                if (IsElite(unit)) elite = true;
+            }
+            if (!string.IsNullOrEmpty(bossIdentifier)) return listed;
+            return Mathf.Min(listed, elite ? 1 : 2);
+        }
+
+        /// <summary>
         /// Ends the boss encounter without combat: the boss and his dialogue stand-in leave, the doors stay
         /// open, the boss counts as overcome for the campaign, and the reward chest holds half its gold.
         /// </summary>
@@ -502,7 +531,7 @@ namespace CastleOfTheD20.World
                         if (enemyObj != null)
                         {
                             EnemyUnit eu = enemyObj.GetComponent<EnemyUnit>();
-                            if (eu != null && (eu.MaxHP >= 25 || eu.AttackDamage >= 5))
+                            if (IsElite(eu))
                             {
                                 maxAllowedEnemies = 1; // Solo hero pacing: 1 elite max
                                 break;

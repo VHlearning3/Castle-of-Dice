@@ -128,6 +128,25 @@ namespace CastleOfTheD20.Tests
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         }
 
+        [Test]
+        public void ForestAmbush_BothEnemiesJoinTheFight()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/Zone_2_ForestPath.unity", OpenSceneMode.Single);
+            DungeonRoomController ambush = null;
+            foreach (DungeonRoomController room in Object.FindObjectsByType<DungeonRoomController>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (room.roomKey == "ForestAmbush") ambush = room;
+            }
+            Assert.IsNotNull(ambush);
+            Assert.AreEqual(2, ambush.roomEnemies.Count);
+            foreach (GameObject enemy in ambush.roomEnemies)
+            {
+                Assert.IsFalse(DungeonRoomController.IsElite(enemy.GetComponent<EnemyUnit>()), enemy.name + " must not count as elite, or it fights alone.");
+            }
+            Assert.AreEqual(2, ambush.CountEnemiesThatJoin(), "The skeleton archer and the curse cultist both fight.");
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
+
         private static void AssertNotes(string scene, int min)
         {
             EditorSceneManager.OpenScene($"Assets/Scenes/{scene}.unity", OpenSceneMode.Single);
