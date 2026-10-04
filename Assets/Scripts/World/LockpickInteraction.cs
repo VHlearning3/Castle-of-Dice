@@ -51,6 +51,16 @@ namespace CastleOfTheD20.World
         [Tooltip("Local Euler rotation for the lid when opened.")]
         [SerializeField] private Vector3 openLidRotation = new Vector3(-65f, 0f, 0f);
 
+        [Header("Gate Models (optional)")]
+        [Tooltip("Model shown while the lock holds (e.g., the closed gate with its lock). Hidden once picked.")]
+        [SerializeField] private GameObject lockedModel;
+
+        [Tooltip("Model shown once the lock is picked (e.g., the open archway). Hidden while locked.")]
+        [SerializeField] private GameObject unlockedModel;
+
+        [Tooltip("If true, this object's own colliders turn off when picked so the hero can walk through the gate.")]
+        [SerializeField] private bool clearPassageOnUnlock;
+
         [Header("Trap Settings")]
         [Tooltip("If true, a failed check springs a trap.")]
         [SerializeField] private bool hasTrap = true;
@@ -101,13 +111,14 @@ namespace CastleOfTheD20.World
         protected override void Awake()
         {
             base.Awake();
+            ShowGateModel(isLocked);
 
             // Zone scenes reload on every visit: a picked lock stays open (and its loot stays taken)
             if (isLocked && GameManager.Instance != null && GameManager.Instance.IsRewardClaimed(GameManager.RewardKey(this)))
             {
                 isLocked = false;
                 promptMessage = "Opened";
-                OpenLid();
+                ApplyOpenedState();
                 if (hiddenPathObject != null)
                 {
                     hiddenPathObject.SetActive(true);
@@ -181,7 +192,7 @@ namespace CastleOfTheD20.World
             isLocked = false;
             promptMessage = "Opened";
             GameManager.Instance?.MarkRewardClaimed(GameManager.RewardKey(this));
-            OpenLid();
+            ApplyOpenedState();
 
             Debug.Log($"[LockpickInteraction] SUCCESS! Lock picked. Gained {rewardGold} Gold.");
 
@@ -228,12 +239,29 @@ namespace CastleOfTheD20.World
             }
         }
 
-        private void OpenLid()
+        /// <summary>Swings the chest lid open, swaps the gate to its open model and clears the passage.</summary>
+        private void ApplyOpenedState()
         {
             if (chestLid != null)
             {
                 chestLid.localEulerAngles = openLidRotation;
             }
+
+            ShowGateModel(false);
+
+            if (clearPassageOnUnlock)
+            {
+                foreach (Collider col in GetComponents<Collider>())
+                {
+                    col.enabled = false;
+                }
+            }
+        }
+
+        private void ShowGateModel(bool locked)
+        {
+            if (lockedModel != null) lockedModel.SetActive(locked);
+            if (unlockedModel != null) unlockedModel.SetActive(!locked);
         }
 
         #endregion

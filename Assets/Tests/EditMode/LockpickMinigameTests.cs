@@ -196,6 +196,34 @@ namespace CastleOfTheD20.Tests
             Assert.AreEqual(hpBefore, rogue.CurrentHP);
         }
 
+        [Test]
+        public void PickingGate_SwapsToOpenModel_AndClearsPassage()
+        {
+            LockpickInteraction lockpick = CreateLock(out _);
+            BoxCollider blocker = lockpick.gameObject.AddComponent<BoxCollider>();
+            GameObject lockedModel = new GameObject("Test_Gate_Locked");
+            GameObject openModel = new GameObject("Test_Gate_Open");
+            created.Add(lockedModel);
+            created.Add(openModel);
+            openModel.SetActive(false);
+
+            SerializedObject so = new SerializedObject(lockpick);
+            so.FindProperty("lockedModel").objectReferenceValue = lockedModel;
+            so.FindProperty("unlockedModel").objectReferenceValue = openModel;
+            so.FindProperty("clearPassageOnUnlock").boolValue = true;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            FinishMinigame(lockpick, CreatePlayer(CharacterClassType.Rogue), LockpickOutcome.Failed);
+            Assert.IsTrue(lockedModel.activeSelf, "A failed pick must leave the closed gate standing.");
+            Assert.IsTrue(blocker.enabled);
+
+            FinishMinigame(lockpick, CreatePlayer(CharacterClassType.Rogue), LockpickOutcome.Unlocked);
+            Assert.IsFalse(lockpick.IsLocked);
+            Assert.IsFalse(lockedModel.activeSelf);
+            Assert.IsTrue(openModel.activeSelf);
+            Assert.IsFalse(blocker.enabled, "The opened gate must stop blocking the path.");
+        }
+
         private static void FinishMinigame(LockpickInteraction lockpick, PlayerUnit player, LockpickOutcome outcome)
         {
             MethodInfo finish = typeof(LockpickInteraction).GetMethod("HandleMinigameFinished", BindingFlags.Instance | BindingFlags.NonPublic);

@@ -1040,6 +1040,8 @@ namespace CastleOfTheD20.Editor
         {
             GameObject gate = Find("Locked_Secret_Gate");
             if (gate == null) { Debug.LogWarning("[ZoneDressingBuilder] Locked_Secret_Gate not found"); return; }
+            // Vili's gate models (ForestGateSetup) dress this gate now; keep the old frame off it
+            if (gate.transform.parent != null && gate.transform.parent.Find(ForestGateSetup.ModelsName) != null) return;
             Vector3 g = gate.transform.position; // (-25, 2.5, 15), slab 1.2 x 5 x 6 along z
             Renderer gr = gate.GetComponent<Renderer>();
             if (gr != null) gr.sharedMaterial = mats["WoodDark"];
