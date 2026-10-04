@@ -50,6 +50,9 @@ namespace CastleOfTheD20.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            // The steps above rebuild the knight with his original clips; put the sword, shield and Mixamo animations back
+            SetupHeroKnightEditor.Setup();
+
             Debug.Log("[SetupKnightCharacterEditor] Knight Character Setup completed successfully!");
             Debug.Log("==================================================");
         }
