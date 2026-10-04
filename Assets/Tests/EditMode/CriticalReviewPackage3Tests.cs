@@ -135,6 +135,7 @@ namespace CastleOfTheD20.Tests
 
             // Walk back next to the brute, then walk away again
             hero.MoveToTile(grid.GetTileAt(new Vector2Int(5, 5)));
+            SeedSoRollsAre(r => r > 1); // a natural 1 always misses
             hero.WalkToTile(grid.GetTileAt(new Vector2Int(2, 5)));
             Assert.Less(hero.CurrentHP, hp, "Walking away gives the brute a free hit.");
         }
