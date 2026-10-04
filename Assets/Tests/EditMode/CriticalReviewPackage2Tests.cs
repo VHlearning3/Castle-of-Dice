@@ -3,10 +3,13 @@ using System.Reflection;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
+using CastleOfTheD20.Bosses;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Core;
 using CastleOfTheD20.Data;
+using CastleOfTheD20.Dialogue;
 using CastleOfTheD20.Economy;
+using CastleOfTheD20.World;
 
 namespace CastleOfTheD20.Tests
 {
@@ -54,6 +57,14 @@ namespace CastleOfTheD20.Tests
             DifficultySettings.Reset();
             DiceSystem.ResetRandom();
 
+            StoryFlags.Clear();
+            SaveSystem.ClearPendingPosition();
+            SetStatic(typeof(QuestManager), "instance", null);
+            foreach (TurnManager tm in Object.FindObjectsByType<TurnManager>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                Object.DestroyImmediate(tm.gameObject);
+            }
+            if (DialogueController.Instance != null) Object.DestroyImmediate(DialogueController.Instance.gameObject);
             SetStaticProperty(typeof(InventoryManager), "Instance", null);
             SetStaticProperty(typeof(TurnManager), "Instance", null);
             GridManager.Instance = null;
@@ -245,7 +256,248 @@ namespace CastleOfTheD20.Tests
 
         #endregion
 
+        #region A6: dialogue bonuses survive scene changes and saves
+
+        [Test]
+        public void BaldursLoreBonus_SurvivesANewDialogueController()
+        {
+            StoryFlags.Clear();
+            DialogueController first = Track(new GameObject("Dialogue_Village")).AddComponent<DialogueController>();
+            first.RegisterCombatDebuff("CommanderArmorWeakened");
+            Object.DestroyImmediate(first.gameObject);
+            SetStatic(typeof(DialogueController), "instance", null);
+
+            DialogueController second = Track(new GameObject("Dialogue_Courtyard")).AddComponent<DialogueController>();
+            Assert.IsTrue(second.HasCombatDebuff("CommanderArmorWeakened"), "The village bonus is waiting in the Courtyard.");
+            Assert.IsTrue(second.ConsumeCombatDebuff("CommanderArmorWeakened"));
+            Assert.IsFalse(StoryFlags.Has("CommanderArmorWeakened"));
+        }
+
+        #endregion
+
+        #region A9: saves keep health, position, flags and difficulty
+
+        [Test]
+        public void Save_KeepsHealthPositionFlagsAndDifficulty()
+        {
+            WithSaveBackup(() =>
+            {
+                PlayerUnit hero = CreateHero("Character_Warrior_SirRoland");
+                hero.TakeDamage(9);
+                int hp = hero.CurrentHP;
+                hero.transform.position = new Vector3(3f, 1f, -2f);
+                StoryFlags.Clear();
+                StoryFlags.Set("CommanderArmorWeakened");
+                DifficultySettings.Current = DifficultyLevel.Hard;
+
+                SaveSystem.SaveGame(sessionData, hero);
+
+                StoryFlags.Clear();
+                DifficultySettings.Reset();
+                sessionData.CurrentHP = -1;
+
+                PlayerSaveData save = SaveSystem.LoadGame(sessionData, null);
+                Assert.IsNotNull(save);
+                Assert.AreEqual(hp, sessionData.CurrentHP);
+                Assert.IsTrue(StoryFlags.Has("CommanderArmorWeakened"));
+                Assert.AreEqual(DifficultyLevel.Hard, DifficultySettings.Current);
+                Assert.IsTrue(save.hasPosition);
+                Assert.AreEqual(3f, save.posX, 0.001f);
+                Assert.AreEqual(-2f, save.posZ, 0.001f);
+
+                PlayerUnit nextHero = CreateHero("Character_Warrior_SirRoland");
+                Assert.AreEqual(hp, nextHero.CurrentHP, "The hero comes back with the HP they had.");
+                SaveSystem.ClearPendingPosition();
+            });
+        }
+
+        [Test]
+        public void Health_CarriesFromZoneToZone()
+        {
+            PlayerUnit hero = CreateHero("Character_Rogue_Corvo");
+            hero.TakeDamage(7);
+            int hp = hero.CurrentHP;
+            sessionData.SyncFromPlayer(hero);
+
+            PlayerUnit nextZoneHero = CreateHero("Character_Rogue_Corvo");
+            Assert.AreEqual(hp, nextZoneHero.CurrentHP);
+        }
+
+        [Test]
+        public void NewAdventure_DeletesTheOldSave()
+        {
+            WithSaveBackup(() =>
+            {
+                SaveSystem.SaveGame(sessionData, null);
+                Assert.IsTrue(SaveSystem.HasSavedGame());
+                StoryFlags.Set("MalakorSpared");
+
+                PlayerProgressionManager progression = Track(new GameObject("P2_Progression")).AddComponent<PlayerProgressionManager>();
+                progression.ResetForNewGame();
+
+                Assert.IsFalse(SaveSystem.HasSavedGame(), "Continue cannot bring the old run back.");
+                Assert.IsFalse(StoryFlags.Has("MalakorSpared"));
+            });
+        }
+
+        #endregion
+
+        #region A10: quest items and quest scrap are not for sale
+
+        [Test]
+        public void QuestItems_CannotBeSold()
+        {
+            Assert.IsFalse(ShopManager.IsSellable(AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_SwampHerb.asset")));
+            Assert.IsFalse(ShopManager.IsSellable(AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Consumable_GiantElixir.asset")));
+            Assert.IsTrue(ShopManager.IsSellable(AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset")));
+        }
+
+        [Test]
+        public void SellingScrap_KeepsWhatBaldursRequestNeeds()
+        {
+            QuestManager quests = CreateQuestManager();
+            QuestSO scrapQuest = AssetDatabase.LoadAssetAtPath<QuestSO>("Assets/Data/Quests/Quest_ScrapMetal.asset");
+            quests.RegisterQuest(scrapQuest);
+            Assert.IsTrue(quests.StartQuest(scrapQuest.QuestID));
+
+            ShopManager shop = Track(new GameObject("P2_Shop")).AddComponent<ShopManager>();
+            inventory.AddScrapMetal(scrapQuest.RequiredAmount + 2);
+            quests.RefreshTrackedObjectives();
+            shop.ConvertScrapToGold(-1);
+            quests.RefreshTrackedObjectives();
+
+            Assert.AreEqual(scrapQuest.RequiredAmount, inventory.ScrapMetalCount, "Only the spare scrap is sold.");
+            Assert.AreEqual(scrapQuest.RequiredAmount, quests.GetQuestProgress(scrapQuest.QuestID), "Quest progress stays.");
+            Invoke(quests, "OnDisable");
+        }
+
+        #endregion
+
+        #region A11: the spec's numbers
+
+        [Test]
+        public void CellarQuest_AsksForTheTwoRatsTheCellarFights()
+        {
+            QuestSO pests = AssetDatabase.LoadAssetAtPath<QuestSO>("Assets/Data/Quests/Quest_CellarPests.asset");
+            Assert.AreEqual(2, pests.RequiredAmount);
+            StringAssert.Contains("2 giant rats", pests.Description);
+        }
+
+        [Test]
+        public void CursedCommander_CallsHisGuardInAtHalfHealth()
+        {
+            PlayerUnit hero = CreateHero("Character_Warrior_SirRoland");
+            hero.transform.position = grid.GetWorldPosition(new Vector2Int(2, 2));
+
+            CursedCommanderBoss commander = CreateUnit<CursedCommanderBoss>("Boss_CursedCommander");
+            commander.InitializeUnit();
+            commander.transform.position = grid.GetWorldPosition(new Vector2Int(8, 8));
+            EnemyUnit guard = CreateUnit<EnemyUnit>("Courtyard_Skeleton");
+            guard.ConfigureStats("Armored Skeleton Guard", hp: 20, ac: 12, damage: 4, bonus: 2);
+            guard.transform.position = grid.GetWorldPosition(new Vector2Int(9, 8));
+
+            DungeonRoomController room = Track(new GameObject("Courtyard_Room")).AddComponent<DungeonRoomController>();
+            room.roomLocation = "Courtyard";
+            room.bossIdentifier = "CursedCommander";
+            room.generateGridOnCombat = false;
+            room.roomEnemies.Add(commander.gameObject);
+            room.roomEnemies.Add(guard.gameObject);
+            Invoke(room, "Awake");
+            Invoke(room, "Start");
+
+            TurnManager tm = Track(new GameObject("P2_TurnManager")).AddComponent<TurnManager>();
+            SetStaticProperty(typeof(TurnManager), "Instance", tm);
+            CreateUnit<AbilityExecutor>("P2_Executor");
+
+            room.BeginEncounter(hero);
+            Assert.IsTrue(tm.IsCombatActive);
+            Assert.IsFalse(guard.gameObject.activeSelf, "The guard waits out of sight when the fight starts.");
+            Assert.IsFalse(Contains(tm.ActiveUnits, guard));
+            Assert.AreEqual(1, commander.ReserveCount);
+
+            commander.TakeDamage(commander.MaxHP / 2 + 1);
+            Assert.IsTrue(guard.gameObject.activeSelf, "At half health the Commander calls his guard in.");
+            Assert.IsTrue(Contains(tm.ActiveUnits, guard));
+            Assert.AreEqual(0, commander.ReserveCount);
+
+            Invoke(room, "OnDestroy");
+        }
+
+        [Test]
+        public void SkillChecks_UseTheAttributeTheyName()
+        {
+            PlayerUnit mage = CreateHero("Character_Mage_Elira");
+            HeroAttribute intimidation = HeroAttributes.ResolveCheckAttribute(mage, "Intimidation / Strength Check");
+            Assert.AreEqual(HeroAttribute.Strength, intimidation);
+            Assert.Less(HeroAttributes.GetModifier(mage, intimidation), mage.PrimaryAttributeBonus, "Elira does not scare people with her Intelligence.");
+            Assert.AreEqual(HeroAttribute.Intelligence, HeroAttributes.ResolveCheckAttribute(mage, "Arcana / Intelligence Check"));
+
+            PlayerUnit rogue = CreateHero("Character_Rogue_Corvo");
+            Assert.AreEqual(HeroAttribute.Dexterity, HeroAttributes.ResolveCheckAttribute(rogue, "Persuasion Check (Charisma/Agility)"), "Corvo picks his better approach.");
+        }
+
+        #endregion
+
+        #region C2: the main quest
+
+        [Test]
+        public void MainQuest_FollowsTheThreeBosses()
+        {
+            QuestManager quests = CreateQuestManager();
+            Assert.AreEqual(QuestState.InProgress, quests.GetQuestState(MainQuest.QuestId), "The main quest is active from the start.");
+            StringAssert.Contains("Commander", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);
+
+            gameManager.NotifyBossDefeated("CursedCommander");
+            Assert.AreEqual(1, quests.GetQuestProgress(MainQuest.QuestId));
+            StringAssert.Contains("Malakor", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);
+
+            gameManager.NotifyBossDefeated("ShadowMageMalakor");
+            StringAssert.Contains("King", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);
+
+            gameManager.NotifyBossDefeated("GargoyleKing");
+            Assert.AreEqual(QuestState.Completed, quests.GetQuestState(MainQuest.QuestId));
+            Invoke(quests, "OnDisable");
+        }
+
+        #endregion
+
         #region Helpers
+
+        private QuestManager CreateQuestManager()
+        {
+            QuestManager quests = Track(new GameObject("P2_Quests")).AddComponent<QuestManager>();
+            FieldInfo database = typeof(QuestManager).GetField("questDatabase", BindingFlags.Instance | BindingFlags.NonPublic);
+            database.SetValue(quests, new List<QuestSO> { AssetDatabase.LoadAssetAtPath<QuestSO>("Assets/Data/Quests/Quest_CellarPests.asset") });
+            SetStatic(typeof(QuestManager), "instance", quests);
+            Invoke(quests, "Awake");
+            Invoke(quests, "OnEnable");
+            return quests;
+        }
+
+        private static bool Contains(IReadOnlyList<CombatUnit> units, CombatUnit unit)
+        {
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (units[i] == unit) return true;
+            }
+            return false;
+        }
+
+        private static void WithSaveBackup(System.Action body)
+        {
+            const string saveKey = "CastleOfDice_SaveData";
+            string backup = PlayerPrefs.HasKey(saveKey) ? PlayerPrefs.GetString(saveKey) : null;
+            try
+            {
+                body();
+            }
+            finally
+            {
+                if (backup != null) PlayerPrefs.SetString(saveKey, backup);
+                else PlayerPrefs.DeleteKey(saveKey);
+                PlayerPrefs.Save();
+            }
+        }
 
         /// <summary>Picks a seed whose first d20 satisfies <paramref name="first"/>.</summary>
         private static void SeedSoFirstRollIs(System.Func<int, bool> first)
