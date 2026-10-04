@@ -102,6 +102,7 @@ namespace CastleOfTheD20.Economy
             InventoryManager.OnScrapMetalChanged += HandleScrapMetalChanged;
             InventoryManager.OnInventoryChanged += HandleInventoryChanged;
             CombatUnit.OnAnyUnitDied += HandleUnitDied;
+            GameManager.OnBossDefeated += HandleBossDefeated;
         }
 
         private void OnDisable()
@@ -109,6 +110,43 @@ namespace CastleOfTheD20.Economy
             InventoryManager.OnScrapMetalChanged -= HandleScrapMetalChanged;
             InventoryManager.OnInventoryChanged -= HandleInventoryChanged;
             CombatUnit.OnAnyUnitDied -= HandleUnitDied;
+            GameManager.OnBossDefeated -= HandleBossDefeated;
+        }
+
+        private void HandleBossDefeated(string bossId)
+        {
+            SyncMainQuest();
+        }
+
+        /// <summary>
+        /// Moves "Break the Castle's Curse" to the step the campaign has reached (Commander, Malakor, King)
+        /// and completes it when the King falls. Safe to call any time.
+        /// </summary>
+        public void SyncMainQuest()
+        {
+            if (!registeredQuests.TryGetValue(MainQuest.QuestId, out QuestSO quest)) return;
+
+            GameManager gm = GameManager.Instance;
+            int step = MainQuest.CountStepsDone(gm);
+            MainQuest.UpdateObjective(quest, step);
+
+            QuestState state = GetQuestState(MainQuest.QuestId);
+            if (state == QuestState.NotStarted) state = QuestState.InProgress;
+            int previous = GetQuestProgress(MainQuest.QuestId);
+            questProgress[MainQuest.QuestId] = step;
+
+            QuestState newState = step >= MainQuest.StepCount ? QuestState.Completed : QuestState.InProgress;
+            bool changed = newState != state || previous != step;
+            questStates[MainQuest.QuestId] = newState;
+
+            if (!changed) return;
+            OnQuestProgressUpdated?.Invoke(MainQuest.QuestId, step, MainQuest.StepCount);
+            OnQuestStateUpdated?.Invoke(MainQuest.QuestId, newState);
+            if (newState == QuestState.Completed && state != QuestState.Completed)
+            {
+                OnQuestCompleted?.Invoke(quest, 0);
+            }
+            PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
         private void OnDestroy()
@@ -133,7 +171,11 @@ namespace CastleOfTheD20.Economy
                 }
             }
 
-            if (registeredQuests.Count == 0)
+            // The main story quest is built in code, so no scene has to list it
+            RegisterQuest(MainQuest.Create());
+            SyncMainQuest();
+
+            if (registeredQuests.Count == 1)
             {
                 // Player builds can only see quests serialized into questDatabase; flag the misconfiguration
                 // instead of silently papering over it with an editor-only AssetDatabase scan.
@@ -524,6 +566,7 @@ namespace CastleOfTheD20.Economy
                 OnQuestStateUpdated?.Invoke(id, questStates[id]);
             }
 
+            SyncMainQuest();
             PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
@@ -555,6 +598,7 @@ namespace CastleOfTheD20.Economy
                 OnQuestStateUpdated?.Invoke(entry.Key, entry.Value.DefaultState);
             }
 
+            SyncMainQuest();
             PlayerHUD.Instance?.UpdateQuestSummaryText();
         }
 
@@ -588,6 +632,22 @@ namespace CastleOfTheD20.Economy
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Scrap that accepted, unfinished scrap quests need for hand-in (the shop will not buy it).
+        /// </summary>
+        public int GetScrapReservedForQuests()
+        {
+            int reserved = 0;
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                QuestSO quest = entry.Value;
+                if (quest == null || quest.ObjectiveType != QuestObjectiveType.ScrapMetal) continue;
+                if (GetQuestState(quest.QuestID) != QuestState.InProgress) continue;
+                reserved += quest.RequiredAmount;
+            }
+            return reserved;
         }
 
         /// <summary>

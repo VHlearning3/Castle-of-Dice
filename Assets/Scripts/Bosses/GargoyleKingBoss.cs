@@ -9,12 +9,28 @@ namespace CastleOfTheD20.Bosses
 {
     /// <summary>
     /// Crown Hall Final Boss: The Gargoyle King.
-    /// Phase 1: Heavy physical attacks and Ground Stomp seismic hazards.
-    /// Phase 2: Stone Form at 50% HP. Magical attacks reflect or deal 0 damage; requires physical strikes.
+    /// Phase 1: Heavy physical attacks and a telegraphed earthquake: he marks a 3x3 area under the hero in red,
+    /// and it shakes on his next turn, so the hero can step out (critical review B4). The quake never hurts him.
+    /// Phase 2: Stone Form at 50% HP (+3 AC) and a petrifying gaze every other turn: the hero makes a DC 13
+    /// CON save or cannot move on their next turn. Othelia's ring breaks the stone armour for 2 turns (C3).
     /// Pre-combat hook: Weakened attack damage (-3) for the first 3 turns if DC 16 Intimidation check succeeded.
     /// </summary>
     public class GargoyleKingBoss : EnemyUnit
     {
+        #region Constants
+
+        /// <summary>AC the Stone Form adds.</summary>
+        public const int StoneFormArmorBonus = 3;
+
+        /// <summary>CON save against the petrifying gaze.</summary>
+        public const int GazeSaveDC = 13;
+
+        /// <summary>Earthquake damage dice (2d6).</summary>
+        public const int QuakeDiceCount = 2;
+        public const int QuakeDiceSides = 6;
+
+        #endregion
+
         #region Serialized Fields
 
         [Header("Phase Settings")]
@@ -22,11 +38,11 @@ namespace CastleOfTheD20.Bosses
         [SerializeField] private bool isStoneFormActive = false;
 
         [Header("Hazard Spawning")]
-        [Tooltip("Number of random tile hazards spawned during ground stomp.")]
+        [Tooltip("Number of random tile hazards spawned during ground stomp (unused since the earthquake is telegraphed).")]
         [SerializeField] private int rockfallHazardCount = 3;
 
-        [Tooltip("Damage dealt to units hit by falling rocks.")]
-        [SerializeField] private int rockfallDamage = 5;
+        [Tooltip("Flat damage added to the earthquake's 2d6.")]
+        [SerializeField] private int rockfallDamage = 0;
 
         [Header("Dialogue Intimidation Hook")]
         [Tooltip("Debuff tag applied if DC 16 Intimidation was passed.")]
@@ -43,6 +59,16 @@ namespace CastleOfTheD20.Bosses
         private bool hasEnteredPhase2 = false;
         private bool wasIntimidated = false;
 
+        // Telegraphed earthquake: tiles marked this turn shake on the King's next turn
+        private readonly List<GridTile> markedQuakeTiles = new List<GridTile>(9);
+        private bool quakePending;
+        private Vector2Int quakeCenter;
+
+        // Phase 2 gaze every other turn, and Othelia's ring
+        private int gazeCountdown;
+        private int ringBrokenArmorTurns;
+        private bool ringUsed;
+
         #endregion
 
         #region Public Properties
@@ -52,6 +78,22 @@ namespace CastleOfTheD20.Bosses
 
         /// <summary>Remaining turns of attack weakness from intimidation.</summary>
         public int RemainingIntimidationTurns => remainingIntimidationTurns;
+
+        /// <summary>True while an earthquake is marked and will strike on the King's next turn.</summary>
+        public bool IsQuakePending => quakePending;
+
+        /// <summary>Centre of the marked earthquake area.</summary>
+        public Vector2Int QuakeCenter => quakeCenter;
+
+        /// <summary>Turns Othelia's ring keeps the stone armour broken.</summary>
+        public int RingBrokenArmorTurns => ringBrokenArmorTurns;
+
+        /// <summary>Whether Othelia's ring can still be shown to the King (Stone Form, not used yet).</summary>
+        public bool CanBeShownTheRing => IsAlive && isStoneFormActive && !ringUsed;
+
+        /// <summary>Stone Form adds +3 AC unless Othelia's ring has broken it.</summary>
+        public override int ArmorClass =>
+            base.ArmorClass + (isStoneFormActive && ringBrokenArmorTurns <= 0 ? StoneFormArmorBonus : 0);
 
         /// <summary>
         /// Effective attack damage: reduced by 3 if intimidated during the first 3 rounds.
@@ -75,8 +117,11 @@ namespace CastleOfTheD20.Bosses
         /// <summary>Fired when a retry puts the boss back from Stone Form into his first phase.</summary>
         public static event Action<GargoyleKingBoss> OnStoneFormReset;
 
-        /// <summary>Fired when ground stomp triggers rockfalls: (boss, targetedTiles).</summary>
+        /// <summary>Fired when the earthquake strikes: (boss, tiles that shook).</summary>
         public static event Action<GargoyleKingBoss, List<Vector2Int>> OnGroundStompTriggered;
+
+        /// <summary>Fired when the King marks where the next earthquake will strike: (boss, centre).</summary>
+        public static event Action<GargoyleKingBoss, Vector2Int> OnQuakeTelegraphed;
 
         #endregion
 
@@ -85,18 +130,23 @@ namespace CastleOfTheD20.Bosses
         public override void InitializeUnit()
         {
             unitName = "The Gargoyle King";
-            maxHP = 60;
+            maxHP = 66;
             currentHP = maxHP;
             armorClass = 15;
             attackDamage = 9;
             attackBonus = 5;
             movementRange = 2;
+            ConfigureDamageDice(2, 6, 2); // average 9, as the old flat hit
 
             // A retry after the hero falls faces the first-phase King again, not the Stone Form
             bool wasInStoneForm = isStoneFormActive;
             hasEnteredPhase2 = false;
             isStoneFormActive = false;
             remainingIntimidationTurns = 0;
+            gazeCountdown = 0;
+            ringBrokenArmorTurns = 0;
+            ringUsed = false;
+            ClearQuakeMarks();
             if (wasInStoneForm)
             {
                 OnStoneFormReset?.Invoke(this);
@@ -147,10 +197,29 @@ namespace CastleOfTheD20.Bosses
             }
         }
 
+        public override void Die()
+        {
+            ClearQuakeMarks();
+            base.Die();
+        }
+
         public override void ExecuteTurnAction(GridManager gridManager, AbilityExecutor abilityExecutor = null)
         {
-            // Execute Ground Stomp before normal attack
+            if (gridManager == null) gridManager = GridManager.Instance;
+
+            // The earthquake marked last turn strikes now; otherwise he marks where the next one lands
             ExecuteGroundStomp(gridManager);
+
+            // Phase 2: the petrifying gaze every other turn
+            if (isStoneFormActive && IsAlive)
+            {
+                if (gazeCountdown <= 0)
+                {
+                    CastPetrifyingGaze(FindClosestPlayer(gridManager));
+                    gazeCountdown = 2;
+                }
+                gazeCountdown--;
+            }
 
             base.ExecuteTurnAction(gridManager, abilityExecutor);
         }
@@ -168,31 +237,21 @@ namespace CastleOfTheD20.Bosses
                     Debug.Log("[GargoyleKing] The Gargoyle King shakes off his fear. Attack damage fully restored!");
                 }
             }
+
+            if (ringBrokenArmorTurns > 0)
+            {
+                ringBrokenArmorTurns--;
+                if (ringBrokenArmorTurns == 0)
+                {
+                    Say("The stone creeps back over the King's chest.");
+                }
+            }
         }
 
-        protected override void PerformAttack(PlayerUnit target, AbilityExecutor abilityExecutor)
+        public override int RollAttackDamage()
         {
-            if (target == null || !target.IsAlive) return;
-
-            // Attack with modified damage accounting for intimidation
-            PlayAttackAnimation();
-            AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
-            DiceResult hitCheck = DiceSystem.RollD20(AttackBonus, target.ArmorClass, advantage);
-
-            Debug.Log($"[GargoyleKing] The King swings his massive stone claws at {target.UnitName}: {hitCheck}");
-
-            if (hitCheck.isSuccess)
-            {
-                int dmg = hitCheck.isCriticalSuccess ? EffectiveAttackDamage * 2 : EffectiveAttackDamage;
-                target.TakeDamage(dmg, hitCheck.isCriticalSuccess);
-            }
-            else
-            {
-                Debug.Log($"[GargoyleKing] The Gargoyle King's strike crashes into the stone floor, missing {target.UnitName}!");
-
-                // Shield Wall (spec): the defender strikes back only when the attack misses
-                target.ResolveCounterAttack(this);
-            }
+            int damage = base.RollAttackDamage();
+            return remainingIntimidationTurns > 0 ? Mathf.Max(2, damage - 3) : damage;
         }
 
         #endregion
@@ -206,7 +265,7 @@ namespace CastleOfTheD20.Bosses
         {
             hasEnteredPhase2 = true;
             isStoneFormActive = true;
-            armorClass += 3; // Boosted AC in stone state
+            gazeCountdown = 1; // the first gaze comes on his next turn
 
             Debug.Log("[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.");
             StatusEffects?.ApplyEffect(StatusEffectType.ManaShield, durationTurns: 2);
@@ -214,41 +273,144 @@ namespace CastleOfTheD20.Bosses
             OnStoneFormActivated?.Invoke(this);
         }
 
+        /// <summary>
+        /// The petrifying gaze: the hero makes a DC 13 CON save (it can be rerolled with a scroll) or turns
+        /// to stone up to the knees and cannot move on their next turn.
+        /// </summary>
+        public void CastPetrifyingGaze(PlayerUnit target)
+        {
+            if (target == null || !target.IsAlive) return;
+
+            Say($"The King's eyes flare grey. {target.UnitName} must resist his petrifying gaze (CON DC {GazeSaveDC})!");
+            int conBonus = HeroAttributes.GetModifier(target, HeroAttribute.Constitution);
+            RerollableRoll.Roll(conBonus, GazeSaveDC, AdvantageType.None, save =>
+            {
+                if (!target.IsAlive) return;
+                if (save.isSuccess)
+                {
+                    Say($"{target.UnitName} shakes off the gaze.");
+                }
+                else
+                {
+                    Say($"Stone creeps up {target.UnitName}'s legs: no moving next turn!");
+                    target.StatusEffects?.ApplyEffect(StatusEffectType.Immobilized, 1);
+                }
+            }, "Petrifying Gaze / Constitution");
+        }
+
+        /// <summary>
+        /// Othelia's ring (critical review C3): the King remembers his queen and his stone armour cracks for
+        /// <paramref name="turns"/> turns. Works once, in Stone Form.
+        /// </summary>
+        public bool BreakStoneArmorWithRing(int turns = 2)
+        {
+            if (!CanBeShownTheRing) return false;
+            ringUsed = true;
+            ringBrokenArmorTurns = Mathf.Max(1, turns);
+            Say("\"Othelia... my queen?\" The King falters, and his stone armour cracks away!");
+            return true;
+        }
+
         #endregion
 
         #region Seismic Ground Stomp
 
         /// <summary>
-        /// Slams the ground, causing falling rock hazards on random tiles across the grid.
+        /// The telegraphed earthquake. If an area is marked, it shakes now: 2d6 to everyone standing in it
+        /// except the King himself. If not, the King marks a 3x3 area around the hero that will shake on his
+        /// next turn, giving the hero one turn to get out.
         /// </summary>
         public void ExecuteGroundStomp(GridManager gridManager)
         {
             if (gridManager == null) return;
 
-            Debug.Log("[GargoyleKing] The Gargoyle King stomps the ground! Ceiling rocks rain down upon the hall!");
-
-            List<Vector2Int> targetedTiles = new List<Vector2Int>();
-            List<GridTile> allTiles = new List<GridTile>(gridManager.Tiles.Values);
-
-            for (int i = 0; i < rockfallHazardCount && allTiles.Count > 0; i++)
+            if (quakePending)
             {
-                int randomIndex = UnityEngine.Random.Range(0, allTiles.Count);
-                GridTile targetTile = allTiles[randomIndex];
-                allTiles.RemoveAt(randomIndex);
+                StrikeQuake(gridManager);
+                return;
+            }
 
-                targetedTiles.Add(targetTile.GridPosition);
-                targetTile.SetHighlight(TileHighlightType.TargetArea);
+            PlayerUnit hero = FindClosestPlayer(gridManager);
+            if (hero == null) return;
+            MarkQuake(gridManager, hero.GridPosition);
+        }
 
-                // If a unit is standing under the falling rock, damage them
-                if (targetTile.IsOccupied && targetTile.OccupyingUnit != null)
+        /// <summary>Marks the 3x3 area around <paramref name="center"/> for next turn's earthquake.</summary>
+        public void MarkQuake(GridManager gridManager, Vector2Int center)
+        {
+            ClearQuakeMarks();
+            quakePending = true;
+            quakeCenter = center;
+            foreach (GridTile tile in gridManager.GetArea3x3(center))
+            {
+                if (tile == null || !tile.IsWalkable) continue;
+                tile.HazardWarning = true;
+                markedQuakeTiles.Add(tile);
+            }
+            Say("The King raises his fists: the ground marked in red will shake on his next turn!");
+            OnQuakeTelegraphed?.Invoke(this, center);
+        }
+
+        private void StrikeQuake(GridManager gridManager)
+        {
+            List<Vector2Int> shaken = new List<Vector2Int>(markedQuakeTiles.Count);
+            for (int i = 0; i < markedQuakeTiles.Count; i++)
+            {
+                if (markedQuakeTiles[i] != null) shaken.Add(markedQuakeTiles[i].GridPosition);
+            }
+            Vector2Int center = quakeCenter;
+            ClearQuakeMarks();
+
+            int damage = DiceSystem.RollDamage(QuakeDiceCount, QuakeDiceSides) + rockfallDamage;
+            Debug.Log($"[GargoyleKing] The Gargoyle King stomps the ground! Rocks rain down on the marked area for {damage}.");
+            if (Application.isPlaying) AbilityVfx.PlayExplosion(gridManager.GetWorldPosition(center));
+
+            // Everyone in the shaken area except the King (read unit positions, not just tile occupancy)
+            List<CombatUnit> victims = new List<CombatUnit>();
+            if (TurnManager.Instance != null)
+            {
+                IReadOnlyList<CombatUnit> units = TurnManager.Instance.ActiveUnits;
+                for (int i = 0; i < units.Count; i++)
                 {
-                    CombatUnit victim = targetTile.OccupyingUnit;
-                    Debug.Log($"[GargoyleKing] Falling rocks strike {victim.UnitName} for {rockfallDamage} damage!");
-                    victim.TakeDamage(rockfallDamage);
+                    CombatUnit unit = units[i];
+                    if (unit == null || unit == this || !unit.IsAlive) continue;
+                    if (shaken.Contains(unit.GridPosition)) victims.Add(unit);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < shaken.Count; i++)
+                {
+                    GridTile tile = gridManager.GetTileAt(shaken[i]);
+                    CombatUnit unit = tile != null ? tile.OccupyingUnit : null;
+                    if (unit != null && unit != this && unit.IsAlive && !victims.Contains(unit)) victims.Add(unit);
                 }
             }
 
-            OnGroundStompTriggered?.Invoke(this, targetedTiles);
+            for (int i = 0; i < victims.Count; i++)
+            {
+                Say($"The earthquake hits {victims[i].UnitName} for {damage}!");
+                victims[i].TakeDamage(damage);
+            }
+            if (victims.Count == 0) Say("The earthquake shakes empty ground.");
+
+            OnGroundStompTriggered?.Invoke(this, shaken);
+        }
+
+        private void ClearQuakeMarks()
+        {
+            for (int i = 0; i < markedQuakeTiles.Count; i++)
+            {
+                if (markedQuakeTiles[i] != null) markedQuakeTiles[i].HazardWarning = false;
+            }
+            markedQuakeTiles.Clear();
+            quakePending = false;
+        }
+
+        private void Say(string message)
+        {
+            Debug.Log("[GargoyleKing] " + message);
+            UI.CombatUIController.Instance?.LogCombatMessage(message);
         }
 
         #endregion

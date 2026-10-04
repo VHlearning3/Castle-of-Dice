@@ -160,13 +160,25 @@ namespace CastleOfTheD20.UI
 
         #region Public Modal API
 
+        /// <summary>Name of each milestone level shown on the level-up screen.</summary>
+        public static string GetMilestoneName(int level)
+        {
+            switch (level)
+            {
+                case 2: return "Castle Veteran";
+                case 3: return "Arcane Crusher";
+                case 4: return "Tower Champion";
+                default: return level >= PlayerUnit.MaxLevel ? "Curse Breaker (Max Level)" : "Adventurer";
+            }
+        }
+
         /// <summary>
         /// Displays the Milestone Level-Up Modal for target level (2 or 3).
         /// Suspends exploration input while open.
         /// </summary>
         public void ShowLevelUpModal(int newLevel, PlayerUnit player = null)
         {
-            pendingMilestoneLevel = Mathf.Clamp(newLevel, 2, 3);
+            pendingMilestoneLevel = Mathf.Clamp(newLevel, 2, PlayerUnit.MaxLevel);
             cachedPlayerUnit = player != null ? player : FindAnyObjectByType<PlayerUnit>();
 
             EnsureUIHierarchy();
@@ -184,9 +196,15 @@ namespace CastleOfTheD20.UI
                 abilitySubmenuPanel.SetActive(false);
             }
 
-            string milestoneName = (pendingMilestoneLevel == 2)
-                ? "Castle Veteran"
-                : "Arcane Crusher (Max Level)";
+            string milestoneName = GetMilestoneName(pendingMilestoneLevel);
+
+            // Level 4 also teaches the class's fifth ability
+            if (pendingMilestoneLevel >= PlayerUnit.FifthAbilityLevel && cachedPlayerUnit != null
+                && cachedPlayerUnit.CharacterClass != null && cachedPlayerUnit.CharacterClass.Level4Ability != null
+                && pendingMilestoneLevel == PlayerUnit.FifthAbilityLevel)
+            {
+                milestoneName += $"\nNew ability: {cachedPlayerUnit.CharacterClass.Level4Ability.AbilityName}";
+            }
 
             if (titleText != null)
             {
@@ -268,7 +286,7 @@ namespace CastleOfTheD20.UI
                     if (abilities != null && i < abilities.Count && abilities[i] != null)
                     {
                         AbilitySO ab = abilities[i];
-                        bool isAlreadyRank2 = ab.AbilityName.Contains("[Rank 2]");
+                        bool isAlreadyRank2 = ab.IsRank2;
 
                         abilitySlotButtons[i].gameObject.SetActive(true);
                         abilitySlotButtons[i].interactable = !isAlreadyRank2;
@@ -277,7 +295,7 @@ namespace CastleOfTheD20.UI
                         {
                             abilitySlotTexts[i].text = isAlreadyRank2
                                 ? $"{ab.AbilityName}\n<color=#a1a1aa>(Already Rank 2)</color>"
-                                : $"<b>{ab.AbilityName}</b>\n<color=#4ade80><b>Potency +3 (Rank 2)</b></color>";
+                                : $"<b>{ab.AbilityName}</b>\n<color=#4ade80><b>Rank 2: {ab.GetRank2Summary()}</b></color>";
                         }
                     }
                     else
@@ -459,7 +477,7 @@ namespace CastleOfTheD20.UI
                 "Card_Ability",
                 new Vector2(280f, -40f),
                 "ABILITY EMPOWERMENT",
-                "Rank 2 Upgrade\n\nChoose one of your 4 starting abilities to elevate to Rank 2 (+3 base potency).",
+                "Rank 2 Upgrade\n\nChoose one of your 4 starting abilities to elevate to Rank 2 (each card shows what it gains).",
                 out abilityTitleText,
                 out abilityDescText
             );

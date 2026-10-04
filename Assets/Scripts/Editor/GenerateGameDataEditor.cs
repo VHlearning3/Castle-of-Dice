@@ -161,7 +161,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(warriorWarCry)) warriorWarCry.Initialize(
                 id: "warrior_war_cry",
                 name: "War Cry",
-                desc: "A 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage.",
+                desc: "Roll d20 + STR against each adjacent enemy: a hit pushes it back 1-2 tiles and deals 1d4 + STR damage.",
                 target: AbilityTargetType.Area3x3,
                 abilityRange: 1,
                 aoeRadius: 1,
@@ -199,7 +199,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFireball)) mageFireball.Initialize(
                 id: "mage_fireball",
                 name: "Fireball",
-                desc: "Hurl a sphere of flame up to 4 tiles, dealing 2d6 fire damage to everything in a 3x3 area.",
+                desc: "Hurl a sphere of flame up to 4 tiles, dealing 2d6 + INT fire damage in a 3x3 area and leaving it burning for 2 rounds.",
                 target: AbilityTargetType.Area3x3,
                 abilityRange: 4,
                 aoeRadius: 1,
@@ -210,7 +210,7 @@ namespace CastleOfTheD20.Editor
                 animTrigger: "CastSpell",
                 diceCount: 2,
                 diceSides: 6,
-                addAttribute: false
+                addAttribute: true
             );
             EditorUtility.SetDirty(mageFireball);
             assetCount++;
@@ -219,7 +219,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
-                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns.",
+                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns and ices the ground around it.",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 4,
                 aoeRadius: 0,
@@ -274,7 +274,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(rogueBackstab)) rogueBackstab.Initialize(
                 id: "rogue_backstab",
                 name: "Backstab",
-                desc: "Attack with Advantage for 2d6 + AGI damage, doubled if the target is blinded or you just used Shadow Step.",
+                desc: "Strike for 2d6 + AGI damage, doubled against a blinded target or straight out of a Shadow Step (which also gives Advantage).",
                 target: AbilityTargetType.SingleTarget,
                 abilityRange: 1,
                 aoeRadius: 0,
@@ -344,6 +344,24 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(rogueLockpicking);
             assetCount++;
 
+            // Lockpicking is an exploration passive; Corvo's fourth combat ability is Shadow Step
+            AbilitySO rogueShadowStep = GetOrCreateAsset<AbilitySO>($"{DataFolderPath}/Ability_Rogue_ShadowStep.asset");
+            if (ShouldInitialize(rogueShadowStep)) rogueShadowStep.Initialize(
+                id: "rogue_shadow_step",
+                name: "Shadow Step",
+                desc: "Slip through the shadows up to 3 tiles to an unoccupied space. Grants Advantage on your next attack.",
+                target: AbilityTargetType.SingleTarget,
+                abilityRange: 3,
+                aoeRadius: 0,
+                value: 0,
+                checkRequired: false,
+                effect: StatusEffectType.AdvantageNextAttack,
+                duration: 1,
+                animTrigger: "Attack"
+            );
+            EditorUtility.SetDirty(rogueShadowStep);
+            assetCount++;
+
             // 3. Generate 3 CharacterClasses and assign respective 4 abilities
             // --- Warrior: Sir Roland ---
             CharacterClassSO warriorClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Warrior_SirRoland.asset");
@@ -385,7 +403,7 @@ namespace CastleOfTheD20.Editor
                 ac: 13,
                 move: 5,
                 bonus: 3,
-                abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueLockpicking }
+                abilities: new List<AbilitySO> { rogueBackstab, rogueSmokeBomb, roguePoisonDagger, rogueShadowStep }
             );
             EditorUtility.SetDirty(rogueClass);
             assetCount++;
@@ -444,9 +462,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(cellarPests)) cellarPests.Initialize(
                 id: "quest_cellar_pests",
                 title: "Cellar Pests",
-                desc: "Slay the 3 giant rats infesting Innkeeper Barnaby's wine cellar.",
+                desc: "Slay the 2 giant rats infesting Innkeeper Barnaby's wine cellar.",
                 state: QuestState.NotStarted,
-                reqAmount: 3,
+                reqAmount: 2, // encounters hold at most 2 regular enemies
                 gold: 30,
                 bonusGold: 15,
                 reward: potionHealth
@@ -745,7 +763,7 @@ namespace CastleOfTheD20.Editor
                 desc: "Rare blue swamp flower that blooms in the damp hollows along the Forest Path.",
                 type: ItemType.QuestItem,
                 buyPrice: 0,
-                sellPrice: 5,
+                sellPrice: 0, // quest item: Baldur never buys it
                 statBonus: 0,
                 consumable: false
             );

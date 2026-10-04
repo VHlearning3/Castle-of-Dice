@@ -341,6 +341,9 @@ namespace CastleOfTheD20.Core
                     clearedLocations.Add((GameLocation)clearedWings[i]);
                 }
             }
+
+            // The main quest's step follows the defeated bosses
+            Economy.QuestManager.Instance?.SyncMainQuest();
         }
 
         /// <summary>

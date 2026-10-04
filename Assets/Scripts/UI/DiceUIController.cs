@@ -133,6 +133,7 @@ namespace CastleOfTheD20.UI
         private int lastHandledRollFrame = -1;
         private DiceResult? lastHandledResult;
         private string currentCheckTitle;
+        private bool awaitingDecision;
 
         public bool IsDisplaying { get; private set; }
 
@@ -620,11 +621,24 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void ShowDiceRoll(DiceResult result, string checkTitle = null)
         {
-            currentCheckTitle = checkTitle;
-
             if (lastHandledRollFrame == Time.frameCount && lastHandledResult.HasValue && lastHandledResult.Value.Equals(result))
             {
+                // Same roll shown again this frame, now with its check name (e.g. a dialogue skill check)
+                if (!string.IsNullOrEmpty(checkTitle))
+                {
+                    currentCheckTitle = checkTitle;
+                    if (headerText != null) headerText.text = $"CHECK: {checkTitle.ToUpperInvariant()}";
+                }
                 return;
+            }
+
+            currentCheckTitle = checkTitle;
+
+            // A different roll while a reroll choice is still open: the shown result stands
+            if (awaitingDecision)
+            {
+                awaitingDecision = false;
+                RerollableRoll.Accept();
             }
 
             lastHandledRollFrame = Time.frameCount;
@@ -764,10 +778,10 @@ namespace CastleOfTheD20.UI
             }
             ResetRollVisuals();
 
-            // Check if player owns a Reroll Scroll to pause for decision
-            if (rerollController != null && rerollController.ShouldPauseForDecision(result))
+            // Only a failed hero roll that can still be rerolled stops on [Continue] / [Use Reroll Scroll]
+            if (awaitingDecision && rerollController != null)
             {
-                rerollController.PresentDecisionOptions(result, onContinue: Dismiss, onReroll: TriggerReroll);
+                rerollController.PresentDecisionOptions(result, onContinue: AcceptRerollDecision, onReroll: TriggerReroll);
                 yield break;
             }
 
@@ -874,27 +888,48 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void TriggerReroll()
         {
-            if (!lastHandledResult.HasValue) return;
-            DiceResult prev = lastHandledResult.Value;
+            if (!awaitingDecision) return;
+            awaitingDecision = false;
 
-            // Roll new D20 result with matching bonus, DC, and advantage mode
-            DiceResult newResult = DiceSystem.RollD20(prev.bonus, prev.targetDC, prev.advantageUsed);
-            Debug.Log($"[DiceUIController] Reroll executed: {newResult} (replaced {prev})");
-
-            if (activeRollCoroutine != null)
-            {
-                StopCoroutine(activeRollCoroutine);
-                activeRollCoroutine = null;
-            }
-
-            lastHandledResult = newResult;
-            activeRollCoroutine = StartCoroutine(AnimateRollRoutine(newResult, currentCheckTitle));
+            // Spends the scroll and rolls again; the outcome callback gets the new result
+            RerollableRoll.Reroll();
         }
 
         /// <summary>
-        /// Manually or automatically hides the dice popup window.
+        /// Marks the roll on screen as a failed hero roll that may be rerolled, so it stops on the
+        /// [Continue] / [Use Reroll Scroll] choice instead of closing by itself.
+        /// </summary>
+        public void AwaitRerollDecision()
+        {
+            awaitingDecision = true;
+        }
+
+        /// <summary>True while the modal waits on the reroll choice.</summary>
+        public bool IsAwaitingRerollDecision => awaitingDecision;
+
+        private void AcceptRerollDecision()
+        {
+            Dismiss();
+        }
+
+        /// <summary>
+        /// Manually or automatically hides the dice popup window. A reroll choice still open is
+        /// answered with [Continue].
         /// </summary>
         public void Dismiss()
+        {
+            if (awaitingDecision)
+            {
+                awaitingDecision = false;
+                HideAfterDismiss();
+                RerollableRoll.Accept();
+                return;
+            }
+
+            HideAfterDismiss();
+        }
+
+        private void HideAfterDismiss()
         {
             IsDisplaying = false;
 

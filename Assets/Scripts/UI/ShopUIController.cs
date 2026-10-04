@@ -1810,7 +1810,7 @@ namespace CastleOfTheD20.UI
         public void SellAllScrap()
         {
             int gold = 0;
-            int scrapBefore = InventoryManager.Instance != null ? InventoryManager.Instance.ScrapMetalCount : 0;
+            int scrapBefore = InventoryManager.Instance != null ? ShopManager.SellableScrap(InventoryManager.Instance.ScrapMetalCount) : 0;
             ShopManager sm = ShopManager.Instance;
             if (sm != null)
             {
@@ -1999,15 +1999,22 @@ namespace CastleOfTheD20.UI
             if (scrapRow != null)
             {
                 visible++;
-                int potentialGold = currentScrap * ShopManager.SCRAP_TO_GOLD_RATE;
+                int sellable = ShopManager.SellableScrap(currentScrap);
+                int kept = currentScrap - sellable;
+                int potentialGold = sellable * ShopManager.SCRAP_TO_GOLD_RATE;
                 if (scrapRow.Title != null) scrapRow.Title.text = currentScrap > 0 ? $"Scrap Metal  <color=#A6B3C7><size=80%>(you have {currentScrap})</size></color>" : "Scrap Metal";
-                if (scrapRow.Desc != null) scrapRow.Desc.text = $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. Fights drop 2-10 scrap.";
+                if (scrapRow.Desc != null)
+                {
+                    scrapRow.Desc.text = kept > 0
+                        ? $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. {kept} kept for his scrap request."
+                        : $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. Fights drop 2-10 scrap.";
+                }
                 if (scrapRow.ButtonLabel != null)
                 {
-                    scrapRow.ButtonLabel.text = currentScrap > 0 ? $"Sell All  +{potentialGold}g" : "No Scrap";
-                    scrapRow.ButtonLabel.color = currentScrap > 0 ? PriceGold : MutedText;
+                    scrapRow.ButtonLabel.text = sellable > 0 ? $"Sell {sellable}  +{potentialGold}g" : (kept > 0 ? "Kept for request" : "No Scrap");
+                    scrapRow.ButtonLabel.color = sellable > 0 ? PriceGold : MutedText;
                 }
-                if (scrapRow.Button != null) scrapRow.Button.interactable = currentScrap > 0;
+                if (scrapRow.Button != null) scrapRow.Button.interactable = sellable > 0;
                 if (scrapRow.Background != null) scrapRow.Background.color = RowTint;
             }
 

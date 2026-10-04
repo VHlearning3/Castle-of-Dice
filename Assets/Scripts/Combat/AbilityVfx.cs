@@ -229,6 +229,50 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// A ranged enemy attack: a dark violet bolt (Malakor's shadow bolt, the archer's arrow, a cultist's
+        /// curse) that flies to the hero and bursts on a hit.
+        /// </summary>
+        public static void PlayRangedBolt(CombatUnit attacker, CombatUnit target, bool hit)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || attacker == null || target == null) return;
+
+            Vector3 from = attacker.transform.position + Vector3.up * 1.2f + attacker.transform.forward * 0.4f;
+            Vector3 to = target.transform.position + Vector3.up * 1f;
+            vfx.StartCoroutine(vfx.RangedBoltRoutine(from, to, hit));
+        }
+
+        private IEnumerator RangedBoltRoutine(Vector3 from, Vector3 to, bool hit)
+        {
+            const float flight = 0.3f;
+            float t = 0f;
+            while (t < flight)
+            {
+                t += Time.deltaTime;
+                Vector3 pos = Vector3.Lerp(from, to, Mathf.Clamp01(t / flight));
+                flash.Emit(FlashParams(pos, ShadowWispColor, 0.45f), 1);
+                yield return null;
+            }
+
+            if (hit)
+            {
+                flash.Emit(FlashParams(to, VortexCore, 1.4f), 1);
+                flash.Emit(FlashParams(to, VortexPurple, 1.0f), 1);
+            }
+        }
+
+        /// <summary>
+        /// A fiery blast on the ground with no projectile (explosive barrel, the King's earthquake strike).
+        /// </summary>
+        public static void PlayExplosion(Vector3 groundWorld)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null) return;
+            vfx.EmitFireExplosion(new Vector3(groundWorld.x, groundWorld.y + 0.05f, groundWorld.z));
+            PlaySound(SFXClipType.SpellCast, groundWorld, 1f);
+        }
+
+        /// <summary>
         /// Mage Frostbite: an icy bolt flies from the mage's hands to the target, trailing frost; on a hit it
         /// shatters into ice shards around the target, on a miss it sails past and fizzles into snow.
         /// </summary>

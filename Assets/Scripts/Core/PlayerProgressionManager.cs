@@ -30,7 +30,7 @@ namespace CastleOfTheD20.Core
 
         [Header("Current Milestone")]
         [Tooltip("Current milestone level (1..3).")]
-        [Range(1, 3)]
+        [Range(1, 5)]
         [SerializeField] private int currentLevel = 1;
 
         #endregion
@@ -70,7 +70,8 @@ namespace CastleOfTheD20.Core
                 PlayerDataSO.Session = playerData;
             }
 
-            LoadProgression();
+            // The save is loaded only when the player picks Continue in the main menu (critical review A9),
+            // so New Adventure never starts with the previous run's progress applied.
         }
 
         private void Start()
@@ -129,6 +130,21 @@ namespace CastleOfTheD20.Core
                     AdvanceToMilestone(3, "Shadow Mage Malakor defeated");
                 }
             }
+            else if (bossID.Equals("GargoyleKing", StringComparison.OrdinalIgnoreCase))
+            {
+                // The ending takes the screen; the level is recorded without the upgrade picker
+                GrantBonusLevel("The Gargoyle King defeated", showModal: false);
+            }
+        }
+
+        /// <summary>
+        /// One more level (up to 5) for the late-game milestones (critical review B8): the Tower challenge and
+        /// the Gargoyle King each give a level. Level 4 brings the class's fifth ability.
+        /// </summary>
+        public void GrantBonusLevel(string reason, bool showModal = true)
+        {
+            if (currentLevel >= PlayerUnit.MaxLevel) return;
+            AdvanceToMilestone(currentLevel + 1, reason, showModal);
         }
 
         /// <summary>
@@ -170,7 +186,7 @@ namespace CastleOfTheD20.Core
         /// <summary>
         /// Advances player to target milestone level, triggering the modal window.
         /// </summary>
-        public void AdvanceToMilestone(int targetLevel, string reason = "")
+        public void AdvanceToMilestone(int targetLevel, string reason = "", bool showModal = true)
         {
             if (targetLevel <= currentLevel)
             {
@@ -179,7 +195,7 @@ namespace CastleOfTheD20.Core
             }
 
             int oldLevel = currentLevel;
-            currentLevel = Mathf.Clamp(targetLevel, 1, 3);
+            currentLevel = Mathf.Clamp(targetLevel, 1, PlayerUnit.MaxLevel);
 
             Debug.Log($"[PlayerProgressionManager] MILESTONE REACHED! Level {oldLevel} -> {currentLevel} ({reason}).");
 
@@ -192,6 +208,12 @@ namespace CastleOfTheD20.Core
             PlayerData.CurrentLevel = currentLevel;
 
             OnMilestoneReached?.Invoke(oldLevel, currentLevel);
+
+            if (!showModal)
+            {
+                PlayerData.SyncFromPlayer(player);
+                return;
+            }
 
             // Open Level-Up UI Modal
             if (LevelUpUIController.Instance != null)
@@ -216,15 +238,20 @@ namespace CastleOfTheD20.Core
 
         #region Save & Load
 
-        public void LoadProgression()
+        /// <summary>
+        /// Loads the saved adventure into the session (Continue). Returns the save, or null when there is none.
+        /// </summary>
+        public PlayerSaveData LoadProgression()
         {
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             PlayerSaveData save = SaveSystem.LoadGame(PlayerData, player);
             currentLevel = save != null ? save.currentLevel : PlayerData.CurrentLevel;
+            return save;
         }
 
         /// <summary>
-        /// Starts a fresh adventure: clears session progression (the persisted save is overwritten on the next save).
+        /// Starts a fresh adventure: clears session progression and deletes the old save, so Continue can
+        /// never bring the previous run back.
         /// </summary>
         public void ResetForNewGame()
         {
@@ -232,6 +259,9 @@ namespace CastleOfTheD20.Core
             PlayerData.ResetData();
             PlayerData.SelectedClass = keepClass;
             currentLevel = 1;
+
+            SaveSystem.ClearSave();
+            StoryFlags.Clear();
 
             if (Economy.InventoryManager.Instance != null)
             {

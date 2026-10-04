@@ -240,8 +240,11 @@ namespace CastleOfTheD20.Combat
                         gridTile = tileObj.AddComponent<GridTile>();
                     }
 
-                    // Check for solid environment obstacles (such as stone pillars or perimeter walls)
+                    // Check for solid environment obstacles (such as stone pillars or perimeter walls).
+                    // How tall the obstacle is decides its cover: crates and barrels give half cover,
+                    // pillars, bookshelves and walls full cover (critical review B6).
                     bool isWalkable = true;
+                    float obstacleTop = 0f;
                     Vector3 lossy = transform.lossyScale;
                     Vector3 checkCenter = worldPos + transform.up * (1.0f * lossy.y);
                     Vector3 checkHalfExtents = new Vector3(tileSize * 0.35f * lossy.x, 0.9f * lossy.y, tileSize * 0.35f * lossy.z);
@@ -256,10 +259,11 @@ namespace CastleOfTheD20.Combat
 
                         // Found a solid structural collider (pillar/wall)
                         isWalkable = false;
-                        break;
+                        obstacleTop = Mathf.Max(obstacleTop, h.bounds.max.y - worldPos.y);
                     }
 
                     gridTile.Initialize(pos, isWalkable);
+                    gridTile.Cover = isWalkable ? TileCover.None : (obstacleTop >= FullCoverHeight * lossy.y ? TileCover.Full : TileCover.Half);
                     if (!isWalkable)
                     {
                         Renderer r = tileObj.GetComponentInChildren<Renderer>();
@@ -765,6 +769,78 @@ namespace CastleOfTheD20.Combat
 
             path.Reverse();
             return path;
+        }
+
+        #endregion
+
+        #region Cover & Terrain
+
+        /// <summary>Obstacles at least this tall (world units, unscaled grid) give full cover.</summary>
+        public const float FullCoverHeight = 1.4f;
+
+        /// <summary>AC bonus half cover gives against ranged attacks.</summary>
+        public const int HalfCoverArmorBonus = 2;
+
+        /// <summary>
+        /// Cover between an attacker and a target: the highest cover of the blocked tiles the line between
+        /// them crosses (the two end tiles do not count). Adjacent units never have cover from each other.
+        /// </summary>
+        public TileCover GetCoverBetween(Vector2Int from, Vector2Int to)
+        {
+            if (GetDistance(from, to) <= 1) return TileCover.None;
+
+            TileCover best = TileCover.None;
+            int dx = to.x - from.x;
+            int dy = to.y - from.y;
+            int steps = Mathf.Max(Mathf.Abs(dx), Mathf.Abs(dy));
+            for (int i = 1; i < steps; i++)
+            {
+                float t = (float)i / steps;
+                Vector2Int p = new Vector2Int(Mathf.RoundToInt(from.x + dx * t), Mathf.RoundToInt(from.y + dy * t));
+                if (p == from || p == to) continue;
+
+                GridTile tile = GetTileAt(p);
+                if (tile == null) continue;
+
+                TileCover c = tile.IsWalkable ? TileCover.None : (tile.Cover == TileCover.None ? TileCover.Full : tile.Cover);
+                if (tile.Barrel != null && c < TileCover.Half) c = TileCover.Half;
+                if (c > best) best = c;
+                if (best == TileCover.Full) break;
+            }
+            return best;
+        }
+
+        /// <summary>Whether a ranged attack can reach from <paramref name="from"/> to <paramref name="to"/>.</summary>
+        public bool HasLineOfSight(Vector2Int from, Vector2Int to)
+        {
+            return GetCoverBetween(from, to) != TileCover.Full;
+        }
+
+        /// <summary>AC the target gains from cover against an attack from <paramref name="from"/>.</summary>
+        public int GetCoverArmorBonus(Vector2Int from, Vector2Int to)
+        {
+            return GetCoverBetween(from, to) == TileCover.Half ? HalfCoverArmorBonus : 0;
+        }
+
+        /// <summary>Counts every tile's flames or ice down by one round.</summary>
+        public void TickTerrain()
+        {
+            foreach (var kvp in tiles)
+            {
+                if (kvp.Value != null) kvp.Value.TickTerrain();
+            }
+        }
+
+        /// <summary>Removes every ground effect and warning (fight over).</summary>
+        public void ClearTerrainAndWarnings()
+        {
+            foreach (var kvp in tiles)
+            {
+                GridTile tile = kvp.Value;
+                if (tile == null) continue;
+                tile.SetTerrain(TileTerrain.None, 0);
+                tile.HazardWarning = false;
+            }
         }
 
         #endregion

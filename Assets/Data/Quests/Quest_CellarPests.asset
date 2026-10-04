@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Economy.QuestSO
   questID: quest_cellar_pests
   questTitle: 'Cellar Pests'
-  description: 'Slay the 3 giant rats infesting Innkeeper Barnaby''s wine cellar.'
+  description: 'Slay the 2 giant rats infesting Innkeeper Barnaby''s wine cellar.'
   defaultState: 0
-  requiredAmount: 3
+  requiredAmount: 2
   rewardGold: 30
   bonusRewardGold: 15
   rewardItem: {fileID: 11400000, guid: 45c342be3e3b68e4f90742f55236d846, type: 2}

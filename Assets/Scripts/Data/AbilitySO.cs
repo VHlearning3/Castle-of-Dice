@@ -132,9 +132,67 @@ namespace CastleOfTheD20.Data
              abilityID.IndexOf("shadow_step", System.StringComparison.OrdinalIgnoreCase) >= 0 ||
              abilityID.IndexOf("shadowstep", System.StringComparison.OrdinalIgnoreCase) >= 0);
 
+        /// <summary>Suffix that marks an ability upgraded to Rank 2 at level-up.</summary>
+        public const string Rank2Suffix = "_rank2";
+
+        /// <summary>Whether this is a Rank 2 copy made at level-up.</summary>
+        public bool IsRank2 => !string.IsNullOrEmpty(abilityID) && abilityID.EndsWith(Rank2Suffix, StringComparison.Ordinal);
+
+        /// <summary>The ability's ID without the Rank 2 suffix (animator triggers use this).</summary>
+        public string BaseAbilityID => IsRank2 ? abilityID.Substring(0, abilityID.Length - Rank2Suffix.Length) : abilityID;
+
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// What Rank 2 adds to this ability, as shown on the level-up screen and the ability card.
+        /// Every Rank 2 gets +3 potency (damage or healing); the defensive and movement abilities,
+        /// which deal no damage, get their own upgrade instead.
+        /// </summary>
+        public string GetRank2Summary()
+        {
+            string id = BaseAbilityID.ToLowerInvariant();
+            if (id.Contains("shield_block")) return "+6 AC instead of +4";
+            if (id.Contains("mana_shield")) return "Absorbs 2 hits instead of 1";
+            if (id.Contains("blink")) return "+2 range and Advantage on the next attack";
+            if (id.Contains("shadow_step") || id.Contains("shadowstep")) return "+2 range";
+            if (id.Contains("smoke_bomb")) return "5x5 cloud and Blind lasts 1 turn longer";
+            if (id.Contains("iron_will")) return "Heals 3 more HP";
+            return "+3 damage";
+        }
+
+        /// <summary>
+        /// Builds the Rank 2 copy of this ability: +3 potency, plus the extra reach or area the
+        /// movement and control abilities get (see <see cref="GetRank2Summary"/>).
+        /// </summary>
+        public AbilitySO CreateRank2()
+        {
+            string id = abilityID.ToLowerInvariant();
+            bool teleport = id.Contains("blink") || id.Contains("shadow_step") || id.Contains("shadowstep");
+            bool smoke = id.Contains("smoke_bomb");
+
+            AbilitySO rank2 = CreateInstance<AbilitySO>();
+            rank2.Initialize(
+                abilityID + Rank2Suffix,
+                $"{abilityName} [Rank 2]",
+                $"{description}\n<color=#4ade80>[Rank 2] {GetRank2Summary()}</color>",
+                targetType,
+                teleport ? range + 2 : range,
+                smoke ? areaOfEffectRadius + 1 : areaOfEffectRadius,
+                baseValue + 3,
+                requiresCheck,
+                appliedEffect,
+                smoke ? effectDurationTurns + 1 : effectDurationTurns,
+                animationTriggerName,
+                abilityIcon,
+                damageDiceCount,
+                damageDiceSides,
+                addsAttributeToDamage
+            );
+            rank2.name = name + " [Rank 2]";
+            return rank2;
+        }
 
         /// <summary>
         /// Initializes the ability parameters programmatically (used by editor generators or unit tests).

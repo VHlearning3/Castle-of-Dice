@@ -31,6 +31,12 @@ namespace CastleOfTheD20.Combat
         /// <summary>Armor Class bonus granted by Shield Wall.</summary>
         public const int ShieldWallArmorBonus = 4;
 
+        /// <summary>Armor Class bonus granted by a Rank 2 Shield Wall.</summary>
+        public const int ShieldWallRank2ArmorBonus = 6;
+
+        // AC bonus of the Shield Wall currently raised (Rank 2 raises a sturdier one)
+        private int shieldWallBonus = ShieldWallArmorBonus;
+
         #endregion
 
         #region Events
@@ -66,7 +72,11 @@ namespace CastleOfTheD20.Combat
 
             if (type == StatusEffectType.ManaShield)
             {
-                manaShieldCharges = 1;
+                manaShieldCharges = Mathf.Max(manaShieldCharges, 1);
+            }
+            if (type == StatusEffectType.ShieldWall && !activeEffects.ContainsKey(type))
+            {
+                shieldWallBonus = ShieldWallArmorBonus;
             }
 
             if (TurnManager.Instance != null && TurnManager.Instance.CurrentActiveUnit == ownerUnit)
@@ -87,6 +97,43 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[StatusEffect] {ownerUnit?.UnitName ?? name} gained {type} for {durationTurns} turn(s).");
             AbilityVfx.ShowStatusAura(ownerUnit, type);
             OnEffectApplied?.Invoke(type, activeEffects[type]);
+        }
+
+        /// <summary>
+        /// Raises Mana Shield with <paramref name="charges"/> absorbed hits (Rank 2 holds two).
+        /// </summary>
+        public void ApplyManaShield(int durationTurns, int charges)
+        {
+            ApplyEffect(StatusEffectType.ManaShield, durationTurns);
+            if (HasEffect(StatusEffectType.ManaShield))
+            {
+                manaShieldCharges = Mathf.Max(1, charges);
+            }
+        }
+
+        /// <summary>Hits the active Mana Shield can still absorb.</summary>
+        public int ManaShieldCharges => HasEffect(StatusEffectType.ManaShield) ? manaShieldCharges : 0;
+
+        /// <summary>
+        /// Raises Shield Wall with the given AC bonus (+4, or +6 at Rank 2).
+        /// </summary>
+        public void ApplyShieldWall(int durationTurns, int armorBonus)
+        {
+            ApplyEffect(StatusEffectType.ShieldWall, durationTurns);
+            if (HasEffect(StatusEffectType.ShieldWall))
+            {
+                shieldWallBonus = Mathf.Max(0, armorBonus);
+            }
+        }
+
+        /// <summary>
+        /// Applies an effect at the start of the owner's own turn that ends with that same turn
+        /// (e.g. slipping on ice: no moving this turn).
+        /// </summary>
+        public void ApplyEffectForThisTurn(StatusEffectType type)
+        {
+            ApplyEffect(type, 1);
+            appliedDuringOwnTurn.Remove(type);
         }
 
         /// <summary>
@@ -194,6 +241,10 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public int GetEffectiveMovementRange(int baseMovement)
         {
+            if (HasEffect(StatusEffectType.Immobilized))
+            {
+                return 0;
+            }
             if (HasEffect(StatusEffectType.Frostbite))
             {
                 return Mathf.Max(1, baseMovement / 2);
@@ -206,7 +257,7 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public int GetArmorClassBonus()
         {
-            return HasEffect(StatusEffectType.ShieldWall) ? ShieldWallArmorBonus : 0;
+            return HasEffect(StatusEffectType.ShieldWall) ? shieldWallBonus : 0;
         }
 
         /// <summary>

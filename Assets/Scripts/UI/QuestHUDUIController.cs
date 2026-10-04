@@ -240,18 +240,18 @@ namespace CastleOfTheD20.UI
             CollectDisplayedQuests(qm, displayBuffer);
 
             int entryIndex = 0;
+            int sideQuestCount = 0;
 
-            if (displayBuffer.Count > 0)
+            for (int i = 0; i < displayBuffer.Count; i++)
             {
-                for (int i = 0; i < displayBuffer.Count; i++)
-                {
-                    QuestSO quest = displayBuffer[i];
-                    QuestEntryUI entry = GetOrCreateEntry(entryIndex);
-                    entry.Setup(quest, qm.GetQuestProgress(quest.QuestID), qm.GetQuestState(quest.QuestID));
-                    entryIndex++;
-                }
+                QuestSO quest = displayBuffer[i];
+                QuestEntryUI entry = GetOrCreateEntry(entryIndex);
+                entry.Setup(quest, qm.GetQuestProgress(quest.QuestID), qm.GetQuestState(quest.QuestID));
+                entryIndex++;
+                if (quest.QuestID != MainQuest.QuestId) sideQuestCount++;
             }
-            else
+
+            if (sideQuestCount == 0)
             {
                 // Guidance before any quest is accepted
                 QuestEntryUI entry = GetOrCreateEntry(entryIndex);
@@ -287,10 +287,15 @@ namespace CastleOfTheD20.UI
             if (qm == null) return;
 
             List<QuestSO> tracked = qm.GetTrackedQuests();
+
+            // The main story quest always leads the card
+            QuestSO main = qm.GetQuest(MainQuest.QuestId);
+            if (main != null && qm.GetQuestState(MainQuest.QuestId) == QuestState.InProgress) result.Add(main);
+
             for (int i = 0; i < tracked.Count; i++)
             {
                 QuestSO quest = tracked[i];
-                if (quest != null && qm.GetQuestState(quest.QuestID) == QuestState.InProgress) result.Add(quest);
+                if (quest != null && quest != main && qm.GetQuestState(quest.QuestID) == QuestState.InProgress) result.Add(quest);
             }
 
             for (int i = 0; i < tracked.Count; i++)

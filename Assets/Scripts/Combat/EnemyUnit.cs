@@ -28,15 +28,54 @@ namespace CastleOfTheD20.Combat
         [Tooltip("Optional AbilitySO defining advanced attacks or boss skills.")]
         [SerializeField] protected AbilitySO specialAbility;
 
+        [Header("Damage Dice (0 = flat Attack Damage)")]
+        [Tooltip("Dice rolled for a hit, e.g. 2 for \"2d6\". When set, a hit deals the dice plus Damage Dice Bonus.")]
+        [SerializeField] protected int damageDiceCount = 0;
+        [SerializeField] protected int damageDiceSides = 0;
+        [SerializeField] protected int damageDiceBonus = 0;
+
+        [Header("Initiative")]
+        [Tooltip("Added to this enemy's d20 initiative roll.")]
+        [SerializeField] protected int initiativeBonus = 0;
+
         #endregion
 
         #region Public Properties
 
-        /// <summary>Base damage dealt on successful attack.</summary>
-        public int AttackDamage => attackDamage;
+        /// <summary>
+        /// Typical damage of a hit: the flat Attack Damage, or the average of the damage dice when the
+        /// enemy rolls them (bosses).
+        /// </summary>
+        public int AttackDamage => HasDamageDice
+            ? Mathf.RoundToInt(damageDiceCount * (damageDiceSides + 1) * 0.5f) + damageDiceBonus
+            : attackDamage;
 
-        /// <summary>Hit check modifier added to D20.</summary>
-        public int AttackBonus => attackBonus;
+        /// <summary>Hit check modifier added to D20 (Hard difficulty adds +2).</summary>
+        public int AttackBonus => attackBonus + DifficultySettings.EnemyHitBonus;
+
+        /// <summary>Added to this enemy's initiative roll.</summary>
+        public int InitiativeBonus => initiativeBonus;
+
+        /// <summary>Whether hits roll damage dice instead of dealing flat damage.</summary>
+        public bool HasDamageDice => damageDiceCount > 0 && damageDiceSides > 0;
+
+        /// <summary>Damage shown on enemy cards, e.g. "2d6+2" or "4".</summary>
+        public string DamageFormula
+        {
+            get
+            {
+                if (!HasDamageDice) return attackDamage.ToString();
+                string dice = damageDiceCount + "d" + damageDiceSides;
+                return damageDiceBonus > 0 ? dice + "+" + damageDiceBonus : dice;
+            }
+        }
+
+        /// <summary>Rolls the damage of one hit (before a critical doubles it).</summary>
+        public virtual int RollAttackDamage()
+        {
+            if (!HasDamageDice) return attackDamage;
+            return Mathf.Max(1, DiceSystem.RollDamage(damageDiceCount, damageDiceSides) + damageDiceBonus);
+        }
 
         /// <summary>Attack distance in grid tiles.</summary>
         public int AttackRange => attackRange;
@@ -60,6 +99,29 @@ namespace CastleOfTheD20.Combat
             armorClass = ac;
             attackDamage = damage;
             attackBonus = bonus;
+        }
+
+        /// <summary>
+        /// Makes hits roll <paramref name="count"/>d<paramref name="sides"/> + <paramref name="bonus"/> instead of
+        /// flat damage (critical review B3: boss damage on dice).
+        /// </summary>
+        public void ConfigureDamageDice(int count, int sides, int bonus)
+        {
+            damageDiceCount = Mathf.Max(0, count);
+            damageDiceSides = Mathf.Max(0, sides);
+            damageDiceBonus = bonus;
+        }
+
+        /// <summary>Sets the enemy's reach in tiles (1 = melee, more = ranged attacks with line of sight).</summary>
+        public void ConfigureAttackRange(int tiles)
+        {
+            attackRange = Mathf.Max(1, tiles);
+        }
+
+        /// <summary>Sets the enemy's initiative modifier.</summary>
+        public void ConfigureInitiative(int bonus)
+        {
+            initiativeBonus = bonus;
         }
 
         /// <summary>Changes the name shown for this unit in combat (e.g. disguising an illusion).</summary>
@@ -110,8 +172,10 @@ namespace CastleOfTheD20.Combat
 
             int distance = gridManager.GetDistance(gridPosition, target.GridPosition);
 
-            // 2. If not within attack range, walk along path
-            if (distance > attackRange)
+            // 2. If not within attack range (or a ranged attacker has no line of sight), walk along path.
+            //    A ranged attacker the hero has closed in on steps back to a firing spot when it can.
+            bool cornered = attackRange > 1 && distance <= 1;
+            if (distance > attackRange || !CanAttackFrom(gridPosition, target.GridPosition, gridManager) || cornered)
             {
                 MoveTowardsTarget(target.GridPosition, gridManager);
             }
@@ -126,7 +190,8 @@ namespace CastleOfTheD20.Combat
             {
                 FaceTowards(target.transform.position);
 
-                if (gridManager.GetDistance(gridPosition, target.GridPosition) <= attackRange)
+                if (gridManager.GetDistance(gridPosition, target.GridPosition) <= attackRange
+                    && CanAttackFrom(gridPosition, target.GridPosition, gridManager))
                 {
                     PerformAttack(target, abilityExecutor);
                 }
@@ -169,10 +234,39 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Moves as far along the shortest path toward the target as movement range allows.
+        /// Whether an attack can reach from <paramref name="from"/>: melee always, ranged attacks only with a
+        /// line of sight that full cover (pillars, bookshelves, walls) does not block.
+        /// </summary>
+        protected bool CanAttackFrom(Vector2Int from, Vector2Int targetPos, GridManager gridManager)
+        {
+            if (gridManager == null) return true;
+            if (gridManager.GetDistance(from, targetPos) <= 1) return true;
+            return gridManager.HasLineOfSight(from, targetPos);
+        }
+
+        /// <summary>
+        /// Moves as far along the shortest path toward the target as movement range allows. Ranged attackers
+        /// stop at the nearest reachable tile that has the target in range and in sight.
         /// </summary>
         protected virtual void MoveTowardsTarget(Vector2Int targetPos, GridManager gridManager)
         {
+            if (attackRange > 1)
+            {
+                GridTile firingSpot = FindFiringPosition(targetPos, gridManager);
+                if (firingSpot != null)
+                {
+                    if (firingSpot != currentTile)
+                    {
+                        Debug.Log($"[EnemyUnit] {unitName} moves to a firing position {firingSpot.GridPosition}.");
+                        WalkToTile(firingSpot);
+                    }
+                    return;
+                }
+
+                // No firing spot this turn: a cornered caster stays and fights at close range
+                if (gridManager.GetDistance(gridPosition, targetPos) <= 1) return;
+            }
+
             List<GridTile> path = gridManager.FindPath(gridPosition, targetPos);
             if (path == null || path.Count == 0) return;
 
@@ -198,6 +292,39 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
+        /// The nearest tile this ranged attacker can reach that has the target within range and line of sight.
+        /// Null when none is reachable this turn.
+        /// </summary>
+        protected GridTile FindFiringPosition(Vector2Int targetPos, GridManager gridManager)
+        {
+            if (gridManager == null) return null;
+            int currentDistance = gridManager.GetDistance(gridPosition, targetPos);
+            if (currentDistance > 1 && currentDistance <= attackRange && CanAttackFrom(gridPosition, targetPos, gridManager))
+            {
+                return currentTile;
+            }
+
+            List<GridTile> reachable = gridManager.GetReachableTiles(gridPosition, MovementRange);
+            GridTile best = null;
+            int bestMove = int.MaxValue;
+            for (int i = 0; i < reachable.Count; i++)
+            {
+                GridTile tile = reachable[i];
+                int dist = gridManager.GetDistance(tile.GridPosition, targetPos);
+                if (dist > attackRange || dist <= 1) continue; // archers keep out of reach
+                if (!CanAttackFrom(tile.GridPosition, targetPos, gridManager)) continue;
+
+                int move = gridManager.GetDistance(gridPosition, tile.GridPosition);
+                if (move < bestMove)
+                {
+                    bestMove = move;
+                    best = tile;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
         /// Performs an attack against the target player hero using D20 mechanics.
         /// </summary>
         protected virtual void PerformAttack(PlayerUnit target, AbilityExecutor abilityExecutor)
@@ -213,15 +340,31 @@ namespace CastleOfTheD20.Combat
 
             // Standard basic attack
             PlayAttackAnimation();
-            AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
-            DiceResult hitCheck = DiceSystem.RollD20(attackBonus, target.ArmorClass, advantage);
+            ResolveBasicAttack(target, "attacks");
+        }
 
-            Debug.Log($"[EnemyUnit] {unitName} attacks {target.UnitName}: {hitCheck}");
+        /// <summary>
+        /// One d20 attack against the hero: AC plus half cover for ranged attacks, damage dice or flat damage,
+        /// double on a natural 20, and the Shield Wall counterattack on a miss. Returns the roll.
+        /// </summary>
+        protected DiceResult ResolveBasicAttack(PlayerUnit target, string verb)
+        {
+            AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
+            GridManager grid = GridManager.Instance;
+            int coverBonus = grid != null ? grid.GetCoverArmorBonus(gridPosition, target.GridPosition) : 0;
+            DiceResult hitCheck = DiceSystem.RollD20(AttackBonus, target.ArmorClass + coverBonus, advantage);
+
+            Debug.Log($"[EnemyUnit] {unitName} {verb} {target.UnitName}: {hitCheck}");
+            if (grid != null && grid.GetDistance(gridPosition, target.GridPosition) > 1)
+            {
+                AbilityVfx.PlayRangedBolt(this, target, hitCheck.isSuccess);
+            }
 
             if (hitCheck.isSuccess)
             {
                 // Double damage on Natural 20
-                int finalDamage = hitCheck.isCriticalSuccess ? attackDamage * 2 : attackDamage;
+                int damage = RollAttackDamage();
+                int finalDamage = hitCheck.isCriticalSuccess ? damage * 2 : damage;
                 target.TakeDamage(finalDamage, hitCheck.isCriticalSuccess);
             }
             else
@@ -229,8 +372,30 @@ namespace CastleOfTheD20.Combat
                 Debug.Log($"[EnemyUnit] {unitName}'s attack missed {target.UnitName}!");
 
                 // Shield Wall (spec): the defender strikes back only when the attack misses
-                target.ResolveCounterAttack(this);
+                if (grid == null || grid.GetDistance(gridPosition, target.GridPosition) <= 1)
+                {
+                    target.ResolveCounterAttack(this);
+                }
             }
+
+            // Retaliation (warrior, level 4): every melee swing at him is answered, hit or miss
+            if (IsAlive && target.IsAlive && (grid == null || grid.GetDistance(gridPosition, target.GridPosition) <= 1))
+            {
+                target.ResolveRetaliation(this);
+            }
+            return hitCheck;
+        }
+
+        /// <summary>
+        /// Free attack against a hero who walks out of this enemy's reach (critical review B2).
+        /// Blink and Shadow Step teleport, so they never provoke it.
+        /// </summary>
+        public virtual void MakeOpportunityAttack(PlayerUnit target)
+        {
+            if (!IsAlive || target == null || !target.IsAlive) return;
+            FaceTowards(target.transform.position);
+            PlayAttackAnimation();
+            ResolveBasicAttack(target, "lashes out at the fleeing");
         }
 
         #endregion

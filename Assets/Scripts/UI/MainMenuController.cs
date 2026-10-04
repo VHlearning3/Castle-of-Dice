@@ -170,6 +170,7 @@ namespace CastleOfTheD20.UI
 
             if (classSelectionPanel != null) classSelectionPanel.SetActive(false);
             if (rulesPanel != null) rulesPanel.SetActive(false);
+            RefreshContinueButton();
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -177,6 +178,18 @@ namespace CastleOfTheD20.UI
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.SetPlayMode(GamePlayMode.Dialogue);
+            }
+        }
+
+        /// <summary>Continue is only clickable when there is a saved adventure.</summary>
+        private void RefreshContinueButton()
+        {
+            if (mainMenuPanel == null) return;
+            Transform continueTr = mainMenuPanel.transform.Find("Menu_Buttons/Continue_Btn");
+            Button continueBtn = continueTr != null ? continueTr.GetComponent<Button>() : null;
+            if (continueBtn != null)
+            {
+                continueBtn.interactable = SaveSystem.HasSavedGame();
             }
         }
 
@@ -196,13 +209,29 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
-        /// "Continue": restores the hero class recorded in the save (progression itself is loaded by
-        /// PlayerProgressionManager on startup) and resumes play.
+        /// "Continue": loads the save (progression, inventory, quests, health, story flags, difficulty),
+        /// restores the hero class recorded in it and resumes play where the game was saved.
+        /// Without a save the button is disabled.
         /// </summary>
         public void ContinueGame()
         {
             CharacterClassSO savedClass = null;
             PlayerSaveData save = SaveSystem.PeekSave();
+            if (save == null)
+            {
+                Debug.Log("[MainMenuController] No saved adventure to continue.");
+                return;
+            }
+
+            if (PlayerProgressionManager.Instance != null)
+            {
+                PlayerProgressionManager.Instance.LoadProgression();
+            }
+            else
+            {
+                SaveSystem.LoadGame();
+            }
+
             if (save != null && save.characterClass >= 0)
             {
                 LoadClassAssetsIfMissing();
@@ -242,6 +271,10 @@ namespace CastleOfTheD20.UI
             {
                 SceneLoader.Instance.LoadScene(save.sceneName);
             }
+            else
+            {
+                SaveSystem.ApplyPendingPosition(currentScene);
+            }
         }
 
         public void OpenClassSelection()
@@ -251,6 +284,7 @@ namespace CastleOfTheD20.UI
             {
                 classSelectionPanel.SetActive(true);
                 classSelectionPanel.transform.SetAsLastSibling();
+                EnsureDifficultyRow();
             }
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -290,6 +324,89 @@ namespace CastleOfTheD20.UI
             Application.OpenURL(SCOTTISH_HARP_ATTRIBUTION_URL);
         }
 
+        #region Difficulty (critical review B9)
+
+        private DifficultyLevel selectedDifficulty = DifficultyLevel.Normal;
+        private readonly Button[] difficultyButtons = new Button[3];
+        private TextMeshProUGUI difficultyDescription;
+
+        /// <summary>Difficulty picked on the hero selection screen for the next New Adventure.</summary>
+        public DifficultyLevel SelectedDifficulty => selectedDifficulty;
+
+        /// <summary>Picks the difficulty for the next New Adventure.</summary>
+        public void SelectDifficulty(DifficultyLevel level)
+        {
+            selectedDifficulty = level;
+            RefreshDifficultyRow();
+        }
+
+        /// <summary>Adds the Easy / Normal / Hard row under the hero cards (built once, at runtime).</summary>
+        private void EnsureDifficultyRow()
+        {
+            if (classSelectionPanel == null) return;
+            if (classSelectionPanel.transform.Find("Difficulty_Row") == null)
+            {
+                GameObject row = new GameObject("Difficulty_Row", typeof(RectTransform));
+                row.transform.SetParent(classSelectionPanel.transform, false);
+                RectTransform rowRect = (RectTransform)row.transform;
+                rowRect.anchoredPosition = new Vector2(0f, -262f);
+                rowRect.sizeDelta = new Vector2(760f, 90f);
+
+                GameObject labelObj = new GameObject("Difficulty_Label", typeof(RectTransform));
+                labelObj.transform.SetParent(row.transform, false);
+                RectTransform labelRect = (RectTransform)labelObj.transform;
+                labelRect.anchoredPosition = new Vector2(-300f, 18f);
+                labelRect.sizeDelta = new Vector2(160f, 40f);
+                TextMeshProUGUI label = labelObj.AddComponent<TextMeshProUGUI>();
+                label.text = "Difficulty";
+                label.fontSize = 22f;
+                label.fontStyle = FontStyles.Bold;
+                label.alignment = TextAlignmentOptions.Right;
+                label.color = new Color(1f, 0.85f, 0.3f);
+                label.raycastTarget = false;
+
+                for (int i = 0; i < 3; i++)
+                {
+                    DifficultyLevel level = (DifficultyLevel)i;
+                    Button btn = UIFactory.CreateTextButton(row.transform, "Difficulty_" + DifficultySettings.GetLabel(level),
+                        DifficultySettings.GetLabel(level), new Vector2(-110f + i * 165f, 18f), new Vector2(150f, 40f), new Color(0.25f, 0.3f, 0.4f));
+                    btn.onClick.AddListener(() => SelectDifficulty(level));
+                    difficultyButtons[i] = btn;
+                }
+
+                GameObject descObj = new GameObject("Difficulty_Description", typeof(RectTransform));
+                descObj.transform.SetParent(row.transform, false);
+                RectTransform descRect = (RectTransform)descObj.transform;
+                descRect.anchoredPosition = new Vector2(0f, -26f);
+                descRect.sizeDelta = new Vector2(700f, 30f);
+                difficultyDescription = descObj.AddComponent<TextMeshProUGUI>();
+                difficultyDescription.fontSize = 17f;
+                difficultyDescription.alignment = TextAlignmentOptions.Center;
+                difficultyDescription.color = UITheme.CreamText;
+                difficultyDescription.raycastTarget = false;
+            }
+
+            RefreshDifficultyRow();
+        }
+
+        private void RefreshDifficultyRow()
+        {
+            for (int i = 0; i < difficultyButtons.Length; i++)
+            {
+                Button btn = difficultyButtons[i];
+                if (btn == null) continue;
+                Image img = btn.GetComponent<Image>();
+                bool selected = (int)selectedDifficulty == i;
+                if (img != null) img.color = selected ? UITheme.ActionGreen : new Color(0.25f, 0.3f, 0.4f);
+            }
+            if (difficultyDescription != null)
+            {
+                difficultyDescription.text = $"{DifficultySettings.GetLabel(selectedDifficulty)}: {DifficultySettings.GetDescription(selectedDifficulty)}";
+            }
+        }
+
+        #endregion
+
         public void SelectCharacterClass(CharacterClassSO chosenClass)
         {
             if (chosenClass == null)
@@ -311,7 +428,10 @@ namespace CastleOfTheD20.UI
             else
             {
                 PlayerDataSO.Session.ResetData();
+                SaveSystem.ClearSave();
+                StoryFlags.Clear();
             }
+            DifficultySettings.Current = selectedDifficulty;
 
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             if (player != null)

@@ -9,8 +9,9 @@ namespace CastleOfTheD20.Bosses
 {
     /// <summary>
     /// Library & Arcane Wing Boss: Shadow Mage Malakor.
-    /// Teleports across the grid when struck by attacks.
-    /// Spawns illusionary decoy duplicates (Mirror Images).
+    /// A real caster (critical review B5): he fires a 4-tile shadow bolt (2d4+3) from a distance and steps away
+    /// from a hero who closes in. When hit he teleports away, but at most every other turn.
+    /// Spawns one illusionary decoy (Mirror Image) that also fires weaker shadow bolts.
     /// Pre-combat hook: If the player passed the DC 14 Arcane Heresy check, the true Malakor is revealed immediately.
     /// </summary>
     public class ShadowMageMalakorBoss : EnemyUnit
@@ -34,6 +35,12 @@ namespace CastleOfTheD20.Bosses
 
         private bool isRealMalakorRevealed = false;
         private bool hasSpawnedIllusions = false;
+
+        // Turns before the next teleport-on-hit (he can blink away at most every other turn)
+        private int teleportCooldown;
+
+        /// <summary>Range of Malakor's and his mirror image's shadow bolt.</summary>
+        public const int ShadowBoltRange = 4;
         private readonly List<EnemyUnit> activeDecoys = new List<EnemyUnit>();
         private readonly List<EnemyUnit> conjuredDecoys = new List<EnemyUnit>();
 
@@ -64,15 +71,19 @@ namespace CastleOfTheD20.Bosses
         public override void InitializeUnit()
         {
             unitName = "Shadow Mage Malakor";
-            maxHP = 40;
+            maxHP = 44;
             currentHP = maxHP;
             armorClass = 13;
             attackDamage = 8;
             attackBonus = 5;
             movementRange = 3;
+            ConfigureDamageDice(2, 4, 3); // shadow bolt, average 8 like the old flat hit
+            ConfigureAttackRange(ShadowBoltRange);
+            ConfigureInitiative(2);
 
             // A retry after the hero falls starts the fight over: the first hit casts Mirror Image again
             hasSpawnedIllusions = false;
+            teleportCooldown = 0;
             activeDecoys.Clear();
 
             base.InitializeUnit();
@@ -109,6 +120,7 @@ namespace CastleOfTheD20.Bosses
                 if (unit.name.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) < 0) continue;
 
                 unit.SetDisplayName(DecoyDisplayName);
+                ArmDecoy(unit);
                 if (!activeDecoys.Contains(unit)) activeDecoys.Add(unit);
             }
         }
@@ -157,9 +169,30 @@ namespace CastleOfTheD20.Bosses
                     SpawnIllusionDecoys();
                 }
 
-                // Teleport to a safe grid coordinate upon sustaining damage
-                TeleportToRandomTile();
+                // Teleport to a safe grid coordinate upon sustaining damage, at most every other turn
+                if (teleportCooldown <= 0)
+                {
+                    TeleportToRandomTile();
+                    teleportCooldown = 2;
+                }
             }
+        }
+
+        protected override void OnTurnActionFinished()
+        {
+            base.OnTurnActionFinished();
+            if (teleportCooldown > 0) teleportCooldown--;
+        }
+
+        /// <summary>Turns before Malakor can teleport away from a hit again (0 = he will).</summary>
+        public int TeleportCooldown => teleportCooldown;
+
+        /// <summary>The mirror image fights too: a weaker 4-tile shadow bolt.</summary>
+        private static void ArmDecoy(EnemyUnit decoy)
+        {
+            if (decoy == null) return;
+            decoy.ConfigureAttackRange(ShadowBoltRange);
+            decoy.ConfigureDamageDice(1, 6, 0);
         }
 
         #endregion
@@ -274,6 +307,7 @@ namespace CastleOfTheD20.Bosses
             }
 
             decoyUnit.DropsLoot = false; // illusions leave no gold behind
+            ArmDecoy(decoyUnit);
             decoyUnit.InitializeUnit();
             decoyUnit.MoveToTile(tile);
             activeDecoys.Add(decoyUnit);

@@ -44,6 +44,10 @@ namespace CastleOfTheD20.Combat
         // Extra damage from a Poison Vial, added to the first hit of the current fight
         private int poisonCoatingBonus;
 
+        // Turns left before an ability can be used again, by base ability ID (critical review B1)
+        private readonly Dictionary<string, int> cooldowns = new Dictionary<string, int>(StringComparer.Ordinal);
+        private readonly List<string> cooldownKeyBuffer = new List<string>(4);
+
         #endregion
 
         #region Progression Data
@@ -94,6 +98,7 @@ namespace CastleOfTheD20.Combat
             try
             {
                 Level = savedLevel;
+                EnsureFifthAbility();
 
                 int oldMax = maxHP;
                 maxHP = baseMaxHP + Mathf.Max(0, maxHpBonus);
@@ -123,6 +128,23 @@ namespace CastleOfTheD20.Combat
             NotifyHealthChanged();
         }
 
+        /// <summary>
+        /// From level 4 the class's fifth ability (Retaliation, Arcane Chains, Poison Cloud) joins the bar.
+        /// </summary>
+        private void EnsureFifthAbility()
+        {
+            if (level < FifthAbilityLevel || characterClass == null) return;
+            AbilitySO fifth = characterClass.Level4Ability;
+            if (fifth == null) return;
+
+            for (int i = 0; i < activeAbilities.Count; i++)
+            {
+                if (activeAbilities[i] != null && activeAbilities[i].BaseAbilityID == fifth.AbilityID) return;
+            }
+            activeAbilities.Add(fifth);
+            Debug.Log($"[PlayerUnit] {unitName} learns {fifth.AbilityName} (level {level}).");
+        }
+
         private void CaptureBaseline()
         {
             // Without a class asset the serialized stats are the baseline; capture them only once so
@@ -147,7 +169,7 @@ namespace CastleOfTheD20.Combat
 
         private static bool IsRank2(AbilitySO ability)
         {
-            return ability != null && ability.AbilityID.EndsWith("_rank2", StringComparison.Ordinal);
+            return ability != null && ability.IsRank2;
         }
 
         #endregion
@@ -169,7 +191,7 @@ namespace CastleOfTheD20.Combat
         /// <summary>
         /// Total effective Armor Class including class baseline and permanent gear bonuses.
         /// </summary>
-        public override int ArmorClass => base.ArmorClass + permanentArmorClassBonus;
+        public override int ArmorClass => base.ArmorClass + permanentArmorClassBonus + DifficultySettings.HeroArmorBonus;
 
         /// <summary>Primary attribute modifier (+2 to +5) added to D20 checks.</summary>
         public int PrimaryAttributeBonus => primaryAttributeBonus;
@@ -191,6 +213,111 @@ namespace CastleOfTheD20.Combat
         #endregion
 
         #region Initialization
+
+        protected override void Awake()
+        {
+            base.Awake();
+            OnHealthChanged += ReportHealthToSession;
+        }
+
+        private void OnDestroy()
+        {
+            OnHealthChanged -= ReportHealthToSession;
+        }
+
+        // Keeps the zone-to-zone HP in the session store up to date (critical review A9)
+        private void ReportHealthToSession(int current, int max)
+        {
+            if (isApplyingProgression || !hasBaseline) return;
+            PlayerDataSO session = ProgressionData;
+            if (session != null)
+            {
+                session.CurrentHP = current > 0 && current < max ? current : -1;
+            }
+        }
+
+        /// <summary>
+        /// Retaliation (warrior, level 4): while it is up, an enemy that attacks the hero in melee takes the
+        /// ability's damage (1d8 + STR + blacksmith bonus) right back.
+        /// </summary>
+        public void ResolveRetaliation(EnemyUnit attacker)
+        {
+            if (!IsAlive || attacker == null || !attacker.IsAlive || StatusEffects == null) return;
+            if (!StatusEffects.HasEffect(StatusEffectType.Retaliation)) return;
+
+            AbilitySO retaliation = null;
+            for (int i = 0; i < activeAbilities.Count; i++)
+            {
+                if (activeAbilities[i] != null && activeAbilities[i].BaseAbilityID == "warrior_retaliation")
+                {
+                    retaliation = activeAbilities[i];
+                    break;
+                }
+            }
+
+            int damage = retaliation != null
+                ? retaliation.RollDamage(primaryAttributeBonus, permanentWeaponDamageBonus)
+                : DiceSystem.RollDamage(1, 8) + primaryAttributeBonus;
+            Debug.Log($"[PlayerUnit] {unitName} retaliates against {attacker.UnitName} for {damage}!");
+            UI.CombatUIController.Instance?.LogCombatMessage($"{unitName} retaliates against {attacker.UnitName} for {damage}!");
+            attacker.TakeDamage(damage);
+        }
+
+        /// <summary>
+        /// Walks to <paramref name="tile"/>. In combat, every enemy the hero walks away from (adjacent at the
+        /// start, out of reach at the end) gets a free attack first (critical review B2). Teleports
+        /// (Blink, Shadow Step) move with MoveToTile and never provoke one.
+        /// </summary>
+        public override void WalkToTile(GridTile tile, Action onArrived = null)
+        {
+            if (tile != null)
+            {
+                ResolveOpportunityAttacks(tile.GridPosition);
+                if (!IsAlive) return;
+            }
+            base.WalkToTile(tile, onArrived);
+        }
+
+        /// <summary>Enemies that would get a free attack if the hero walked to <paramref name="destination"/>.</summary>
+        public void CollectOpportunityAttackers(Vector2Int destination, List<EnemyUnit> result)
+        {
+            result.Clear();
+            TurnManager tm = TurnManager.Instance;
+            GridManager grid = GridManager.Instance;
+            if (tm == null || !tm.IsCombatActive || grid == null) return;
+
+            IReadOnlyList<CombatUnit> units = tm.ActiveUnits;
+            for (int i = 0; i < units.Count; i++)
+            {
+                if (!(units[i] is EnemyUnit enemy) || !enemy.IsAlive || !enemy.isActiveAndEnabled) continue;
+                if (grid.GetDistance(enemy.GridPosition, gridPosition) > 1) continue;
+                if (grid.GetDistance(enemy.GridPosition, destination) <= 1) continue;
+                result.Add(enemy);
+            }
+        }
+
+        private readonly List<EnemyUnit> opportunityBuffer = new List<EnemyUnit>(2);
+
+        private void ResolveOpportunityAttacks(Vector2Int destination)
+        {
+            CollectOpportunityAttackers(destination, opportunityBuffer);
+            for (int i = 0; i < opportunityBuffer.Count && IsAlive; i++)
+            {
+                EnemyUnit enemy = opportunityBuffer[i];
+                UI.CombatUIController.Instance?.LogCombatMessage($"{enemy.UnitName} gets a free attack as {unitName} walks away!");
+                enemy.MakeOpportunityAttack(this);
+            }
+        }
+
+        /// <summary>
+        /// Sets the hero's HP (clamped to 1..MaxHP), e.g. the health carried over from the last zone or a save.
+        /// </summary>
+        public void SetCurrentHP(int hp)
+        {
+            if (!IsAlive) return;
+            currentHP = Mathf.Clamp(hp, 1, maxHP);
+            NotifyHealthChanged();
+        }
 
         public override void InitializeUnit()
         {
@@ -264,14 +391,24 @@ namespace CastleOfTheD20.Combat
         #region Level & Progression Upgrades
 
         [Header("Progression & Milestone")]
-        [Tooltip("Current hero level: 1 (Starting), 2 (Castle Veteran), 3 (Arcane Crusher).")]
+        [Tooltip("Current hero level: 1 (Starting), 2 (Castle Veteran), 3 (Arcane Crusher), 4 (Tower Champion), 5 (Curse Breaker).")]
         [SerializeField] private int level = 1;
 
-        /// <summary>Current hero milestone level (1..3).</summary>
+        /// <summary>Highest hero level (critical review B8).</summary>
+        public const int MaxLevel = 5;
+
+        /// <summary>Level that unlocks the class's fifth ability.</summary>
+        public const int FifthAbilityLevel = 4;
+
+        /// <summary>Current hero milestone level (1..5).</summary>
         public int Level
         {
             get => level;
-            set => level = Mathf.Clamp(value, 1, 3);
+            set
+            {
+                level = Mathf.Clamp(value, 1, MaxLevel);
+                EnsureFifthAbility();
+            }
         }
 
         /// <summary>
@@ -300,8 +437,9 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Ability Empowerment (Rank 2): Upgrades the ability in the specified slot (0..3)
-        /// with +3 potency and marked as Rank 2.
+        /// Ability Empowerment (Rank 2): Upgrades the ability in the specified slot (0..3).
+        /// Every ability gains +3 potency; Shield Wall, Mana Shield, Blink, Shadow Step and Smoke Bomb
+        /// get their own upgrade too (see <see cref="AbilitySO.GetRank2Summary"/>).
         /// </summary>
         public bool UpgradeAbilityToRank2(int slotIndex)
         {
@@ -312,31 +450,13 @@ namespace CastleOfTheD20.Combat
             }
 
             AbilitySO original = activeAbilities[slotIndex];
-            if (original.AbilityName.Contains("[Rank 2]"))
+            if (original.IsRank2)
             {
                 Debug.LogWarning($"[PlayerUnit] Ability {original.AbilityName} is already Rank 2.");
                 return false;
             }
 
-            AbilitySO rank2 = ScriptableObject.CreateInstance<AbilitySO>();
-            rank2.Initialize(
-                original.AbilityID + "_rank2",
-                $"{original.AbilityName} [Rank 2]",
-                $"{original.Description}\n<color=#4ade80>[Rank 2] Potency +3</color>",
-                original.TargetType,
-                original.Range,
-                original.AreaOfEffectRadius,
-                original.BaseValue + 3,
-                original.RequiresCheck,
-                original.AppliedEffect,
-                original.EffectDurationTurns,
-                original.AnimationTriggerName,
-                original.AbilityIcon,
-                original.DamageDiceCount,
-                original.DamageDiceSides,
-                original.AddsAttributeToDamage
-            );
-
+            AbilitySO rank2 = original.CreateRank2();
             activeAbilities[slotIndex] = rank2;
             Debug.Log($"[PlayerUnit] Upgraded slot {slotIndex} ({rank2.AbilityName}) to Rank 2! New BaseValue: {rank2.BaseValue}");
             PushProgressionToData();
@@ -403,12 +523,50 @@ namespace CastleOfTheD20.Combat
         #region Ability Execution
 
         /// <summary>
-        /// Checks if an ability slot can be used.
+        /// Checks if an ability slot can be used (action left this turn and the ability is off cooldown).
         /// </summary>
         public bool CanUseAbility(int slotIndex)
         {
             if (hasActedThisTurn) return false;
-            return slotIndex >= 0 && slotIndex < activeAbilities.Count && activeAbilities[slotIndex] != null;
+            if (slotIndex < 0 || slotIndex >= activeAbilities.Count || activeAbilities[slotIndex] == null) return false;
+            return GetCooldownRemaining(slotIndex) <= 0;
+        }
+
+        /// <summary>Turns left before the ability in <paramref name="slotIndex"/> can be used again (0 = ready).</summary>
+        public int GetCooldownRemaining(int slotIndex)
+        {
+            AbilitySO ability = GetAbility(slotIndex);
+            if (ability == null) return 0;
+            return cooldowns.TryGetValue(ability.BaseAbilityID, out int turns) ? turns : 0;
+        }
+
+        /// <summary>Counts every cooldown down by one turn (called when the hero's turn starts).</summary>
+        public void TickCooldowns()
+        {
+            cooldownKeyBuffer.Clear();
+            cooldownKeyBuffer.AddRange(cooldowns.Keys);
+            for (int i = 0; i < cooldownKeyBuffer.Count; i++)
+            {
+                string key = cooldownKeyBuffer[i];
+                int left = cooldowns[key] - 1;
+                if (left <= 0) cooldowns.Remove(key);
+                else cooldowns[key] = left;
+            }
+        }
+
+        /// <summary>Every ability is ready again (a new fight starts or one ends).</summary>
+        public void ResetCooldowns()
+        {
+            cooldowns.Clear();
+        }
+
+        private void StartCooldown(AbilitySO ability)
+        {
+            int turns = AbilityCooldowns.GetCooldownTurns(ability);
+            if (turns > 0)
+            {
+                cooldowns[ability.BaseAbilityID] = turns;
+            }
         }
 
         /// <summary>
@@ -450,9 +608,35 @@ namespace CastleOfTheD20.Combat
             if (success)
             {
                 hasActedThisTurn = true;
+                StartCooldown(ability);
             }
 
             return success;
+        }
+
+        /// <summary>
+        /// Hits an explosive barrel with a damaging ability in range (critical review B6). Spends the action
+        /// and sets the barrel off. Returns false when the ability can't reach or hurt it.
+        /// </summary>
+        public bool AttackBarrel(int slotIndex, ExplosiveBarrel barrel)
+        {
+            if (!CanUseAbility(slotIndex) || barrel == null || barrel.HasExploded || barrel.Tile == null) return false;
+
+            AbilitySO ability = activeAbilities[slotIndex];
+            if (!ability.DealsDamage || ability.TargetType == AbilityTargetType.Self || ability.TargetsEmptyTile) return false;
+
+            GridManager grid = GridManager.Instance;
+            if (grid == null || grid.GetDistance(gridPosition, barrel.Tile.GridPosition) > ability.Range) return false;
+
+            hasActedThisTurn = true;
+            StartCooldown(ability);
+            FaceTowards(barrel.transform.position);
+            if (UnitAnimator != null && !TrySetAnimatorTrigger(ability.BaseAbilityID))
+            {
+                UnitAnimator.SetTrigger(ability.TargetType == AbilityTargetType.Area3x3 ? "CastSpell" : "Attack");
+            }
+            barrel.Explode();
+            return true;
         }
 
         /// <summary>

@@ -126,7 +126,8 @@ namespace CastleOfTheD20.Economy
                 return 0;
             }
 
-            int available = inventory.ScrapMetalCount;
+            // Scrap an accepted scrap quest still needs stays in the bag, so selling never undoes its progress
+            int available = SellableScrap(inventory.ScrapMetalCount);
             int toConvert = (scrapCount < 0 || scrapCount > available) ? available : scrapCount;
 
             if (toConvert <= 0)
@@ -143,6 +144,16 @@ namespace CastleOfTheD20.Economy
             OnScrapConverted?.Invoke(toConvert, goldEarned);
 
             return goldEarned;
+        }
+
+        /// <summary>
+        /// Scrap Baldur buys out of <paramref name="carried"/>: everything above what accepted scrap quests
+        /// still need (critical review A10).
+        /// </summary>
+        public static int SellableScrap(int carried)
+        {
+            int reserved = QuestManager.Instance != null ? QuestManager.Instance.GetScrapReservedForQuests() : 0;
+            return Mathf.Max(0, carried - reserved);
         }
 
         #endregion

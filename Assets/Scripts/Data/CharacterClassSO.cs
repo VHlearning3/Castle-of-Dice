@@ -45,6 +45,9 @@ namespace CastleOfTheD20.Data
         [Tooltip("Fixed loadout of 4 class-specific active abilities available during combat.")]
         [SerializeField] private List<AbilitySO> startingAbilities = new List<AbilitySO>(4);
 
+        [Tooltip("Fifth combat ability the hero learns at level 4 (critical review B8).")]
+        [SerializeField] private AbilitySO level4Ability;
+
         [Header("Visual Assets")]
         [Tooltip("2D portrait sprite displayed in dialogue boxes, turn trackers, and character HUD.")]
         [SerializeField] private Sprite characterPortrait;
@@ -82,6 +85,13 @@ namespace CastleOfTheD20.Data
 
         /// <summary>Read-only access to the 4 starting abilities.</summary>
         public IReadOnlyList<AbilitySO> StartingAbilities => startingAbilities;
+
+        /// <summary>Fifth combat ability learned at level 4 (null = none).</summary>
+        public AbilitySO Level4Ability
+        {
+            get => level4Ability;
+            set => level4Ability = value;
+        }
 
         /// <summary>Character portrait sprite.</summary>
         public Sprite CharacterPortrait => characterPortrait;
