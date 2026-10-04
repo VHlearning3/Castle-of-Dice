@@ -15,6 +15,7 @@ MonoBehaviour:
   coinPrefab: {fileID: 5502589446686647927, guid: 05624a7d6842dc344a9424cad89c2218, type: 3}
   potionPrefab: {fileID: 3204520884909506935, guid: 6042d223ed8772246bc729653664880a, type: 3}
   potionItem: {fileID: 11400000, guid: 45c342be3e3b68e4f90742f55236d846, type: 2}
+  scrapRemainsPrefab: {fileID: 750731962428947635, guid: a598470dbc265c64690cbf30c3c1c2ab, type: 3}
   enemyGoldMin: 3
   enemyGoldMax: 8
   enemyPotionChance: 0.25

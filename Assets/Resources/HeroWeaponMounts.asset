@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0254606e647dbf14fa7610a673aefd27, type: 3}
+  m_Name: HeroWeaponMounts
+  m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.Data.HeroWeaponMountsSO
+  mounts:
+  - heroClass: 1
+    weaponPrefab: {fileID: 8128824161302026255, guid: 0de5d746c0b8ebc44bdccdfde7a64834, type: 3}
+    boneName: mixamorig:RightHand
+    localPosition: {x: -0.000008952849, y: 5.5000043, z: 1.5000161}
+    localRotation: {x: 0.98379135, y: 0.017227007, z: -0.15671442, w: -0.08543122}
+    localScale: {x: 79.99999, y: 80, z: 80.00004}
+  - heroClass: 2
+    weaponPrefab: {fileID: 5491934708342095176, guid: 448bcf91940453944bc2cb665e1c68a7, type: 3}
+    boneName: mixamorig:RightHand
+    localPosition: {x: -0.000000019593555, y: 0.030000187, z: -0.00000007187062}
+    localRotation: {x: 0.25743937, y: -0.52547234, z: 0.3779036, w: -0.71749103}
+    localScale: {x: 0.85, y: 0.85000026, z: 0.85000014}
+  - heroClass: 2
+    weaponPrefab: {fileID: 7827499208375991160, guid: e6d22674e354bdb4a8366aa96a91ab89, type: 3}
+    boneName: mixamorig:LeftHand
+    localPosition: {x: -0.000000019184732, y: 0.030000128, z: 0.000000090047365}
+    localRotation: {x: 0.50142366, y: -0.81865346, z: -0.1658477, w: 0.22555757}
+    localScale: {x: 0.8499999, y: 0.84999996, z: 0.8500001}

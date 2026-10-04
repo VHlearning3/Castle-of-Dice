@@ -8,20 +8,24 @@ using CastleOfTheD20.Economy;
 namespace CastleOfTheD20.World
 {
     /// <summary>
-    /// A gold coin or healing potion that drops from a defeated enemy or an opened chest (see <see cref="LootDrops"/>).
+    /// A gold coin, healing potion or scrap pile that drops from a defeated enemy or an opened chest (see <see cref="LootDrops"/>)
+    /// or lies in the field.
     /// It pops out in a short arc, spins and bobs, drifts to the hero once they are close and is collected on
     /// touch. Pickups placed by hand in a scene are remembered as taken (GameManager rewards); dropped ones are not.
     /// </summary>
     [SelectionBase]
     public class WorldPickup : Interactable
     {
-        public enum PickupKind { Gold, Item }
+        public enum PickupKind { Gold, Item, Scrap }
 
         [Header("Reward")]
         [SerializeField] private PickupKind kind = PickupKind.Gold;
         [Min(0)]
         [SerializeField] private int goldAmount = 10;
         [SerializeField] private ItemSO item;
+        [Tooltip("Scrap metal a scrap pile is worth.")]
+        [Min(0)]
+        [SerializeField] private int scrapAmount = 3;
 
         [Header("Presentation")]
         [Tooltip("Child that spins and bobs (the model).")]
@@ -52,6 +56,7 @@ namespace CastleOfTheD20.World
 
         public PickupKind Kind => kind;
         public int GoldAmount => goldAmount;
+        public int ScrapAmount => scrapAmount;
 
         protected override void Awake()
         {
@@ -128,6 +133,7 @@ namespace CastleOfTheD20.World
             {
                 if (kind == PickupKind.Gold && goldAmount > 0) inventory.AddGold(goldAmount);
                 if (kind == PickupKind.Item && item != null) inventory.AddItem(item, 1);
+                if (kind == PickupKind.Scrap && scrapAmount > 0) inventory.AddScrapMetal(scrapAmount);
             }
             else
             {
@@ -140,7 +146,7 @@ namespace CastleOfTheD20.World
                 SFXManager.Instance.PlaySFX(s_pickupClip, transform.position, kind == PickupKind.Gold ? 0.8f : 0.7f, randomizePitch: true);
             }
 
-            Debug.Log($"[WorldPickup] Picked up {(kind == PickupKind.Gold ? goldAmount + " Gold" : item != null ? item.ItemName : "item")}.");
+            Debug.Log($"[WorldPickup] Picked up {(kind == PickupKind.Gold ? goldAmount + " Gold" : kind == PickupKind.Scrap ? scrapAmount + " Scrap Metal" : item != null ? item.ItemName : "item")}.");
             if (persistent) gameObject.SetActive(false);
             else Destroy(gameObject);
         }
