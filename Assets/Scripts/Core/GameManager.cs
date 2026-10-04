@@ -289,6 +289,12 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// True once anything in the campaign has happened (a boss, a cleared room, a taken reward). A New
+        /// Adventure started after that reloads the village, so its rooms and chests start fresh.
+        /// </summary>
+        public bool HasCampaignProgress => defeatedBosses.Count > 0 || clearedLocations.Count > 0 || claimedRewards.Count > 0;
+
+        /// <summary>
         /// Writes defeated bosses, cleared wings and claimed rewards for the save file.
         /// </summary>
         public void CaptureCampaignProgress(List<string> bosses, List<int> clearedWings, List<string> rewards = null)

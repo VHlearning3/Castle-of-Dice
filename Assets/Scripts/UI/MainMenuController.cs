@@ -78,12 +78,24 @@ namespace CastleOfTheD20.UI
 
         private void Start()
         {
+            // A New Adventure that reloaded the village goes straight into the game
+            if (s_skipMenuOnNextLoad)
+            {
+                s_skipMenuOnNextLoad = false;
+                hasGameStarted = true;
+                HideMainMenu();
+                return;
+            }
+
             // If the game was already running or player is actively exploring, don't block
             if (!hasGameStarted)
             {
                 ShowMainMenu();
             }
         }
+
+        // Set when New Adventure reloads the village: the reloaded scene must not open the menu again
+        private static bool s_skipMenuOnNextLoad;
 
         #endregion
 
@@ -424,6 +436,9 @@ namespace CastleOfTheD20.UI
                 SFXManager.Instance.PlaySFX(SFXClipType.CriticalSuccess);
             }
 
+            // The village loaded with the old run's state (cleared cellar, opened chests) when a game was played
+            bool reloadVillage = GameManager.Instance != null && GameManager.Instance.HasCampaignProgress;
+
             // A new adventure starts from level 1 without the previous run's upgrades
             if (PlayerProgressionManager.Instance != null)
             {
@@ -456,7 +471,16 @@ namespace CastleOfTheD20.UI
             HideMainMenu();
 
             // A few pages of story before the adventure starts (critical review D2)
-            TutorialHints.ShowIntro();
+            string village = World.VillageNPC.StartingVillageSceneName;
+            if (reloadVillage && SceneLoader.Instance != null && Application.CanStreamedLevelBeLoaded(village))
+            {
+                s_skipMenuOnNextLoad = true;
+                SceneLoader.Instance.LoadSceneAsync(village, () => TutorialHints.ShowIntro(), "StartSpawn");
+            }
+            else
+            {
+                TutorialHints.ShowIntro();
+            }
         }
 
         #endregion

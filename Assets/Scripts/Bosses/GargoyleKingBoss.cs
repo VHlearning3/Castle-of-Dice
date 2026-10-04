@@ -65,7 +65,6 @@ namespace CastleOfTheD20.Bosses
         private Vector2Int quakeCenter;
 
         // Phase 2 gaze every other turn, and Othelia's ring
-        private int gazeCountdown;
         private int ringBrokenArmorTurns;
         private bool ringUsed;
 
@@ -155,7 +154,6 @@ namespace CastleOfTheD20.Bosses
             hasEnteredPhase2 = false;
             isStoneFormActive = false;
             remainingIntimidationTurns = 0;
-            gazeCountdown = 0;
             ringBrokenArmorTurns = 0;
             ringUsed = false;
             ClearQuakeMarks();
@@ -248,17 +246,14 @@ namespace CastleOfTheD20.Bosses
             AnnounceStoryChoices();
 
             // The earthquake marked last turn strikes now; otherwise he marks where the next one lands
+            bool strikesThisTurn = quakePending;
             ExecuteGroundStomp(gridManager);
 
-            // Phase 2: the petrifying gaze every other turn
-            if (isStoneFormActive && IsAlive)
+            // Phase 2: the petrifying gaze every other turn. It comes on the turns the quake strikes, so a
+            // rooted hero never stands in a marked area they cannot leave (found in the D7 smoke run).
+            if (isStoneFormActive && IsAlive && strikesThisTurn)
             {
-                if (gazeCountdown <= 0)
-                {
-                    CastPetrifyingGaze(FindClosestPlayer(gridManager));
-                    gazeCountdown = 2;
-                }
-                gazeCountdown--;
+                CastPetrifyingGaze(FindClosestPlayer(gridManager));
             }
 
             base.ExecuteTurnAction(gridManager, abilityExecutor);
@@ -305,7 +300,6 @@ namespace CastleOfTheD20.Bosses
         {
             hasEnteredPhase2 = true;
             isStoneFormActive = true;
-            gazeCountdown = 1; // the first gaze comes on his next turn
 
             Debug.Log("[GargoyleKing] PHASE 2: The Gargoyle King's skin petrifies into enchanted granite! STONE FORM ACTIVATED.");
             StatusEffects?.ApplyEffect(StatusEffectType.ManaShield, durationTurns: 2);
