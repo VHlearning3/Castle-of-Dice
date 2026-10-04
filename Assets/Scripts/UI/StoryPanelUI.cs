@@ -26,6 +26,7 @@ namespace CastleOfTheD20.UI
         private string[] pageBodies;
         private int pageIndex;
         private Action onClosed;
+        private bool inputWasEnabled = true;
 
         /// <summary>True while a panel is on screen.</summary>
         public static bool IsOpen => instance != null && instance.gameObject.activeSelf;
@@ -41,6 +42,10 @@ namespace CastleOfTheD20.UI
         {
             if (titles == null || bodies == null || titles.Length == 0) return;
             StoryPanelUI panel = GetOrCreate();
+            if (!panel.gameObject.activeSelf)
+            {
+                panel.inputWasEnabled = GameInput.IsExplorationInputEnabled;
+            }
             panel.pageTitles = titles;
             panel.pageBodies = bodies;
             panel.pageIndex = 0;
@@ -69,7 +74,7 @@ namespace CastleOfTheD20.UI
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
-            MainMenuController.EnsureEventSystem();
+            if (Application.isPlaying) MainMenuController.EnsureEventSystem();
 
             // Dim the game behind the parchment
             GameObject dim = new GameObject("Dim", typeof(RectTransform), typeof(Image));
@@ -144,7 +149,7 @@ namespace CastleOfTheD20.UI
         private void Close()
         {
             gameObject.SetActive(false);
-            GameInput.SetExplorationInputEnabled(true);
+            GameInput.SetExplorationInputEnabled(inputWasEnabled);
             Action closed = onClosed;
             onClosed = null;
             closed?.Invoke();

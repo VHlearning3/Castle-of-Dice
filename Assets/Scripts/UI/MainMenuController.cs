@@ -37,6 +37,10 @@ namespace CastleOfTheD20.UI
         [Tooltip("Root Main Menu panel containing title, background, and navigation buttons.")]
         [SerializeField] private GameObject mainMenuPanel;
 
+        /// <summary>Whether the main menu (or its hero / rules screens) is on screen.</summary>
+        public bool IsMenuOpen => (mainMenuPanel != null && mainMenuPanel.activeInHierarchy)
+            || (classSelectionPanel != null && classSelectionPanel.activeInHierarchy);
+
         [Tooltip("Hero Class Selection modal popup.")]
         [SerializeField] private GameObject classSelectionPanel;
 
@@ -450,6 +454,9 @@ namespace CastleOfTheD20.UI
             }
 
             HideMainMenu();
+
+            // A few pages of story before the adventure starts (critical review D2)
+            TutorialHints.ShowIntro();
         }
 
         #endregion
