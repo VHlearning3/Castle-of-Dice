@@ -170,6 +170,7 @@ namespace CastleOfTheD20.UI
 
             if (classSelectionPanel != null) classSelectionPanel.SetActive(false);
             if (rulesPanel != null) rulesPanel.SetActive(false);
+            RefreshContinueButton();
 
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -177,6 +178,18 @@ namespace CastleOfTheD20.UI
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.SetPlayMode(GamePlayMode.Dialogue);
+            }
+        }
+
+        /// <summary>Continue is only clickable when there is a saved adventure.</summary>
+        private void RefreshContinueButton()
+        {
+            if (mainMenuPanel == null) return;
+            Transform continueTr = mainMenuPanel.transform.Find("Menu_Buttons/Continue_Btn");
+            Button continueBtn = continueTr != null ? continueTr.GetComponent<Button>() : null;
+            if (continueBtn != null)
+            {
+                continueBtn.interactable = SaveSystem.HasSavedGame();
             }
         }
 
@@ -196,13 +209,29 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
-        /// "Continue": restores the hero class recorded in the save (progression itself is loaded by
-        /// PlayerProgressionManager on startup) and resumes play.
+        /// "Continue": loads the save (progression, inventory, quests, health, story flags, difficulty),
+        /// restores the hero class recorded in it and resumes play where the game was saved.
+        /// Without a save the button is disabled.
         /// </summary>
         public void ContinueGame()
         {
             CharacterClassSO savedClass = null;
             PlayerSaveData save = SaveSystem.PeekSave();
+            if (save == null)
+            {
+                Debug.Log("[MainMenuController] No saved adventure to continue.");
+                return;
+            }
+
+            if (PlayerProgressionManager.Instance != null)
+            {
+                PlayerProgressionManager.Instance.LoadProgression();
+            }
+            else
+            {
+                SaveSystem.LoadGame();
+            }
+
             if (save != null && save.characterClass >= 0)
             {
                 LoadClassAssetsIfMissing();
@@ -241,6 +270,10 @@ namespace CastleOfTheD20.UI
                 SceneLoader.Instance != null && Application.CanStreamedLevelBeLoaded(save.sceneName))
             {
                 SceneLoader.Instance.LoadScene(save.sceneName);
+            }
+            else
+            {
+                SaveSystem.ApplyPendingPosition(currentScene);
             }
         }
 

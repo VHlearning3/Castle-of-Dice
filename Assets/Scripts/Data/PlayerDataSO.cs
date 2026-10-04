@@ -66,6 +66,10 @@ namespace CastleOfTheD20.Data
         [SerializeField] private int gold = 0;
         [SerializeField] private int scrapMetal = 0;
 
+        [Header("Health")]
+        [Tooltip("Hero HP carried between zones and saves (-1 = full health).")]
+        [SerializeField] private int currentHP = -1;
+
         #endregion
 
         #region Public Properties
@@ -121,6 +125,13 @@ namespace CastleOfTheD20.Data
             set => scrapMetal = Mathf.Max(0, value);
         }
 
+        /// <summary>Hero HP carried between zones and saves (-1 or 0 = full health).</summary>
+        public int CurrentHP
+        {
+            get => currentHP;
+            set => currentHP = value > 0 ? value : -1;
+        }
+
         #endregion
 
         #region Management Methods
@@ -138,6 +149,7 @@ namespace CastleOfTheD20.Data
             upgradedAbilityIndices.Clear();
             gold = 0;
             scrapMetal = 0;
+            currentHP = -1;
         }
 
         /// <summary>
@@ -158,9 +170,15 @@ namespace CastleOfTheD20.Data
         {
             if (player == null) return;
 
-            // Absolute (base + bonus) application: safe to call on every scene load and after loading a save
+            // Absolute (base + bonus) application: safe to call on every scene load and after loading a save.
+            // Read the carried HP first: applying progression reports the hero's health back to this store.
+            int carriedHP = currentHP;
             player.ApplyProgression(currentLevel, maxHPBonus, attributeBonusModifier,
                 permanentWeaponDamageBonus, permanentArmorClassBonus, upgradedAbilityIndices);
+            if (carriedHP > 0)
+            {
+                player.SetCurrentHP(carriedHP);
+            }
         }
 
         /// <summary>
@@ -176,6 +194,7 @@ namespace CastleOfTheD20.Data
             permanentWeaponDamageBonus = player.WeaponDamageBonus;
             permanentArmorClassBonus = player.ArmorClassBonus;
             player.GetUpgradedAbilitySlots(upgradedAbilityIndices);
+            CurrentHP = player.IsAlive ? player.CurrentHP : -1;
         }
 
         #endregion

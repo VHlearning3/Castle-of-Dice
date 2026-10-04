@@ -192,6 +192,38 @@ namespace CastleOfTheD20.Combat
 
         #region Initialization
 
+        protected override void Awake()
+        {
+            base.Awake();
+            OnHealthChanged += ReportHealthToSession;
+        }
+
+        private void OnDestroy()
+        {
+            OnHealthChanged -= ReportHealthToSession;
+        }
+
+        // Keeps the zone-to-zone HP in the session store up to date (critical review A9)
+        private void ReportHealthToSession(int current, int max)
+        {
+            if (isApplyingProgression || !hasBaseline) return;
+            PlayerDataSO session = ProgressionData;
+            if (session != null)
+            {
+                session.CurrentHP = current > 0 && current < max ? current : -1;
+            }
+        }
+
+        /// <summary>
+        /// Sets the hero's HP (clamped to 1..MaxHP), e.g. the health carried over from the last zone or a save.
+        /// </summary>
+        public void SetCurrentHP(int hp)
+        {
+            if (!IsAlive) return;
+            currentHP = Mathf.Clamp(hp, 1, maxHP);
+            NotifyHealthChanged();
+        }
+
         public override void InitializeUnit()
         {
             // Each zone scene has its own hero prefab: adopt the class chosen for this adventure

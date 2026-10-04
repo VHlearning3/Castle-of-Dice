@@ -46,8 +46,6 @@ namespace CastleOfTheD20.Dialogue
         private bool isInDialogue = false;
         private bool isResolvingCheck = false;
 
-        // Stores unlocked combat debuff tags (e.g., "CommanderArmorWeakened", "-2 AC")
-        private readonly HashSet<string> registeredCombatDebuffs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         // Choices the speaker adds to every node of this conversation (e.g. a villager's [Fight] option)
         private readonly List<DialogueOption> sessionOptions = new List<DialogueOption>();
@@ -62,8 +60,11 @@ namespace CastleOfTheD20.Dialogue
         /// <summary>Whether a conversation is currently active.</summary>
         public bool IsInDialogue => isInDialogue;
 
-        /// <summary>Read-only collection of active combat debuff tags gained from dialogues.</summary>
-        public IReadOnlyCollection<string> RegisteredCombatDebuffs => registeredCombatDebuffs;
+        /// <summary>
+        /// Combat debuff tags gained from dialogues. They live in <see cref="StoryFlags"/>, so a bonus won in
+        /// the village (Baldur's [Lore]) survives scene changes and is saved.
+        /// </summary>
+        public IReadOnlyCollection<string> RegisteredCombatDebuffs => StoryFlags.All;
 
         /// <summary>Choices added to every node of the current conversation by the speaker.</summary>
         public IReadOnlyList<DialogueOption> SessionOptions => sessionOptions;
@@ -180,8 +181,9 @@ namespace CastleOfTheD20.Dialogue
 
             if (option.RequiresCheck)
             {
-                // Calculate bonus from active player's attribute modifier
-                int bonus = activePlayer != null ? activePlayer.PrimaryAttributeBonus : 2;
+                // The check uses the attribute it names (STR, DEX, INT, WIS, CHA), not always the class's main one
+                HeroAttribute attribute = HeroAttributes.ResolveCheckAttribute(activePlayer, option.SkillCheckDescription);
+                int bonus = activePlayer != null ? HeroAttributes.GetModifier(activePlayer, attribute) : 2;
                 AdvantageType advantage = AdvantageType.None;
 
                 // Rogue lockpicking or persuasion advantages if applicable
@@ -381,7 +383,7 @@ namespace CastleOfTheD20.Dialogue
             if (string.IsNullOrWhiteSpace(tag)) return;
             if (tag.StartsWith("[ACTION_", StringComparison.OrdinalIgnoreCase)) return;
 
-            registeredCombatDebuffs.Add(tag);
+            StoryFlags.Set(tag);
             Debug.Log($"[DialogueController] Combat debuff unlocked: '{tag}'.");
         }
 
@@ -390,7 +392,7 @@ namespace CastleOfTheD20.Dialogue
         /// </summary>
         public bool HasCombatDebuff(string tag)
         {
-            return !string.IsNullOrEmpty(tag) && registeredCombatDebuffs.Contains(tag);
+            return StoryFlags.Has(tag);
         }
 
         /// <summary>
@@ -400,7 +402,7 @@ namespace CastleOfTheD20.Dialogue
         {
             if (HasCombatDebuff(tag))
             {
-                registeredCombatDebuffs.Remove(tag);
+                StoryFlags.Remove(tag);
                 Debug.Log($"[DialogueController] Combat debuff consumed: '{tag}'.");
                 return true;
             }
@@ -412,7 +414,7 @@ namespace CastleOfTheD20.Dialogue
         /// </summary>
         public void ClearAllCombatDebuffs()
         {
-            registeredCombatDebuffs.Clear();
+            StoryFlags.Clear();
         }
 
         #endregion

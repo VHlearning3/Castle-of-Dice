@@ -298,6 +298,9 @@ namespace CastleOfTheD20.Core
                 Debug.Log($"[SceneLoader] Player positioned at spawn '{targetSpawn.name}' ({spawnPos}).");
             }
 
+            // Continue: the hero goes back to the spot where the game was saved
+            SaveSystem.ApplyPendingPosition(sceneName);
+
             // 3. Restore persisted hero stats from PlayerDataSO
             if (player != null && playerData != null)
             {

@@ -70,7 +70,8 @@ namespace CastleOfTheD20.Core
                 PlayerDataSO.Session = playerData;
             }
 
-            LoadProgression();
+            // The save is loaded only when the player picks Continue in the main menu (critical review A9),
+            // so New Adventure never starts with the previous run's progress applied.
         }
 
         private void Start()
@@ -216,15 +217,20 @@ namespace CastleOfTheD20.Core
 
         #region Save & Load
 
-        public void LoadProgression()
+        /// <summary>
+        /// Loads the saved adventure into the session (Continue). Returns the save, or null when there is none.
+        /// </summary>
+        public PlayerSaveData LoadProgression()
         {
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
             PlayerSaveData save = SaveSystem.LoadGame(PlayerData, player);
             currentLevel = save != null ? save.currentLevel : PlayerData.CurrentLevel;
+            return save;
         }
 
         /// <summary>
-        /// Starts a fresh adventure: clears session progression (the persisted save is overwritten on the next save).
+        /// Starts a fresh adventure: clears session progression and deletes the old save, so Continue can
+        /// never bring the previous run back.
         /// </summary>
         public void ResetForNewGame()
         {
@@ -232,6 +238,9 @@ namespace CastleOfTheD20.Core
             PlayerData.ResetData();
             PlayerData.SelectedClass = keepClass;
             currentLevel = 1;
+
+            SaveSystem.ClearSave();
+            StoryFlags.Clear();
 
             if (Economy.InventoryManager.Instance != null)
             {
