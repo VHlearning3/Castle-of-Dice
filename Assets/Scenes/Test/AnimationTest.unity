@@ -1,0 +1,773 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!29 &1
+OcclusionCullingSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_OcclusionBakeSettings:
+    smallestOccluder: 5
+    smallestHole: 0.25
+    backfaceThreshold: 100
+  m_SceneGUID: 00000000000000000000000000000000
+  m_OcclusionCullingData: {fileID: 0}
+--- !u!104 &2
+RenderSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 10
+  m_Fog: 0
+  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_FogMode: 3
+  m_FogDensity: 0.01
+  m_LinearFogStart: 0
+  m_LinearFogEnd: 300
+  m_AmbientSkyColor: {r: 0.62, g: 0.66, b: 0.74, a: 1}
+  m_AmbientEquatorColor: {r: 0.46, g: 0.44, b: 0.4, a: 1}
+  m_AmbientGroundColor: {r: 0.24, g: 0.21, b: 0.18, a: 1}
+  m_AmbientIntensity: 1
+  m_AmbientMode: 1
+  m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
+  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_HaloStrength: 0.5
+  m_FlareStrength: 1
+  m_FlareFadeSpeed: 3
+  m_HaloTexture: {fileID: 0}
+  m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
+  m_DefaultReflectionMode: 0
+  m_DefaultReflectionResolution: 128
+  m_ReflectionBounces: 1
+  m_ReflectionIntensity: 1
+  m_CustomReflection: {fileID: 0}
+  m_Sun: {fileID: 0}
+  m_UseRadianceAmbientProbe: 0
+--- !u!157 &3
+LightmapSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 13
+  m_BakeOnSceneLoad: 0
+  m_GISettings:
+    serializedVersion: 2
+    m_BounceScale: 1
+    m_IndirectOutputScale: 1
+    m_AlbedoBoost: 1
+    m_EnvironmentLightingMode: 0
+    m_EnableBakedLightmaps: 1
+    m_EnableRealtimeLightmaps: 0
+  m_LightmapEditorSettings:
+    serializedVersion: 12
+    m_Resolution: 2
+    m_BakeResolution: 40
+    m_AtlasSize: 1024
+    m_AO: 0
+    m_AOMaxDistance: 1
+    m_CompAOExponent: 1
+    m_CompAOExponentDirect: 0
+    m_ExtractAmbientOcclusion: 0
+    m_Padding: 2
+    m_LightmapParameters: {fileID: 0}
+    m_LightmapsBakeMode: 1
+    m_TextureCompression: 1
+    m_ReflectionCompression: 2
+    m_MixedBakeMode: 2
+    m_BakeBackend: 2
+    m_PVRSampling: 1
+    m_PVRDirectSampleCount: 32
+    m_PVRSampleCount: 512
+    m_PVRBounces: 2
+    m_PVREnvironmentSampleCount: 256
+    m_PVREnvironmentReferencePointCount: 2048
+    m_PVRFilteringMode: 1
+    m_PVRDenoiserTypeDirect: 1
+    m_PVRDenoiserTypeIndirect: 1
+    m_PVRDenoiserTypeAO: 1
+    m_PVRFilterTypeDirect: 0
+    m_PVRFilterTypeIndirect: 0
+    m_PVRFilterTypeAO: 0
+    m_PVREnvironmentMIS: 1
+    m_PVRCulling: 1
+    m_PVRFilteringGaussRadiusDirect: 1
+    m_PVRFilteringGaussRadiusIndirect: 1
+    m_PVRFilteringGaussRadiusAO: 1
+    m_PVRFilteringAtrousPositionSigmaDirect: 0.5
+    m_PVRFilteringAtrousPositionSigmaIndirect: 2
+    m_PVRFilteringAtrousPositionSigmaAO: 1
+    m_ExportTrainingData: 0
+    m_TrainingDataDestination: TrainingData
+    m_LightProbeSampleCountMultiplier: 4
+  m_LightingDataAsset: {fileID: 20201, guid: 0000000000000000f000000000000000, type: 0}
+  m_LightingSettings: {fileID: 0}
+--- !u!196 &4
+NavMeshSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_BuildSettings:
+    serializedVersion: 3
+    agentTypeID: 0
+    agentRadius: 0.5
+    agentHeight: 2
+    agentSlope: 45
+    agentClimb: 0.4
+    ledgeDropHeight: 0
+    maxJumpAcrossDistance: 0
+    minRegionArea: 2
+    manualCellSize: 0
+    cellSize: 0.16666667
+    manualTileSize: 0
+    tileSize: 256
+    buildHeightMesh: 0
+    maxJobWorkers: 0
+    preserveTilesOutsideBounds: 0
+    debug:
+      m_Flags: 0
+  m_NavMeshData: {fileID: 0}
+--- !u!1 &414260512
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 414260514}
+  - component: {fileID: 414260513}
+  m_Layer: 0
+  m_Name: Directional Light
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!108 &414260513
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414260512}
+  m_Enabled: 1
+  serializedVersion: 12
+  m_Type: 1
+  m_Color: {r: 1, g: 0.95, b: 0.86, a: 1}
+  m_Intensity: 1.4
+  m_Range: 10
+  m_SpotAngle: 30
+  m_InnerSpotAngle: 21.80208
+  m_CookieSize2D: {x: 0.5, y: 0.5}
+  m_Shadows:
+    m_Type: 2
+    m_Resolution: -1
+    m_CustomResolution: -1
+    m_Strength: 1
+    m_Bias: 0.05
+    m_NormalBias: 0.4
+    m_NearPlane: 0.2
+    m_CullingMatrixOverride:
+      e00: 1
+      e01: 0
+      e02: 0
+      e03: 0
+      e10: 0
+      e11: 1
+      e12: 0
+      e13: 0
+      e20: 0
+      e21: 0
+      e22: 1
+      e23: 0
+      e30: 0
+      e31: 0
+      e32: 0
+      e33: 1
+    m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ForceVisible: 0
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0
+  m_LightUnit: 1
+  m_LuxAtDistance: 1
+  m_EnableSpotReflector: 1
+--- !u!4 &414260514
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 414260512}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.109381676, y: 0.8754261, z: -0.40821794, w: 0.23456974}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &829664528
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 829664530}
+  - component: {fileID: 829664529}
+  m_Layer: 0
+  m_Name: AnimationTestBench
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &829664529
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 829664528}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 463481d14af648a409aecf30ec653538, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.DevTools.AnimationTestBench
+  entries:
+  - displayName: Sir Roland
+    group: Heroes
+    prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
+    modelChild: Knight_Model
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: Sword and shield are saved on his hand bones in PlayerHero.
+    stateNames:
+    - Idle
+    - Walk
+    - Run
+    - Attack
+    - TakeHit
+    - DrinkPotion
+    - warrior_sword_slash
+    - warrior_shield_block
+    - warrior_war_cry
+    - warrior_iron_will
+    - warrior_retaliation
+    - Die
+    - Victory
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Run
+    - Base Layer.Attack
+    - Base Layer.TakeHit
+    - Base Layer.DrinkPotion
+    - Base Layer.warrior_sword_slash
+    - Base Layer.warrior_shield_block
+    - Base Layer.warrior_war_cry
+    - Base Layer.warrior_iron_will
+    - Base Layer.warrior_retaliation
+    - Base Layer.Die
+    - Base Layer.Victory
+  - displayName: Scholar Elira
+    group: Heroes
+    prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
+    modelChild: Mage_Model
+    attachHeroWeapons: 1
+    heroClass: 1
+    note: Staff attached from HeroWeaponMounts, as in the game.
+    stateNames:
+    - Idle
+    - Walk
+    - Run
+    - TakeHit
+    - DrinkPotion
+    - mage_fireball
+    - mage_frostbite
+    - mage_mana_shield
+    - mage_blink
+    - mage_arcane_chains
+    - Attack
+    - Die
+    - Victory
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Run
+    - Base Layer.TakeHit
+    - Base Layer.DrinkPotion
+    - Base Layer.mage_fireball
+    - Base Layer.mage_frostbite
+    - Base Layer.mage_mana_shield
+    - Base Layer.mage_blink
+    - Base Layer.mage_arcane_chains
+    - Base Layer.Attack
+    - Base Layer.Die
+    - Base Layer.Victory
+  - displayName: Shadow-Corvo
+    group: Heroes
+    prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
+    modelChild: Rogue_Model
+    attachHeroWeapons: 1
+    heroClass: 2
+    note: Daggers attached from HeroWeaponMounts, as in the game.
+    stateNames:
+    - Idle
+    - Walk
+    - Run
+    - TakeHit
+    - DrinkPotion
+    - rogue_backstab
+    - rogue_poison_dagger
+    - rogue_smoke_bomb
+    - rogue_shadow_step
+    - rogue_poison_cloud
+    - Attack
+    - Die
+    - Victory
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Run
+    - Base Layer.TakeHit
+    - Base Layer.DrinkPotion
+    - Base Layer.rogue_backstab
+    - Base Layer.rogue_poison_dagger
+    - Base Layer.rogue_smoke_bomb
+    - Base Layer.rogue_shadow_step
+    - Base Layer.rogue_poison_cloud
+    - Base Layer.Attack
+    - Base Layer.Die
+    - Base Layer.Victory
+  - displayName: Baldur the Smith
+    group: NPCs
+    prefab: {fileID: 8407242380456473719, guid: de1ca3d83d03ada4a81c88e2febeeb23, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - idle
+    - walk
+    - attack
+    statePaths:
+    - Base Layer.idle
+    - Base Layer.walk
+    - Base Layer.attack
+  - displayName: Barnaby
+    group: NPCs
+    prefab: {fileID: 1498305608250196926, guid: 4e483f2befea7c14bb70cba26a79515e, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: Also the model for Pip the peddler.
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Mirabel
+    group: NPCs
+    prefab: {fileID: 4698348843933289517, guid: 46c00c3ec988f1a4aa0245147a7c6cb3, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Elder Othelia
+    group: NPCs
+    prefab: {fileID: 6656072630696856095, guid: 977874ce8dd79184fb27778cf5fd260b, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Giant Cellar Rat
+    group: Enemies
+    prefab: {fileID: 2985732716032882606, guid: 3f7c76159cf655f47aab6dbcfc762f7a, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+  - displayName: Rotting Zombie
+    group: Enemies
+    prefab: {fileID: 1943073133155162453, guid: 7d3c6b3ee90a9b142ab5d47020a6ea00, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Skeleton Guard
+    group: Enemies
+    prefab: {fileID: 2730786726161341926, guid: 0197e986f9617c04fb380ac9adec54a8, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: Also the Skeleton Archer and the ghost of Sir Aldric.
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Cursed Commander
+    group: Bosses
+    prefab: {fileID: 1496257928652497661, guid: 85e5285e8f0b98a4d9949365594acac7, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Shadow Mage Malakor
+    group: Bosses
+    prefab: {fileID: 8058661143662878879, guid: 546a372192a724a4d86e4a203b7aa994, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: Also his mirror image and the Curse Cultist (0.8 scale, red robe).
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Gargoyle King (stage 1)
+    group: Bosses
+    prefab: {fileID: 4896238273926261918, guid: de145c9296fd62b408ebf90e69e53344, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  - displayName: Gargoyle King (Stone Form)
+    group: Bosses
+    prefab: {fileID: 6845457417357795407, guid: c85e76885b2eaf0419065d98c49bf383, type: 3}
+    modelChild: 
+    attachHeroWeapons: 0
+    heroClass: 0
+    note: 
+    stateNames:
+    - Idle
+    - Walk
+    - Attack
+    - Die
+    statePaths:
+    - Base Layer.Idle
+    - Base Layer.Walk
+    - Base Layer.Attack
+    - Base Layer.Die
+  missing:
+  - displayName: Village cat
+    reason: no rig; VillageCat.cs only breathes and meows
+  - displayName: Mimic
+    reason: Chest.prefab with a primitive tongue, no rig
+  - displayName: Grey Wolf
+    reason: WolfUnit has AI but no model, prefab or controller
+  viewCamera: {fileID: 1911046798}
+  gap: 1
+--- !u!4 &829664530
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 829664528}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &941461157
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 941461161}
+  - component: {fileID: 941461160}
+  - component: {fileID: 941461159}
+  - component: {fileID: 941461158}
+  m_Layer: 0
+  m_Name: Ground
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &941461158
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941461157}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 9130bf7822dfb64409ea16eb032da0cd, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &941461159
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941461157}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!33 &941461160
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941461157}
+  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &941461161
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 941461157}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 12}
+  m_LocalScale: {x: 8, y: 1, z: 6}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1911046797
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1911046800}
+  - component: {fileID: 1911046798}
+  - component: {fileID: 1911046799}
+  m_Layer: 0
+  m_Name: Main Camera
+  m_TagString: MainCamera
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!20 &1911046798
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1911046797}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 0.16, g: 0.17, b: 0.2, a: 1}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: 0
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: 0.1
+  far clip plane: 300
+  field of view: 40
+  orthographic: 0
+  orthographic size: 5
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022
+--- !u!81 &1911046799
+AudioListener:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1911046797}
+  m_Enabled: 1
+--- !u!4 &1911046800
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1911046797}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.1305262, y: 0, z: 0, w: 0.9914449}
+  m_LocalPosition: {x: 0, y: 3, z: -8}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1660057539 &9223372036854775807
+SceneRoots:
+  m_ObjectHideFlags: 0
+  m_Roots:
+  - {fileID: 1911046800}
+  - {fileID: 414260514}
+  - {fileID: 941461161}
+  - {fileID: 829664530}
