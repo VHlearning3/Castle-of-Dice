@@ -1,0 +1,9 @@
+Begin Object Class=/Script/Foliage.FoliageType_InstancedStaticMesh Name="Pine_tree_1" ExportPath="/Script/Foliage.FoliageType_InstancedStaticMesh'/Game/HandPaintedEnvironment/Assets/Models/Pine_tree_1.Pine_tree_1'"
+   Mesh="/Script/Engine.StaticMesh'/Game/HandPaintedEnvironment/Assets/Models/Pine_tree.Pine_tree'"
+   UpdateGuid=65F60B48489A10A4B20CBAB19C7590FA
+   MeshBounds=(Origin=(X=-1.661987,Y=-8.532288,Z=652.385681),BoxExtent=(X=375.027496,Y=431.036377,Z=653.557556),SphereRadius=658.293457)
+   LowBoundOriginRadius=(X=-6.003805,Y=-0.034214,Z=98.553070)
+   ScaleCurve=(EditorCurveData=())
+   DensityFalloff=(FalloffCurve=(EditorCurveData=()))
+   bIncludeInHLOD=False
+End Object
