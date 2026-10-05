@@ -383,23 +383,18 @@ namespace CastleOfTheD20.Editor
             col.center = Vector3.zero;
             CultistCaster caster = cultist.AddComponent<CultistCaster>();
 
-            GameObject visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Characters/Visual_Boss_Malakor.prefab");
+            // The cultist's own hooded model (SetupRiggedEnemiesEditor.SetupEnemyAnimations)
+            GameObject visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(SetupRiggedEnemiesEditor.CultistVisualPath);
             if (visualPrefab != null)
             {
                 GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(visualPrefab, cultist.transform);
                 visual.name = "Visuals";
                 visual.transform.localPosition = new Vector3(0f, -height * 0.5f, 0f);
                 visual.transform.localRotation = Quaternion.identity;
-                visual.transform.localScale = Vector3.one * 0.8f;
-
-                // Dark red robes, so the cultist never reads as Malakor himself
-                Material robe = Mat("Cultist_Robe", new Color(0.35f, 0.06f, 0.08f), new Color(0.08f, 0f, 0f));
-                foreach (Renderer r in visual.GetComponentsInChildren<Renderer>())
-                {
-                    Material[] shared = new Material[r.sharedMaterials.Length];
-                    for (int i = 0; i < shared.Length; i++) shared[i] = robe;
-                    r.sharedMaterials = shared;
-                }
+            }
+            else
+            {
+                Debug.LogWarning("[ReviewContentBuilder] Run CastleOfDice/Setup Enemy Animations first: no cultist model.");
             }
 
             SerializedObject so = new SerializedObject(caster);
@@ -421,30 +416,26 @@ namespace CastleOfTheD20.Editor
             mimic.tag = "Enemy";
             mimic.transform.SetParent(parent, false);
             mimic.transform.position = floorPos + new Vector3(0f, height * 0.5f, 0f);
-            mimic.transform.rotation = Quaternion.Euler(0f, 181f, 0f);
+            // The mimic model's mouth faces the unit's forward; turned so it faces the same way as the prop chest
+            mimic.transform.rotation = Quaternion.Euler(0f, 1f, 0f);
             BoxCollider col = mimic.AddComponent<BoxCollider>();
             col.center = Vector3.zero;
             col.size = new Vector3(1.4f, height, 1.1f);
             MimicUnit unit = mimic.AddComponent<MimicUnit>();
 
-            GameObject chestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Chest.prefab");
-            if (chestPrefab != null)
+            // The rigged mimic (the village chest and lid with teeth, tongue and eyes): idle, hop, bite and death
+            GameObject visualPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(SetupRiggedEnemiesEditor.MimicVisualPath);
+            if (visualPrefab != null)
             {
-                GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(chestPrefab, mimic.transform);
+                GameObject visual = (GameObject)PrefabUtility.InstantiatePrefab(visualPrefab, mimic.transform);
                 visual.name = "Visuals";
                 visual.transform.localPosition = new Vector3(0f, -height * 0.5f, 0f);
                 visual.transform.localRotation = Quaternion.identity;
-                foreach (Collider c in visual.GetComponentsInChildren<Collider>()) c.enabled = false;
             }
-
-            // A red tongue so the guardian reads as alive once it wakes
-            GameObject tongue = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            tongue.name = "Mimic_Tongue";
-            Object.DestroyImmediate(tongue.GetComponent<Collider>());
-            tongue.transform.SetParent(mimic.transform, false);
-            tongue.transform.localPosition = new Vector3(0f, 0.1f, 0.6f);
-            tongue.transform.localScale = new Vector3(0.35f, 0.08f, 0.7f);
-            tongue.GetComponent<Renderer>().sharedMaterial = Mat("Mimic_Tongue", new Color(0.7f, 0.12f, 0.2f), new Color(0.2f, 0f, 0.05f));
+            else
+            {
+                Debug.LogWarning("[ReviewContentBuilder] Run CastleOfDice/Setup Enemy Animations first: no mimic model.");
+            }
 
             mimic.SetActive(false);
             return unit;

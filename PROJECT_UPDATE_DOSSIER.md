@@ -255,7 +255,7 @@ Seven scenes connected by `DoorTeleporter`s, each arriving at a named `StartSpaw
 | Curse Cultist | Forest Ambush | 18 | 11 | +3 | 4 | 3 | Heals a hurt ally 1d8 + 2, or curses the hero from 4 tiles: 1d4 and Blind 1 turn |
 | Armored Skeleton Guard | Courtyard | 20 | 12 | +2 | 4 | 3 | The Commander's guard |
 | Mimic | Tower | 32 | 13 | +4 | 2d6 + 1 | 3 | A hit also roots the hero for their next turn |
-| Grey Wolf | none yet | 14 | prefab | +3 | 1d6 + 1 | 6 | Initiative +2; pack AI (Advantage when another wolf flanks); waits for a wolf model |
+| Grey Wolf | none yet | 14 | prefab | +3 | 1d6 + 1 | 6 | Initiative +2; pack AI (Advantage when another wolf flanks); `Enemy_Wolf.prefab` is ready but no scene places it |
 | Village NPC (brawl) | Oakhaven | 16 | 11 | +2 | 3 | 3 | Defaults; knocked out, not killed; no scrap |
 
 ### 3.4 Boss mechanics and pre-combat dialogue hooks
@@ -426,12 +426,12 @@ The Zone 1 scene places the prefabs in `Assets/PREFABS/NPCs/`, and those prefabs
 
 | Unit | Prefab and model | Controller: states and clips |
 |---|---|---|
-| Giant Cellar Rat | `Characters/Visual_Enemy_Rat.prefab`, model `low-poly+rat+3d+model(1)/tripo_convert_7efcb97a….fbx` | `Enemy_Rat_Animator`: Idle, Walk and Attack all play the one *preset:quadruped:walk.001* clip, at speeds 0.2, 1 and 2.5. No Die state. |
-| Rotting Zombie | `Enemies/Enemy_Zombie.prefab` with `Visual_Enemy_Zombie`, model `FIxed_zombie_3dmodel.fbx` | `Enemy_Zombie_Animator`: Idle *idle*, Walk *Zombie walk*, Attack *Zombie attack*, Die *fall*, all from its own FBX. |
-| Armored Skeleton Guard, Skeleton Archer | `Enemies/Enemy_SkeletonGuard.prefab` with `Visual_Enemy_Skeleton`, model `Enemy_Normal_skeleton_3d_model/tripo_convert_5bd365a6….fbx` | `Enemy_Skeleton_Animator`: Idle *idle*, Walk *walk*, Die *defeat_03* from its own FBX; Attack *box_01* borrowed from the Commander's FBX. The archer is the same prefab with ranged stats and has no bow. Sir Aldric's ghost in the Castle Hall is this skeleton model with a pale glowing material. |
-| Curse Cultist | `Visual_Boss_Malakor` at 0.8 scale with a dark red `Cultist_Robe` material | Malakor's controller. |
-| Mimic | `Chest.prefab` plus a primitive tongue (`Mimic_Tongue`) | No rig and no Animator. |
-| Grey Wolf | none | No model, prefab or controller. |
+| Giant Cellar Rat | `Characters/Visual_Enemy_Rat.prefab`, model `low-poly+rat+3d+model(1)/tripo_convert_7efcb97a….fbx` | `Enemy_Rat_Animator`: Walk *preset:quadruped:walk.001* from its own FBX; Idle (sniffing), Attack (lunging bite) and Die (rolls onto its side) keyed on its skeleton in `BlenderSources/Enemy_Anims.blend` (`Rat_Anims.fbx`). |
+| Rotting Zombie | `Enemies/Enemy_Zombie.prefab` with `Visual_Enemy_Zombie`, model `FIxed_zombie_3dmodel.fbx` | `Enemy_Zombie_Animator`: Idle, Walk, Attack and Die from the Mixamo Scary Zombie Pack (*zombie idle*, *zombie walk*, *zombie attack*, *zombie death*), retargeted onto its Tripo skeleton (`Zombie_Anims.fbx`). |
+| Armored Skeleton Guard, Skeleton Archer | `Enemies/Enemy_SkeletonGuard.prefab` with `Visual_Enemy_Skeleton`, model `Enemy_Normal_skeleton_3d_model/tripo_convert_5bd365a6….fbx` | `Enemy_Skeleton_Animator`: Idle *idle*, Walk *walk*, Die *defeat_03* from its own FBX; Attack the Scary Zombie Pack's *zombie attack* swipe retargeted onto it (`Skeleton_Anims.fbx`). The archer is `Enemies/Enemy_SkeletonArcher.prefab` with `Visual_Enemy_SkeletonArcher`: the same model with a low-poly bow (`Models/Items/Skeleton_Bow.fbx`) on the left hand and a keyed draw-and-release shot as Attack. Sir Aldric's ghost in the Castle Hall is this skeleton model with a pale glowing material. |
+| Curse Cultist | `Visual_Enemy_Cultist`, model `Characters/Cultist/Cultist.fbx` (low-poly hooded robe built in `BlenderSources/Cultist.blend` on Mirabel's skeleton) | `Enemy_Cultist_Animator`: Idle, Walk and Die are Mirabel's *idle*, *walk* and *fall*; Attack (curse and heal) is Elira's *ManaShield* arm-raise retargeted. |
+| Mimic | `Visual_Enemy_Mimic`, model `Characters/Mimic/Mimic.fbx`: the village `Chest` and `Chest_cover` with teeth, tongue and eyes (`BlenderSources/Mimic.blend`) | `Enemy_Mimic_Animator`: Idle (lid breathing), Walk (hop), Attack (lid flies open, tongue lashes, bite), Die (lid flops open, tips over). |
+| Grey Wolf | `Enemies/Enemy_Wolf.prefab` (`WolfUnit`) with `Visual_Enemy_Wolf`, model `Characters/Wolf/Wolf.fbx` (low-poly, `BlenderSources/Wolf.blend`) | `Enemy_Wolf_Animator`: Idle, Walk, Attack (lunging bite) and Die keyed on its own rig. No scene places a wolf yet. |
 | Cursed Commander | `Characters/Visual_Boss_CursedCommander.prefab`, model `1_BOSS_skeletal_warrior_3d_model/tripo_convert_10a8093e….fbx` | `Boss_CursedCommander_Animator`: Walk *walk*, Attack *box_01*, Die *defeat_03* from his FBX; Idle borrowed from the normal skeleton FBX. |
 | Shadow Mage Malakor and his mirror image | `Characters/Visual_Boss_Malakor.prefab`, model `2_Boss_fantasy_silhouette_3d_model/tripo_convert_18f25e08….fbx` | `Boss_Malakor_Animator`: Attack *cast_a_spell*, Die *defeat_03* from his FBX; Idle and Walk borrowed from the normal skeleton FBX. |
 | Gargoyle King, stage 1 | `Characters/Visual_Boss_Golem_Stage1.prefab`, model `3_Boss_1st stage_stone+golem+3d+model(1)/tripo_convert_013987b6….fbx` | `Boss_Golem_Stage1_Animator`: Idle *idle.001*, Walk *walk.001*, Attack *box_01.001* from the stage 1 FBX; Die *fall.001* borrowed from the stage 2 FBX. |

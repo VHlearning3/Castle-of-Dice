@@ -43,9 +43,13 @@ namespace CastleOfTheD20.Editor
             new Def { name = "Elder Othelia", group = "NPCs", path = Npcs + "NPC_Othelia_3dmodel.prefab" },
             new Def { name = "Giant Cellar Rat", group = "Enemies", path = Visuals + "Visual_Enemy_Rat.prefab" },
             new Def { name = "Rotting Zombie", group = "Enemies", path = Visuals + "Visual_Enemy_Zombie.prefab" },
-            new Def { name = "Skeleton Guard", group = "Enemies", path = Visuals + "Visual_Enemy_Skeleton.prefab", note = "Also the Skeleton Archer and the ghost of Sir Aldric." },
+            new Def { name = "Skeleton Guard", group = "Enemies", path = Visuals + "Visual_Enemy_Skeleton.prefab", note = "Also the ghost of Sir Aldric." },
+            new Def { name = "Skeleton Archer", group = "Enemies", path = Visuals + "Visual_Enemy_SkeletonArcher.prefab", note = "The guard's model with a bow; Attack is the bow shot." },
+            new Def { name = "Curse Cultist", group = "Enemies", path = Visuals + "Visual_Enemy_Cultist.prefab" },
+            new Def { name = "Mimic", group = "Enemies", path = Visuals + "Visual_Enemy_Mimic.prefab" },
+            new Def { name = "Grey Wolf", group = "Enemies", path = Visuals + "Visual_Enemy_Wolf.prefab", note = "Enemy_Wolf.prefab is ready; no scene uses it yet." },
             new Def { name = "Cursed Commander", group = "Bosses", path = Visuals + "Visual_Boss_CursedCommander.prefab" },
-            new Def { name = "Shadow Mage Malakor", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image and the Curse Cultist (0.8 scale, red robe)." },
+            new Def { name = "Shadow Mage Malakor", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image." },
             new Def { name = "Gargoyle King (stage 1)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage1.prefab" },
             new Def { name = "Gargoyle King (Stone Form)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage2.prefab" },
         };
@@ -53,8 +57,6 @@ namespace CastleOfTheD20.Editor
         private static readonly string[,] Missing =
         {
             { "Village cat", "no rig; VillageCat.cs only breathes and meows" },
-            { "Mimic", "Chest.prefab with a primitive tongue, no rig" },
-            { "Grey Wolf", "WolfUnit has AI but no model, prefab or controller" },
         };
 
         [MenuItem("CastleOfDice/Build Animation Test Scene")]

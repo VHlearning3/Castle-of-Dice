@@ -39,6 +39,10 @@ namespace CastleOfTheD20.Editor
         private const string ZombiePrefabPath = EnemyFolder + "/Enemy_Zombie.prefab";
         private const string SkeletonGuardPrefabPath = EnemyFolder + "/Enemy_SkeletonGuard.prefab";
         public const string SkeletonArcherPrefabPath = EnemyFolder + "/Enemy_SkeletonArcher.prefab";
+        public const string WolfPrefabPath = EnemyFolder + "/Enemy_Wolf.prefab";
+        public const string MimicVisualPath = VisualFolder + "/Visual_Enemy_Mimic.prefab";
+        public const string CultistVisualPath = VisualFolder + "/Visual_Enemy_Cultist.prefab";
+        private const string ChestMaterialPath = "Assets/LowPolyVillageAll/Omat Materials/M_Chest.mat";
         private const string Zone2 = "Assets/Scenes/Zone_2_ForestPath.unity";
         private const string PlayerHeroPrefabPath = "Assets/PREFABS/Players/PlayerHero.prefab";
 
@@ -72,6 +76,8 @@ namespace CastleOfTheD20.Editor
             public List<string> TriggeredRoles = new List<string>();
             // Props hung on a bone of the visual prefab: FBX placed in the model's rest-pose space (from Blender)
             public List<(string fbx, string bone)> Attachments = new List<(string, string)>();
+            // Models built in Blender keep their own material slots (mapped by name, see PropMaterial)
+            public bool OwnMaterials;
 
             public string MaterialPath => $"Assets/Characters/Materials/M_{Key}.mat";
             public string ControllerPath => $"Assets/Characters/Animators/{Key}_Animator.controller";
@@ -165,6 +171,38 @@ namespace CastleOfTheD20.Editor
                 Takes = { [Walk] = "preset:quadruped:walk.001" },
                 AnimFbxPath = "Assets/Characters/low-poly+rat+3d+model(1)/Rat_Anims.fbx",
                 AnimTakes = { [Idle] = "Idle", [Attack] = "Attack", [Die] = "Die" },
+            },
+            // Low-poly models built in Blender (BlenderSources/Mimic.blend, Wolf.blend, Cultist.blend)
+            new ModelSpec
+            {
+                // The Tower's mimic: the village chest and its lid with teeth, a tongue and eyes; the lid bites
+                Key = "Enemy_Mimic",
+                FbxPath = "Assets/Characters/Mimic/Mimic.fbx",
+                MotionNode = "Root",
+                TargetHeight = 1.5f,
+                Yaw = 180f,
+                OwnMaterials = true,
+                Takes = { [Idle] = "Idle", [Walk] = "Walk", [Attack] = "Attack", [Die] = "Die" },
+            },
+            new ModelSpec
+            {
+                Key = "Enemy_Wolf",
+                FbxPath = "Assets/Characters/Wolf/Wolf.fbx",
+                MotionNode = "Root",
+                TargetHeight = 1.8f,
+                OwnMaterials = true,
+                Takes = { [Idle] = "Idle", [Walk] = "Walk", [Attack] = "Attack", [Die] = "Die" },
+            },
+            new ModelSpec
+            {
+                // The Forest ambush's curse cultist: a hooded robe on Mirabel's skeleton, with her idle, walk and
+                // fall and Elira's Mana Shield arm-raise retargeted as the curse / heal cast
+                Key = "Enemy_Cultist",
+                FbxPath = "Assets/Characters/Cultist/Cultist.fbx",
+                MotionNode = MixamoHips,
+                TargetHeight = 2.6f,
+                OwnMaterials = true,
+                Takes = { [Idle] = "Idle", [Walk] = "Walk", [Attack] = "Attack", [Die] = "Die" },
             },
             new ModelSpec
             {
@@ -275,15 +313,17 @@ namespace CastleOfTheD20.Editor
 
         /// <summary>
         /// Re-imports the skeleton's, zombie's and rat's clips and rebuilds their animators in place, and builds the
-        /// skeleton archer (visual prefab with the bow, and Enemy_SkeletonArcher). Existing visual prefabs, the
-        /// hero prefab and the zone scenes are left alone.
+        /// skeleton archer (with the bow), mimic, wolf and cultist visual prefabs plus Enemy_SkeletonArcher and
+        /// Enemy_Wolf. Existing visual prefabs, the hero prefab and the zone scenes are left alone (the Forest
+        /// ambush and the Tower mimic pick the new models up through ReviewContentBuilder).
         /// </summary>
-        [MenuItem("CastleOfDice/Setup Enemy Animations (skeleton, archer, zombie, rat)")]
+        [MenuItem("CastleOfDice/Setup Enemy Animations (skeleton, archer, zombie, rat, mimic, wolf, cultist)")]
         public static void SetupEnemyAnimations()
         {
             EnsureFolder(VisualFolder);
             EnsureFolder(EnemyFolder);
-            string[] keys = { "Enemy_Skeleton", "Enemy_Zombie", "Enemy_Rat", "Enemy_SkeletonArcher" };
+            string[] keys = { "Enemy_Skeleton", "Enemy_Zombie", "Enemy_Rat", "Enemy_SkeletonArcher", "Enemy_Mimic", "Enemy_Wolf", "Enemy_Cultist" };
+            var newVisuals = new HashSet<string> { "Enemy_SkeletonArcher", "Enemy_Mimic", "Enemy_Wolf", "Enemy_Cultist" };
             foreach (string key in keys) ConfigureImporter(Find(key));
             AssetDatabase.Refresh();
             foreach (string key in keys)
@@ -291,9 +331,10 @@ namespace CastleOfTheD20.Editor
                 ModelSpec spec = Find(key);
                 Material material = SetupMaterial(spec);
                 AnimatorController controller = BuildController(spec);
-                if (key == "Enemy_SkeletonArcher") BuildVisualPrefab(spec, material, controller);
+                if (newVisuals.Contains(key)) BuildVisualPrefab(spec, material, controller);
             }
             BuildSkeletonArcherPrefab();
+            BuildWolfPrefab();
             AssetDatabase.SaveAssets();
             Debug.Log("[SetupRiggedEnemiesEditor] Skeleton, archer, zombie and rat animations set up.");
         }
@@ -369,7 +410,8 @@ namespace CastleOfTheD20.Editor
             // Hips as root node: travel becomes root motion (discarded), so clips play in place
             importer.motionNodeName = spec.MotionNode;
             importer.importAnimation = true;
-            importer.materialImportMode = ModelImporterMaterialImportMode.None;
+            // Models built in Blender keep their material slots so CreateModel can map them by name
+            importer.materialImportMode = spec.OwnMaterials ? ModelImporterMaterialImportMode.ImportViaMaterialDescription : ModelImporterMaterialImportMode.None;
 
             var clips = new List<ModelImporterClipAnimation>();
             // One clip per role; two roles may share a take (the mage's FrostRay is also her plain cast)
@@ -444,6 +486,7 @@ namespace CastleOfTheD20.Editor
 
         private static Material SetupMaterial(ModelSpec spec)
         {
+            if (spec.OwnMaterials) return null;
             Material mat = AssetDatabase.LoadAssetAtPath<Material>(spec.MaterialPath);
             if (mat == null)
             {
@@ -632,7 +675,16 @@ namespace CastleOfTheD20.Editor
 
             foreach (Renderer r in model.GetComponentsInChildren<Renderer>(true))
             {
-                r.sharedMaterial = material;
+                if (spec.OwnMaterials)
+                {
+                    Material[] mats = r.sharedMaterials;
+                    for (int i = 0; i < mats.Length; i++) mats[i] = PropMaterial(mats[i] != null ? mats[i].name : "Prop");
+                    r.sharedMaterials = mats;
+                }
+                else
+                {
+                    r.sharedMaterial = material;
+                }
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
                 r.receiveShadows = true;
             }
@@ -726,11 +778,29 @@ namespace CastleOfTheD20.Editor
             ["M_Bow_Wood"] = new Color(0.36f, 0.2f, 0.08f),
             ["M_Bow_Grip"] = new Color(0.15f, 0.09f, 0.05f),
             ["M_Bow_String"] = new Color(0.85f, 0.82f, 0.72f),
+            ["M_Mimic_Teeth"] = new Color(0.92f, 0.88f, 0.75f),
+            ["M_Mimic_Tongue"] = new Color(0.7f, 0.12f, 0.2f),
+            ["M_Mimic_Eyes"] = new Color(1f, 0.85f, 0.1f),
+            ["M_Mimic_Mouth"] = new Color(0.25f, 0.02f, 0.05f),
+            ["M_Wolf_Fur"] = new Color(0.42f, 0.42f, 0.44f),
+            ["M_Wolf_Belly"] = new Color(0.72f, 0.7f, 0.66f),
+            ["M_Wolf_Dark"] = new Color(0.12f, 0.11f, 0.11f),
+            ["M_Wolf_Eyes"] = new Color(0.95f, 0.75f, 0.15f),
+            ["M_Cultist_Robe"] = new Color(0.38f, 0.05f, 0.07f),
+            ["M_Cultist_Trim"] = new Color(0.1f, 0.06f, 0.05f),
+            ["M_Cultist_Skin"] = new Color(0.62f, 0.55f, 0.5f),
+            ["M_Cultist_Shadow"] = new Color(0.02f, 0.01f, 0.01f),
+            ["M_Cultist_Eyes"] = new Color(1f, 0.35f, 0.05f),
         };
+
+        // Glowing eyes
+        private static readonly HashSet<string> EmissiveProps = new HashSet<string> { "M_Mimic_Eyes", "M_Wolf_Eyes", "M_Cultist_Eyes" };
 
         private static Material PropMaterial(string sourceName)
         {
             string name = sourceName.Replace(" (Instance)", "");
+            // The mimic's box and lid keep the village chest's own textured material
+            if (name.StartsWith("Chest")) return AssetDatabase.LoadAssetAtPath<Material>(ChestMaterialPath);
             string path = $"Assets/Characters/Materials/{name}.mat";
             Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
             if (mat == null)
@@ -743,6 +813,12 @@ namespace CastleOfTheD20.Editor
             mat.color = c;
             if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
             if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.15f);
+            if (EmissiveProps.Contains(name) && mat.HasProperty("_EmissionColor"))
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", c * 2f);
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
             EditorUtility.SetDirty(mat);
             return mat;
         }
@@ -799,6 +875,10 @@ namespace CastleOfTheD20.Editor
         private static void BuildZombiePrefab() =>
             BuildEnemyPrefab(ZombiePrefabPath, "Enemy_Zombie", "Rotting Zombie", hp: 20, ac: 11, damage: 4);
 
+        /// <summary>A grey wolf (WolfUnit sets its own stats). No scene uses it yet.</summary>
+        private static void BuildWolfPrefab() =>
+            BuildEnemyPrefab(WolfPrefabPath, "Enemy_Wolf", "Grey Wolf", hp: 14, ac: 12, damage: 4, height: 1.8f, unitType: typeof(WolfUnit));
+
         /// <summary>The Forest ambush's skeleton archer: the guard's model with a bow and a bow shot.</summary>
         private static void BuildSkeletonArcherPrefab() =>
             BuildEnemyPrefab(SkeletonArcherPrefabPath, "Enemy_SkeletonArcher", "Skeleton Archer", hp: 16, ac: 12, damage: 4);
@@ -807,15 +887,15 @@ namespace CastleOfTheD20.Editor
         private static void BuildSkeletonGuardPrefab() =>
             BuildEnemyPrefab(SkeletonGuardPrefabPath, "Enemy_Skeleton", "Armored Skeleton Guard", hp: 20, ac: 12, damage: 4);
 
-        private static void BuildEnemyPrefab(string path, string visualKey, string displayName, int hp, int ac, int damage)
+        private static void BuildEnemyPrefab(string path, string visualKey, string displayName, int hp, int ac, int damage,
+            float height = 3.0f, System.Type unitType = null)
         {
-            const float height = 3.0f;
             GameObject root = new GameObject(displayName);
             try
             {
                 root.tag = "Enemy";
-                EnemyUnit enemy = root.AddComponent<EnemyUnit>();
-                enemy.ConfigureStats(displayName, hp: hp, ac: ac, damage: damage, bonus: 2);
+                EnemyUnit enemy = (EnemyUnit)root.AddComponent(unitType ?? typeof(EnemyUnit));
+                if (unitType == null) enemy.ConfigureStats(displayName, hp: hp, ac: ac, damage: damage, bonus: 2);
 
                 CapsuleCollider col = root.AddComponent<CapsuleCollider>();
                 col.height = height;
