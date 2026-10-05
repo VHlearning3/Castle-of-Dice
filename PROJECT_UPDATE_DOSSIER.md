@@ -416,10 +416,10 @@ The Zone 1 scene places the prefabs in `Assets/PREFABS/NPCs/`, and those prefabs
 
 | NPC | Prefab and model | Controller: states and clips |
 |---|---|---|
-| Baldur | `NPC_Baldur_Smith.prefab`, model `Characters/NPC_Baldur_Smith.fbx` | `NPC_Baldur_Smith_Animator`: idle *agree* (a looping nod), walk *walk*, attack *box_01*. No Die state. The FBX also has *press-up*, *run* and *front_kick_01*, unused. |
-| Barnaby | `NPC_Barnaby_3dmodel.prefab`, model `Characters/NPC_BarnabyFIXED/NPC_BarnabyFIXED.fbx` | `NPC_Barnaby_Animator`: Idle *idle*, Walk *walk*, Attack *front_kick_01* (61 frames), Die *fall*. The same prefab is the model for Pip the peddler in the Castle Hall. |
-| Mirabel | `NPC_Mirabel_3dmodel.prefab`, model `Characters/NPC_Mirabel_3dmodelFIXED/NPC_Mirabel_3dmodel.fbx` | `NPC_Mirabel_Animator`: Idle *idle*, Walk *walk*, Attack *front_kick_02* (34 frames), Die *fall*. |
-| Elder Othelia | `NPC_Othelia_3dmodel.prefab`, model `Characters/NPC_Othelia_3d_model_FixedSpecialanimations/NPC_Old_Women_FixedSpecialanimations.fbx` | `NPC_Othelia_Animator`: Idle *Old women idle*, Walk also *Old women idle*, Attack *Old women punch* (120 frames), Die *fall*. Used in Zone 1 and in the Throne Room ending. |
+| Baldur | `NPC_Baldur_Smith.prefab`, model `Characters/NPC_Baldur_Smith.fbx` | `NPC_Baldur_Smith_Animator` (Humanoid, Tripo's own skeleton): Idle the Mixamo *idle (2)* and Die the villagers' *fall*, both retargeted onto his skeleton as `Characters/Baldur_Anims.fbx`; Walk *walk* and Attack *box_01* from his own FBX. The FBX also has *agree*, *press-up*, *run* and *front_kick_01*, unused. |
+| Barnaby | `NPC_Barnaby_3dmodel.prefab`, model `Characters/NPC_BarnabyFIXED/NPC_BarnabyFIXED.fbx` | `NPC_Barnaby_Animator`: Idle *idle*, Walk *walk*, Attack Baldur's *box_01* punch retargeted onto him (`NPC_BarnabyFIXED/Barnaby_Anims.fbx`; his own *front_kick_01* spins his back to the camera), Die *fall*. The same prefab is the model for Pip the peddler in the Castle Hall. |
+| Mirabel | `NPC_Mirabel_3dmodel.prefab`, model `Characters/NPC_Mirabel_3dmodelFIXED/NPC_Mirabel_3dmodel.fbx` | `NPC_Mirabel_Animator`: Idle *idle*, Walk *walk*, Attack Baldur's *box_01* punch retargeted onto her (`Mirabel_Anims.fbx`), Die *fall*. |
+| Elder Othelia | `NPC_Othelia_3dmodel.prefab`, model `Characters/NPC_Othelia_3d_model_FixedSpecialanimations/NPC_Old_Women_FixedSpecialanimations.fbx` | `NPC_Othelia_Animator`: Idle *Old women idle*, Walk Mirabel's *walk* retargeted onto her (`Othelia_Anims.fbx`, played at 0.85 speed), Attack *Old women punch* trimmed to the jab (frames 25-83, 2.4 s), Die *fall*. Used in Zone 1 and in the Throne Room ending. |
 | Village cat | `Village_Cat.prefab`, model `Characters/low-poly cat 3d model/low-poly+cat+3d+model.fbx` | No rig and no Animator; `VillageCat.cs` gives it a breathing scale and a synthesised meow. |
 
 ### 5.4 Enemies and bosses
