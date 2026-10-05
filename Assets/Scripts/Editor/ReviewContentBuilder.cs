@@ -235,8 +235,9 @@ namespace CastleOfTheD20.Editor
             Note("hall_decree", new Vector3(5.5f, 0f, -29f));
             Note("hall_diary", new Vector3(-27f, 0f, -21f));
 
-            // Pip the Peddler, trapped since the curse (second shop)
-            BuildScriptedNpc(ScriptedNpc.Kind.TrappedMerchant, "Pip_The_Peddler", "Assets/PREFABS/NPCs/NPC_Barnaby_3dmodel.prefab",
+            // Pip the Peddler, trapped since the curse (second shop): a legless ghost floating up and down.
+            // Only ScriptedNpc (talk and trade); no VillageNPC, so there is no way to start a fight with him.
+            BuildScriptedNpc(ScriptedNpc.Kind.TrappedMerchant, "Pip_The_Peddler", SetupRiggedEnemiesEditor.PipGhostVisualPath,
                 Free(new Vector3(-27f, 0f, -12f), 0.9f), 90f, null);
 
             // The Queen's treasury vault and its ghost guard
@@ -507,16 +508,16 @@ namespace CastleOfTheD20.Editor
 
             ScriptedNpc scripted = npc.AddComponent<ScriptedNpc>();
             scripted.NpcKind = kind;
-            if (kind == ScriptedNpc.Kind.GhostGuard)
+            // Both are ghosts now: Sir Aldric glows blue, Pip a paler green
             {
                 GameObject glowObj = new GameObject("Ghost_Glow");
                 glowObj.transform.SetParent(npc.transform, false);
                 glowObj.transform.localPosition = new Vector3(0f, 0.6f, 0f);
                 Light glow = glowObj.AddComponent<Light>();
                 glow.type = LightType.Point;
-                glow.color = new Color(0.5f, 0.8f, 1f);
-                glow.range = 6f;
-                glow.intensity = 2.2f;
+                glow.color = kind == ScriptedNpc.Kind.GhostGuard ? new Color(0.5f, 0.8f, 1f) : new Color(0.6f, 1f, 0.85f);
+                glow.range = kind == ScriptedNpc.Kind.GhostGuard ? 6f : 5f;
+                glow.intensity = kind == ScriptedNpc.Kind.GhostGuard ? 2.2f : 1.6f;
             }
         }
 

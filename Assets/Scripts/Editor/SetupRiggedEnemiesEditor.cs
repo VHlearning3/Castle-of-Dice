@@ -42,6 +42,7 @@ namespace CastleOfTheD20.Editor
         public const string WolfPrefabPath = EnemyFolder + "/Enemy_Wolf.prefab";
         public const string MimicVisualPath = VisualFolder + "/Visual_Enemy_Mimic.prefab";
         public const string CultistVisualPath = VisualFolder + "/Visual_Enemy_Cultist.prefab";
+        public const string PipGhostVisualPath = VisualFolder + "/Visual_NPC_Pip_Ghost.prefab";
         private const string ChestMaterialPath = "Assets/LowPolyVillageAll/Omat Materials/M_Chest.mat";
         private const string Zone2 = "Assets/Scenes/Zone_2_ForestPath.unity";
         private const string PlayerHeroPrefabPath = "Assets/PREFABS/Players/PlayerHero.prefab";
@@ -183,6 +184,17 @@ namespace CastleOfTheD20.Editor
                 Yaw = 180f,
                 OwnMaterials = true,
                 Takes = { [Idle] = "Idle", [Walk] = "Walk", [Attack] = "Attack", [Die] = "Die" },
+            },
+            new ModelSpec
+            {
+                // Pip the Peddler, a ghost merchant in the Castle Hall (BlenderSources/Pip_Ghost.blend): legless,
+                // translucent, with his hat and pack; he only floats up and down. Nobody can fight him.
+                Key = "NPC_Pip_Ghost",
+                FbxPath = "Assets/Characters/Pip_Ghost/Pip_Ghost.fbx",
+                MotionNode = "Root",
+                TargetHeight = 2.6f,
+                OwnMaterials = true,
+                Takes = { [Idle] = "Idle" },
             },
             new ModelSpec
             {
@@ -337,6 +349,18 @@ namespace CastleOfTheD20.Editor
             BuildWolfPrefab();
             AssetDatabase.SaveAssets();
             Debug.Log("[SetupRiggedEnemiesEditor] Skeleton, archer, zombie and rat animations set up.");
+        }
+
+        /// <summary>Builds Pip the ghost merchant's visual prefab (the Castle Hall picks it up via ReviewContentBuilder).</summary>
+        [MenuItem("CastleOfDice/Setup Pip Ghost")]
+        public static void SetupPipGhost()
+        {
+            EnsureFolder(VisualFolder);
+            ModelSpec spec = Find("NPC_Pip_Ghost");
+            ConfigureImporter(spec);
+            AssetDatabase.Refresh();
+            BuildVisualPrefab(spec, SetupMaterial(spec), BuildController(spec));
+            AssetDatabase.SaveAssets();
         }
 
         /// <summary>Re-imports only Elira's model and puts her on the hero prefab; enemies and zone scenes are left alone.</summary>
@@ -791,10 +815,13 @@ namespace CastleOfTheD20.Editor
             ["M_Cultist_Skin"] = new Color(0.62f, 0.55f, 0.5f),
             ["M_Cultist_Shadow"] = new Color(0.02f, 0.01f, 0.01f),
             ["M_Cultist_Eyes"] = new Color(1f, 0.35f, 0.05f),
+            ["M_Ghost_Body"] = new Color(0.62f, 0.88f, 0.86f, 0.5f),
+            ["M_Ghost_Dark"] = new Color(0.25f, 0.45f, 0.48f, 0.65f),
+            ["M_Ghost_Eyes"] = new Color(0.85f, 1f, 0.95f),
         };
 
         // Glowing eyes
-        private static readonly HashSet<string> EmissiveProps = new HashSet<string> { "M_Mimic_Eyes", "M_Wolf_Eyes", "M_Cultist_Eyes" };
+        private static readonly HashSet<string> EmissiveProps = new HashSet<string> { "M_Mimic_Eyes", "M_Wolf_Eyes", "M_Cultist_Eyes", "M_Ghost_Body", "M_Ghost_Dark", "M_Ghost_Eyes" };
 
         private static Material PropMaterial(string sourceName)
         {
@@ -813,14 +840,28 @@ namespace CastleOfTheD20.Editor
             mat.color = c;
             if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
             if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.15f);
+            if (c.a < 1f) MakeTransparent(mat);
             if (EmissiveProps.Contains(name) && mat.HasProperty("_EmissionColor"))
             {
                 mat.EnableKeyword("_EMISSION");
-                mat.SetColor("_EmissionColor", c * 2f);
+                mat.SetColor("_EmissionColor", new Color(c.r, c.g, c.b) * (c.a < 1f ? 0.45f : 2f));
                 mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
             }
             EditorUtility.SetDirty(mat);
             return mat;
+        }
+
+        /// <summary>URP Lit, alpha-blended (the ghost's see-through body).</summary>
+        private static void MakeTransparent(Material mat)
+        {
+            if (mat.HasProperty("_Surface")) mat.SetFloat("_Surface", 1f);
+            if (mat.HasProperty("_Blend")) mat.SetFloat("_Blend", 0f);
+            mat.SetOverrideTag("RenderType", "Transparent");
+            mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            mat.SetInt("_ZWrite", 0);
+            mat.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            mat.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
         }
 
         /// <summary>
