@@ -163,36 +163,31 @@ namespace CastleOfTheD20.UI
                 return;
             }
 
-            // Restart encounter if a DungeonRoomController is present in the active zone
-            DungeonRoomController room = FindAnyObjectByType<DungeonRoomController>();
+            // Restart the encounter that was lost, and only that one (the Forest Path holds two): its hostiles
+            // come back at full strength on their starting spots and the room enrolls just them again
+            DungeonRoomController room = FindLostEncounter();
             if (room != null && TurnManager.Instance != null)
             {
-                // Revive and fully heal the room's enemies (Heal() ignores dead units)
-                if (room.roomEnemies != null)
-                {
-                    foreach (var enemyObj in room.roomEnemies)
-                    {
-                        if (enemyObj != null)
-                        {
-                            EnemyUnit enemy = enemyObj.GetComponent<EnemyUnit>();
-                            if (enemy != null)
-                            {
-                                enemy.Revive();
-                            }
-                            else
-                            {
-                                enemyObj.SetActive(true);
-                            }
-                        }
-                    }
-                }
-
-                TurnManager.Instance.StartCombatEncounter(player, room.roomLocation, room.bossIdentifier);
+                room.ResetEncounter();
+                room.TriggerEncounter();
             }
             else if (TurnManager.Instance != null)
             {
                 TurnManager.Instance.EndCombat(false);
             }
+        }
+
+        /// <summary>
+        /// The room whose fight is running: the one the hero just lost. Null for a fight without a room.
+        /// </summary>
+        public static DungeonRoomController FindLostEncounter()
+        {
+            DungeonRoomController[] rooms = FindObjectsByType<DungeonRoomController>(FindObjectsSortMode.None);
+            for (int i = 0; i < rooms.Length; i++)
+            {
+                if (rooms[i].CurrentState == RoomState.CombatActive) return rooms[i];
+            }
+            return null;
         }
 
         private void OnReturnToVillageClicked()

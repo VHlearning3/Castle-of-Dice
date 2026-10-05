@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Economy;
 using CastleOfTheD20.Data;
@@ -79,7 +80,7 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Image coinIconImage;
 
         [Header("Scrap Metal Counter (MasterSpec §6)")]
-        [Tooltip("Text display indicating available scrap metal pieces in the player's pack (e.g. '8 kpl').")]
+        [Tooltip("Text display indicating available scrap metal pieces in the player's pack (e.g. '8 Scrap').")]
         [SerializeField] private TMP_Text scrapCounterText;
 
         [Tooltip("Image displaying the authentic UI_Icon_ScrapOre.png.")]
@@ -156,6 +157,8 @@ namespace CastleOfTheD20.UI
         private Color damageFlashColor = new Color(1.0f, 0.45f, 0.40f, 1f);
         private float damageFlashTimer = 0f;
         private int lastSeenHP = -1;
+        private float nextPlayerLookup;
+        private const float PlayerLookupInterval = 0.5f;
 
         #endregion
 
@@ -209,6 +212,7 @@ namespace CastleOfTheD20.UI
             QuestManager.OnQuestProgressUpdated += HandleQuestProgressUpdated;
             QuestManager.OnQuestStateUpdated += HandleQuestStateUpdated;
             GameManager.OnLocationChanged += HandleLocationChanged;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
 
             LocatePlayer();
             RefreshAllHUD();
@@ -222,6 +226,7 @@ namespace CastleOfTheD20.UI
             QuestManager.OnQuestProgressUpdated -= HandleQuestProgressUpdated;
             QuestManager.OnQuestStateUpdated -= HandleQuestStateUpdated;
             GameManager.OnLocationChanged -= HandleLocationChanged;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
 
             if (trackedPlayer != null)
             {
@@ -249,6 +254,13 @@ namespace CastleOfTheD20.UI
 
         private void Update()
         {
+            // 0. The HUD outlives every zone, the hero does not: pick up the new one when the old one is gone
+            if (trackedPlayer == null && Time.unscaledTime >= nextPlayerLookup)
+            {
+                nextPlayerLookup = Time.unscaledTime + PlayerLookupInterval;
+                if (LocatePlayer()) RefreshAllHUD();
+            }
+
             // 1. Smoothly interpolate health slider value
             if (healthSlider != null && Mathf.Abs(healthSlider.value - targetHPValue) > 0.05f)
             {
@@ -864,7 +876,7 @@ namespace CastleOfTheD20.UI
                 scIconRect.localScale = Vector3.one;
             }
 
-            // Scrap counter text (formatted as e.g. '8 kpl' per MasterSpec §6)
+            // Scrap counter text (formatted as e.g. '8 Scrap')
             Transform scrapTextTr = scrapContainer.Find("Scrap_Text");
             if (scrapTextTr == null)
             {
@@ -876,7 +888,7 @@ namespace CastleOfTheD20.UI
             scrapCounterText = scrapTextTr.GetComponent<TMP_Text>();
             if (scrapCounterText != null)
             {
-                scrapCounterText.text = "0 kpl";
+                scrapCounterText.text = FormatScrap(0);
                 scrapCounterText.alignment = TextAlignmentOptions.MidlineLeft;
                 scrapCounterText.fontSize = 13f;
                 scrapCounterText.fontStyle = FontStyles.Bold;
@@ -1068,15 +1080,44 @@ namespace CastleOfTheD20.UI
 
         #region Player Tracking
 
-        private void LocatePlayer()
+        /// <summary>The hero whose health, name and stats the HUD shows.</summary>
+        public PlayerUnit TrackedPlayer => trackedPlayer;
+
+        /// <summary>
+        /// Makes sure the HUD follows the hero of the loaded zone. The HUD lives on across scene loads but
+        /// every zone brings its own hero, so a hero from an earlier zone (destroyed with its scene) is
+        /// dropped and the current one picked up. Returns true when it switched to a new hero.
+        /// </summary>
+        private bool LocatePlayer()
         {
-            if (trackedPlayer == null)
+            PlayerUnit current = trackedPlayer;
+            if (current == null)
             {
-                trackedPlayer = FindAnyObjectByType<PlayerUnit>(FindObjectsInactive.Include);
+                current = FindHero();
+            }
+
+            bool changed = !ReferenceEquals(current, trackedPlayer);
+            if (changed)
+            {
+                if (!ReferenceEquals(trackedPlayer, null))
+                {
+                    trackedPlayer.OnHealthChanged -= HandleHealthChanged;
+                }
+
+                trackedPlayer = current;
+                lastSeenHP = -1;
+
                 if (trackedPlayer != null)
                 {
                     trackedPlayer.OnHealthChanged -= HandleHealthChanged;
                     trackedPlayer.OnHealthChanged += HandleHealthChanged;
+
+                    // The new hero's bar starts on its own HP instead of sliding over from the old one's
+                    if (healthSlider != null && trackedPlayer.MaxHP > 0)
+                    {
+                        healthSlider.maxValue = trackedPlayer.MaxHP;
+                        healthSlider.value = Mathf.Clamp(trackedPlayer.CurrentHP, 0, trackedPlayer.MaxHP);
+                    }
                 }
             }
 
@@ -1084,6 +1125,21 @@ namespace CastleOfTheD20.UI
             {
                 combatStatsHUD.SetPlayer(trackedPlayer);
             }
+
+            return changed && trackedPlayer != null;
+        }
+
+        /// <summary>The hero of the loaded zone, an active one first (a fallen hero is deactivated).</summary>
+        public static PlayerUnit FindHero()
+        {
+            PlayerUnit active = FindAnyObjectByType<PlayerUnit>();
+            return active != null ? active : FindAnyObjectByType<PlayerUnit>(FindObjectsInactive.Include);
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            LocatePlayer();
+            RefreshAllHUD();
         }
 
         #endregion
@@ -1205,9 +1261,12 @@ namespace CastleOfTheD20.UI
         {
             if (scrapCounterText != null)
             {
-                scrapCounterText.text = $"{scrapCount} kpl";
+                scrapCounterText.text = FormatScrap(scrapCount);
             }
         }
+
+        /// <summary>The scrap counter text in the hero card, e.g. "16 Scrap".</summary>
+        public static string FormatScrap(int scrapCount) => $"{scrapCount} Scrap";
 
         private void UpdatePotionDisplay()
         {
