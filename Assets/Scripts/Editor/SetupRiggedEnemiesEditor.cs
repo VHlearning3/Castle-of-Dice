@@ -153,16 +153,20 @@ namespace CastleOfTheD20.Editor
                 // Vili's own Blender export: one take per ability. Unused takes: fall, standing_idle.
                 Takes =
                 {
-                    [Idle] = "Armature|idle", [Walk] = "Armature|walk", [Run] = "Armature|run",
+                    [Idle] = "Armature|idle",
                     [Attack] = "Armature|FrostRay", [Die] = "Armature|death",
                     [TakeHit] = "Armature|afraid", [DrinkPotion] = "Armature|drink potion",
                     ["mage_fireball"] = "Armature|Fireball", ["mage_frostbite"] = "Armature|FrostRay",
                     ["mage_mana_shield"] = "Armature|ManaShield", ["mage_blink"] = "Armature|Blink",
                 },
-                // Her file has no victory or Arcane Chains: the knight's cheer (raise and hold, ~3 s) and his
-                // cast_a_spell, baked onto her skeleton (cm, 30 fps) in BlenderSources/Elira_Victory.blend
+                // BlenderSources/Elira_Victory.blend: the knight's cheer (raise and hold, ~3 s) and cast_a_spell,
+                // retargeted onto her skeleton, and her own walk / run with the staff arm held still (her
+                // idle's right arm) and the run, which sat 0.6 m ahead of her, moved back under her
                 AnimFbxPath = "Assets/Characters/Player_mage_new/Elira_Anims.fbx",
-                AnimTakes = { [Victory] = "Victory", ["mage_arcane_chains"] = "ArcaneChains" },
+                AnimTakes =
+                {
+                    [Walk] = "Walk", [Run] = "Run", [Victory] = "Victory", ["mage_arcane_chains"] = "ArcaneChains",
+                },
                 Frames = { [Victory] = (0, 100), ["mage_arcane_chains"] = (0, 120) },
                 TriggeredRoles =
                 {
@@ -184,8 +188,9 @@ namespace CastleOfTheD20.Editor
                     ["rogue_backstab"] = "Character does dnd small sword attack.001",
                 },
                 // BlenderSources/Corvo_Rogue.blend: Mixamo Action Adventure idle / walk / run, his own unused
-                // takes, and Elira's and the knight's, baked onto Corvo's skeleton in metres and in place
-                // (Mixamo and Elira's rigs are in centimetres, so their clips can't be borrowed directly)
+                // takes, and Elira's and the knight's, retargeted onto Corvo's skeleton in metres and in place.
+                // Mixamo and Elira's rigs are in centimetres, in T-pose and roll the right arm differently from
+                // his A-pose Tripo rig, so their clips are retargeted in world space, not copied bone for bone.
                 AnimFbxPath = "Assets/Characters/Rogue+3d+model/Corvo_Anims.fbx",
                 AnimTakes =
                 {
