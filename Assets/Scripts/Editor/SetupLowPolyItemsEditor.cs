@@ -280,6 +280,13 @@ namespace CastleOfTheD20.Editor
 
         #region Hero weapons
 
+        /// <summary>Refits Elira's staff and Corvo's daggers (e.g. after his Idle clip changes) and saves the mounts asset.</summary>
+        public static void BuildHeroWeaponMounts()
+        {
+            BuildWeaponMounts();
+            AssetDatabase.SaveAssets();
+        }
+
         private static void BuildWeaponMounts()
         {
             var mounts = new List<HeroWeaponMountsSO.Mount>();
@@ -349,8 +356,8 @@ namespace CastleOfTheD20.Editor
         }
 
         /// <summary>
-        /// Corvo's idle is Barnaby's clip, which turns the wrists differently from his own rest pose, so the
-        /// daggers fitted in Blender would point backwards. Re-aim them in that idle: blades forward, a little
+        /// Corvo's idle (the Mixamo one from Corvo_Anims.fbx) turns the wrists differently from his rest pose, so the
+        /// daggers fitted in Blender would point the wrong way. Re-aim them in that idle: blades forward, a little
         /// outward and down, edges vertical. The grip position from the Blender fit stays.
         /// </summary>
         private static void AimDaggersInIdle(List<HeroWeaponMountsSO.Mount> mounts)

@@ -56,6 +56,11 @@ namespace CastleOfTheD20.Editor
             public float Yaw;
             // role -> take name inside this FBX
             public Dictionary<string, string> Takes = new Dictionary<string, string>();
+            // Optional animation-only FBX on the same skeleton (role -> take name in it)
+            public string AnimFbxPath;
+            public Dictionary<string, string> AnimTakes = new Dictionary<string, string>();
+            // role -> (first, last) frame when only part of a take is used
+            public Dictionary<string, (int first, int last)> Frames = new Dictionary<string, (int, int)>();
             // role -> (other model key, role in that model)
             public Dictionary<string, (string key, string role)> Borrowed = new Dictionary<string, (string, string)>();
             // role -> playback speed (1 when missing)
@@ -164,12 +169,31 @@ namespace CastleOfTheD20.Editor
                 MotionNode = MixamoHips,
                 TargetHeight = 3.0f,
                 HeroParameters = true,
-                Takes = { [Attack] = "Character does dnd small sword attack.001", [Die] = "dnd character dies.001" },
+                Takes =
+                {
+                    [Attack] = "Character does dnd small sword attack.001", [Die] = "dnd character dies.001",
+                    ["rogue_backstab"] = "Character does dnd small sword attack.001",
+                },
+                // BlenderSources/Corvo_Rogue.blend: Mixamo Action Adventure idle / walk / run, his own unused
+                // takes, and Elira's and the knight's, baked onto Corvo's skeleton in metres and in place
+                // (Mixamo and Elira's rigs are in centimetres, so their clips can't be borrowed directly)
+                AnimFbxPath = "Assets/Characters/Rogue+3d+model/Corvo_Anims.fbx",
+                AnimTakes =
+                {
+                    [Idle] = "Idle", [Walk] = "Walk", [Run] = "Run", [TakeHit] = "TakeHit", [Victory] = "Victory",
+                    [DrinkPotion] = "DrinkPotion", ["rogue_poison_dagger"] = "PoisonDagger",
+                    ["rogue_smoke_bomb"] = "ThrowBomb", ["rogue_poison_cloud"] = "ThrowBomb",
+                    ["rogue_shadow_step"] = "ShadowStep",
+                },
+                // The flinch at the start of his "afraid" take, and the first two fist pumps of the cheer
+                Frames = { [TakeHit] = (0, 36), [Victory] = (0, 175) },
+                TriggeredRoles =
+                {
+                    TakeHit, DrinkPotion, "rogue_backstab", "rogue_poison_dagger", "rogue_smoke_bomb",
+                    "rogue_shadow_step", "rogue_poison_cloud",
+                },
             },
         };
-
-        // Corvo's file has no idle / walk: reuse Barnaby's (same Mixamo skeleton)
-        private const string BarnabyFbx = "Assets/Characters/NPC_BarnabyFIXED/NPC_BarnabyFIXED.fbx";
 
         [MenuItem("CastleOfDice/Setup Rigged Enemies, Bosses & Heroes")]
         public static void SetupAll()
@@ -225,6 +249,22 @@ namespace CastleOfTheD20.Editor
             Debug.Log("[SetupRiggedEnemiesEditor] Elira's model set up on the hero prefab.");
         }
 
+        /// <summary>
+        /// Re-imports Corvo's clips and rebuilds his animator in place (the hero prefab keeps its Rogue_Model),
+        /// then re-aims his daggers, which are fitted to whatever his Idle clip is.
+        /// </summary>
+        [MenuItem("CastleOfDice/Setup Hero Rogue Animations")]
+        public static void SetupRogue()
+        {
+            ModelSpec rogue = Find("Hero_Rogue_Corvo");
+            ConfigureImporter(rogue);
+            AssetDatabase.Refresh();
+            BuildController(rogue);
+            AssetDatabase.SaveAssets();
+            SetupLowPolyItemsEditor.BuildHeroWeaponMounts();
+            Debug.Log("[SetupRiggedEnemiesEditor] Corvo's animations and daggers set up.");
+        }
+
         #region Import
 
         private static ModelSpec Find(string key)
@@ -235,10 +275,16 @@ namespace CastleOfTheD20.Editor
 
         private static void ConfigureImporter(ModelSpec spec)
         {
-            ModelImporter importer = AssetImporter.GetAtPath(spec.FbxPath) as ModelImporter;
+            ConfigureImporter(spec, spec.FbxPath, spec.Takes);
+            if (spec.AnimFbxPath != null) ConfigureImporter(spec, spec.AnimFbxPath, spec.AnimTakes);
+        }
+
+        private static void ConfigureImporter(ModelSpec spec, string fbxPath, Dictionary<string, string> takes)
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
             if (importer == null)
             {
-                Debug.LogError($"[SetupRiggedEnemiesEditor] FBX not found: {spec.FbxPath}");
+                Debug.LogError($"[SetupRiggedEnemiesEditor] FBX not found: {fbxPath}");
                 return;
             }
 
@@ -251,17 +297,22 @@ namespace CastleOfTheD20.Editor
 
             var clips = new List<ModelImporterClipAnimation>();
             // One clip per role; two roles may share a take (the mage's FrostRay is also her plain cast)
-            foreach (KeyValuePair<string, string> kv in spec.Takes)
+            foreach (KeyValuePair<string, string> kv in takes)
             {
                 ModelImporterClipAnimation source = null;
                 foreach (ModelImporterClipAnimation take in importer.defaultClipAnimations)
                 {
-                    if (take.takeName == kv.Value) { source = take; break; }
+                    if (take.takeName == kv.Value || take.takeName.EndsWith("|" + kv.Value)) { source = take; break; }
                 }
                 if (source == null) continue;
 
                 string role = kv.Key;
                 source.name = role;
+                if (spec.Frames.TryGetValue(role, out (int first, int last) range))
+                {
+                    source.firstFrame = range.first;
+                    source.lastFrame = range.last;
+                }
                 bool loops = role == Idle || role == Walk || role == Run || role == Victory;
                 source.loopTime = loops;
                 source.loopPose = loops;
@@ -273,9 +324,9 @@ namespace CastleOfTheD20.Editor
                 clips.Add(source);
             }
 
-            if (clips.Count != spec.Takes.Count)
+            if (clips.Count != takes.Count)
             {
-                Debug.LogWarning($"[SetupRiggedEnemiesEditor] {spec.Key}: found {clips.Count}/{spec.Takes.Count} takes.");
+                Debug.LogWarning($"[SetupRiggedEnemiesEditor] {spec.Key}: found {clips.Count}/{takes.Count} takes in {fbxPath}.");
             }
             importer.clipAnimations = clips.ToArray();
             importer.SaveAndReimport();
@@ -293,12 +344,12 @@ namespace CastleOfTheD20.Editor
         private static AnimationClip ClipFor(ModelSpec spec, string role)
         {
             if (spec.Takes.ContainsKey(role)) return LoadClip(spec.FbxPath, role);
+            if (spec.AnimTakes.ContainsKey(role)) return LoadClip(spec.AnimFbxPath, role);
             if (spec.Borrowed.TryGetValue(role, out (string key, string role) src))
             {
                 ModelSpec other = Find(src.key);
                 return other != null ? LoadClip(other.FbxPath, src.role) : null;
             }
-            if (spec.Key == "Hero_Rogue_Corvo" && (role == Idle || role == Walk)) return LoadClip(BarnabyFbx, role);
             return null;
         }
 
