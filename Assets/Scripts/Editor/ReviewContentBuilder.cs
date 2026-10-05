@@ -192,6 +192,30 @@ namespace CastleOfTheD20.Editor
 
             DungeonRoomController room = Room(encounter, "Forest_Ambush_Trigger", new Vector3(0f, 2.5f, z), new Vector3(22f, 6f, 12f), "Forest", "ForestAmbush");
             room.roomEnemies = new List<GameObject> { archer.gameObject, cultist.gameObject };
+
+            // A wolf pair between the zombie and the ambush (C7): pack hunters, so a wolf next to its packmate
+            // bites with Advantage. Its grid (z -10.6..8.6) sits between the zombie's and the ambush's.
+            const float wz = -1f;
+            Transform wolves = Group("Forest_Wolf_Encounter");
+            GameObject wolfGrid = InstantiatePrefab("Assets/PREFABS/CombatGrid.prefab", wolves, new Vector3(0f, 0.05f, wz));
+            if (wolfGrid != null) wolfGrid.name = "CombatGrid_ForestWolves";
+            EnemyUnit wolfA = BuildWolf(wolves, "Forest_Wolf_A", Free(new Vector3(-2.5f, 0f, wz + 5f), 0.8f));
+            EnemyUnit wolfB = BuildWolf(wolves, "Forest_Wolf_B", Free(new Vector3(2.5f, 0f, wz + 6.5f), 0.8f));
+            DungeonRoomController wolfRoom = Room(wolves, "Forest_Wolf_Trigger", new Vector3(0f, 2.5f, wz - 2f), new Vector3(22f, 6f, 8f), "Forest", "ForestWolves");
+            wolfRoom.roomEnemies = new List<GameObject>();
+            if (wolfA != null) wolfRoom.roomEnemies.Add(wolfA.gameObject);
+            if (wolfB != null) wolfRoom.roomEnemies.Add(wolfB.gameObject);
+        }
+
+        private static EnemyUnit BuildWolf(Transform parent, string name, Vector3 floorPos)
+        {
+            // Enemy_Wolf.prefab: WolfUnit (sets its own stats) on a 1.8 m capsule, model pivot at the feet
+            GameObject wolf = InstantiatePrefab(SetupRiggedEnemiesEditor.WolfPrefabPath, parent, floorPos + new Vector3(0f, 0.9f, 0f));
+            if (wolf == null) return null;
+            wolf.name = name;
+            wolf.transform.rotation = Quaternion.Euler(0f, 180f, 0f);   // facing the village gate
+            wolf.SetActive(false);
+            return wolf.GetComponent<EnemyUnit>();
         }
 
         private static void BuildCourtyard()

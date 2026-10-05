@@ -1064,7 +1064,57 @@ namespace CastleOfTheD20.Editor
             GameObject malakor = LoadVisual("Boss_Malakor");
             DressUnit(FindInScene("Boss_ShadowMageMalakor"), malakor, 3.4f, 0.8f);
             DressDialogueNpc(FindInScene("NPC_Malakor"), malakor, 3.4f);
+            DressShadowDecoyIn(malakor);
             SaveScene(scene);
+        }
+
+        /// <summary>
+        /// Malakor's Shadow Decoy was still a grey capsule: give it Malakor's model, a little smaller and in
+        /// shadow (dark violet with a faint glow). Opens and saves only the Library scene.
+        /// </summary>
+        [MenuItem("CastleOfDice/Dress Library Shadow Decoy")]
+        public static void DressShadowDecoy()
+        {
+            Scene scene = OpenScene(Zone4);
+            DressShadowDecoyIn(LoadVisual("Boss_Malakor"));
+            SaveScene(scene);
+        }
+
+        private static void DressShadowDecoyIn(GameObject malakor)
+        {
+            GameObject visual = DressUnit(FindInScene("Shadow_Decoy"), malakor, 2.8f, 0.6f);
+            if (visual == null) return;
+            Material shadow = ShadowDecoyMaterial();
+            foreach (Renderer r in visual.GetComponentsInChildren<Renderer>(true))
+            {
+                Material[] mats = new Material[r.sharedMaterials.Length];
+                for (int i = 0; i < mats.Length; i++) mats[i] = shadow;
+                r.sharedMaterials = mats;
+            }
+        }
+
+        private static Material ShadowDecoyMaterial()
+        {
+            const string path = "Assets/Characters/Materials/M_Shadow_Decoy.mat";
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            Color c = new Color(0.07f, 0.04f, 0.1f);
+            mat.color = c;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.3f);
+            if (mat.HasProperty("_EmissionColor"))
+            {
+                mat.EnableKeyword("_EMISSION");
+                mat.SetColor("_EmissionColor", new Color(0.07f, 0.025f, 0.12f));
+                mat.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
+            }
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         private static void DressZone7()
