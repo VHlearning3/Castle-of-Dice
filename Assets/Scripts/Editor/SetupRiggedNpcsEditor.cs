@@ -29,6 +29,16 @@ namespace CastleOfTheD20.Editor
             public string WalkTake;
             public string AttackTake;
             public string DieTake;
+            // Optional animation-only FBX baked onto the same skeleton in BlenderSources/Village_NPC_Anims.blend
+            public string AnimFbxPath;
+            public Dictionary<string, string> AnimTakes = new Dictionary<string, string>();
+            // role -> (first, last) frame when only part of a take is used
+            public Dictionary<string, (int first, int last)> Frames = new Dictionary<string, (int, int)>();
+            // role -> playback speed (1 when missing)
+            public Dictionary<string, float> Speeds = new Dictionary<string, float>();
+            // Humanoid NPCs keep their own hand-set import; OwnClips names the clips used from it per role
+            public bool Humanoid;
+            public Dictionary<string, string> OwnClips = new Dictionary<string, string>();
         }
 
         private const string IdleClip = "Idle";
@@ -51,7 +61,10 @@ namespace CastleOfTheD20.Editor
                 ControllerPath = "Assets/Characters/Animators/NPC_Barnaby_Animator.controller",
                 SceneObjectName = "NPC_Barnaby",
                 TargetHeight = 3.0f,
-                IdleTake = "idle", WalkTake = "walk", AttackTake = "front_kick_01", DieTake = "fall",
+                // The file's front_kick_01 spins his back to the camera: Baldur's box_01 punch, retargeted
+                IdleTake = "idle", WalkTake = "walk", DieTake = "fall",
+                AnimFbxPath = "Assets/Characters/NPC_BarnabyFIXED/Barnaby_Anims.fbx",
+                AnimTakes = { [AttackClip] = "Attack" },
             },
             new RiggedNpc
             {
@@ -62,7 +75,10 @@ namespace CastleOfTheD20.Editor
                 ControllerPath = "Assets/Characters/Animators/NPC_Mirabel_Animator.controller",
                 SceneObjectName = "NPC_Mirabel",
                 TargetHeight = 2.9f,
-                IdleTake = "idle", WalkTake = "walk", AttackTake = "front_kick_02", DieTake = "fall",
+                // Same spinning kick as Barnaby's: Baldur's box_01 punch instead
+                IdleTake = "idle", WalkTake = "walk", DieTake = "fall",
+                AnimFbxPath = "Assets/Characters/NPC_Mirabel_3dmodelFIXED/Mirabel_Anims.fbx",
+                AnimTakes = { [AttackClip] = "Attack" },
             },
             new RiggedNpc
             {
@@ -73,9 +89,28 @@ namespace CastleOfTheD20.Editor
                 ControllerPath = "Assets/Characters/Animators/NPC_Othelia_Animator.controller",
                 SceneObjectName = "NPC_Othelia",
                 TargetHeight = 2.8f,
-                // This file ships no walk take: the Walk state reuses the idle loop
+                // This file ships no walk take: Mirabel's walk retargeted onto her, played a little slower.
+                // Her punch take is 5 s long; only the jab itself (frames 25-83) is used.
                 IdleTake = "Old women idle", WalkTake = null, AttackTake = "Old women punch", DieTake = "fall",
+                AnimFbxPath = "Assets/Characters/NPC_Othelia_3d_model_FixedSpecialanimations/Othelia_Anims.fbx",
+                AnimTakes = { [WalkClip] = "Walk" },
+                Frames = { [AttackClip] = (25, 83) },
+                Speeds = { [WalkClip] = 0.85f },
             },
+        };
+
+        // Baldur is Humanoid on Tripo's own skeleton (Left_UpperLeg ...), which is in T-pose and matches the
+        // Mixamo one bone for bone. His file has no idle or death: a Mixamo idle and the villagers' fall,
+        // retargeted onto his skeleton. His prefab and his own import are left as they are.
+        private static readonly RiggedNpc Baldur = new RiggedNpc
+        {
+            FbxPath = "Assets/Characters/NPC_Baldur_Smith.fbx",
+            ControllerPath = "Assets/Characters/Animators/NPC_Baldur_Smith_Animator.controller",
+            SceneObjectName = "NPC_Baldur",
+            Humanoid = true,
+            OwnClips = { [WalkClip] = "walk", [AttackClip] = "box_01" },
+            AnimFbxPath = "Assets/Characters/Baldur_Anims.fbx",
+            AnimTakes = { [IdleClip] = "Idle", [DieClip] = "Die" },
         };
 
         [MenuItem("CastleOfDice/Setup Rigged NPCs (Barnaby, Mirabel, Othelia)")]
@@ -105,6 +140,22 @@ namespace CastleOfTheD20.Editor
             Debug.Log("[SetupRiggedNpcsEditor] Rigged Barnaby, Mirabel and Othelia prefabs updated and placed in Zone 1.");
         }
 
+        /// <summary>
+        /// Re-imports the village NPCs' clips and rebuilds their four animators in place (Barnaby, Mirabel,
+        /// Othelia and Baldur). Prefabs and scenes are left alone.
+        /// </summary>
+        [MenuItem("CastleOfDice/Setup Village NPC Animations")]
+        public static void SetupAnimations()
+        {
+            foreach (RiggedNpc npc in Npcs) ConfigureImporter(npc);
+            ConfigureImporter(Baldur);
+            AssetDatabase.Refresh();
+            foreach (RiggedNpc npc in Npcs) BuildController(npc);
+            BuildController(Baldur);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SetupRiggedNpcsEditor] Village NPC animations set up.");
+        }
+
         /// <summary>Rebuilds the rigged NPC prefabs without placing them in Zone 1.</summary>
         public static void SetupPrefabsOnly()
         {
@@ -118,32 +169,76 @@ namespace CastleOfTheD20.Editor
 
         private static void ConfigureImporter(RiggedNpc npc)
         {
-            ModelImporter importer = AssetImporter.GetAtPath(npc.FbxPath) as ModelImporter;
+            if (!npc.Humanoid)
+            {
+                ModelImporter own = AssetImporter.GetAtPath(npc.FbxPath) as ModelImporter;
+                var takes = new Dictionary<string, string>();
+                if (own != null)
+                {
+                    foreach (ModelImporterClipAnimation take in own.defaultClipAnimations)
+                    {
+                        string role = RoleForTake(npc, take.takeName);
+                        if (role != null && !npc.AnimTakes.ContainsKey(role)) takes[role] = take.takeName;
+                    }
+                }
+                ConfigureImporter(npc, npc.FbxPath, takes);
+            }
+            if (npc.AnimFbxPath != null) ConfigureImporter(npc, npc.AnimFbxPath, npc.AnimTakes);
+        }
+
+        private static void ConfigureImporter(RiggedNpc npc, string fbxPath, Dictionary<string, string> takes)
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
             if (importer == null)
             {
-                Debug.LogError($"[SetupRiggedNpcsEditor] FBX not found: {npc.FbxPath}");
+                Debug.LogError($"[SetupRiggedNpcsEditor] FBX not found: {fbxPath}");
                 return;
             }
 
-            importer.animationType = ModelImporterAnimationType.Generic;
-            importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
-            // Hips as root node: horizontal travel becomes root motion (discarded, applyRootMotion = false),
-            // so Walk and Idle play in place instead of drifting off and snapping back each loop
-            importer.motionNodeName = MotionNode;
+            if (npc.Humanoid)
+            {
+                // Clips baked on the NPC's own skeleton, played through his existing avatar
+                importer.animationType = ModelImporterAnimationType.Human;
+                importer.avatarSetup = ModelImporterAvatarSetup.CopyFromOther;
+                importer.sourceAvatar = LoadAvatar(npc);
+            }
+            else
+            {
+                importer.animationType = ModelImporterAnimationType.Generic;
+                importer.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                // Hips as root node: horizontal travel becomes root motion (discarded, applyRootMotion = false),
+                // so Walk and Idle play in place instead of drifting off and snapping back each loop
+                importer.motionNodeName = MotionNode;
+            }
             importer.importAnimation = true;
 
             var clips = new List<ModelImporterClipAnimation>();
-            foreach (ModelImporterClipAnimation source in importer.defaultClipAnimations)
+            foreach (KeyValuePair<string, string> kv in takes)
             {
-                string role = RoleForTake(npc, source.takeName);
-                if (role == null) continue;
+                ModelImporterClipAnimation source = null;
+                foreach (ModelImporterClipAnimation take in importer.defaultClipAnimations)
+                {
+                    if (take.takeName == kv.Value || take.takeName.EndsWith("|" + kv.Value)) { source = take; break; }
+                }
+                if (source == null)
+                {
+                    Debug.LogWarning($"[SetupRiggedNpcsEditor] Take '{kv.Value}' not found in {fbxPath}");
+                    continue;
+                }
 
+                string role = kv.Key;
                 source.name = role;
+                if (npc.Frames.TryGetValue(role, out (int first, int last) range))
+                {
+                    source.firstFrame = range.first;
+                    source.lastFrame = range.last;
+                }
                 bool loops = role == IdleClip || role == WalkClip;
                 source.loopTime = loops;
                 source.loopPose = loops;
                 source.lockRootRotation = true;      // bake rotation into pose
-                source.keepOriginalOrientation = true;
+                // Humanoid: face along the body like Baldur's own clips; Generic: keep the authored facing
+                source.keepOriginalOrientation = !npc.Humanoid;
                 source.lockRootHeightY = true;       // bake height (hip bob / falling to the floor) into pose
                 source.keepOriginalPositionY = true;
                 source.lockRootPositionXZ = false;   // XZ travel -> root motion (ignored)
@@ -162,9 +257,13 @@ namespace CastleOfTheD20.Editor
             return null;
         }
 
-        private static AnimationClip LoadClip(RiggedNpc npc, string clipName)
+        private static AnimationClip LoadClip(RiggedNpc npc, string role)
         {
-            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(npc.FbxPath))
+            bool baked = npc.AnimTakes.ContainsKey(role);
+            string path = baked ? npc.AnimFbxPath : npc.FbxPath;
+            string clipName = role;
+            if (!baked && npc.Humanoid && !npc.OwnClips.TryGetValue(role, out clipName)) return null;
+            foreach (Object asset in AssetDatabase.LoadAllAssetsAtPath(path))
             {
                 if (asset is AnimationClip clip && clip.name == clipName) return clip;
             }
@@ -237,6 +336,7 @@ namespace CastleOfTheD20.Editor
             idleState.motion = idle;
             AnimatorState walkState = sm.AddState("Walk", new Vector3(300f, 120f, 0f));
             walkState.motion = walk;
+            if (npc.Speeds.TryGetValue(WalkClip, out float walkSpeed)) walkState.speed = walkSpeed;
             AnimatorState attackState = sm.AddState("Attack", new Vector3(560f, 0f, 0f));
             attackState.motion = attack;
             AnimatorState dieState = sm.AddState("Die", new Vector3(560f, 120f, 0f));
