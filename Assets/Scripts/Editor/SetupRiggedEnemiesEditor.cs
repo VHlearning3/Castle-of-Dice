@@ -159,12 +159,16 @@ namespace CastleOfTheD20.Editor
                     ["mage_fireball"] = "Armature|Fireball", ["mage_frostbite"] = "Armature|FrostRay",
                     ["mage_mana_shield"] = "Armature|ManaShield", ["mage_blink"] = "Armature|Blink",
                 },
-                // Her file has no victory: the knight's cheer baked onto her skeleton (cm, 30 fps) in
-                // BlenderSources/Elira_Victory.blend, first two fist pumps
+                // Her file has no victory or Arcane Chains: the knight's cheer (raise and hold, ~3 s) and his
+                // cast_a_spell, baked onto her skeleton (cm, 30 fps) in BlenderSources/Elira_Victory.blend
                 AnimFbxPath = "Assets/Characters/Player_mage_new/Elira_Anims.fbx",
-                AnimTakes = { [Victory] = "Victory" },
-                Frames = { [Victory] = (0, 218) },
-                TriggeredRoles = { TakeHit, DrinkPotion, "mage_fireball", "mage_frostbite", "mage_mana_shield", "mage_blink" },
+                AnimTakes = { [Victory] = "Victory", ["mage_arcane_chains"] = "ArcaneChains" },
+                Frames = { [Victory] = (0, 100), ["mage_arcane_chains"] = (0, 120) },
+                TriggeredRoles =
+                {
+                    TakeHit, DrinkPotion, "mage_fireball", "mage_frostbite", "mage_mana_shield", "mage_blink",
+                    "mage_arcane_chains",
+                },
             },
             new ModelSpec
             {
@@ -190,8 +194,8 @@ namespace CastleOfTheD20.Editor
                     ["rogue_smoke_bomb"] = "ThrowBomb", ["rogue_poison_cloud"] = "ThrowBomb",
                     ["rogue_shadow_step"] = "ShadowStep",
                 },
-                // The flinch at the start of his "afraid" take, and the first two fist pumps of the cheer
-                Frames = { [TakeHit] = (0, 36), [Victory] = (0, 175) },
+                // The flinch at the start of his "afraid" take, and the cheer's raise and hold (~3 s)
+                Frames = { [TakeHit] = (0, 36), [Victory] = (0, 80) },
                 TriggeredRoles =
                 {
                     TakeHit, DrinkPotion, "rogue_backstab", "rogue_poison_dagger", "rogue_smoke_bomb",
@@ -330,7 +334,7 @@ namespace CastleOfTheD20.Editor
                     source.firstFrame = range.first;
                     source.lastFrame = range.last;
                 }
-                bool loops = role == Idle || role == Walk || role == Run || role == Victory;
+                bool loops = role == Idle || role == Walk || role == Run;
                 source.loopTime = loops;
                 source.loopPose = loops;
                 source.lockRootRotation = true;
@@ -499,6 +503,7 @@ namespace CastleOfTheD20.Editor
             {
                 AnimatorState victoryState = AddState(sm, spec, Victory, victory, new Vector3(560f, 240f, 0f));
                 AddAnyTransition(sm, victoryState, Victory);
+                AddVictoryExits(victoryState, idleState);
             }
 
             EditorUtility.SetDirty(controller);
@@ -525,6 +530,23 @@ namespace CastleOfTheD20.Editor
             t.duration = 0.15f;
             t.AddCondition(moving ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, "IsMoving");
             if (walking.HasValue) t.AddCondition(walking.Value ? AnimatorConditionMode.If : AnimatorConditionMode.IfNot, 0f, "IsWalking");
+        }
+
+        /// <summary>
+        /// The cheer plays once and settles back into Idle; walking off right away cuts it short, so the hero
+        /// never stays stuck in the Victory pose while exploring.
+        /// </summary>
+        public static void AddVictoryExits(AnimatorState victory, AnimatorState idle)
+        {
+            AnimatorStateTransition done = victory.AddTransition(idle);
+            done.hasExitTime = true;
+            done.exitTime = 0.9f;
+            done.duration = 0.4f;
+
+            AnimatorStateTransition move = victory.AddTransition(idle);
+            move.hasExitTime = false;
+            move.duration = 0.15f;
+            move.AddCondition(AnimatorConditionMode.If, 0f, "IsMoving");
         }
 
         private static void AddAnyTransition(AnimatorStateMachine sm, AnimatorState target, string trigger)

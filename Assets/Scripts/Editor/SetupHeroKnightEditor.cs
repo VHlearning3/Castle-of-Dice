@@ -45,6 +45,7 @@ namespace CastleOfTheD20.Editor
             ["warrior_shield_block"] = "sword and shield block",
             ["warrior_war_cry"] = "sword and shield attack",
             ["warrior_iron_will"] = "draw sword 1",
+            ["warrior_retaliation"] = "sword and shield attack (3)",
             // Elira's potion drink (BlenderSources/Elira_Victory.blend, her T-pose skeleton), retargeted by the avatar
             [DrinkPotion] = "elira drink potion",
         };
@@ -58,8 +59,11 @@ namespace CastleOfTheD20.Editor
 
         private static readonly string[] AbilityRoles =
         {
-            "warrior_sword_slash", "warrior_shield_block", "warrior_war_cry", "warrior_iron_will",
+            "warrior_sword_slash", "warrior_shield_block", "warrior_war_cry", "warrior_iron_will", "warrior_retaliation",
         };
+
+        // The knight's cheer is 12 s long: keep the raise and hold (frames at 24 fps)
+        private const int VictoryLastFrame = 80;
 
         // FBX material name -> (asset name, colour, metallic, smoothness)
         private static readonly (string source, string asset, Color color, float metallic, float smoothness)[] WeaponMaterials =
@@ -81,6 +85,7 @@ namespace CastleOfTheD20.Editor
 
             ExposeWeaponBones();
             foreach (KeyValuePair<string, string> kv in MixamoClips) ConfigureMixamoClip(kv.Key, kv.Value);
+            TrimVictory();
             ConfigureWeaponsImporter();
             AssetDatabase.Refresh();
 
@@ -95,6 +100,7 @@ namespace CastleOfTheD20.Editor
         public static void SetupAnimations()
         {
             foreach (KeyValuePair<string, string> kv in MixamoClips) ConfigureMixamoClip(kv.Key, kv.Value);
+            TrimVictory();
             AssetDatabase.Refresh();
             BuildController();
             AssetDatabase.SaveAssets();
@@ -170,6 +176,29 @@ namespace CastleOfTheD20.Editor
             clip.keepOriginalPositionY = true;
             clip.lockRootPositionXZ = false;
             importer.clipAnimations = new[] { clip };
+            importer.SaveAndReimport();
+        }
+
+        /// <summary>Shortens the knight FBX's cheer take, which the Victory state plays once.</summary>
+        private static void TrimVictory()
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(KnightFbx) as ModelImporter;
+            if (importer == null) return;
+
+            ModelImporterClipAnimation[] clips = importer.clipAnimations;
+            bool changed = false;
+            foreach (ModelImporterClipAnimation clip in clips)
+            {
+                if (clip.name != KnightClips[Victory]) continue;
+                if (clip.lastFrame == VictoryLastFrame && !clip.loopTime) break;
+                clip.firstFrame = 0;
+                clip.lastFrame = VictoryLastFrame;
+                clip.loopTime = false;
+                changed = true;
+            }
+            if (!changed) return;
+
+            importer.clipAnimations = clips;
             importer.SaveAndReimport();
         }
 
@@ -281,6 +310,7 @@ namespace CastleOfTheD20.Editor
             AddAnyTransition(sm, die, Die);
             AnimatorState victory = AddState(sm, Victory, new Vector3(560f, 240f, 0f));
             AddAnyTransition(sm, victory, Victory);
+            SetupRiggedEnemiesEditor.AddVictoryExits(victory, idle);
 
             EditorUtility.SetDirty(controller);
             return controller;
