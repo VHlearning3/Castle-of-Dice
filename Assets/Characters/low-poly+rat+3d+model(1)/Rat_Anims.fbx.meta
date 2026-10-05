@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7c73b1c81c4d0274fabf5ecb9bc47504
+guid: 39f72f8332b7f904aa1be186ccb60920
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -15,7 +15,7 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     removeConstantScaleCurves: 0
-    motionNodeName: Hips
+    motionNodeName: tripo::Root
     animationImportErrors: 
     animationImportWarnings: 
     animationRetargetingWarnings: 
@@ -32,10 +32,10 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Idle
-      takeName: idle
-      internalID: -5252816984213320552
+      takeName: Idle
+      internalID: -3100369314251171874
       firstFrame: 0
-      lastFrame: 368
+      lastFrame: 47
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -60,19 +60,19 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Walk
-      takeName: walk
-      internalID: -3419257869308726280
+      name: Attack
+      takeName: Attack
+      internalID: 6720303635017113406
       firstFrame: 0
-      lastFrame: 56
+      lastFrame: 26
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
       cycleOffset: 0
       loop: 0
       hasAdditiveReferencePose: 0
-      loopTime: 1
-      loopBlend: 1
+      loopTime: 0
+      loopBlend: 0
       loopBlendOrientation: 1
       loopBlendPositionY: 1
       loopBlendPositionXZ: 0
@@ -90,10 +90,10 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: Die
-      takeName: defeat_03
-      internalID: 4621032695417671721
+      takeName: Die
+      internalID: -4630339522487117836
       firstFrame: 0
-      lastFrame: 133
+      lastFrame: 29
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

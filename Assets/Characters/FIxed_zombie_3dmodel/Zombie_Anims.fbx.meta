@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7c73b1c81c4d0274fabf5ecb9bc47504
+guid: 13a4eeedf22b97c4e8f0bec790510834
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -32,10 +32,10 @@ ModelImporter:
     clipAnimations:
     - serializedVersion: 16
       name: Idle
-      takeName: idle
-      internalID: -5252816984213320552
+      takeName: Idle
+      internalID: -3100369314251171874
       firstFrame: 0
-      lastFrame: 368
+      lastFrame: 103
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -61,10 +61,10 @@ ModelImporter:
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
       name: Walk
-      takeName: walk
-      internalID: -3419257869308726280
+      takeName: Walk
+      internalID: 2667949614841947897
       firstFrame: 0
-      lastFrame: 56
+      lastFrame: 95
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -89,11 +89,40 @@ ModelImporter:
       maskSource: {instanceID: 0}
       additiveReferencePoseFrame: 0
     - serializedVersion: 16
-      name: Die
-      takeName: defeat_03
-      internalID: 4621032695417671721
+      name: Attack
+      takeName: Attack
+      internalID: 6720303635017113406
       firstFrame: 0
-      lastFrame: 133
+      lastFrame: 63
+      wrapMode: 0
+      orientationOffsetY: 0
+      level: 0
+      cycleOffset: 0
+      loop: 0
+      hasAdditiveReferencePose: 0
+      loopTime: 0
+      loopBlend: 0
+      loopBlendOrientation: 1
+      loopBlendPositionY: 1
+      loopBlendPositionXZ: 0
+      keepOriginalOrientation: 1
+      keepOriginalPositionY: 1
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 0
+      mirror: 0
+      bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
+      curves: []
+      events: []
+      transformMask: []
+      maskType: 3
+      maskSource: {instanceID: 0}
+      additiveReferencePoseFrame: 0
+    - serializedVersion: 16
+      name: Die
+      takeName: Die
+      internalID: -4630339522487117836
+      firstFrame: 0
+      lastFrame: 71
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

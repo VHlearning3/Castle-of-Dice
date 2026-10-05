@@ -28,6 +28,8 @@ namespace CastleOfTheD20.Editor
         private const string Run = "Run";
         private const string TakeHit = "TakeHit";
         private const string DrinkPotion = "DrinkPotion";
+        // Clip-only role: the archer's bow shot, imported with the skeleton's clips and borrowed as his Attack
+        private const string Shoot = "Shoot";
 
         private const string TripoHips = "Hips";
         private const string MixamoHips = "mixamorig:Hips";
@@ -36,6 +38,7 @@ namespace CastleOfTheD20.Editor
         private const string EnemyFolder = "Assets/PREFABS/Enemies";
         private const string ZombiePrefabPath = EnemyFolder + "/Enemy_Zombie.prefab";
         private const string SkeletonGuardPrefabPath = EnemyFolder + "/Enemy_SkeletonGuard.prefab";
+        public const string SkeletonArcherPrefabPath = EnemyFolder + "/Enemy_SkeletonArcher.prefab";
         private const string Zone2 = "Assets/Scenes/Zone_2_ForestPath.unity";
         private const string PlayerHeroPrefabPath = "Assets/PREFABS/Players/PlayerHero.prefab";
 
@@ -67,6 +70,8 @@ namespace CastleOfTheD20.Editor
             public Dictionary<string, float> Speeds = new Dictionary<string, float>();
             // One-shot roles played by a trigger of the same name (e.g. an ability ID like mage_fireball)
             public List<string> TriggeredRoles = new List<string>();
+            // Props hung on a bone of the visual prefab: FBX placed in the model's rest-pose space (from Blender)
+            public List<(string fbx, string bone)> Attachments = new List<(string, string)>();
 
             public string MaterialPath => $"Assets/Characters/Materials/M_{Key}.mat";
             public string ControllerPath => $"Assets/Characters/Animators/{Key}_Animator.controller";
@@ -82,8 +87,24 @@ namespace CastleOfTheD20.Editor
                 TexturePath = "Assets/Characters/Enemy_Normal_skeleton_3d_model/tripo_convert_5bd365a6-e8a7-40ea-9d29-0f8a1ba6d8b8.fbm/Normal_skeleton_3d_model_basecolor.JPEG",
                 TargetHeight = 3.0f,
                 Takes = { [Idle] = "idle", [Walk] = "walk", [Die] = "defeat_03" },
-                // The skeleton file has no attack take: punch with the Commander's box_01
-                Borrowed = { [Attack] = ("Boss_CursedCommander", Attack) },
+                // BlenderSources/Enemy_Anims.blend: the Scary Zombie Pack's two-handed swipe retargeted onto the
+                // skeleton (it used to punch with the Commander's box_01), and the archer's bow shot
+                AnimFbxPath = "Assets/Characters/Enemy_Normal_skeleton_3d_model/Skeleton_Anims.fbx",
+                AnimTakes = { [Attack] = "Attack", [Shoot] = "Shoot" },
+            },
+            new ModelSpec
+            {
+                // The Forest ambush archer: the skeleton guard's model with a bow in the left hand
+                Key = "Enemy_SkeletonArcher",
+                FbxPath = "Assets/Characters/Enemy_Normal_skeleton_3d_model/tripo_convert_5bd365a6-e8a7-40ea-9d29-0f8a1ba6d8b8.fbx",
+                TexturePath = "Assets/Characters/Enemy_Normal_skeleton_3d_model/tripo_convert_5bd365a6-e8a7-40ea-9d29-0f8a1ba6d8b8.fbm/Normal_skeleton_3d_model_basecolor.JPEG",
+                TargetHeight = 3.0f,
+                Borrowed =
+                {
+                    [Idle] = ("Enemy_Skeleton", Idle), [Walk] = ("Enemy_Skeleton", Walk),
+                    [Attack] = ("Enemy_Skeleton", Shoot), [Die] = ("Enemy_Skeleton", Die),
+                },
+                Attachments = { ("Assets/Models/Items/Skeleton_Bow.fbx", "Left_Hand") },
             },
             new ModelSpec
             {
@@ -91,7 +112,9 @@ namespace CastleOfTheD20.Editor
                 FbxPath = "Assets/Characters/FIxed_zombie_3dmodel/FIxed_zombie_3dmodel.fbx",
                 TexturePath = "Assets/Characters/FIxed_zombie_3dmodel/tripo_convert_c1b79a5c-9761-428b-98e6-f77fc470776b.fbm/FIxed_zombie_3dmodel_basecolor.JPEG",
                 TargetHeight = 3.0f,
-                Takes = { [Idle] = "idle", [Walk] = "Zombie walk", [Attack] = "Zombie attack", [Die] = "fall" },
+                // Scary Zombie Pack (Mixamo) idle, walk, attack and death retargeted onto the zombie's Tripo skeleton
+                AnimFbxPath = "Assets/Characters/FIxed_zombie_3dmodel/Zombie_Anims.fbx",
+                AnimTakes = { [Idle] = "Idle", [Walk] = "Walk", [Attack] = "Attack", [Die] = "Die" },
             },
             new ModelSpec
             {
@@ -137,10 +160,11 @@ namespace CastleOfTheD20.Editor
                 MotionNode = "tripo::Root",
                 TargetHeight = 1.0f,
                 Yaw = 90f,
-                // Only a walk cycle ships with the rat: idle shuffles slowly, the attack is a fast lunge
+                // Only a walk cycle ships with the rat: idle (sniffing), a lunging bite and a death (rolls onto its
+                // side) are keyed on its own skeleton in BlenderSources/Enemy_Anims.blend
                 Takes = { [Walk] = "preset:quadruped:walk.001" },
-                Borrowed = { [Idle] = ("Enemy_Rat", Walk), [Attack] = ("Enemy_Rat", Walk) },
-                Speeds = { [Idle] = 0.2f, [Attack] = 2.5f },
+                AnimFbxPath = "Assets/Characters/low-poly+rat+3d+model(1)/Rat_Anims.fbx",
+                AnimTakes = { [Idle] = "Idle", [Attack] = "Attack", [Die] = "Die" },
             },
             new ModelSpec
             {
@@ -249,6 +273,31 @@ namespace CastleOfTheD20.Editor
             AssetDatabase.SaveAssets();
         }
 
+        /// <summary>
+        /// Re-imports the skeleton's, zombie's and rat's clips and rebuilds their animators in place, and builds the
+        /// skeleton archer (visual prefab with the bow, and Enemy_SkeletonArcher). Existing visual prefabs, the
+        /// hero prefab and the zone scenes are left alone.
+        /// </summary>
+        [MenuItem("CastleOfDice/Setup Enemy Animations (skeleton, archer, zombie, rat)")]
+        public static void SetupEnemyAnimations()
+        {
+            EnsureFolder(VisualFolder);
+            EnsureFolder(EnemyFolder);
+            string[] keys = { "Enemy_Skeleton", "Enemy_Zombie", "Enemy_Rat", "Enemy_SkeletonArcher" };
+            foreach (string key in keys) ConfigureImporter(Find(key));
+            AssetDatabase.Refresh();
+            foreach (string key in keys)
+            {
+                ModelSpec spec = Find(key);
+                Material material = SetupMaterial(spec);
+                AnimatorController controller = BuildController(spec);
+                if (key == "Enemy_SkeletonArcher") BuildVisualPrefab(spec, material, controller);
+            }
+            BuildSkeletonArcherPrefab();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SetupRiggedEnemiesEditor] Skeleton, archer, zombie and rat animations set up.");
+        }
+
         /// <summary>Re-imports only Elira's model and puts her on the hero prefab; enemies and zone scenes are left alone.</summary>
         [MenuItem("CastleOfDice/Setup Hero Mage Model")]
         public static void SetupMage()
@@ -301,7 +350,8 @@ namespace CastleOfTheD20.Editor
 
         private static void ConfigureImporter(ModelSpec spec)
         {
-            ConfigureImporter(spec, spec.FbxPath, spec.Takes);
+            // A model whose clips all come from elsewhere keeps its own import untouched
+            if (spec.Takes.Count > 0) ConfigureImporter(spec, spec.FbxPath, spec.Takes);
             if (spec.AnimFbxPath != null) ConfigureImporter(spec, spec.AnimFbxPath, spec.AnimTakes);
         }
 
@@ -374,7 +424,7 @@ namespace CastleOfTheD20.Editor
             if (spec.Borrowed.TryGetValue(role, out (string key, string role) src))
             {
                 ModelSpec other = Find(src.key);
-                return other != null ? LoadClip(other.FbxPath, src.role) : null;
+                return other != null ? ClipFor(other, src.role) : null;
             }
             return null;
         }
@@ -595,6 +645,8 @@ namespace CastleOfTheD20.Editor
                 smr.localBounds = b;
             }
 
+            foreach ((string fbx, string bone) a in spec.Attachments) Attach(model, spec, a.fbx, a.bone);
+
             Animator animator = model.GetComponent<Animator>();
             if (animator == null) animator = model.AddComponent<Animator>();
             animator.runtimeAnimatorController = controller;
@@ -602,6 +654,97 @@ namespace CastleOfTheD20.Editor
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
             return model;
+        }
+
+        /// <summary>
+        /// Hangs a prop (exported from Blender in the model's rest-pose space) on <paramref name="boneName"/>,
+        /// keeping the offset it has from that bone in the bind pose. Its materials become M_{prop}_{material}.
+        /// </summary>
+        private static void Attach(GameObject model, ModelSpec spec, string fbxPath, string boneName)
+        {
+            ModelImporter importer = AssetImporter.GetAtPath(fbxPath) as ModelImporter;
+            GameObject asset = AssetDatabase.LoadAssetAtPath<GameObject>(fbxPath);
+            if (importer == null || asset == null)
+            {
+                Debug.LogError($"[SetupRiggedEnemiesEditor] Attachment not found: {fbxPath}");
+                return;
+            }
+            importer.animationType = ModelImporterAnimationType.None;
+            importer.importAnimation = false;
+            importer.materialImportMode = ModelImporterMaterialImportMode.ImportViaMaterialDescription;
+            importer.SaveAndReimport();
+
+            Transform bone = null;
+            foreach (Transform t in model.GetComponentsInChildren<Transform>(true)) if (t.name == boneName) bone = t;
+            if (bone == null)
+            {
+                Debug.LogError($"[SetupRiggedEnemiesEditor] {spec.Key} has no bone {boneName}.");
+                return;
+            }
+
+            // Bind pose of the bone in the model root's space (rotation and position, no scale)
+            Matrix4x4 boneBind = Matrix4x4.identity;
+            bool found = false;
+            foreach (SkinnedMeshRenderer skin in model.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+            {
+                Matrix4x4[] bindposes = skin.sharedMesh != null ? skin.sharedMesh.bindposes : null;
+                if (bindposes == null) continue;
+                Matrix4x4 toModel = model.transform.worldToLocalMatrix * skin.transform.localToWorldMatrix;
+                for (int i = 0; i < skin.bones.Length && i < bindposes.Length; i++)
+                {
+                    if (skin.bones[i] != bone) continue;
+                    Matrix4x4 m = toModel * bindposes[i].inverse;
+                    boneBind = Matrix4x4.TRS(m.GetPosition(), m.rotation, Vector3.one);
+                    found = true;
+                }
+            }
+            if (!found) Debug.LogWarning($"[SetupRiggedEnemiesEditor] {boneName} is not skinned; {fbxPath} uses its rest transform.");
+
+            GameObject prop = (GameObject)PrefabUtility.InstantiatePrefab(asset);
+            PrefabUtility.UnpackPrefabInstance(prop, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            Transform mesh = prop.transform.childCount > 0 ? prop.transform.GetChild(0) : prop.transform;
+            // The prop was exported in the model's rest-pose space and is instantiated at the origin
+            Matrix4x4 local = boneBind.inverse * mesh.localToWorldMatrix;
+            mesh.SetParent(bone, false);
+            mesh.localPosition = local.GetPosition();
+            mesh.localRotation = local.rotation;
+            mesh.localScale = local.lossyScale;
+            if (mesh != prop.transform) Object.DestroyImmediate(prop);
+
+            foreach (MeshRenderer r in mesh.GetComponentsInChildren<MeshRenderer>(true))
+            {
+                Material[] mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++) mats[i] = PropMaterial(mats[i] != null ? mats[i].name : "Prop");
+                r.sharedMaterials = mats;
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            }
+        }
+
+        // Blender material name -> colour, for the props built in BlenderSources/Enemy_Anims.blend
+        private static readonly Dictionary<string, Color> PropColors = new Dictionary<string, Color>
+        {
+            ["M_Bow_Wood"] = new Color(0.36f, 0.2f, 0.08f),
+            ["M_Bow_Grip"] = new Color(0.15f, 0.09f, 0.05f),
+            ["M_Bow_String"] = new Color(0.85f, 0.82f, 0.72f),
+        };
+
+        private static Material PropMaterial(string sourceName)
+        {
+            string name = sourceName.Replace(" (Instance)", "");
+            string path = $"Assets/Characters/Materials/{name}.mat";
+            Material mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                Shader shader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            Color c = PropColors.TryGetValue(name, out Color col) ? col : Color.gray;
+            mat.color = c;
+            if (mat.HasProperty("_BaseColor")) mat.SetColor("_BaseColor", c);
+            if (mat.HasProperty("_Smoothness")) mat.SetFloat("_Smoothness", 0.15f);
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         /// <summary>
@@ -655,6 +798,10 @@ namespace CastleOfTheD20.Editor
         /// <summary>The Forest Path's zombie.</summary>
         private static void BuildZombiePrefab() =>
             BuildEnemyPrefab(ZombiePrefabPath, "Enemy_Zombie", "Rotting Zombie", hp: 20, ac: 11, damage: 4);
+
+        /// <summary>The Forest ambush's skeleton archer: the guard's model with a bow and a bow shot.</summary>
+        private static void BuildSkeletonArcherPrefab() =>
+            BuildEnemyPrefab(SkeletonArcherPrefabPath, "Enemy_SkeletonArcher", "Skeleton Archer", hp: 16, ac: 12, damage: 4);
 
         /// <summary>The skeleton the Cursed Commander raises at half HP (same profile as the Courtyard guard).</summary>
         private static void BuildSkeletonGuardPrefab() =>

@@ -347,7 +347,8 @@ namespace CastleOfTheD20.Editor
 
         private static EnemyUnit BuildSkeletonArcher(Transform parent, Vector3 floorPos)
         {
-            GameObject archer = InstantiatePrefab("Assets/PREFABS/Enemies/Enemy_SkeletonGuard.prefab", parent, floorPos + new Vector3(0f, 1.5f, 0f));
+            // The guard's skeleton with a bow and a bow shot (SetupRiggedEnemiesEditor.SetupEnemyAnimations)
+            GameObject archer = InstantiatePrefab(SetupRiggedEnemiesEditor.SkeletonArcherPrefabPath, parent, floorPos + new Vector3(0f, 1.5f, 0f));
             archer.name = "Forest_Skeleton_Archer";
             archer.transform.rotation = Quaternion.Euler(0f, 180f, 0f);
             EnemyUnit unit = archer.GetComponent<EnemyUnit>();
