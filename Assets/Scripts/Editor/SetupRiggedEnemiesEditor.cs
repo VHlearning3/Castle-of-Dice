@@ -159,6 +159,11 @@ namespace CastleOfTheD20.Editor
                     ["mage_fireball"] = "Armature|Fireball", ["mage_frostbite"] = "Armature|FrostRay",
                     ["mage_mana_shield"] = "Armature|ManaShield", ["mage_blink"] = "Armature|Blink",
                 },
+                // Her file has no victory: the knight's cheer baked onto her skeleton (cm, 30 fps) in
+                // BlenderSources/Elira_Victory.blend, first two fist pumps
+                AnimFbxPath = "Assets/Characters/Player_mage_new/Elira_Anims.fbx",
+                AnimTakes = { [Victory] = "Victory" },
+                Frames = { [Victory] = (0, 218) },
                 TriggeredRoles = { TakeHit, DrinkPotion, "mage_fireball", "mage_frostbite", "mage_mana_shield", "mage_blink" },
             },
             new ModelSpec
@@ -247,6 +252,18 @@ namespace CastleOfTheD20.Editor
             SetupHeroPrefab(rogueToo: false);
             AssetDatabase.SaveAssets();
             Debug.Log("[SetupRiggedEnemiesEditor] Elira's model set up on the hero prefab.");
+        }
+
+        /// <summary>Re-imports Elira's clips and rebuilds her animator in place; the hero prefab is left alone.</summary>
+        [MenuItem("CastleOfDice/Setup Hero Mage Animations")]
+        public static void SetupMageAnimations()
+        {
+            ModelSpec mage = Find("Hero_Mage_Elira");
+            ConfigureImporter(mage);
+            AssetDatabase.Refresh();
+            BuildController(mage);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SetupRiggedEnemiesEditor] Elira's animations set up.");
         }
 
         /// <summary>

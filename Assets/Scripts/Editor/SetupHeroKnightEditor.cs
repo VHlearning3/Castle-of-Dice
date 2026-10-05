@@ -31,6 +31,7 @@ namespace CastleOfTheD20.Editor
         private const string TakeHit = "TakeHit";
         private const string Die = "Die";
         private const string Victory = "Victory";
+        private const string DrinkPotion = "DrinkPotion";
 
         // role -> Mixamo file in ClipFolder (each holds one "mixamo.com" take)
         private static readonly Dictionary<string, string> MixamoClips = new Dictionary<string, string>
@@ -44,6 +45,8 @@ namespace CastleOfTheD20.Editor
             ["warrior_shield_block"] = "sword and shield block",
             ["warrior_war_cry"] = "sword and shield attack",
             ["warrior_iron_will"] = "draw sword 1",
+            // Elira's potion drink (BlenderSources/Elira_Victory.blend, her T-pose skeleton), retargeted by the avatar
+            [DrinkPotion] = "elira drink potion",
         };
 
         // The pack has no walk or cheer: keep the knight's own takes for those
@@ -85,6 +88,17 @@ namespace CastleOfTheD20.Editor
             AttachWeapons(controller);
             AssetDatabase.SaveAssets();
             Debug.Log("[SetupHeroKnightEditor] Sir Roland has his sword, shield and sword-and-shield animations.");
+        }
+
+        /// <summary>Re-imports Sir Roland's clips and rebuilds his animator in place; prefab and weapons are left alone.</summary>
+        [MenuItem("CastleOfDice/Setup Hero Knight Animations")]
+        public static void SetupAnimations()
+        {
+            foreach (KeyValuePair<string, string> kv in MixamoClips) ConfigureMixamoClip(kv.Key, kv.Value);
+            AssetDatabase.Refresh();
+            BuildController();
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SetupHeroKnightEditor] Sir Roland's animations set up.");
         }
 
         #region Import
@@ -252,6 +266,8 @@ namespace CastleOfTheD20.Editor
             AnimatorState attack = AddOneShot(sm, Attack, idle, new Vector3(560f, 0f, 0f));
             AddAnyTransition(sm, attack, "CastSpell");
             AddOneShot(sm, TakeHit, idle, new Vector3(560f, 60f, 0f));
+            controller.AddParameter(DrinkPotion, AnimatorControllerParameterType.Trigger);
+            AddOneShot(sm, DrinkPotion, idle, new Vector3(560f, 120f, 0f));
 
             float slot = 0f;
             foreach (string role in AbilityRoles)
