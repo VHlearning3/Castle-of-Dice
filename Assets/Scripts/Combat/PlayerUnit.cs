@@ -391,7 +391,7 @@ namespace CastleOfTheD20.Combat
         #region Level & Progression Upgrades
 
         [Header("Progression & Milestone")]
-        [Tooltip("Current hero level: 1 (Starting), 2 (Castle Veteran), 3 (Arcane Crusher), 4 (Tower Champion), 5 (Curse Breaker).")]
+        [Tooltip("Current hero level: 1 (Starting), 2 (Blooded Adventurer), 3 (Castle Veteran), 4 (Champion of Oakhaven), 5 (Curse Breaker).")]
         [SerializeField] private int level = 1;
 
         /// <summary>Highest hero level (critical review B8).</summary>

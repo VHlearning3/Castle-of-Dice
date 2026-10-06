@@ -336,11 +336,14 @@ namespace CastleOfTheD20.Tests.PlayMode
 
         private static void CloseLevelUp()
         {
+            // Two levels reached at once open one window after the other
             LevelUpUIController levelUp = LevelUpUIController.Instance;
-            if (levelUp == null || !levelUp.IsModalOpen) return;
             MethodInfo choose = typeof(LevelUpUIController).GetMethod("OnResilienceChosen", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (choose != null) choose.Invoke(levelUp, null);
-            else levelUp.CloseLevelUpModal();
+            for (int i = 0; i < 5 && levelUp != null && levelUp.IsModalOpen; i++)
+            {
+                if (choose != null) choose.Invoke(levelUp, null);
+                else levelUp.CloseLevelUpModal();
+            }
         }
 
         private static CharacterClassSO LoadClass(string assetName)

@@ -8,11 +8,13 @@ using CastleOfTheD20.Data;
 namespace CastleOfTheD20.Core
 {
     /// <summary>
-    /// Master supervisor for hero milestone progression (Levels 1, 2, and 3).
-    /// Replaces XP-based progression with story/encounter milestones:
-    /// - Level 1 (Starting Level): Default in Oakhaven Village & Cellar.
-    /// - Level 2 (Castle Veteran): Boss 1 (Cursed Commander) defeated OR Rogue unlocks Nature Path secret door.
-    /// - Level 3 (Arcane Crusher - Max Level): Boss 2 (Shadow Witch) defeated in Library.
+    /// Hero levels 1..5 from four milestones (Vili, 2026-10-06). Each gives one level, once, in any order:
+    /// - the first battle won (the cellar rats, the Forest Path, wherever it comes first);
+    /// - three battles won in all, or the Cursed Commander or the Shadow Witch dealt with;
+    /// - the hero's own quest (ClassQuests);
+    /// - the Treasure Tower challenge (TowerChallenge).
+    /// A battle is a cleared encounter room (a village fist fight is not one). The Gargoyle King gives no level.
+    /// The milestones are story flags, so they are saved with the adventure.
     /// </summary>
     public class PlayerProgressionManager : MonoBehaviour
     {
@@ -92,52 +94,89 @@ namespace CastleOfTheD20.Core
         private void SubscribeToGameEvents()
         {
             GameManager.OnBossDefeated += HandleBossDefeated;
+            DungeonRoomController.OnRoomCleared += HandleRoomCleared;
         }
 
         private void UnsubscribeFromGameEvents()
         {
             GameManager.OnBossDefeated -= HandleBossDefeated;
+            DungeonRoomController.OnRoomCleared -= HandleRoomCleared;
         }
 
         #endregion
 
         #region Milestone Triggers
 
-        /// <summary>
-        /// Boss Defeat Milestone Handler:
-        /// - "CursedCommander" -> Level 2
-        /// - "ShadowMageMalakor" -> Level 3
-        /// </summary>
-        private void HandleBossDefeated(string bossID)
+        /// <summary>Story flag of the "first battle won" milestone.</summary>
+        public const string FirstVictoryFlag = "LevelMilestone_FirstVictory";
+
+        /// <summary>Story flag of the "three battles won, or a castle boss dealt with" milestone.</summary>
+        public const string SeasonedFlag = "LevelMilestone_Seasoned";
+
+        /// <summary>Prefix of the story flags that record each battle won (one per encounter room).</summary>
+        public const string BattleWonPrefix = "BattleWon:";
+
+        /// <summary>Battles that give the second milestone.</summary>
+        public const int SeasonedBattles = 3;
+
+        /// <summary>Battles won so far in this adventure (each encounter counts once).</summary>
+        public static int BattlesWon
         {
-            if (string.IsNullOrWhiteSpace(bossID)) return;
-
-            Debug.Log($"[PlayerProgressionManager] Evaluating milestone trigger for defeated boss: {bossID}");
-
-            if (bossID.Equals("CursedCommander", StringComparison.OrdinalIgnoreCase))
+            get
             {
-                if (currentLevel < 2)
+                int count = 0;
+                foreach (string flag in StoryFlags.All)
                 {
-                    AdvanceToMilestone(2, "Cursed Commander defeated");
+                    if (flag.StartsWith(BattleWonPrefix, StringComparison.OrdinalIgnoreCase)) count++;
                 }
-            }
-            else if (bossID.Equals("ShadowMageMalakor", StringComparison.OrdinalIgnoreCase))
-            {
-                if (currentLevel < 3)
-                {
-                    AdvanceToMilestone(3, "Shadow Witch defeated");
-                }
-            }
-            else if (bossID.Equals("GargoyleKing", StringComparison.OrdinalIgnoreCase))
-            {
-                // The ending takes the screen; the level is recorded without the upgrade picker
-                GrantBonusLevel("The Gargoyle King defeated", showModal: false);
+                return count;
             }
         }
 
+        /// <summary>The flag a won encounter leaves: its scene and object name, so every room counts once.</summary>
+        public static string BattleWonFlag(DungeonRoomController room)
+        {
+            return BattleWonPrefix + room.gameObject.scene.name + "/" + room.name;
+        }
+
+        /// <summary>A cleared encounter room is a battle won: the first gives a level, the third another.</summary>
+        public void HandleRoomCleared(DungeonRoomController room)
+        {
+            if (room == null) return;
+            StoryFlags.Set(BattleWonFlag(room));
+
+            int won = BattlesWon;
+            GrantMilestone(FirstVictoryFlag, "First battle won");
+            if (won >= SeasonedBattles) GrantMilestone(SeasonedFlag, $"{SeasonedBattles} battles won");
+        }
+
+        /// <summary>The Cursed Commander or the Shadow Witch (beaten, released or spared) gives the second milestone.</summary>
+        public void HandleBossDefeated(string bossID)
+        {
+            if (string.IsNullOrWhiteSpace(bossID)) return;
+
+            if (bossID.Equals("CursedCommander", StringComparison.OrdinalIgnoreCase))
+            {
+                GrantMilestone(SeasonedFlag, "Cursed Commander overcome");
+            }
+            else if (bossID.Equals("ShadowMageMalakor", StringComparison.OrdinalIgnoreCase))
+            {
+                GrantMilestone(SeasonedFlag, "Shadow Witch overcome");
+            }
+        }
+
+        /// <summary>Gives one level for a milestone the first time it is reached.</summary>
+        public bool GrantMilestone(string flag, string reason)
+        {
+            if (StoryFlags.Has(flag)) return false;
+            StoryFlags.Set(flag);
+            GrantBonusLevel(reason);
+            return true;
+        }
+
         /// <summary>
-        /// One more level (up to 5) for the late-game milestones (critical review B8): the Tower challenge and
-        /// the Gargoyle King each give a level. Level 4 brings the class's fifth ability.
+        /// One more level (up to 5). Used by every milestone; the hero's own quest and the Tower challenge call
+        /// it directly. Level 4 brings the class's fifth ability.
         /// </summary>
         public void GrantBonusLevel(string reason, bool showModal = true)
         {
