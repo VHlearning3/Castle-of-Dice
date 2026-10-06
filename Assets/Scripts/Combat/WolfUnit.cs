@@ -12,11 +12,11 @@ namespace CastleOfTheD20.Combat
         public override void InitializeUnit()
         {
             if (unitName == "Combatant") unitName = "Grey Wolf";
-            if (maxHP == 20) maxHP = 14;
+            if (maxHP == 20) maxHP = 12; // 2026-10-06 balance: 12 HP and 1d4+1 bites (was 14 HP and 1d6+1)
             currentHP = maxHP;
             movementRange = 6;
             attackBonus = Mathf.Max(attackBonus, 3);
-            ConfigureDamageDice(1, 6, 1);
+            ConfigureDamageDice(1, 4, 1);
             ConfigureInitiative(2);
             base.InitializeUnit();
         }

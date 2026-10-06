@@ -39,7 +39,7 @@ Kohdeympäristö: **Unity 6 (6000.3.14f1 LTS) WebGL (60 FPS)** | C# (.NET Standa
    - `5: Zone_6_Tower` (Aarretorni: Othelian sormus & +30 Max HP Eliksiiri)
    - `6: Zone_7_ThroneRoom` (3. Pomo: Kivettymiskuningas)
 5. **Kylätalous (Seppä Baldur):**
-   - Romumetallin myynti: 1 romu = 10 Kultaa.
+   - Romumetallin myynti: 1 romu = 5 Kultaa (muutettu 6.10.2026).
    - Ostot: Terveysjuoma (15g tai 25g), Teroitettu miekka (+1 Pysyvä DMG, 50-60g), Haarniskapäivitys (+1 Pysyvä AC, 50-100g).
 
 animator.SetTrigger("Attack");

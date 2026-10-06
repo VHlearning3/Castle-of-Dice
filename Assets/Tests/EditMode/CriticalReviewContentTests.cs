@@ -772,6 +772,42 @@ namespace CastleOfTheD20.Tests
             Assert.IsFalse(witch.SeesThrough);
         }
 
+        /// <summary>Vili's balance changes (2026-10-06): wolves, Baldur's tip, Stone Form, Frostbite, scrap.</summary>
+        [Test]
+        public void Balance_WolvesStoneFormFrostbiteScrap()
+        {
+            WolfUnit wolf = CreateUnit<WolfUnit>("Wolf");
+            wolf.InitializeUnit();
+            Assert.AreEqual(12, wolf.MaxHP, "wolves have 12 HP");
+            Assert.AreEqual(3, wolf.AttackDamage, "wolves bite for 1d4+1");
+
+            Assert.AreEqual(2, GargoyleKingBoss.StoneFormArmorBonus, "Stone Form gives +2 AC");
+            Assert.AreEqual(6, AssetDatabase.LoadAssetAtPath<AbilitySO>("Assets/Data/Ability_Mage_Frostbite.asset").Range, "Frostbite reaches 6 tiles");
+            Assert.AreEqual(5, ShopManager.SCRAP_TO_GOLD_RATE, "Baldur pays 5 gold per scrap");
+            Assert.AreEqual(5, AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_ScrapMetal.asset").SellPriceGold);
+        }
+
+        [Test]
+        public void BaldursTip_WeakensTheCommanderForTheWholeFight_ForEveryHero()
+        {
+            foreach (string cls in new[] { "Character_Warrior_SirRoland", "Character_Mage_Elira", "Character_Rogue_Corvo" })
+            {
+                StoryFlags.Clear();
+                CreateHero(cls);
+                CursedCommanderBoss plain = CreateUnit<CursedCommanderBoss>("Commander_" + cls);
+                plain.InitializeUnit();
+                int fullAc = plain.ArmorClass;
+
+                StoryFlags.Set("CommanderArmorWeakened"); // Baldur's [Lore] answer
+                CursedCommanderBoss commander = CreateUnit<CursedCommanderBoss>("Commander_Tip_" + cls);
+                commander.InitializeUnit();
+                Assert.AreEqual(fullAc - 2, commander.ArmorClass, cls);
+                for (int round = 0; round < 8; round++) Invoke(commander, "OnTurnActionFinished");
+                Assert.AreEqual(fullAc - 2, commander.ArmorClass, cls + ": still weakened late in the fight");
+                Assert.IsTrue(StoryFlags.Has("CommanderArmorWeakened"), "the tip is kept for a retry");
+            }
+        }
+
         /// <summary>The 2026-10-06 icon set: every ability and item has its own icon (the potions share one).</summary>
         [Test]
         public void EveryAbilityAndItem_HasItsOwnIcon()

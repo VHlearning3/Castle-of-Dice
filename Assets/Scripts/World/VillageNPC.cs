@@ -381,7 +381,7 @@ namespace CastleOfTheD20.World
             // 2. Baldur Lore Node (Reveals Commander armor weakness and sets CommanderArmorWeakened debuff)
             loreNode.Initialize(
                 speaker: "Baldur the Smith",
-                text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for first 2 rounds)",
+                text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for the whole fight)",
                 portrait: null,
                 isExit: false
             );

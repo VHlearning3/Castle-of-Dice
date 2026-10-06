@@ -14,11 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: mat_scrap_metal
   itemName: Scrap Metal
-  description: Salvaged scrap ore gathered from dungeon ruins. Can be sold to Blacksmith
-    Baldur for 10 gold.
+  description: Salvaged scrap ore gathered from dungeon ruins. Can be sold to Blacksmith Baldur for 5 gold.
   itemIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000011, type: 3}
   itemType: 4
   buyPriceGold: 0
-  sellPriceGold: 10
+  sellPriceGold: 5
   statBonusValue: 0
   isConsumable: 0

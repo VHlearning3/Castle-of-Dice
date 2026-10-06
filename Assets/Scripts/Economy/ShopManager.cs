@@ -9,7 +9,7 @@ namespace CastleOfTheD20.Economy
 {
     /// <summary>
     /// Implements Blacksmith Baldur's trading post mechanics in Oakhaven.
-    /// Handles scrap metal conversion (1 scrap = 10 gold), item purchasing (potions, weapons, armor),
+    /// Handles scrap metal conversion (1 scrap = 5 gold), item purchasing (potions, weapons, armor),
     /// and selling loot back for gold.
     /// </summary>
     public class ShopManager : MonoBehaviour
@@ -41,7 +41,7 @@ namespace CastleOfTheD20.Economy
 
         #region Constants
 
-        public const int SCRAP_TO_GOLD_RATE = 10;
+        public const int SCRAP_TO_GOLD_RATE = 5;
         public const int HEALTH_POTION_PRICE = 15;
         public const int GREATER_POTION_PRICE = 25;
         public const int POISON_VIAL_PRICE = 30;
@@ -113,7 +113,7 @@ namespace CastleOfTheD20.Economy
         #region Scrap Conversion
 
         /// <summary>
-        /// Converts scrap metal pieces to gold coins at Blacksmith Baldur's 1 Scrap = 10 Gold rate.
+        /// Converts scrap metal pieces to gold coins at Blacksmith Baldur's 1 Scrap = 5 Gold rate.
         /// </summary>
         /// <param name="scrapCount">Number of scrap pieces to convert (pass -1 to convert all available scrap).</param>
         /// <returns>Total gold coins received.</returns>

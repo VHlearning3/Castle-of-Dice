@@ -108,7 +108,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(scrapMetal)) scrapMetal.Initialize(
                 id: "mat_scrap_metal",
                 name: "Scrap Metal",
-                desc: "Salvaged scrap ore gathered from dungeon ruins. Can be sold to Blacksmith Baldur for 10 gold.",
+                desc: "Salvaged scrap ore gathered from dungeon ruins. Can be sold to Blacksmith Baldur for 5 gold.",
                 type: ItemType.ScrapMetal,
                 buyPrice: 0,
                 sellPrice: 10,
@@ -219,9 +219,9 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(mageFrostbite)) mageFrostbite.Initialize(
                 id: "mage_frostbite",
                 name: "Frostbite",
-                desc: "A frost ray up to 4 tiles for 1d6 + INT damage that halves the target's movement for 2 turns and ices the ground around it.",
+                desc: "A frost ray up to 6 tiles for 1d6 + INT damage that halves the target's movement for 2 turns and ices the ground around it.",
                 target: AbilityTargetType.SingleTarget,
-                abilityRange: 4,
+                abilityRange: 6,
                 aoeRadius: 0,
                 value: 0,
                 checkRequired: true,
@@ -518,7 +518,7 @@ namespace CastleOfTheD20.Editor
             // Lore Node
             if (ShouldInitialize(baldurLore)) baldurLore.Initialize(
                 speaker: "Baldur the Smith",
-                text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for first 2 rounds)",
+                text: "The Cursed Commander wears ancient plate and wields a heavy shield. But centuries in the damp courtyard have rusted the armor joints at his knees. Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced by 2 for the whole fight)",
                 portrait: null,
                 isExit: false
             );

@@ -11,7 +11,7 @@ namespace CastleOfTheD20.Bosses
     /// Crown Hall Final Boss: The Gargoyle King.
     /// Phase 1: Heavy physical attacks and a telegraphed earthquake: he marks a 3x3 area under the hero in red,
     /// and it shakes on his next turn, so the hero can step out (critical review B4). The quake never hurts him.
-    /// Phase 2: Stone Form at 50% HP (+3 AC) and a petrifying gaze every other turn: the hero makes a DC 13
+    /// Phase 2: Stone Form at 50% HP (+2 AC) and a petrifying gaze every other turn: the hero makes a DC 13
     /// CON save or cannot move on their next turn. Othelia's ring breaks the stone armour for 2 turns (C3).
     /// Pre-combat hook: Weakened attack damage (-3) for the first 3 turns if DC 16 Intimidation check succeeded.
     /// </summary>
@@ -20,7 +20,7 @@ namespace CastleOfTheD20.Bosses
         #region Constants
 
         /// <summary>AC the Stone Form adds.</summary>
-        public const int StoneFormArmorBonus = 3;
+        public const int StoneFormArmorBonus = 2;
 
         /// <summary>CON save against the petrifying gaze.</summary>
         public const int GazeSaveDC = 13;
