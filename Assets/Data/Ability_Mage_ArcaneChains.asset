@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityID: mage_arcane_chains
   abilityName: Arcane Chains
   description: 'Bind an enemy up to 4 tiles away in glowing chains: 1d6 + INT damage and it cannot move for 2 turns. Cooldown 3.'
-  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000016, type: 3}
+  abilityIcon: {fileID: 21300000, guid: bc2677c712acddd3591d7efc90e3a185, type: 3}
   targetType: 0
   range: 4
   areaOfEffectRadius: 0

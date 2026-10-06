@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Runic Armor
   description: Reinforced armor inscribed with protective runes. Permanently increases
     Armor Class by +1.
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: 5d6ad725f5f1e5336f23cdd0b66d3f96, type: 3}
   itemType: 2
   buyPriceGold: 50
   sellPriceGold: 35

@@ -487,6 +487,10 @@ namespace CastleOfTheD20.Editor
                 { "Assets/Data/Ability_Rogue_Backstab.asset", "Assets/UI/Sprites/UI_Icon_Backstab.png" },
                 { "Assets/Data/Ability_Rogue_PoisonDagger.asset", "Assets/UI/Sprites/UI_Icon_PoisonDagger.png" },
                 { "Assets/Data/Ability_Rogue_SmokeBomb.asset", "Assets/UI/Sprites/UI_Icon_SmokeBomb.png" },
+                { "Assets/Data/Ability_Warrior_Retaliation.asset", "Assets/UI/Sprites/UI_Icon_Retaliation.png" },
+                { "Assets/Data/Ability_Mage_ArcaneChains.asset", "Assets/UI/Sprites/UI_Icon_ArcaneChains.png" },
+                { "Assets/Data/Ability_Rogue_ShadowStep.asset", "Assets/UI/Sprites/UI_Icon_ShadowStep.png" },
+                { "Assets/Data/Ability_Rogue_PoisonCloud.asset", "Assets/UI/Sprites/UI_Icon_PoisonCloud.png" },
                 { "Assets/Data/Ability_Rogue_Lockpicking.asset", "Assets/UI/Sprites/UI_Icon_Lockpicking.png" }
             };
 

@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: item_reroll_rune
   itemName: Rune of Fate
   description: 'A rune stone of Oakhaven. When one of your d20 rolls fails, break the rune to roll again.'
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: cab1cf72a5824a72075169de4051d101, type: 3}
   itemType: 3
   buyPriceGold: 75
   sellPriceGold: 35

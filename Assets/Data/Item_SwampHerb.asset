@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: item_swamp_herb
   itemName: Swamp Blossom
   description: Rare blue swamp flower that blooms in the damp hollows along the Forest Path.
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: df3cade6a890c7133f916dff9da5c325, type: 3}
   itemType: 3
   buyPriceGold: 0
   sellPriceGold: 0
