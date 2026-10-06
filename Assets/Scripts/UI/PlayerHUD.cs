@@ -57,7 +57,7 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Image sliderFillImage;
 
         [Header("Hero Identity & Stats")]
-        [Tooltip("Text display for Hero Name (e.g. 'Sir Roland').")]
+        [Tooltip("Text display for Hero Name (e.g. 'Sir Roland the Brave').")]
         [SerializeField] private TMP_Text heroNameText;
 
         [Tooltip("Text display for Hero Class & Level (e.g. 'Warrior • Level 1').")]
@@ -556,7 +556,7 @@ namespace CastleOfTheD20.UI
             GameObject nameObj = nameTr != null ? nameTr.gameObject : new GameObject("Hero_Name_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
             nameObj.transform.SetParent(heroCardObj.transform, false);
             heroNameText = nameObj.GetComponent<TMP_Text>();
-            heroNameText.text = "Sir Roland";
+            heroNameText.text = "Sir Roland the Brave";
             heroNameText.fontSize = 17f;
             heroNameText.fontStyle = FontStyles.Bold;
             heroNameText.color = new Color(1.0f, 0.96f, 0.88f, 1f); // Antique parchment
@@ -1252,7 +1252,15 @@ namespace CastleOfTheD20.UI
             // Name
             if (heroNameText != null)
             {
-                heroNameText.text = !string.IsNullOrEmpty(trackedPlayer.UnitName) ? trackedPlayer.UnitName : "Sir Roland";
+                heroNameText.text = !string.IsNullOrEmpty(trackedPlayer.UnitName) ? trackedPlayer.UnitName : "Sir Roland the Brave";
+
+                // Longer names ("Scholar Elisa Star-Eye") shrink to fit the card instead of being cut off
+                if (!heroNameText.enableAutoSizing)
+                {
+                    heroNameText.fontSizeMax = heroNameText.fontSize;
+                    heroNameText.fontSizeMin = Mathf.Min(11f, heroNameText.fontSize);
+                    heroNameText.enableAutoSizing = true;
+                }
             }
 
             // Class & Level
@@ -1389,7 +1397,7 @@ namespace CastleOfTheD20.UI
                     break;
                 case GameLocation.Library:
                     zoneTitleText.text = "Grand Archives";
-                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Wing 2 • Shadow Mage Malakor";
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Wing 2 • Shadow Witch";
                     break;
                 case GameLocation.CrownHall:
                     zoneTitleText.text = "The Throne Room";

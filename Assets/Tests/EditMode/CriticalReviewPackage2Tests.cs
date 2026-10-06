@@ -450,7 +450,7 @@ namespace CastleOfTheD20.Tests
 
             gameManager.NotifyBossDefeated("CursedCommander");
             Assert.AreEqual(1, quests.GetQuestProgress(MainQuest.QuestId));
-            StringAssert.Contains("Malakor", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);
+            StringAssert.Contains("Shadow Witch", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);
 
             gameManager.NotifyBossDefeated("ShadowMageMalakor");
             StringAssert.Contains("King", quests.GetQuest(MainQuest.QuestId).ObjectiveSummary);

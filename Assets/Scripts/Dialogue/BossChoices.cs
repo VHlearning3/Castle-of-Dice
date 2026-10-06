@@ -43,10 +43,10 @@ namespace CastleOfTheD20.Dialogue
                             Exit("Cursed Commander", "A duel... yes. As it was done at court. Stand back, guard! This one is mine alone."),
                             Exit("Cursed Commander", "Duel? You are no knight. Guard, with me!")));
                     }
-                    options.Add(Check("[Soldier's Honor] Your King is gone. I release you from your oath, Sir Gareth.",
+                    options.Add(Check("[Soldier's Honor] The Gargoyle King is no king of yours any more. I release you from your oath, Commander.",
                         15, "Honor / Charisma Check", CommanderReleasedFlag,
-                        Exit("Sir Gareth", "Released... I remember my name. Thank you, stranger. Tell them the gate held until the very end."),
-                        Exit("Cursed Commander", "Only the King can release me! Draw your blade!")));
+                        Exit("Cursed Commander", "Released... I remember who I was. Thank you, stranger. Tell them the gate held until the very end."),
+                        Exit("Cursed Commander", "Only the Gargoyle King can release me! Draw your blade!")));
                     break;
 
                 case MalakorBossId:
@@ -54,13 +54,13 @@ namespace CastleOfTheD20.Dialogue
                     {
                         options.Add(Check("[Mage] Your binding holds only the loyal. It is already cracking; I can see it from here.",
                             14, "Arcana / Intelligence Check", MalakorShakenFlag,
-                            Exit("Shadow Mage Malakor", "You... see the flaw? Then my mirrors are useless against you. Fight me as I am!"),
-                            Exit("Shadow Mage Malakor", "A student lecturing the master! My mirrors will teach you humility.")));
+                            Exit("Shadow Witch", "You... see the flaw? Then my mirrors are useless against you. Fight me as I am!"),
+                            Exit("Shadow Witch", "A student lecturing the master! My mirrors will teach you humility.")));
                     }
                     options.Add(Check("[Mercy] You wrote the counter-rune. Live, and help undo what you did.",
                         15, "Persuasion / Charisma Check", MalakorSparedFlag,
-                        Exit("Malakor", "Mercy... from you? Very well. I will be there when you face him. Whether I help you... we shall both find out."),
-                        Exit("Shadow Mage Malakor", "Mercy is a word for the weak. Burn!")));
+                        Exit("Shadow Witch", "Mercy... from you? Very well. I will be there when you face him. Whether I help you... we shall both find out."),
+                        Exit("Shadow Witch", "Mercy is a word for the weak. Burn!")));
                     break;
 
                 case KingBossId:
@@ -110,15 +110,15 @@ namespace CastleOfTheD20.Dialogue
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder();
             if (StoryFlags.Has(CommanderReleasedFlag))
-                sb.Append("Sir Gareth walked out of the gate he had guarded for so long and laid his sword on the Courtyard steps. ");
+                sb.Append("The Cursed Commander, free at last, walked out of the gate he had guarded for so long and laid his sword on the Courtyard steps. ");
             if (StoryFlags.Has(MalakorHelpedFlag))
-                sb.Append("Malakor kept his word: his counter-rune is why the stone let go so quickly. He has asked to be judged by the village. ");
+                sb.Append("The Shadow Witch kept her word: her counter-rune is why the stone let go so quickly. She has asked to be judged by the village. ");
             else if (StoryFlags.Has(MalakorBetrayedFlag))
-                sb.Append("Malakor betrayed you in the Throne Room and fled. Somewhere, the old mage is still running. ");
+                sb.Append("The Shadow Witch betrayed you in the Throne Room and fled. Somewhere, the old witch is still running. ");
             else if (StoryFlags.Has(MalakorSparedFlag))
-                sb.Append("Malakor, whom you spared, was never seen again. ");
+                sb.Append("The Shadow Witch, whom you spared, was never seen again. ");
             if (StoryFlags.Has(CrownStolenFlag))
-                sb.Append("And the King's crown? It sits in your pack. I will not ask.");
+                sb.Append("And the Gargoyle King's crown? It sits in your pack. I will not ask.");
             return sb.ToString().Trim();
         }
 

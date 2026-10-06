@@ -48,7 +48,7 @@ namespace CastleOfTheD20.World
         #region Private State
 
         /// <summary>Shown when the hero tries the Throne Room gate before both wing bosses are beaten.</summary>
-        public const string SealedThroneRoomMessage = "The Throne Room gate is sealed by the curse.\nDefeat the Cursed Commander and Shadow Mage Malakor first.";
+        public const string SealedThroneRoomMessage = "The Throne Room gate is sealed by the curse.\nDefeat the Cursed Commander and the Shadow Witch first.";
 
         private static float s_lastGlobalTeleportTime = -10f;
 

@@ -810,9 +810,9 @@ namespace CastleOfTheD20.UI
             titleTMP.raycastTarget = false;
 
             // 3 Class Cards
-            CreateClassCard(csPanel.transform, "Warrior_Card", "Sir Roland", "WARRIOR", "High HP & AC. Frontline swordmaster.", new Vector2(-280f, 10f), () => SelectCharacterClass(warriorClass));
-            CreateClassCard(csPanel.transform, "Mage_Card", "Scholar Elira", "MAGE", "Devastating Fireball area damage (3x3). Teleportation.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
-            CreateClassCard(csPanel.transform, "Rogue_Card", "Shadow-Corvo", "ROGUE", "Critical puncture damage, Smoke Bomb and lockpicking.", new Vector2(280f, 10f), () => SelectCharacterClass(rogueClass));
+            CreateClassCard(csPanel.transform, "Warrior_Card", "Sir Roland the Brave", "WARRIOR", "High HP & AC. Frontline swordmaster.", new Vector2(-280f, 10f), () => SelectCharacterClass(warriorClass));
+            CreateClassCard(csPanel.transform, "Mage_Card", "Scholar Elisa Star-Eye", "MAGE", "Devastating Fireball area damage (3x3). Teleportation.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
+            CreateClassCard(csPanel.transform, "Rogue_Card", "Sylvaine the Veiled", "ROGUE", "Critical puncture damage, Smoke Bomb and lockpicking.", new Vector2(280f, 10f), () => SelectCharacterClass(rogueClass));
 
             // Back button
             Button backBtn = CreateMenuButton(csPanel.transform, "Back_Btn", "Back", new Vector2(0f, -190f), new Color(0.4f, 0.2f, 0.2f));

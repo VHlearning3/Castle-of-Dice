@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: Before the curse, the Petrified King ruled these lands justly. But
-    he sought immortality from the deep crags... and his heart turned to stone. Shadows
-    consumed the fortress from within.
+  dialogueText: 'Before the curse, the Gargoyle King ruled these lands justly. But he feared death, and the Shadow Witch''s ritual turned him and everyone sworn to him into living stone. Shadows consumed the fortress from within.'
   options:
   - optionText: A tragic fate. I can search for the signet ring on your behalf.
     requiresCheck: 0

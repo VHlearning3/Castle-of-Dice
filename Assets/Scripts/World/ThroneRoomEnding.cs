@@ -312,13 +312,13 @@ namespace CastleOfTheD20.World
 
             DialogueNodeSO second = ScriptableObject.CreateInstance<DialogueNodeSO>();
             second.Initialize(OtheliaName,
-                "He ruled these lands justly once, before he sought to live forever. My family kept Queen Isolde's ring for him all these years. Thanks to you, he will be remembered for that, not for the shadows.");
+                "He ruled these lands justly once, before he sought to live forever. My family kept Queen Isolde's ring for generations, and you carried it home to him. Thanks to you, he will be remembered for that, not for the shadows.");
             second.SetOptions(new List<DialogueOption> { new DialogueOption("The castle is yours again, Elder.", afterSecond) });
 
             DialogueNodeSO first = ScriptableObject.CreateInstance<DialogueNodeSO>();
             first.Initialize(OtheliaName,
-                "I felt it all the way in Oakhaven: the stone let go of the castle. The King's curse is broken, and his knights are breathing again!");
-            first.SetOptions(new List<DialogueOption> { new DialogueOption("The Petrified King can finally rest.", second) });
+                "I felt it all the way in Oakhaven: the stone let go of the castle. The Gargoyle King's curse is broken, and his knights are breathing again!");
+            first.SetOptions(new List<DialogueOption> { new DialogueOption("The Gargoyle King can finally rest.", second) });
 
             return first;
         }
@@ -342,8 +342,8 @@ namespace CastleOfTheD20.World
         public const string CreditsText =
             "<size=64><b><color=#ffd34d>CASTLE OF DICE</color></b></size>\n\n\n" +
             "<color=#ffd34d>Game design & development</color>\nVili\n\n" +
-            "<color=#ffd34d>Heroes</color>\nSir Roland the Warrior\nScholar Elira the Mage\nShadow-Corvo the Rogue\n\n" +
-            "<color=#ffd34d>Villains</color>\nThe Cursed Commander\nShadow Mage Malakor\nThe Gargoyle King\n\n" +
+            "<color=#ffd34d>Heroes</color>\nSir Roland the Brave, Warrior\nScholar Elisa Star-Eye, Mage\nSylvaine the Veiled, Rogue\n\n" +
+            "<color=#ffd34d>Villains</color>\nThe Cursed Commander\nThe Shadow Witch\nThe Gargoyle King\n\n" +
             "<color=#ffd34d>Music</color>\nScottish Harp (Pixabay)\n\n" +
             "<color=#ffd34d>Made with</color>\nUnity 6\n\n\n\n" +
             "<size=48><b>Thank you for playing!</b></size>";

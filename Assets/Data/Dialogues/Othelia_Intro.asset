@@ -14,9 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace
-    until the ancient stone castle stirred with evil. If you venture to the castle
-    gates, could you search for my family's lost signet ring?
+  dialogueText: 'Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace until the ancient stone castle stirred with evil. If you venture to the castle gates, could you search for my family''s lost signet ring? It belonged to Queen Isolde, my ancestor.'
   options:
   - optionText: I will find the ring for you.
     requiresCheck: 0
@@ -25,7 +23,7 @@ MonoBehaviour:
     nextNodeSuccess: {fileID: 11400000, guid: 987fe80ae9a717848a795a47b5e99846, type: 2}
     nextNodeFailure: {fileID: 0}
     combatDebuffTag: '[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]'
-  - optionText: Tell me about the castle's history and the King.
+  - optionText: Tell me about the castle's history and the Gargoyle King.
     requiresCheck: 0
     targetDC: 10
     skillCheckDescription: 

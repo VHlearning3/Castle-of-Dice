@@ -12,7 +12,7 @@ namespace CastleOfTheD20.Core
     /// Replaces XP-based progression with story/encounter milestones:
     /// - Level 1 (Starting Level): Default in Oakhaven Village & Cellar.
     /// - Level 2 (Castle Veteran): Boss 1 (Cursed Commander) defeated OR Rogue unlocks Nature Path secret door.
-    /// - Level 3 (Arcane Crusher - Max Level): Boss 2 (Shadow Mage Malakor) defeated in Library.
+    /// - Level 3 (Arcane Crusher - Max Level): Boss 2 (Shadow Witch) defeated in Library.
     /// </summary>
     public class PlayerProgressionManager : MonoBehaviour
     {
@@ -127,7 +127,7 @@ namespace CastleOfTheD20.Core
             {
                 if (currentLevel < 3)
                 {
-                    AdvanceToMilestone(3, "Shadow Mage Malakor defeated");
+                    AdvanceToMilestone(3, "Shadow Witch defeated");
                 }
             }
             else if (bossID.Equals("GargoyleKing", StringComparison.OrdinalIgnoreCase))

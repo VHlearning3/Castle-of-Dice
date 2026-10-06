@@ -367,7 +367,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO warriorClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Warrior_SirRoland.asset");
             if (ShouldInitialize(warriorClass)) warriorClass.Initialize(
                 type: CharacterClassType.Warrior,
-                name: "Sir Roland",
+                name: "Sir Roland the Brave",
                 lore: "Veteran of the royal guard who donned his ancestral plate armor to purge his fallen castle of undead abominations.",
                 maxHp: 30,
                 ac: 14,
@@ -382,7 +382,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO mageClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Mage_Elira.asset");
             if (ShouldInitialize(mageClass)) mageClass.Initialize(
                 type: CharacterClassType.Mage,
-                name: "Scholar Elira",
+                name: "Scholar Elisa Star-Eye",
                 lore: "Academy arcanist seeking to unravel the ancient curses and retrieve lost grimoires hidden in the castle's depths.",
                 maxHp: 20,
                 ac: 12,
@@ -397,7 +397,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO rogueClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Rogue_Corvo.asset");
             if (ShouldInitialize(rogueClass)) rogueClass.Initialize(
                 type: CharacterClassType.Rogue,
-                name: "Shadow-Corvo",
+                name: "Sylvaine the Veiled",
                 lore: "Tavern-bred opportunist and lockpick specialist who knows the castle's secret passageways better than anyone.",
                 maxHp: 25,
                 ac: 13,
@@ -421,7 +421,7 @@ namespace CastleOfTheD20.Editor
                 EditorUtility.DisplayDialog(
                     "Castle of the D20",
                     $"Successfully generated {assetCount} game data assets in '{DataFolderPath}'!\n\n" +
-                    "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
+                    "- 3 Character Classes (Sir Roland the Brave, Elisa Star-Eye, Sylvaine the Veiled) with assigned abilities\n" +
                     "- 12 Abilities (4 per class)\n" +
                     "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
                     "- 4 Quests (Cellar Pests, Scrap for the Forge, Lost Signet Ring, Herbs for the Healer)\n" +
@@ -713,7 +713,7 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO otheliaAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Accepted.asset");
             if (ShouldInitialize(otheliaAccepted)) otheliaAccepted.Initialize(
                 speaker: "Elder Othelia",
-                text: "Thank you, brave adventurer! My family's signet ring was carried off to the castle's treasure tower when the curse fell. The way there is long and dangerous, so stay alive!",
+                text: "Thank you, brave adventurer! My family kept Queen Isolde's ring for generations, until the castle's stone guards came down to Oakhaven and carried it off to the treasure tower. The way there is long and dangerous, so stay alive!",
                 portrait: null,
                 isExit: false
             );
@@ -727,7 +727,7 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO otheliaLore = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Lore.asset");
             if (ShouldInitialize(otheliaLore)) otheliaLore.Initialize(
                 speaker: "Elder Othelia",
-                text: "Before the curse, the Petrified King ruled these lands justly. But he sought immortality from the deep crags... and his heart turned to stone. Shadows consumed the fortress from within.",
+                text: "Before the curse, the Gargoyle King ruled these lands justly. But he feared death, and the Shadow Witch's ritual turned him and everyone sworn to him into living stone. Shadows consumed the fortress from within.",
                 portrait: null,
                 isExit: false
             );
@@ -742,14 +742,14 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO otheliaIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Othelia_Intro.asset");
             if (ShouldInitialize(otheliaIntro)) otheliaIntro.Initialize(
                 speaker: "Elder Othelia",
-                text: "Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace until the ancient stone castle stirred with evil. If you venture to the castle gates, could you search for my family's lost signet ring?",
+                text: "Greetings, traveler. I am Elder Othelia. Oakhaven lived in peace until the ancient stone castle stirred with evil. If you venture to the castle gates, could you search for my family's lost signet ring? It belonged to Queen Isolde, my ancestor.",
                 portrait: null,
                 isExit: false
             );
             otheliaIntro.SetOptions(new List<DialogueOption>
             {
                 new DialogueOption("I will find the ring for you.", otheliaAccepted, false, 10, "", null, "[ACTION_ACCEPT_QUEST:quest_lost_signet_ring]"),
-                new DialogueOption("Tell me about the castle's history and the King.", otheliaLore, false, 10, "", null, ""),
+                new DialogueOption("Tell me about the castle's history and the Gargoyle King.", otheliaLore, false, 10, "", null, ""),
                 new DialogueOption("[Exit] I have urgent matters elsewhere.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
             EditorUtility.SetDirty(otheliaIntro);
@@ -915,7 +915,7 @@ namespace CastleOfTheD20.Editor
             DialogueNodeSO commanderIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Intro.asset");
             if (ShouldInitialize(commanderIntro)) commanderIntro.Initialize(
                 speaker: "Cursed Commander",
-                text: "Who dares desecrate the castle watchtower? My blade has lain in the grave for centuries, but today it hungers for living blood once more!",
+                text: "Who dares approach the castle gates? I have held them for centuries, and today my blade hungers for living blood once more!",
                 portrait: null,
                 isExit: false
             );
@@ -935,10 +935,10 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(commanderIntro);
             assetCount++;
 
-            // 7. Boss 2: Shadow Mage Malakor Dialogue (Siipi 2: Kirjasto)
+            // 7. Boss 2: Shadow Witch Dialogue (Siipi 2: Kirjasto)
             DialogueNodeSO malakorSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Success.asset");
             if (ShouldInitialize(malakorSuccess)) malakorSuccess.Initialize(
-                speaker: "Shadow Mage Malakor",
+                speaker: "Shadow Witch",
                 text: "What?! How do you know the dispel formula for that incantation?! The phantom reflection shatters!",
                 portrait: null,
                 isExit: true
@@ -949,7 +949,7 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO malakorFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Check_Fail.asset");
             if (ShouldInitialize(malakorFail)) malakorFail.Initialize(
-                speaker: "Shadow Mage Malakor",
+                speaker: "Shadow Witch",
                 text: "Blind fool! You shall never discern shadow from truth in my hall of mirrors!",
                 portrait: null,
                 isExit: true
@@ -960,7 +960,7 @@ namespace CastleOfTheD20.Editor
 
             DialogueNodeSO malakorIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Malakor_Intro.asset");
             if (ShouldInitialize(malakorIntro)) malakorIntro.Initialize(
-                speaker: "Shadow Mage Malakor",
+                speaker: "Shadow Witch",
                 text: "Welcome to my arcane sanctum, mortal. Do you seek ancient secrets? Or merely your doom within my labyrinth of mirrors?",
                 portrait: null,
                 isExit: false

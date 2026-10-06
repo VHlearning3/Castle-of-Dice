@@ -34,9 +34,9 @@ namespace CastleOfTheD20.Editor
 
         private static readonly Def[] Defs =
         {
-            new Def { name = "Sir Roland", group = "Heroes", path = PlayerHero, child = "Knight_Model", heroClass = CharacterClassType.Warrior, note = "Sword and shield are saved on his hand bones in PlayerHero." },
-            new Def { name = "Scholar Elira", group = "Heroes", path = PlayerHero, child = "Mage_Model", weapons = true, heroClass = CharacterClassType.Mage, note = "Staff attached from HeroWeaponMounts, as in the game." },
-            new Def { name = "Shadow-Corvo", group = "Heroes", path = PlayerHero, child = "Rogue_Model", weapons = true, heroClass = CharacterClassType.Rogue, note = "Daggers attached from HeroWeaponMounts, as in the game." },
+            new Def { name = "Sir Roland the Brave", group = "Heroes", path = PlayerHero, child = "Knight_Model", heroClass = CharacterClassType.Warrior, note = "Sword and shield are saved on his hand bones in PlayerHero." },
+            new Def { name = "Scholar Elisa Star-Eye", group = "Heroes", path = PlayerHero, child = "Mage_Model", weapons = true, heroClass = CharacterClassType.Mage, note = "Staff attached from HeroWeaponMounts, as in the game." },
+            new Def { name = "Sylvaine the Veiled", group = "Heroes", path = PlayerHero, child = "Rogue_Model", weapons = true, heroClass = CharacterClassType.Rogue, note = "Daggers attached from HeroWeaponMounts, as in the game." },
             new Def { name = "Baldur the Smith", group = "NPCs", path = Npcs + "NPC_Baldur_Smith.prefab" },
             new Def { name = "Barnaby", group = "NPCs", path = Npcs + "NPC_Barnaby_3dmodel.prefab" },
             new Def { name = "Pip the Peddler (ghost)", group = "NPCs", path = Visuals + "Visual_NPC_Pip_Ghost.prefab", note = "Floats in place; talk and trade only." },
@@ -50,7 +50,7 @@ namespace CastleOfTheD20.Editor
             new Def { name = "Mimic", group = "Enemies", path = Visuals + "Visual_Enemy_Mimic.prefab" },
             new Def { name = "Grey Wolf", group = "Enemies", path = Visuals + "Visual_Enemy_Wolf.prefab", note = "Enemy_Wolf.prefab is ready; no scene uses it yet." },
             new Def { name = "Cursed Commander", group = "Bosses", path = Visuals + "Visual_Boss_CursedCommander.prefab" },
-            new Def { name = "Shadow Mage Malakor", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image." },
+            new Def { name = "Shadow Witch", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image." },
             new Def { name = "Gargoyle King (stage 1)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage1.prefab" },
             new Def { name = "Gargoyle King (Stone Form)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage2.prefab" },
         };

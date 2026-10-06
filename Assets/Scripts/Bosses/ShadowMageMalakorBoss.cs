@@ -8,7 +8,7 @@ using CastleOfTheD20.Dialogue;
 namespace CastleOfTheD20.Bosses
 {
     /// <summary>
-    /// Library & Arcane Wing Boss: Shadow Mage Malakor.
+    /// Library & Arcane Wing Boss: Shadow Witch.
     /// A real caster (critical review B5): he fires a 4-tile shadow bolt (2d4+3) from a distance and steps away
     /// from a hero who closes in. When hit he teleports away, but at most every other turn.
     /// Spawns one illusionary decoy (Mirror Image) that also fires weaker shadow bolts.
@@ -70,7 +70,7 @@ namespace CastleOfTheD20.Bosses
 
         public override void InitializeUnit()
         {
-            unitName = "Shadow Mage Malakor";
+            unitName = "Shadow Witch";
             maxHP = 44;
             currentHP = maxHP;
             armorClass = 13;
@@ -103,7 +103,7 @@ namespace CastleOfTheD20.Bosses
         }
 
         /// <summary>Name an illusion shows: Malakor's own unless Arcane Heresy exposed the trick.</summary>
-        private string DecoyDisplayName => isRealMalakorRevealed ? "[Decoy] Shadow Illusion" : "Shadow Mage Malakor";
+        private string DecoyDisplayName => isRealMalakorRevealed ? "[Decoy] Shadow Illusion" : "Shadow Witch";
 
         /// <summary>
         /// A decoy placed in the Library with the boss is his mirror image: it wears Malakor's name
@@ -151,7 +151,7 @@ namespace CastleOfTheD20.Bosses
             // Once pierced, the glamour stays pierced on a retry
             if (isRealMalakorRevealed)
             {
-                unitName = "[True] Shadow Mage Malakor";
+                unitName = "[True] Shadow Witch";
                 Debug.Log("[ShadowMageMalakor] Arcane Heresy check succeeded! Malakor's true form is pierced through his glamour!");
             }
         }
@@ -313,7 +313,7 @@ namespace CastleOfTheD20.Bosses
                 decoyObj.transform.position = tile.transform.position;
             }
 
-            decoyObj.name = isRealMalakorRevealed ? "[Decoy] Shadow Illusion" : "Shadow Mage Malakor";
+            decoyObj.name = isRealMalakorRevealed ? "[Decoy] Shadow Illusion" : "Shadow Witch";
 
             EnemyUnit decoyUnit = decoyObj.GetComponent<EnemyUnit>();
             if (decoyUnit == null)

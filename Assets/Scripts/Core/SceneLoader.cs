@@ -62,7 +62,7 @@ namespace CastleOfTheD20.Core
             "Resting at the Great Hall's Runestone Shrine fully restores your health and saves your progress.",
             "Combat encounters reward 2 to 10 scrap metal pieces used for blacksmith weapon upgrades.",
             "Shadow Step allows the Rogue to teleport up to 3 tiles and gain Advantage on the next attack.",
-            "Defeating either the Cursed Commander or Shadow Mage Malakor unlocks access to the Crown Hall."
+            "Defeat both the Cursed Commander and the Shadow Witch to open the Throne Room gate."
         };
 
         #endregion

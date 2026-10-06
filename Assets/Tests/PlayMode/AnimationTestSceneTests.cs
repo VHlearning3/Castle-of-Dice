@@ -84,7 +84,7 @@ namespace CastleOfTheD20.Tests.PlayMode
                 yield return new WaitForSeconds(0.5f);
                 yield return Capture(bench, Path.Combine(dir, "AnimationTest_Overview.png"));
 
-                int elira = FindStation(bench, "Scholar Elira");
+                int elira = FindStation(bench, "Scholar Elisa Star-Eye");
                 bench.Select(elira >= 0 ? elira : 0);
                 bench.SnapCamera();
                 int fireball = Array.IndexOf(bench.Stations[bench.Selected].entry.stateNames, "mage_fireball");

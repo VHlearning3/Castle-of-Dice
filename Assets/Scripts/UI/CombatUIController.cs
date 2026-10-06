@@ -1406,7 +1406,7 @@ namespace CastleOfTheD20.UI
             if (king.BreakStoneArmorWithRing(2))
             {
                 activePlayer.HasActedThisTurn = true;
-                LogCombatMessage($"{activePlayer.UnitName} raises Queen Isolde's ring. The King's stone armour cracks for 2 turns!");
+                LogCombatMessage($"{activePlayer.UnitName} raises Queen Isolde's ring. The Gargoyle King's stone armour cracks for 2 turns!");
             }
             selectedAbilitySlot = -1;
             RefreshAbilityBar();
