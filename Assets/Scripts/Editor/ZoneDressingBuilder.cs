@@ -22,6 +22,7 @@ namespace CastleOfTheD20.Editor
     public static class ZoneDressingBuilder
     {
         private const string RootName = "Zone_Dressing";
+        private const string ForestExpansionRoot = "Forest_Expansion";
         private const string MatDir = "Assets/Materials/Zones";
         private const string MeshDir = "Assets/Materials/Zones/Meshes";
         private const string TexDir = "Assets/Materials/Zones/Textures";
@@ -79,6 +80,16 @@ namespace CastleOfTheD20.Editor
         {
             scene = EditorSceneManager.OpenScene("Assets/Scenes/" + sceneName + ".unity", OpenSceneMode.Single);
             rng = new System.Random(seed);
+            foreach (GameObject go in scene.GetRootGameObjects())
+            {
+                // The enlarged Forest Path (2026-10-06) was edited in place; redressing it would put the old
+                // tree lines back across the new ground
+                if (go.name == ForestExpansionRoot)
+                {
+                    Debug.LogWarning("[ZoneDressingBuilder] " + sceneName + " has a " + ForestExpansionRoot + " root; skipped so the enlarged forest stays as it is.");
+                    return;
+                }
+            }
             foreach (GameObject go in scene.GetRootGameObjects())
             {
                 if (go.name == RootName) Object.DestroyImmediate(go);
