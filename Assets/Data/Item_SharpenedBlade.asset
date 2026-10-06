@@ -16,7 +16,7 @@ MonoBehaviour:
   itemName: Sharpened Blade
   description: Finely honed weapon forged by Blacksmith Baldur. Permanently adds
     +1 to all attack damage.
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: 8b5bac4e0768135ac2a6682c13e6eea6, type: 3}
   itemType: 1
   buyPriceGold: 50
   sellPriceGold: 20

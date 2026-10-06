@@ -264,7 +264,8 @@ namespace CastleOfTheD20.UI
             back.color = IconBackColor;
             if (entry.Icon != null)
             {
-                RectTransform iconRect = Rect("Sprite", iconBack, new Vector2(48f, 48f), Vector2.zero);
+                back.color = Color.clear; // the icons carry their own frame
+                RectTransform iconRect = Rect("Sprite", iconBack, new Vector2(60f, 60f), Vector2.zero);
                 Image icon = iconRect.gameObject.AddComponent<Image>();
                 icon.sprite = entry.Icon;
                 icon.preserveAspect = true;

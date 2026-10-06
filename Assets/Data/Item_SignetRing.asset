@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: item_signet_ring
   itemName: Othelia's Signet Ring
   description: 'Queen Isolde''s golden signet ring, kept by Othelia''s family for generations. The Gargoyle King could refuse its wearer nothing.'
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: 7ebe0d4f59e4d78fa476e53e7fb47912, type: 3}
   itemType: 3
   buyPriceGold: 0
   sellPriceGold: 0

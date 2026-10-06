@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: scroll_warding
   itemName: Scroll of Warding
   description: 'Read automatically when your next fight starts: a mana shield stops the first two blows.'
-  itemIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000017, type: 3}
+  itemIcon: {fileID: 21300000, guid: ca17d7d6678eaa23966b68b3ae5c5be2, type: 3}
   itemType: 0
   buyPriceGold: 60
   sellPriceGold: 0

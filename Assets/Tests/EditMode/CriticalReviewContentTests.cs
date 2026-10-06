@@ -772,6 +772,37 @@ namespace CastleOfTheD20.Tests
             Assert.IsFalse(witch.SeesThrough);
         }
 
+        /// <summary>The 2026-10-06 icon set: every ability and item has its own icon (the potions share one).</summary>
+        [Test]
+        public void EveryAbilityAndItem_HasItsOwnIcon()
+        {
+            Dictionary<Sprite, string> abilityIcons = new Dictionary<Sprite, string>();
+            foreach (string guid in AssetDatabase.FindAssets("t:AbilitySO", new[] { "Assets/Data" }))
+            {
+                AbilitySO ability = AssetDatabase.LoadAssetAtPath<AbilitySO>(AssetDatabase.GUIDToAssetPath(guid));
+                Assert.IsNotNull(ability.AbilityIcon, ability.AbilityName + " has an icon");
+                Assert.IsFalse(abilityIcons.ContainsKey(ability.AbilityIcon), ability.AbilityName + " does not borrow another ability's icon");
+                abilityIcons[ability.AbilityIcon] = ability.AbilityName;
+                Assert.GreaterOrEqual(ability.AbilityIcon.texture.width, 256, ability.AbilityName + " uses the new 256 px icon");
+            }
+
+            Dictionary<Sprite, string> itemIcons = new Dictionary<Sprite, string>();
+            foreach (string folder in new[] { "Assets/Data", "Assets/Resources/Items" })
+            {
+                foreach (string guid in AssetDatabase.FindAssets("t:ItemSO", new[] { folder }))
+                {
+                    ItemSO item = AssetDatabase.LoadAssetAtPath<ItemSO>(AssetDatabase.GUIDToAssetPath(guid));
+                    Assert.IsNotNull(item.ItemIcon, item.ItemName + " has an icon");
+                    bool potion = item.ItemID == ShopManager.SMALL_POTION_ID || item.ItemID == ShopManager.GREATER_POTION_ID;
+                    if (!potion)
+                    {
+                        Assert.IsFalse(itemIcons.ContainsKey(item.ItemIcon), item.ItemName + " has its own icon");
+                        itemIcons[item.ItemIcon] = item.ItemName;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region Helpers

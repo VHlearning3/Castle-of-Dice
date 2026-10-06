@@ -15,7 +15,7 @@ MonoBehaviour:
   abilityID: warrior_retaliation
   abilityName: Retaliation
   description: 'For 2 turns, every enemy that attacks you in melee is struck back for 1d8 + STR, hit or miss. Cooldown 3.'
-  abilityIcon: {fileID: 21300000, guid: a11a11a1100100010001000000000010, type: 3}
+  abilityIcon: {fileID: 21300000, guid: 44f7c9872d36ed1e7719aae18d571f39, type: 3}
   targetType: 2
   range: 0
   areaOfEffectRadius: 0

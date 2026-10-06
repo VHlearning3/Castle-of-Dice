@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: item_greater_potion
   itemName: Greater Health Potion
   description: Concentrated healing draught. Restores 35 Hit Points.
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: c30dc9e1ac22d704b815ed7f40fa03e5, type: 3}
   itemType: 0
   buyPriceGold: 25
   sellPriceGold: 12

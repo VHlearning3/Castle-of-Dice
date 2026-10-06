@@ -119,6 +119,8 @@ namespace CastleOfTheD20.Editor
         private static void BuildShadowStepIcon()
         {
             const string iconPath = "Assets/UI/Sprites/UI_Icon_ShadowStep.png";
+            // The hand-drawn icon (2026-10-06 icon set) is kept; this only fills in a missing one
+            if (File.Exists(iconPath)) return;
             Texture2D blink = AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/UI/Sprites/UI_Icon_Blink.png");
             if (blink == null) return;
 
