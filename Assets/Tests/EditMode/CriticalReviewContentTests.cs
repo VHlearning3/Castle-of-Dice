@@ -104,7 +104,7 @@ namespace CastleOfTheD20.Tests
         public void ZoneScenes_CarryTheirNotesAndContent()
         {
             AssertNotes("Zone_2_ForestPath", 2);
-            Assert.AreEqual(2, Object.FindObjectsByType<DungeonRoomController>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "The Forest Path has a second encounter.");
+            Assert.AreEqual(3, Object.FindObjectsByType<DungeonRoomController>(FindObjectsInactive.Include, FindObjectsSortMode.None).Length, "The Forest Path has three encounters: the zombie, the two wolves and the ambush.");
             Assert.IsNotNull(Object.FindAnyObjectByType<CultistCaster>(FindObjectsInactive.Include));
 
             AssertNotes("Zone_3_CastleCourtyard", 2);
