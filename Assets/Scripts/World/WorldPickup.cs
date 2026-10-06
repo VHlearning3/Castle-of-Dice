@@ -69,6 +69,8 @@ namespace CastleOfTheD20.World
                 collected = true;
                 gameObject.SetActive(false);
             }
+
+            PickupBeacon.Attach(transform, PickupBeacon.TreasureColor, () => !collected);
         }
 
         /// <summary>Sets up a dropped pickup: its reward, and an arc from <paramref name="from"/> to where it lands.</summary>

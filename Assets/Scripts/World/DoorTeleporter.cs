@@ -131,6 +131,19 @@ namespace CastleOfTheD20.World
 
         #endregion
 
+        #region Unity Lifecycle
+
+        private void Start()
+        {
+            // Exits to another zone get a destination sign and burning braziers on their arch
+            if (!string.IsNullOrEmpty(targetSceneName))
+            {
+                ZoneExitSign.Attach(this);
+            }
+        }
+
+        #endregion
+
         #region Interactable Overrides
 
         /// <summary>

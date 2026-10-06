@@ -32,9 +32,12 @@ namespace CastleOfTheD20.World
             interactionRadius = Mathf.Max(interactionRadius, 3f);
         }
 
+        private bool isRead;
+
         private void Start()
         {
             RefreshGlow();
+            PickupBeacon.Attach(transform, PickupBeacon.NoteColor, () => !isRead, 0.7f);
         }
 
         public override void Interact(PlayerUnit player)
@@ -47,7 +50,8 @@ namespace CastleOfTheD20.World
 
         private void RefreshGlow()
         {
-            if (unreadGlow != null) unreadGlow.enabled = !StoryFlags.Has(LoreTexts.ReadFlag(noteId));
+            isRead = StoryFlags.Has(LoreTexts.ReadFlag(noteId));
+            if (unreadGlow != null) unreadGlow.enabled = !isRead;
         }
 
         /// <summary>

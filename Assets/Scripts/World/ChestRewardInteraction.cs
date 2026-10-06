@@ -125,7 +125,13 @@ namespace CastleOfTheD20.World
             {
                 HideVisuals();
             }
+
+            PickupBeacon.Attach(transform, IsHerb ? PickupBeacon.HerbColor : PickupBeacon.TreasureColor, () => !isOpen);
         }
+
+        /// <summary>A plant to gather (the swamp blossoms) rather than a chest or trinket: it glows green.</summary>
+        private bool IsHerb => name.IndexOf("Herb", StringComparison.OrdinalIgnoreCase) >= 0
+            || name.IndexOf("Blossom", StringComparison.OrdinalIgnoreCase) >= 0;
 
         #endregion
 

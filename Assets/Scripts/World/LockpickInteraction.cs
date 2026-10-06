@@ -124,6 +124,12 @@ namespace CastleOfTheD20.World
                     hiddenPathObject.SetActive(true);
                 }
             }
+
+            // A locked chest glows like any other loot until it is picked
+            if (chestLid != null || name.IndexOf("Chest", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                PickupBeacon.Attach(transform, PickupBeacon.TreasureColor, () => isLocked);
+            }
         }
 
         #endregion

@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Zone_2_ForestPath.unity
     guid: 38bfc326edc2f5a41b2f1d11a08d9c47
   - enabled: 1
+    path: Assets/Scenes/Zone_2.5_SecretForestPath.unity
+    guid: 21335fbf7b71e204eb82f480ef617dfd
+  - enabled: 1
     path: Assets/Scenes/Zone_3_CastleCourtyard.unity
     guid: 7cacf413a47771c4a90f803f5dba694f
   - enabled: 1

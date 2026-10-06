@@ -1365,6 +1365,14 @@ namespace CastleOfTheD20.UI
         {
             if (zoneTitleText == null) return;
 
+            // The hidden trail counts as the Forest but gets its own banner
+            if (location == GameLocation.Forest && CastleOfTheD20.World.SecretForestPath.IsActive)
+            {
+                zoneTitleText.text = CastleOfTheD20.World.SecretForestPath.DisplayName;
+                if (zoneSubtitleText != null) zoneSubtitleText.text = CastleOfTheD20.World.SecretForestPath.Subtitle;
+                return;
+            }
+
             switch (location)
             {
                 case GameLocation.Village:

@@ -69,6 +69,8 @@ namespace CastleOfTheD20.World
                     visualBottle.SetActive(false);
                 }
             }
+
+            PickupBeacon.Attach(transform, PickupBeacon.TreasureColor, () => !isConsumed);
         }
 
         #endregion
