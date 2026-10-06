@@ -68,6 +68,12 @@ namespace CastleOfTheD20.UI
         private int pendingMilestoneLevel = 2;
         private PlayerUnit cachedPlayerUnit;
 
+        // Levels reached while the window was already open (two milestones from one battle): each gets its own choice
+        private readonly Queue<int> queuedLevels = new Queue<int>();
+
+        /// <summary>Level-ups waiting for their own window.</summary>
+        public int QueuedLevelUps => queuedLevels.Count;
+
         #endregion
 
         #region Unity Lifecycle
@@ -168,9 +174,9 @@ namespace CastleOfTheD20.UI
         {
             switch (level)
             {
-                case 2: return "Castle Veteran";
-                case 3: return "Arcane Crusher";
-                case 4: return "Tower Champion";
+                case 2: return "Blooded Adventurer";
+                case 3: return "Castle Veteran";
+                case 4: return "Champion of Oakhaven";
                 default: return level >= PlayerUnit.MaxLevel ? "Curse Breaker (Max Level)" : "Adventurer";
             }
         }
@@ -181,6 +187,12 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void ShowLevelUpModal(int newLevel, PlayerUnit player = null)
         {
+            if (IsModalOpen)
+            {
+                queuedLevels.Enqueue(newLevel);
+                return;
+            }
+
             pendingMilestoneLevel = Mathf.Clamp(newLevel, 2, PlayerUnit.MaxLevel);
             cachedPlayerUnit = player != null ? player : FindAnyObjectByType<PlayerUnit>();
 
@@ -363,6 +375,12 @@ namespace CastleOfTheD20.UI
 
             // 5. Close Modal & re-enable movement
             CloseLevelUpModal();
+
+            // 6. A second level reached at the same time gets its own choice
+            if (queuedLevels.Count > 0)
+            {
+                ShowLevelUpModal(queuedLevels.Dequeue(), cachedPlayerUnit);
+            }
         }
 
         #endregion
