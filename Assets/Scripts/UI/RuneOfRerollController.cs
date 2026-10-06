@@ -250,7 +250,8 @@ namespace CastleOfTheD20.UI
                     rerollButton.interactable = true;
                     if (rerollButtonText != null)
                     {
-                        rerollButtonText.text = $"Use Rune of Fate ({scrolls})";
+                        // Free reroll, then Inspiration, then a Rune of Fate (Vili, 2026-10-06)
+                        rerollButtonText.text = RerollableRoll.NextRerollLabel;
                     }
                 }
                 else

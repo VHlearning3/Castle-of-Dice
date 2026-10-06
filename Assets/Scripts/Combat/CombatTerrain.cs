@@ -106,9 +106,10 @@ namespace CastleOfTheD20.Combat
             }
             else if (tile.Terrain == TileTerrain.Ice)
             {
+                // A DEX saving throw: the hero's own save bonus, an enemy's DEX save (D&D rules, Vili 2026-10-06)
                 int dexBonus = unit is PlayerUnit hero
-                    ? HeroAttributes.GetModifier(hero, HeroAttribute.Dexterity)
-                    : (unit is EnemyUnit enemy ? enemy.AttackBonus / 2 : 0);
+                    ? HeroAttributes.GetSaveBonus(hero, HeroAttribute.Dexterity)
+                    : (unit is EnemyUnit enemy ? enemy.GetSaveBonus(HeroAttribute.Dexterity) : 0);
                 int roll = DiceSystem.RollDice(20);
                 if (roll + dexBonus < IceSaveDC)
                 {

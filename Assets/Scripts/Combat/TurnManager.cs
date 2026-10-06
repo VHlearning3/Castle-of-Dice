@@ -328,7 +328,7 @@ namespace CastleOfTheD20.Combat
                     }
                     if (u is PlayerUnit p)
                     {
-                        p.ResetTurnFlags();
+                        p.ResetForNewFight();
                         p.ResetCooldowns();
                     }
                 }
@@ -343,20 +343,16 @@ namespace CastleOfTheD20.Combat
                 CombatTerrain.PrepareBattlefield(GridManager.Instance, activeUnits);
             }
 
-            // A Poison Vial is used up automatically at the start of a real fight (not a village brawl)
-            if (awardVictoryScrap && InventoryManager.Instance != null)
-            {
-                foreach (var u in activeUnits)
-                {
-                    if (u is PlayerUnit hero)
-                    {
-                        InventoryManager.Instance.TryCoatWithPoisonVial(hero);
+            // Poison Vials and Pip's scrolls are no longer used up automatically: the hero picks them from the
+            // combat item buttons when they want (Vili, 2026-10-06)
 
-                        // Pip's spell scrolls are read as the fight begins (critical review C4)
-                        CombatScrolls.UseAtFightStart(hero, activeUnits);
-                    }
-                }
+            // Who is caught off guard this fight (sneaking up on enemies, or walking into an ambush)
+            surprisedUnits.Clear();
+            for (int i = 0; i < pendingSurprised.Count; i++)
+            {
+                if (pendingSurprised[i] != null && activeUnits.Contains(pendingSurprised[i])) surprisedUnits.Add(pendingSurprised[i]);
             }
+            pendingSurprised.Clear();
 
             // Ensure CombatUIController is awake and active
             CombatUIController.Instance?.EnsureActiveAndReady(true);
@@ -367,6 +363,31 @@ namespace CastleOfTheD20.Combat
 
         /// <summary>Last initiative totals, by unit (shown in the combat log).</summary>
         private readonly Dictionary<CombatUnit, int> initiativeRolls = new Dictionary<CombatUnit, int>();
+
+        #region Surprise
+
+        // Units that lose their first turn in the next fight / the running fight (Vili, 2026-10-06)
+        private readonly List<CombatUnit> pendingSurprised = new List<CombatUnit>(4);
+        private readonly List<CombatUnit> surprisedUnits = new List<CombatUnit>(4);
+
+        /// <summary>
+        /// Marks units that will be surprised in the next <see cref="StartCombat(List{CombatUnit}, bool)"/>: they
+        /// lose their turn in the first round.
+        /// </summary>
+        public void SetSurprisedForNextFight(IEnumerable<CombatUnit> units)
+        {
+            pendingSurprised.Clear();
+            if (units == null) return;
+            foreach (CombatUnit unit in units)
+            {
+                if (unit != null && !pendingSurprised.Contains(unit)) pendingSurprised.Add(unit);
+            }
+        }
+
+        /// <summary>Whether <paramref name="unit"/> is still surprised (it has not had its first turn yet).</summary>
+        public bool IsSurprised(CombatUnit unit) => unit != null && surprisedUnits.Contains(unit);
+
+        #endregion
 
         /// <summary>Initiative total a unit rolled for the running fight (0 when not rolled).</summary>
         public int GetInitiative(CombatUnit unit)
@@ -472,12 +493,19 @@ namespace CastleOfTheD20.Combat
                 return;
             }
 
+            // A surprised unit loses its first turn (D&D surprise, Vili 2026-10-06)
+            if (surprisedUnits.Remove(currentActiveUnit))
+            {
+                SkipSurprisedTurn(currentActiveUnit);
+                return;
+            }
+
             // 2. Dispatch turn state based on unit type
             if (currentActiveUnit is PlayerUnit player)
             {
                 CombatUIController.Instance?.EnsureActiveAndReady(true);
                 player.EnsureTilePosition();
-                player.ResetTurnFlags();
+                player.BeginOwnTurn();
                 player.TickCooldowns();
                 SetTurnState(TurnState.PlayerTurn);
 
@@ -491,6 +519,32 @@ namespace CastleOfTheD20.Combat
 
                 StartCoroutine(ExecuteEnemyTurnDelayed(enemy));
             }
+        }
+
+        private void SkipSurprisedTurn(CombatUnit unit)
+        {
+            string message = unit is PlayerUnit
+                ? $"{unit.UnitName} is caught off guard by the ambush and loses this turn!"
+                : $"{unit.UnitName} is caught off guard and loses this turn!";
+            Debug.Log("[TurnManager] " + message);
+            CombatUIController.Instance?.LogCombatMessage(message);
+            if (Application.isPlaying)
+            {
+                World.FloatingCombatText.Instance?.ShowText(unit.transform.position + Vector3.up * 2.2f, "SURPRISED!", new Color(1f, 0.85f, 0.45f));
+            }
+
+            if (unit is PlayerUnit hero) hero.BeginOwnTurn();
+            SetTurnState(TurnState.ResolveAbilities);
+            GridManager.Instance?.ClearAllHighlights();
+
+            if (Application.isPlaying && isActiveAndEnabled) StartCoroutine(EndSurprisedTurnLater());
+            else EndActiveUnitTurn();
+        }
+
+        private IEnumerator EndSurprisedTurnLater()
+        {
+            yield return new WaitForSeconds(enemyTurnDelay + 0.6f);
+            if (isCombatActive) EndActiveUnitTurn();
         }
 
         private IEnumerator ExecuteEnemyTurnDelayed(EnemyUnit enemy)

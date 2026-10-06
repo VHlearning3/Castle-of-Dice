@@ -6,14 +6,31 @@ namespace CastleOfTheD20.Combat
 {
     /// <summary>
     /// A curse-cult caster (critical review C7). Keeps its distance like any ranged enemy. On its turn it heals
-    /// a badly hurt ally in range (1d8+2); otherwise it curses the hero from up to 4 tiles: a d20 roll against
-    /// the hero's AC that deals 1d4 and blinds them for a turn (Disadvantage on their next attacks).
+    /// a badly hurt ally in range (1d8+2); otherwise it curses the hero from up to 4 tiles: a WIS saving throw
+    /// (DC 12) that on a failure deals 1d4 and blinds them for a turn (Disadvantage on their next attacks).
+    /// At a quarter of its health it may lose its nerve and surrender (Vili, 2026-10-06).
     /// </summary>
     public class CultistCaster : EnemyUnit
     {
+        /// <summary>Range of the curse and the healing chant.</summary>
         public const int SpellRange = 4;
 
+        /// <summary>DC of the WIS save against the curse.</summary>
+        public const int CurseSaveDC = 12;
+
+        /// <summary>Health fraction at which the cultist tests its nerve.</summary>
+        public const float MoraleThreshold = 0.25f;
+
         [SerializeField] private string displayName = "Curse Cultist";
+
+        // STR, DEX, CON, INT, WIS, CHA: a strong will, a weak body
+        private static readonly int[] CultistSaves = { 0, 1, 0, 1, 2, 1 };
+
+        /// <summary>The cultist's saving throws.</summary>
+        protected override int[] SaveProfile => CultistSaves;
+
+        /// <summary>Cultists value their lives over the curse.</summary>
+        public override bool CanSurrender => true;
 
         public override void InitializeUnit()
         {
@@ -26,6 +43,15 @@ namespace CastleOfTheD20.Combat
             ConfigureAttackRange(SpellRange);
             ConfigureDamageDice(1, 4, 0);
             base.InitializeUnit();
+        }
+
+        public override void TakeDamage(int amount, bool isCritical = false)
+        {
+            base.TakeDamage(amount, isCritical);
+            if (IsAlive)
+            {
+                CheckMorale(MoraleThreshold, false, $"{unitName} drops to their knees: \"Mercy! I yield!\"");
+            }
         }
 
         public override void ExecuteTurnAction(GridManager gridManager, AbilityExecutor abilityExecutor = null)
@@ -69,16 +95,32 @@ namespace CastleOfTheD20.Combat
             return true;
         }
 
+        /// <summary>
+        /// The curse: the hero makes a WIS save (DC 12). On a failure it deals 1d4 and blinds them for a turn.
+        /// </summary>
         protected override void PerformAttack(PlayerUnit target, AbilityExecutor abilityExecutor)
         {
             if (target == null || !target.IsAlive) return;
             PlayAttackAnimation();
-            DiceResult curse = ResolveBasicAttack(target, "curses");
-            if (curse.isSuccess && target.IsAlive)
+            FaceTowards(target.transform.position);
+            UI.CombatUIController.Instance?.LogCombatMessage($"{unitName} hisses a curse at {target.UnitName} (WIS save, DC {CurseSaveDC})!");
+
+            CombatRules.RollHeroSave(target, HeroAttribute.Wisdom, CurseSaveDC, "Curse / Wisdom save", save =>
             {
-                target.StatusEffects?.ApplyEffect(StatusEffectType.Blind, 1);
-                UI.CombatUIController.Instance?.LogCombatMessage($"The curse clouds {target.UnitName}'s eyes!");
-            }
+                if (target == null || !target.IsAlive) return;
+                AbilityVfx.PlayRangedBolt(this, target, !save.isSuccess);
+                if (save.isSuccess)
+                {
+                    UI.CombatUIController.Instance?.LogCombatMessage($"{target.UnitName} shrugs off the curse.");
+                    return;
+                }
+                target.TakeDamage(RollAttackDamage());
+                if (target.IsAlive)
+                {
+                    target.StatusEffects?.ApplyEffect(StatusEffectType.Blind, 1);
+                    UI.CombatUIController.Instance?.LogCombatMessage($"The curse clouds {target.UnitName}'s eyes!");
+                }
+            });
         }
     }
 }

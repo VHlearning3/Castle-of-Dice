@@ -51,8 +51,8 @@ namespace CastleOfTheD20.World
             if (plateVisual != null) plateVisual.localPosition += Vector3.down * 0.05f;
 
             UI.LockpickMinigameUI.ShowToast("Click! A pressure plate. Dodge the darts (DEX DC 12)!");
-            int dex = HeroAttributes.GetModifier(hero, HeroAttribute.Dexterity);
-            RerollableRoll.Roll(dex, SaveDC, AdvantageType.None, save =>
+            // A real DEX saving throw: the rogue's proficiency and the Oathkeeper Shield count (Vili, 2026-10-06)
+            CombatRules.RollHeroSave(hero, HeroAttribute.Dexterity, SaveDC, "Dart Trap / Dexterity", save =>
             {
                 if (save.isSuccess)
                 {
@@ -62,7 +62,7 @@ namespace CastleOfTheD20.World
                 int damage = DiceSystem.RollDice(DamageDieSides);
                 UI.LockpickMinigameUI.ShowToast($"The darts hit you for {damage}!");
                 hero.TakeDamage(damage);
-            }, "Dart Trap / Dexterity");
+            });
         }
     }
 }

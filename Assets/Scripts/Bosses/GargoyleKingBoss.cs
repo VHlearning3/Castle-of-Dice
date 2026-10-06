@@ -101,6 +101,12 @@ namespace CastleOfTheD20.Bosses
         /// <summary>Whether Othelia's ring can still be shown to the King (Stone Form, not used yet).</summary>
         public bool CanBeShownTheRing => IsAlive && isStoneFormActive && !ringUsed;
 
+        // STR, DEX, CON, INT, WIS, CHA: living stone, slow but unbreakable
+        private static readonly int[] KingSaves = { 5, -1, 5, 1, 3, 3 };
+
+        /// <summary>The King's saving throws.</summary>
+        protected override int[] SaveProfile => KingSaves;
+
         /// <summary>Stone Form adds +3 AC unless Othelia's ring has broken it.</summary>
         public override int ArmorClass =>
             base.ArmorClass + (isStoneFormActive && ringBrokenArmorTurns <= 0 ? StoneFormArmorBonus : 0)
@@ -316,8 +322,7 @@ namespace CastleOfTheD20.Bosses
             if (target == null || !target.IsAlive) return;
 
             Say($"The Gargoyle King's eyes flare grey. {target.UnitName} must resist his petrifying gaze (CON DC {GazeSaveDC})!");
-            int conBonus = HeroAttributes.GetModifier(target, HeroAttribute.Constitution);
-            RerollableRoll.Roll(conBonus, GazeSaveDC, AdvantageType.None, save =>
+            CombatRules.RollHeroSave(target, HeroAttribute.Constitution, GazeSaveDC, "Petrifying Gaze / Constitution", save =>
             {
                 if (!target.IsAlive) return;
                 if (save.isSuccess)
@@ -329,7 +334,7 @@ namespace CastleOfTheD20.Bosses
                     Say($"Stone creeps up {target.UnitName}'s legs: no moving next turn!");
                     target.StatusEffects?.ApplyEffect(StatusEffectType.Immobilized, 1);
                 }
-            }, "Petrifying Gaze / Constitution");
+            });
         }
 
         /// <summary>

@@ -18,6 +18,8 @@ namespace CastleOfTheD20.UI
         NoHero,
         FullHealth,
         NotYourTurn,
+
+        /// <summary>The bonus action (drinking a potion costs it) is already used this turn.</summary>
         ActionUsed
     }
 
@@ -112,7 +114,7 @@ namespace CastleOfTheD20.UI
 
         /// <summary>
         /// The potion rules in one place: you need a potion, a living hero who is hurt, and in combat it must be
-        /// the hero's turn with the action still unused.
+        /// the hero's turn with the bonus action still unused (drinking is a bonus action, Vili 2026-10-06).
         /// </summary>
         public static PotionUseCheck CheckUse(int potionCount, bool heroAlive, int currentHP, int maxHP, bool inCombat, bool heroTurn, bool actionUsed)
         {
@@ -136,12 +138,12 @@ namespace CastleOfTheD20.UI
             bool heroTurn = inCombat && tm.CurrentState == TurnState.PlayerTurn
                 && (tm.CurrentActiveUnit == null || tm.CurrentActiveUnit == player);
 
-            return CheckUse(count, player.IsAlive, player.CurrentHP, player.MaxHP, inCombat, heroTurn, player.HasActedThisTurn);
+            return CheckUse(count, player.IsAlive, player.CurrentHP, player.MaxHP, inCombat, heroTurn, player.HasUsedBonusActionThisTurn);
         }
 
         /// <summary>
         /// Drinks one <paramref name="potion"/> if the rules allow it: heals, removes it from the pack and, in combat,
-        /// spends the hero's action. Shows a short message over the hero either way.
+        /// spends the hero's bonus action. Shows a short message over the hero either way.
         /// </summary>
         public static PotionUseCheck TryDrink(ItemSO potion, PlayerUnit player)
         {
@@ -169,7 +171,7 @@ namespace CastleOfTheD20.UI
 
             if (inCombat)
             {
-                player.HasActedThisTurn = true;
+                player.HasUsedBonusActionThisTurn = true;
                 CombatUIController combatUI = CombatUIController.Instance;
                 if (combatUI != null)
                 {
@@ -206,7 +208,7 @@ namespace CastleOfTheD20.UI
                 case PotionUseCheck.NoPotion: return "No potions left";
                 case PotionUseCheck.FullHealth: return "Already at full health";
                 case PotionUseCheck.NotYourTurn: return "Wait for your turn";
-                case PotionUseCheck.ActionUsed: return "Action already used this turn";
+                case PotionUseCheck.ActionUsed: return "Bonus action already used this turn";
                 case PotionUseCheck.NoHero: return "No hero to drink it";
                 default: return "";
             }

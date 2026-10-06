@@ -742,7 +742,11 @@ namespace CastleOfTheD20.UI
 
                     TMP_Text btnText = btnObj.GetComponentInChildren<TMP_Text>(true);
 
-                    int neededRoll = Mathf.Clamp(option.TargetDC - playerBonus, 1, 20);
+                    // The check's own skill or attribute (with proficiency when trained), as the roll will use
+                    int checkBonus = player != null && option.RequiresCheck
+                        ? Core.HeroAttributes.ResolveCheckBonus(player, option.SkillCheckDescription)
+                        : playerBonus;
+                    int neededRoll = Mathf.Clamp(option.TargetDC - checkBonus, 1, 20);
 
                     string cleanText = option.OptionText ?? "";
                     string formattedText;

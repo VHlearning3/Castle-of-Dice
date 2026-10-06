@@ -168,7 +168,18 @@ namespace CastleOfTheD20.Bosses
 
         public override void TakeDamage(int amount, bool isCritical = false)
         {
+            // Facing Queen Isolde's ring she always yields instead of dying: a killing blow leaves her on her knees
+            if (IsAlive && !MoraleTested && amount >= currentHP && TurnManager.Instance != null && TurnManager.Instance.IsCombatActive
+                && UI.CombatUIController.HeroHasQueensRing())
+            {
+                amount = currentHP - 1;
+            }
+
             base.TakeDamage(amount, isCritical);
+
+            // At a fifth of her health she may yield; a hero carrying Queen Isolde's ring makes her yield for sure
+            // (Vili, 2026-10-06)
+            if (IsAlive && TryYield()) return;
 
             if (IsAlive)
             {
@@ -192,6 +203,48 @@ namespace CastleOfTheD20.Bosses
             base.OnTurnActionFinished();
             if (teleportCooldown > 0) teleportCooldown--;
         }
+
+        #region Surrender
+
+        /// <summary>Health fraction at which the Witch thinks of yielding.</summary>
+        public const float YieldThreshold = 0.2f;
+
+        /// <summary>Story flag: the Witch yielded to the Queen's ring.</summary>
+        public const string YieldedToRingFlag = BossChoices.MalakorYieldedToRingFlag;
+
+        /// <summary>Story flag: the Witch yielded in the fight (to the ring or losing her nerve).</summary>
+        public const string YieldedFlag = "MalakorYielded";
+
+        // STR, DEX, CON, INT, WIS, CHA: a frail body, a sharp mind
+        private static readonly int[] WitchSaves = { -1, 2, 1, 4, 3, 2 };
+
+        /// <summary>The Witch's saving throws.</summary>
+        protected override int[] SaveProfile => WitchSaves;
+
+        /// <summary>The Shadow Witch can surrender (Vili, 2026-10-06).</summary>
+        public override bool CanSurrender => true;
+
+        private bool TryYield()
+        {
+            bool ring = UI.CombatUIController.HeroHasQueensRing();
+            string message = ring
+                ? "The Shadow Witch sees Queen Isolde's ring and lowers her hands: \"Enough. I yield.\""
+                : "The Shadow Witch staggers: \"Enough! I yield!\"";
+            if (!CheckMorale(YieldThreshold, ring, message)) return false;
+
+            StoryFlags.Set(YieldedFlag);
+            if (ring) StoryFlags.Set(YieldedToRingFlag);
+
+            // Her mirror images fade with her will to fight
+            for (int i = 0; i < activeDecoys.Count; i++)
+            {
+                EnemyUnit decoy = activeDecoys[i];
+                if (decoy != null && decoy.IsAlive && decoy.gameObject.activeInHierarchy) decoy.Die();
+            }
+            return true;
+        }
+
+        #endregion
 
         /// <summary>
         /// After the mage's debate his standing mirror image never joins the fight (it waits hidden).

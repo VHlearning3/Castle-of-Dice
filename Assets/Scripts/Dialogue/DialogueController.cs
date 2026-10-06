@@ -202,9 +202,9 @@ namespace CastleOfTheD20.Dialogue
 
             if (option.RequiresCheck)
             {
-                // The check uses the attribute it names (STR, DEX, INT, WIS, CHA), not always the class's main one
-                HeroAttribute attribute = HeroAttributes.ResolveCheckAttribute(activePlayer, option.SkillCheckDescription);
-                int bonus = activePlayer != null ? HeroAttributes.GetModifier(activePlayer, attribute) : 2;
+                // The check uses the skill or attribute it names; a skill the hero is trained in adds the
+                // proficiency bonus (D&D rules, Vili 2026-10-06)
+                int bonus = activePlayer != null ? HeroAttributes.ResolveCheckBonus(activePlayer, option.SkillCheckDescription) : 2;
                 AdvantageType advantage = AdvantageType.None;
 
                 // Rogue lockpicking or persuasion advantages if applicable

@@ -208,7 +208,8 @@ namespace CastleOfTheD20.Combat
             Debug.Log($"[AbilityExecutor] {caster.UnitName} roars with War Cry!");
 
             // Spec: 3x3 shockwave that pushes adjacent enemies back 1-2 tiles and deals 1d4 + STR damage.
-            // Critical review B3: each enemy is rolled against (d20 + STR vs AC); only a hit pushes and hurts.
+            // D&D rules (Vili, 2026-10-06): each enemy makes a STR save against the hero's DC. A failure is pushed
+            // and takes the damage, a success stands firm and takes half.
             int bonus = GetCasterAttributeBonus(caster);
             int damage = ability.RollDamage(bonus);
             AbilityVfx.PlayWarCry(caster);
@@ -230,6 +231,28 @@ namespace CastleOfTheD20.Combat
 
         private void ResolveWarCryTargets(CombatUnit caster, List<CombatUnit> targets, int index, int damage, int bonus, GridManager grid)
         {
+            // The hero's War Cry forces a STR saving throw on each enemy
+            if (caster is PlayerUnit hero)
+            {
+                int dc = HeroAttributes.GetSaveDC(hero);
+                for (int i = 0; i < targets.Count; i++)
+                {
+                    if (!(targets[i] is EnemyUnit enemy) || !enemy.IsAlive) continue;
+                    DiceResult save = CombatRules.RollEnemySave(enemy, HeroAttribute.Strength, dc, "War Cry");
+                    if (!enemy.IsAlive) continue;
+                    if (save.isSuccess)
+                    {
+                        Debug.Log($"[AbilityExecutor] {enemy.UnitName} stands firm against the War Cry.");
+                        enemy.TakeDamage(damage / 2);
+                    }
+                    else
+                    {
+                        PushAndDamage(caster, enemy, damage, grid);
+                    }
+                }
+                return;
+            }
+
             for (; index < targets.Count; index++)
             {
                 CombatUnit target = targets[index];
@@ -346,7 +369,17 @@ namespace CastleOfTheD20.Combat
             }
 
             List<CombatUnit> targets = CollectHostilesInArea3x3(caster, targetGridPos, grid);
-            ResolveAreaTargets(caster, ability, targets, 0, damage, bonus);
+
+            // The hero's Fireball (DEX) and Poison Cloud (CON) force a saving throw: a success takes half and shrugs
+            // off the poison (D&D rules, Vili 2026-10-06)
+            if (caster is PlayerUnit hero && CombatRules.TryGetSave(ability, out HeroAttribute saveAttribute, out bool halfOnSave))
+            {
+                ResolveAreaSaves(hero, ability, targets, damage, saveAttribute, halfOnSave);
+            }
+            else
+            {
+                ResolveAreaTargets(caster, ability, targets, 0, damage, bonus);
+            }
 
             // Fireball leaves the ground burning and sets off any barrel it catches (B6)
             if (isFireball)
@@ -354,6 +387,30 @@ namespace CastleOfTheD20.Combat
                 CombatTerrain.IgniteArea(grid, targetGridPos, CombatTerrain.FireballBurnRounds);
             }
             return true;
+        }
+
+        /// <summary>
+        /// Each target rolls its saving throw against the hero's save DC: a failure takes the damage and the
+        /// ability's condition, a success half the damage (or nothing) and no condition.
+        /// </summary>
+        private void ResolveAreaSaves(PlayerUnit hero, AbilitySO ability, List<CombatUnit> targets, int damage, HeroAttribute attribute, bool halfOnSave)
+        {
+            int dc = HeroAttributes.GetSaveDC(hero);
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (!(targets[i] is EnemyUnit enemy) || !enemy.IsAlive) continue;
+                DiceResult save = CombatRules.RollEnemySave(enemy, attribute, dc, ability.AbilityName);
+                if (!enemy.IsAlive) continue;
+
+                if (save.isSuccess)
+                {
+                    if (halfOnSave && damage / 2 > 0) enemy.TakeDamage(damage / 2);
+                    continue;
+                }
+
+                if (damage > 0) enemy.TakeDamage(damage);
+                if (enemy.IsAlive) ApplyAbilityStatusEffect(enemy, ability);
+            }
         }
 
         /// <summary>
@@ -441,9 +498,9 @@ namespace CastleOfTheD20.Combat
             bool targetBlinded = target.StatusEffects != null && target.StatusEffects.HasEffect(StatusEffectType.Blind);
 
             // Critical review B3: no free Advantage; it comes from Shadow Step (and Blind gives Disadvantage)
-            AdvantageType advantage = caster.StatusEffects != null ? caster.StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
+            AdvantageType advantage = CombatRules.AttackAdvantage(caster, target);
             caster.StatusEffects?.ConsumeAdvantageNextAttack();
-            RollToHit(caster, bonus, target.ArmorClass, advantage, hitCheck =>
+            RollToHit(caster, GetCasterAttackBonus(caster), target.ArmorClass, advantage, hitCheck =>
             {
                 Debug.Log($"[AbilityExecutor] {caster.UnitName} executes Backstab on {target.UnitName}: {hitCheck}");
                 if (!hitCheck.isSuccess || !target.IsAlive) return;
@@ -477,13 +534,20 @@ namespace CastleOfTheD20.Combat
             int duration = Mathf.Max(1, ability.EffectDurationTurns);
             List<GridTile> affected = grid.GetTilesInRadius(targetGridPos, radius);
             List<CombatUnit> blinded = new List<CombatUnit>();
+            int dc = caster is PlayerUnit hero ? HeroAttributes.GetSaveDC(hero) : 0;
             foreach (var tile in affected)
             {
-                if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit != caster)
+                CombatUnit unit = tile.IsOccupied ? tile.OccupyingUnit : null;
+                if (unit == null || unit == caster) continue;
+
+                // Enemies caught in the hero's smoke make a CON save to keep their eyes open (Vili, 2026-10-06)
+                if (dc > 0 && unit is EnemyUnit enemy && CombatRules.RollEnemySave(enemy, HeroAttribute.Constitution, dc, ability.AbilityName).isSuccess)
                 {
-                    tile.OccupyingUnit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: duration);
-                    blinded.Add(tile.OccupyingUnit);
+                    continue;
                 }
+
+                unit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: duration);
+                blinded.Add(unit);
             }
 
             AbilityVfx.PlaySmokeBomb(caster, affected, blinded, duration);
@@ -563,7 +627,7 @@ namespace CastleOfTheD20.Combat
                 return false;
             }
             int bonus = GetCasterAttributeBonus(caster);
-            AdvantageType advantage = caster.StatusEffects != null ? caster.StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
+            AdvantageType advantage = CombatRules.AttackAdvantage(caster, target);
 
             // Ranged attacks need a line of sight; half cover adds +2 AC (critical review B6)
             if (!grid.HasLineOfSight(caster.GridPosition, target.GridPosition))
@@ -577,10 +641,31 @@ namespace CastleOfTheD20.Combat
             }
             int coverBonus = grid.GetCoverArmorBonus(caster.GridPosition, target.GridPosition);
 
+            // The hero's Arcane Chains: a STR save instead of an attack roll (D&D rules, Vili 2026-10-06)
+            if (caster is PlayerUnit chainer && target is EnemyUnit chained
+                && CombatRules.TryGetSave(ability, out HeroAttribute saveAttribute, out bool halfOnSave))
+            {
+                DiceResult save = CombatRules.RollEnemySave(chained, saveAttribute, HeroAttributes.GetSaveDC(chainer), ability.AbilityName);
+                if (ability.AppliedEffect == StatusEffectType.Immobilized) AbilityVfx.PlayRangedBolt(caster, target, !save.isSuccess);
+                if (!chained.IsAlive) return true;
+
+                int saveDamage = ability.DealsDamage ? ability.RollDamage(bonus, chainer.WeaponDamageBonus) : 0;
+                if (save.isSuccess)
+                {
+                    if (halfOnSave && saveDamage / 2 > 0) chained.TakeDamage(saveDamage / 2);
+                }
+                else
+                {
+                    if (saveDamage > 0) chained.TakeDamage(saveDamage);
+                    if (chained.IsAlive) ApplyAbilityStatusEffect(chained, ability);
+                }
+                return true;
+            }
+
             if (ability.RequiresCheck)
             {
                 caster.StatusEffects?.ConsumeAdvantageNextAttack();
-                RollToHit(caster, bonus, target.ArmorClass + coverBonus, advantage, hitCheck =>
+                RollToHit(caster, GetCasterAttackBonus(caster), target.ArmorClass + coverBonus, advantage, hitCheck =>
                 {
                     Debug.Log($"[AbilityExecutor] {caster.UnitName} casts {ability.AbilityName} on {target.UnitName}: {hitCheck}");
 
@@ -692,6 +777,17 @@ namespace CastleOfTheD20.Combat
             {
                 return enemy.AttackBonus;
             }
+            return 2;
+        }
+
+        /// <summary>
+        /// To-hit bonus: a hero adds their proficiency bonus to the attribute (D&D rules, Vili 2026-10-06), an
+        /// enemy its own attack bonus.
+        /// </summary>
+        private static int GetCasterAttackBonus(CombatUnit caster)
+        {
+            if (caster is PlayerUnit player) return HeroAttributes.GetAttackBonus(player);
+            if (caster is EnemyUnit enemy) return enemy.AttackBonus;
             return 2;
         }
 

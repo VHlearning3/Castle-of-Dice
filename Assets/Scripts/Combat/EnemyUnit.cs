@@ -97,6 +97,142 @@ namespace CastleOfTheD20.Combat
 
         #endregion
 
+        #region Saving Throws
+
+        // Save bonuses in HeroAttribute order: STR, DEX, CON, INT, WIS, CHA
+        private static readonly int[] DefaultSaves = { 1, 1, 1, -1, 0, -1 };
+        private static readonly int[] RatSaves = { -1, 2, 0, -4, 0, -3 };
+        private static readonly int[] ZombieSaves = { 1, -2, 3, -4, -2, -3 };
+        private static readonly int[] SkeletonSaves = { 0, 2, 2, -2, -1, -3 };
+        private static readonly int[] IllusionSaves = { -1, 2, 0, 2, 1, 1 };
+
+        /// <summary>
+        /// The creature's saving throw bonuses (STR, DEX, CON, INT, WIS, CHA). Rats are quick, zombies tough and
+        /// slow, skeletons nimble but mindless; bosses and special enemies override this.
+        /// </summary>
+        protected virtual int[] SaveProfile
+        {
+            get
+            {
+                string n = unitName ?? string.Empty;
+                if (n.IndexOf("Rat", StringComparison.Ordinal) >= 0) return RatSaves;
+                if (n.IndexOf("Zombie", StringComparison.OrdinalIgnoreCase) >= 0) return ZombieSaves;
+                if (n.IndexOf("Skeleton", StringComparison.OrdinalIgnoreCase) >= 0) return SkeletonSaves;
+                if (n.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) >= 0 || n.IndexOf("Illusion", StringComparison.OrdinalIgnoreCase) >= 0) return IllusionSaves;
+                return DefaultSaves;
+            }
+        }
+
+        /// <summary>Bonus this enemy adds to a saving throw of <paramref name="attribute"/>.</summary>
+        public virtual int GetSaveBonus(HeroAttribute attribute)
+        {
+            int[] profile = SaveProfile;
+            int index = (int)attribute;
+            return profile != null && index >= 0 && index < profile.Length ? profile[index] : 0;
+        }
+
+        /// <summary>Passive Perception: 10 + WIS. The DC of the hero's Stealth check against this enemy.</summary>
+        public int PassivePerception => 10 + GetSaveBonus(HeroAttribute.Wisdom);
+
+        #endregion
+
+        #region Surrender
+
+        private bool hasYielded;
+        private bool moraleTested;
+
+        /// <summary>
+        /// Whether this enemy can lose its nerve and surrender (Vili, 2026-10-06: only the Shadow Witch and the
+        /// curse cultists can).
+        /// </summary>
+        public virtual bool CanSurrender => false;
+
+        /// <summary>True once the enemy surrendered (it left the fight; it did not die).</summary>
+        public bool HasYielded => hasYielded;
+
+        /// <summary>True once this fight's morale check was made.</summary>
+        public bool MoraleTested => moraleTested;
+
+        /// <summary>DC of the WIS save a hurt enemy makes to keep fighting.</summary>
+        public const int MoraleDC = 12;
+
+        /// <summary>Fired when an enemy surrenders: (enemy).</summary>
+        public static event Action<EnemyUnit> OnEnemyYielded;
+
+        /// <summary>
+        /// Below <paramref name="hpFraction"/> of its health an enemy that can surrender makes one WIS save
+        /// (DC 12) per fight; failing it, it yields. <paramref name="forceYield"/> skips the save.
+        /// Returns true when the enemy yielded.
+        /// </summary>
+        protected bool CheckMorale(float hpFraction, bool forceYield = false, string yieldMessage = null)
+        {
+            if (!CanSurrender || hasYielded || moraleTested || !IsAlive) return false;
+            if (currentHP > Mathf.FloorToInt(maxHP * hpFraction)) return false;
+            if (TurnManager.Instance == null || !TurnManager.Instance.IsCombatActive) return false;
+
+            moraleTested = true;
+            if (!forceYield)
+            {
+                DiceResult nerve = CombatRules.RollEnemySave(this, HeroAttribute.Wisdom, MoraleDC, "losing its nerve");
+                if (nerve.isSuccess) return false;
+            }
+
+            Yield(yieldMessage ?? $"{unitName} throws down their weapon and begs for mercy!");
+            return true;
+        }
+
+        /// <summary>
+        /// The enemy surrenders: it leaves the battle (counted as beaten, so the fight can be won), drops its
+        /// purse and slips away instead of dying.
+        /// </summary>
+        public void Yield(string message)
+        {
+            if (hasYielded || !IsAlive) return;
+            hasYielded = true;
+            moraleTested = true;
+
+            Debug.Log($"[EnemyUnit] {unitName} yields.");
+            if (!string.IsNullOrEmpty(message)) UI.CombatUIController.Instance?.LogCombatMessage(message);
+            if (Application.isPlaying)
+            {
+                World.FloatingCombatText.Instance?.ShowText(transform.position + Vector3.up * 2.2f, "SURRENDERS!", new Color(1f, 0.92f, 0.6f));
+            }
+
+            OnEnemyYielded?.Invoke(this);
+            Die();
+        }
+
+        /// <summary>A retry starts the fight over: the enemy has its nerve back.</summary>
+        protected void ResetMorale()
+        {
+            hasYielded = false;
+            moraleTested = false;
+        }
+
+        #endregion
+
+        #region Opportunity Attacks Against Enemies
+
+        /// <summary>
+        /// An enemy walking out of the hero's reach gives the hero a reaction attack (Vili, 2026-10-06), unless it
+        /// teleports. It walks on only if it survives.
+        /// </summary>
+        public override void WalkToTile(GridTile tile, Action onArrived = null)
+        {
+            if (tile != null)
+            {
+                PlayerUnit.ResolveReactionAgainst(this, tile.GridPosition);
+                if (!IsAlive)
+                {
+                    onArrived?.Invoke();
+                    return;
+                }
+            }
+            base.WalkToTile(tile, onArrived);
+        }
+
+        #endregion
+
         #region Runtime Configuration
 
         /// <summary>
@@ -361,7 +497,8 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         protected DiceResult ResolveBasicAttack(PlayerUnit target, string verb)
         {
-            AdvantageType advantage = StatusEffects != null ? StatusEffects.GetAttackRollAdvantageModifier() : AdvantageType.None;
+            // Advantage and Disadvantage cancel out; a dodging hero is harder to hit (Vili, 2026-10-06)
+            AdvantageType advantage = CombatRules.AttackAdvantage(this, target);
             GridManager grid = GridManager.Instance;
             int coverBonus = grid != null ? grid.GetCoverArmorBonus(gridPosition, target.GridPosition) : 0;
             DiceResult hitCheck = DiceSystem.RollD20(AttackBonus, target.ArmorClass + coverBonus, advantage);
@@ -456,6 +593,14 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         protected override void HideOnDeath()
         {
+            // A surrendering enemy slips away in a puff of smoke instead of playing its death clip
+            if (hasYielded)
+            {
+                if (Application.isPlaying) AbilityVfx.PlayVanish(this);
+                base.HideOnDeath();
+                return;
+            }
+
             Animator animator = UnitAnimator;
             bool hasDeathClip = animator != null && animator.isActiveAndEnabled
                 && animator.runtimeAnimatorController != null && animator.HasState(0, DieStateHash);
@@ -490,6 +635,7 @@ namespace CastleOfTheD20.Combat
             Collider col = GetComponent<Collider>();
             if (col != null) col.enabled = true;
 
+            ResetMorale();
             base.Revive();
             InitializeUnit();
             NotifyHealthChanged();

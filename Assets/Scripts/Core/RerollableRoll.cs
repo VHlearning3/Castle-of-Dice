@@ -26,13 +26,30 @@ namespace CastleOfTheD20.Core
         /// </summary>
         public static Func<bool> CanPauseOverride;
 
-        /// <summary>Rerolls the hero can spend right now: scrolls plus the difficulty's free reroll.</summary>
+        /// <summary>
+        /// Rerolls the hero can spend right now: scrolls, the difficulty's free reroll and Heroic Inspiration.
+        /// </summary>
         public static int AvailableRerolls
         {
             get
             {
                 int scrolls = InventoryManager.Instance != null ? InventoryManager.Instance.RerollScrollCount : 0;
-                return scrolls + (DifficultySettings.FreeRerollAvailable ? 1 : 0);
+                return scrolls + (DifficultySettings.FreeRerollAvailable ? 1 : 0) + (HeroicInspiration.Has ? 1 : 0);
+            }
+        }
+
+        /// <summary>
+        /// Label of the reroll button for the reroll that would be spent next: the free reroll, then Inspiration,
+        /// then a Rune of Fate.
+        /// </summary>
+        public static string NextRerollLabel
+        {
+            get
+            {
+                if (DifficultySettings.FreeRerollAvailable) return "Free Reroll";
+                if (HeroicInspiration.Has) return "Use Inspiration";
+                int scrolls = InventoryManager.Instance != null ? InventoryManager.Instance.RerollScrollCount : 0;
+                return $"Use Rune of Fate ({scrolls})";
             }
         }
 
@@ -90,6 +107,7 @@ namespace CastleOfTheD20.Core
             if (pendingOutcome == null) return false;
 
             bool spent = DifficultySettings.TryUseFreeReroll()
+                || HeroicInspiration.Spend()
                 || (InventoryManager.Instance != null && InventoryManager.Instance.ConsumeRerollScroll());
             if (!spent)
             {

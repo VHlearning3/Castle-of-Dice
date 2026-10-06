@@ -9,6 +9,12 @@ namespace CastleOfTheD20.Combat
     /// </summary>
     public class WolfUnit : EnemyUnit
     {
+        // STR, DEX, CON, INT, WIS, CHA: quick, with a keen nose
+        private static readonly int[] WolfSaves = { 1, 2, 1, -4, 1, -2 };
+
+        /// <summary>A wolf's saving throws.</summary>
+        protected override int[] SaveProfile => WolfSaves;
+
         public override void InitializeUnit()
         {
             if (unitName == "Combatant") unitName = "Grey Wolf";

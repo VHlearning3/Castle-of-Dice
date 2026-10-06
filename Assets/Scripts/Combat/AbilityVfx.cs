@@ -188,6 +188,15 @@ namespace CastleOfTheD20.Combat
             PlaySound(SFXClipType.SpellCast, fromWorld, 0.45f);
         }
 
+        /// <summary>A surrendering enemy slips away: a puff of dark smoke where it stood.</summary>
+        public static void PlayVanish(CombatUnit unit)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || unit == null) return;
+            vfx.EmitShadowSmoke(vfx.GroundPoint(unit, unit.transform.position));
+            PlaySound(SFXClipType.SpellCast, unit.transform.position, 0.35f);
+        }
+
         /// <summary>Malakor's teleport: a purple vortex swallows him and another spits him out spinning.</summary>
         public static void PlayMalakorTeleport(CombatUnit boss, Vector3 fromWorld)
         {

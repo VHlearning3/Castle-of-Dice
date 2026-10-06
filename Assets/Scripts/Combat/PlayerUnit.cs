@@ -35,6 +35,15 @@ namespace CastleOfTheD20.Combat
         private bool hasActedThisTurn = false;
         private bool hasMovedThisTurn = false;
 
+        // D&D action economy (Vili, 2026-10-06): a bonus action per turn, a reaction per round, Dash, Disengage
+        private bool hasUsedBonusActionThisTurn;
+        private bool hasUsedReactionThisRound;
+        private bool isDashing;
+        private bool isDisengaging;
+
+        // Death's Door: once per fight a blow that would drop the hero gets a death save instead
+        private bool deathsDoorUsedThisFight;
+
         // Class baseline captured by InitializeUnit; progression bonuses are stored relative to it
         private int baseMaxHP;
         private int baseAttributeBonus;
@@ -62,8 +71,25 @@ namespace CastleOfTheD20.Combat
             set => PlayerDataSO.Session = value;
         }
 
-        /// <summary>Max HP gained above the class baseline (Hero's Resilience, Giant Elixir).</summary>
-        public int MaxHPBonus => hasBaseline ? Mathf.Max(0, maxHP - baseMaxHP) : 0;
+        /// <summary>
+        /// Max HP gained above the class baseline from Hero's Resilience and the Giant Elixir. The HP every level
+        /// gives (<see cref="LevelHitPoints"/>) is not part of it: it follows from the level.
+        /// </summary>
+        public int MaxHPBonus => hasBaseline ? Mathf.Max(0, maxHP - baseMaxHP - LevelHitPoints) : 0;
+
+        /// <summary>Max HP each level above the first gives automatically: warrior 6, rogue 5, mage 4.</summary>
+        public static int HitPointsPerLevel(CharacterClassType classType)
+        {
+            switch (classType)
+            {
+                case CharacterClassType.Warrior: return 6;
+                case CharacterClassType.Rogue: return 5;
+                default: return 4;
+            }
+        }
+
+        /// <summary>Max HP the hero's levels give on top of the class's starting HP.</summary>
+        public int LevelHitPoints => characterClass != null ? HitPointsPerLevel(characterClass.ClassType) * (Mathf.Max(1, level) - 1) : 0;
 
         /// <summary>Primary attribute points gained above the class baseline.</summary>
         public int AttributeBonusModifier => hasBaseline ? Mathf.Max(0, primaryAttributeBonus - baseAttributeBonus) : 0;
@@ -101,7 +127,7 @@ namespace CastleOfTheD20.Combat
                 EnsureFifthAbility();
 
                 int oldMax = maxHP;
-                maxHP = baseMaxHP + Mathf.Max(0, maxHpBonus);
+                maxHP = baseMaxHP + LevelHitPoints + Mathf.Max(0, maxHpBonus);
                 currentHP = Mathf.Clamp(currentHP + (maxHP - oldMax), 1, maxHP);
 
                 primaryAttributeBonus = baseAttributeBonus + Mathf.Max(0, attributeBonus);
@@ -189,9 +215,24 @@ namespace CastleOfTheD20.Combat
         public int ArmorClassBonus => permanentArmorClassBonus;
 
         /// <summary>
-        /// Total effective Armor Class including class baseline and permanent gear bonuses.
+        /// Total effective Armor Class including class baseline, permanent gear bonuses and the Oathkeeper Shield.
         /// </summary>
-        public override int ArmorClass => base.ArmorClass + permanentArmorClassBonus + DifficultySettings.HeroArmorBonus;
+        public override int ArmorClass => base.ArmorClass + permanentArmorClassBonus + DifficultySettings.HeroArmorBonus
+            + Economy.MagicItems.ArmorBonus;
+
+        /// <summary>
+        /// Tiles the hero can walk this turn: the class's movement and the Boots of Striding, halved by Frostbite,
+        /// doubled by Dash.
+        /// </summary>
+        public override int MovementRange
+        {
+            get
+            {
+                int baseRange = movementRange + Economy.MagicItems.MovementBonus;
+                int range = StatusEffects != null ? StatusEffects.GetEffectiveMovementRange(baseRange) : baseRange;
+                return isDashing ? range * 2 : range;
+            }
+        }
 
         /// <summary>Primary attribute modifier (+2 to +5) added to D20 checks.</summary>
         public int PrimaryAttributeBonus => primaryAttributeBonus;
@@ -209,6 +250,29 @@ namespace CastleOfTheD20.Combat
             get => hasMovedThisTurn;
             set => hasMovedThisTurn = value;
         }
+
+        /// <summary>Whether the hero has used their bonus action this turn.</summary>
+        public bool HasUsedBonusActionThisTurn
+        {
+            get => hasUsedBonusActionThisTurn;
+            set => hasUsedBonusActionThisTurn = value;
+        }
+
+        /// <summary>Whether the hero's reaction (an attack on a fleeing enemy) is spent until their next turn.</summary>
+        public bool HasUsedReactionThisRound
+        {
+            get => hasUsedReactionThisRound;
+            set => hasUsedReactionThisRound = value;
+        }
+
+        /// <summary>True after Dash this turn: the move reaches twice as far.</summary>
+        public bool IsDashing => isDashing;
+
+        /// <summary>True after Disengage this turn: walking away provokes no free attacks.</summary>
+        public bool IsDisengaging => isDisengaging;
+
+        /// <summary>Whether this fight's Death's Door save has been used.</summary>
+        public bool DeathsDoorUsedThisFight => deathsDoorUsedThisFight;
 
         #endregion
 
@@ -278,10 +342,14 @@ namespace CastleOfTheD20.Combat
             base.WalkToTile(tile, onArrived);
         }
 
-        /// <summary>Enemies that would get a free attack if the hero walked to <paramref name="destination"/>.</summary>
+        /// <summary>
+        /// Enemies that would get a free attack if the hero walked to <paramref name="destination"/>. None after
+        /// Disengage.
+        /// </summary>
         public void CollectOpportunityAttackers(Vector2Int destination, List<EnemyUnit> result)
         {
             result.Clear();
+            if (isDisengaging) return;
             TurnManager tm = TurnManager.Instance;
             GridManager grid = GridManager.Instance;
             if (tm == null || !tm.IsCombatActive || grid == null) return;
@@ -309,6 +377,224 @@ namespace CastleOfTheD20.Combat
             }
         }
 
+        #region Reaction: Opportunity Attack
+
+        /// <summary>
+        /// The hero's melee weapon attack for reactions: the first ability when it is a melee strike (Sword Slash,
+        /// Poison Dagger). The mage carries no melee weapon, so she makes no opportunity attacks.
+        /// </summary>
+        public AbilitySO ReactionWeapon
+        {
+            get
+            {
+                AbilitySO first = GetAbility(0);
+                if (first == null || !first.DealsDamage || first.TargetType != AbilityTargetType.SingleTarget) return null;
+                return first.Range <= 1 ? first : null;
+            }
+        }
+
+        /// <summary>
+        /// Whether the hero gets a reaction attack on <paramref name="mover"/> walking to
+        /// <paramref name="destination"/>: it starts next to the hero and ends out of reach, the hero has a melee
+        /// weapon and has not used their reaction since their last turn.
+        /// </summary>
+        public bool CanReactTo(EnemyUnit mover, Vector2Int destination)
+        {
+            if (!IsAlive || mover == null || !mover.IsAlive || hasUsedReactionThisRound) return false;
+            if (ReactionWeapon == null) return false;
+            TurnManager tm = TurnManager.Instance;
+            GridManager grid = GridManager.Instance;
+            if (tm == null || !tm.IsCombatActive || grid == null) return false;
+            if (grid.GetDistance(mover.GridPosition, gridPosition) > 1) return false;
+            return grid.GetDistance(destination, gridPosition) > 1;
+        }
+
+        /// <summary>
+        /// An enemy walking out of reach: every hero who can react strikes at it once (Vili, 2026-10-06).
+        /// </summary>
+        public static void ResolveReactionAgainst(EnemyUnit mover, Vector2Int destination)
+        {
+            TurnManager tm = TurnManager.Instance;
+            if (mover == null || tm == null || !tm.IsCombatActive) return;
+
+            IReadOnlyList<CombatUnit> units = tm.ActiveUnits;
+            for (int i = 0; i < units.Count && mover.IsAlive; i++)
+            {
+                if (units[i] is PlayerUnit hero && hero.CanReactTo(mover, destination))
+                {
+                    hero.MakeOpportunityAttack(mover);
+                }
+            }
+        }
+
+        /// <summary>
+        /// The reaction attack itself: d20 + attack bonus against the enemy's AC with the hero's melee ability,
+        /// rolled at once (no reroll pause on the enemy's turn).
+        /// </summary>
+        public void MakeOpportunityAttack(EnemyUnit target)
+        {
+            AbilitySO weapon = ReactionWeapon;
+            if (weapon == null || target == null || !target.IsAlive) return;
+            hasUsedReactionThisRound = true;
+
+            FaceTowards(target.transform.position);
+            if (UnitAnimator != null && !TrySetAnimatorTrigger(weapon.BaseAbilityID)) UnitAnimator.SetTrigger("Attack");
+
+            UI.CombatUIController.Instance?.LogCombatMessage($"{unitName} strikes at {target.UnitName} as it pulls away (reaction)!");
+            AdvantageType advantage = CombatRules.AttackAdvantage(this, target);
+            StatusEffects?.ConsumeAdvantageNextAttack();
+            DiceResult hit = DiceSystem.RollD20(HeroAttributes.GetAttackBonus(this), target.ArmorClass, advantage);
+            UI.CombatUIController.LogAttackRoll(unitName, target.UnitName, hit);
+            if (!hit.isSuccess) return;
+
+            int damage = weapon.RollDamage(primaryAttributeBonus, permanentWeaponDamageBonus + ConsumePoisonCoating());
+            if (hit.isCriticalSuccess) damage *= 2;
+            target.TakeDamage(damage, hit.isCriticalSuccess);
+            if (target.IsAlive && weapon.AppliedEffect != StatusEffectType.None)
+            {
+                target.StatusEffects?.ApplyEffect(weapon.AppliedEffect, Mathf.Max(1, weapon.EffectDurationTurns));
+            }
+        }
+
+        #endregion
+
+        #region Death's Door
+
+        /// <summary>DC of the Death's Door save.</summary>
+        public const int DeathSaveDC = 10;
+
+        /// <summary>Fired when a Death's Door save is resolved: (hero, survived).</summary>
+        public static event Action<PlayerUnit, bool> OnDeathsDoorResolved;
+
+        /// <summary>
+        /// A blow that would drop the hero to 0 HP in a fight first gets a Death's Door save, once per fight
+        /// (Vili, 2026-10-06): d20 (+ the Oathkeeper Shield) vs DC 10. 10 or more and the hero stays up with
+        /// 1 HP; a natural 20 brings back 1d4 + level HP; less and the hero falls. A failed save can be rerolled.
+        /// </summary>
+        public override void TakeDamage(int amount, bool isCritical = false)
+        {
+            if (!ShouldUseDeathsDoor(amount))
+            {
+                base.TakeDamage(amount, isCritical);
+                return;
+            }
+
+            deathsDoorUsedThisFight = true;
+
+            // The blow lands, leaving the hero on the brink at 1 HP while the save is rolled
+            if (currentHP > 1) base.TakeDamage(currentHP - 1, isCritical);
+            if (!IsAlive) return;
+
+            UI.CombatUIController.Instance?.LogCombatMessage($"{unitName} is at Death's Door! (death save, DC {DeathSaveDC})");
+            RerollableRoll.Roll(HeroAttributes.GetDeathSaveBonus(), DeathSaveDC, AdvantageType.None, ResolveDeathsDoor, "Death's Door");
+        }
+
+        private bool ShouldUseDeathsDoor(int amount)
+        {
+            if (deathsDoorUsedThisFight || !IsAlive || amount <= 0 || amount < currentHP) return false;
+            if (StatusEffects != null && StatusEffects.ManaShieldCharges > 0) return false; // the shield takes it
+            TurnManager tm = TurnManager.Instance;
+            return tm != null && tm.IsCombatActive;
+        }
+
+        private void ResolveDeathsDoor(DiceResult save)
+        {
+            if (!IsAlive) return;
+
+            if (save.isSuccess)
+            {
+                int healed = 0;
+                if (save.isCriticalSuccess)
+                {
+                    healed = DiceSystem.RollDice(4) + level;
+                    Heal(healed);
+                }
+                string message = healed > 0
+                    ? $"Natural 20! {unitName} surges back from Death's Door with {CurrentHP} HP!"
+                    : $"{unitName} refuses to fall and clings on with 1 HP!";
+                UI.CombatUIController.Instance?.LogCombatMessage(message);
+                if (Application.isPlaying)
+                {
+                    World.FloatingCombatText.Instance?.ShowText(transform.position + Vector3.up * 2.4f, "DEATH'S DOOR!", new Color(1f, 0.85f, 0.4f));
+                    AbilityVfx.PlayPotionHeal(this);
+                }
+                OnDeathsDoorResolved?.Invoke(this, true);
+                return;
+            }
+
+            UI.CombatUIController.Instance?.LogCombatMessage($"{unitName} fails the death save and falls.");
+            OnDeathsDoorResolved?.Invoke(this, false);
+            base.TakeDamage(currentHP);
+        }
+
+        #endregion
+
+        #region Basic Actions: Dash, Dodge, Disengage
+
+        /// <summary>
+        /// Whether the rogue's Cunning Action applies: for her Dash and Disengage cost the bonus action.
+        /// </summary>
+        public bool HasCunningAction => characterClass != null && characterClass.ClassType == CharacterClassType.Rogue;
+
+        /// <summary>What Dash or Disengage would cost now (the rogue uses her bonus action while she has it).</summary>
+        public ActionCost GetMobilityActionCost()
+        {
+            return HasCunningAction && !hasUsedBonusActionThisTurn ? ActionCost.BonusAction : ActionCost.Action;
+        }
+
+        private bool CanPay(ActionCost cost)
+        {
+            return cost == ActionCost.BonusAction ? !hasUsedBonusActionThisTurn : !hasActedThisTurn;
+        }
+
+        private void Pay(ActionCost cost)
+        {
+            if (cost == ActionCost.BonusAction) hasUsedBonusActionThisTurn = true;
+            else hasActedThisTurn = true;
+        }
+
+        /// <summary>Whether Dash can be taken: not yet dashing and the action (or the rogue's bonus action) is free.</summary>
+        public bool CanDash => IsAlive && !isDashing && CanPay(GetMobilityActionCost());
+
+        /// <summary>Whether Disengage can be taken.</summary>
+        public bool CanDisengage => IsAlive && !isDisengaging && CanPay(GetMobilityActionCost());
+
+        /// <summary>Whether Dodge can be taken (always the action).</summary>
+        public bool CanDodge => IsAlive && !hasActedThisTurn
+            && (StatusEffects == null || !StatusEffects.HasEffect(StatusEffectType.Dodging));
+
+        /// <summary>
+        /// Dash: this turn's move reaches twice as far. Taken after moving, it gives a second move.
+        /// </summary>
+        public bool Dash()
+        {
+            if (!CanDash) return false;
+            Pay(GetMobilityActionCost());
+            if (hasMovedThisTurn) hasMovedThisTurn = false; // a second move at normal speed
+            else isDashing = true;
+            return true;
+        }
+
+        /// <summary>Disengage: walking away this turn provokes no free attacks.</summary>
+        public bool Disengage()
+        {
+            if (!CanDisengage) return false;
+            Pay(GetMobilityActionCost());
+            isDisengaging = true;
+            return true;
+        }
+
+        /// <summary>Dodge: attacks against the hero have Disadvantage and DEX saves Advantage until the next turn.</summary>
+        public bool Dodge()
+        {
+            if (!CanDodge) return false;
+            hasActedThisTurn = true;
+            StatusEffects?.ApplyEffect(StatusEffectType.Dodging, 1);
+            return true;
+        }
+
+        #endregion
+
         /// <summary>
         /// Sets the hero's HP (clamped to 1..MaxHP), e.g. the health carried over from the last zone or a save.
         /// </summary>
@@ -331,7 +617,7 @@ namespace CastleOfTheD20.Combat
             if (characterClass != null)
             {
                 unitName = characterClass.CharacterName;
-                maxHP = characterClass.BaseMaxHealth;
+                maxHP = characterClass.BaseMaxHealth + LevelHitPoints;
                 currentHP = maxHP;
                 armorClass = characterClass.BaseArmorClass;
                 movementRange = characterClass.BaseMovementRange;
@@ -400,13 +686,28 @@ namespace CastleOfTheD20.Combat
         /// <summary>Level that unlocks the class's fifth ability.</summary>
         public const int FifthAbilityLevel = 4;
 
-        /// <summary>Current hero milestone level (1..5).</summary>
+        /// <summary>
+        /// Current hero milestone level (1..5). Gaining a level adds the class's hit points per level to Max HP
+        /// and the same to the hero's current HP (Vili, 2026-10-06).
+        /// </summary>
         public int Level
         {
             get => level;
             set
             {
+                int oldLevelHP = LevelHitPoints;
                 level = Mathf.Clamp(value, 1, MaxLevel);
+
+                if (!isApplyingProgression && hasBaseline)
+                {
+                    int gained = LevelHitPoints - oldLevelHP;
+                    if (gained != 0)
+                    {
+                        maxHP = Mathf.Max(1, maxHP + gained);
+                        if (IsAlive) currentHP = Mathf.Clamp(currentHP + Mathf.Max(0, gained), 1, maxHP);
+                        NotifyHealthChanged();
+                    }
+                }
                 EnsureFifthAbility();
             }
         }
@@ -523,14 +824,21 @@ namespace CastleOfTheD20.Combat
         #region Ability Execution
 
         /// <summary>
-        /// Checks if an ability slot can be used (action left this turn and the ability is off cooldown).
+        /// Checks if an ability slot can be used: its cost (the action, or the bonus action for Iron Will, Blink
+        /// and Shadow Step) is still free this turn and the ability is off cooldown.
         /// </summary>
         public bool CanUseAbility(int slotIndex)
         {
-            if (hasActedThisTurn) return false;
             if (slotIndex < 0 || slotIndex >= activeAbilities.Count || activeAbilities[slotIndex] == null) return false;
+            if (!CanPay(ActionEconomy.GetCost(activeAbilities[slotIndex]))) return false;
             return GetCooldownRemaining(slotIndex) <= 0;
         }
+
+        /// <summary>What the ability in <paramref name="slotIndex"/> costs.</summary>
+        public ActionCost GetAbilityCost(int slotIndex) => ActionEconomy.GetCost(GetAbility(slotIndex));
+
+        /// <summary>Whether the cost of the ability in <paramref name="slotIndex"/> is already spent this turn.</summary>
+        public bool IsAbilityCostSpent(int slotIndex) => !CanPay(GetAbilityCost(slotIndex));
 
         /// <summary>Turns left before the ability in <paramref name="slotIndex"/> can be used again (0 = ready).</summary>
         public int GetCooldownRemaining(int slotIndex)
@@ -607,7 +915,7 @@ namespace CastleOfTheD20.Combat
             bool success = executor.ExecuteAbility(this, ability, targetGridPos);
             if (success)
             {
-                hasActedThisTurn = true;
+                Pay(ActionEconomy.GetCost(ability));
                 StartCooldown(ability);
             }
 
@@ -628,7 +936,7 @@ namespace CastleOfTheD20.Combat
             GridManager grid = GridManager.Instance;
             if (grid == null || grid.GetDistance(gridPosition, barrel.Tile.GridPosition) > ability.Range) return false;
 
-            hasActedThisTurn = true;
+            Pay(ActionEconomy.GetCost(ability));
             StartCooldown(ability);
             FaceTowards(barrel.transform.position);
             if (UnitAnimator != null && !TrySetAnimatorTrigger(ability.BaseAbilityID))
@@ -640,12 +948,33 @@ namespace CastleOfTheD20.Combat
         }
 
         /// <summary>
-        /// Resets turn action and movement flags when the player's turn begins.
+        /// Resets turn action and movement flags when the player's turn begins: the action, the bonus action,
+        /// the move and the reaction come back, and Dash / Disengage end.
         /// </summary>
         public void ResetTurnFlags()
         {
             hasActedThisTurn = false;
             hasMovedThisTurn = false;
+            hasUsedBonusActionThisTurn = false;
+            hasUsedReactionThisRound = false;
+            isDashing = false;
+            isDisengaging = false;
+        }
+
+        /// <summary>
+        /// The hero's turn begins: everything in <see cref="ResetTurnFlags"/>, and a Dodge from last turn ends.
+        /// </summary>
+        public void BeginOwnTurn()
+        {
+            ResetTurnFlags();
+            StatusEffects?.RemoveEffect(StatusEffectType.Dodging);
+        }
+
+        /// <summary>A new fight: Death's Door is ready again.</summary>
+        public void ResetForNewFight()
+        {
+            ResetTurnFlags();
+            deathsDoorUsedThisFight = false;
         }
 
         #endregion

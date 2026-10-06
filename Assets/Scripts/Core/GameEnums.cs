@@ -107,7 +107,10 @@ namespace CastleOfTheD20.Core
         Immobilized,
 
         /// <summary>Warrior Retaliation: every enemy that swings at the warrior in melee is struck back.</summary>
-        Retaliation
+        Retaliation,
+
+        /// <summary>Dodge action: attacks against the unit have Disadvantage until its next turn.</summary>
+        Dodging
     }
 
     /// <summary>
@@ -128,7 +131,10 @@ namespace CastleOfTheD20.Core
         QuestItem,
 
         /// <summary>Raw metal scrap gathered from castle ruins, redeemable for gold at the blacksmith.</summary>
-        ScrapMetal
+        ScrapMetal,
+
+        /// <summary>A worn magic item (Oathkeeper Shield, Shadow Cloak, Boots of Striding): works while worn.</summary>
+        Wondrous
     }
 
     /// <summary>

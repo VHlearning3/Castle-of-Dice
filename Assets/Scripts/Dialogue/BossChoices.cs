@@ -123,9 +123,13 @@ namespace CastleOfTheD20.Dialogue
             }
         }
 
+        /// <summary>Story flag: the Witch yielded to Queen Isolde's ring (ShadowMageMalakorBoss).</summary>
+        public const string MalakorYieldedToRingFlag = "MalakorYieldedToRing";
+
         /// <summary>
         /// For a spared Malakor at the King's fight: decides once (and remembers) whether he helps or betrays.
-        /// Returns true for help, false for betrayal; null when Malakor was not spared.
+        /// A Witch who yielded to Queen Isolde's ring keeps her word (Vili, 2026-10-06); otherwise it is a coin
+        /// toss. Returns true for help, false for betrayal; null when Malakor was not spared.
         /// </summary>
         public static bool? ResolveMalakorAtThrone()
         {
@@ -133,7 +137,7 @@ namespace CastleOfTheD20.Dialogue
             if (StoryFlags.Has(MalakorHelpedFlag)) return true;
             if (StoryFlags.Has(MalakorBetrayedFlag)) return false;
 
-            bool helps = DiceSystem.RollDice(2) == 2;
+            bool helps = StoryFlags.Has(MalakorYieldedToRingFlag) || DiceSystem.RollDice(2) == 2;
             StoryFlags.Set(helps ? MalakorHelpedFlag : MalakorBetrayedFlag);
             return helps;
         }

@@ -9,6 +9,12 @@ namespace CastleOfTheD20.Combat
     /// </summary>
     public class MimicUnit : EnemyUnit
     {
+        // STR, DEX, CON, INT, WIS, CHA: a strong, sticky box
+        private static readonly int[] MimicSaves = { 3, 1, 2, -3, 1, -1 };
+
+        /// <summary>The mimic's saving throws.</summary>
+        protected override int[] SaveProfile => MimicSaves;
+
         public override void InitializeUnit()
         {
             unitName = "Mimic";

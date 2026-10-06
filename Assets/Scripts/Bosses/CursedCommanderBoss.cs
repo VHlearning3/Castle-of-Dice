@@ -46,6 +46,12 @@ namespace CastleOfTheD20.Bosses
 
         #region Public Properties
 
+        // STR, DEX, CON, INT, WIS, CHA: a veteran in heavy armour, strong and stubborn
+        private static readonly int[] CommanderSaves = { 4, 0, 3, 0, 2, 1 };
+
+        /// <summary>The Commander's saving throws.</summary>
+        protected override int[] SaveProfile => CommanderSaves;
+
         /// <summary>Whether skeleton reinforcements have already been summoned.</summary>
         public bool HasSpawnedAdds => hasSpawnedAdds;
 

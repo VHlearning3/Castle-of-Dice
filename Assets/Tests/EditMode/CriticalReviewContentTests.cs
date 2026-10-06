@@ -227,13 +227,16 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void ScrollOfWarding_ShieldsTheHeroWhenAFightStarts()
+        public void ScrollOfWarding_ShieldsTheHeroWhenRead()
         {
             PlayerUnit hero = CreateHero("Character_Mage_Elira");
             inventory.AddItem(inventory.FindItemByID(CombatScrolls.WardingScrollId), 1);
-            Assert.AreEqual(1, CombatScrolls.UseAtFightStart(hero, new List<CombatUnit> { hero }));
+            Assert.IsTrue(CombatScrolls.ReadWarding(hero), "Reading the scroll is the hero's choice (Vili, 2026-10-06).");
             Assert.AreEqual(2, hero.StatusEffects.ManaShieldCharges);
-            Assert.AreEqual(0, CombatScrolls.UseAtFightStart(hero, new List<CombatUnit> { hero }), "Used up.");
+            Assert.IsTrue(hero.HasActedThisTurn, "Reading a scroll costs the action.");
+
+            hero.ResetTurnFlags();
+            Assert.IsFalse(CombatScrolls.ReadWarding(hero), "Used up.");
         }
 
         [Test]
