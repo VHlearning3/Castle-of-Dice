@@ -4,6 +4,7 @@ using NUnit.Framework;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.UI;
 using CastleOfTheD20.Bosses;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Core;
@@ -645,6 +646,130 @@ namespace CastleOfTheD20.Tests
             Invoke(quests, "Awake");
             Invoke(quests, "OnEnable");
             return quests;
+        }
+
+        #endregion
+
+        #region Bag, shops and boss options (Vili, 2026-10-06)
+
+        [Test]
+        public void Bag_ListsWhatTheHeroCarries_WithTheRuneOfFate()
+        {
+            ItemSO potion = AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_Potion_Health.asset");
+            ItemSO ring = AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_SignetRing.asset");
+            inventory.AddItem(potion, 2);
+            inventory.AddItem(ring, 1);
+            inventory.AddRerollScroll(3);
+            inventory.AddScrapMetal(4);
+
+            List<CastleOfTheD20.UI.InventoryUI.Entry> entries = CastleOfTheD20.UI.InventoryUI.CollectEntries(inventory);
+            Assert.AreEqual(3, entries.Count, "potions, the rune and the ring; scrap shows on top instead");
+            CastleOfTheD20.UI.InventoryUI.Entry rune = entries.Find(e => e.Name == "Rune of Fate");
+            Assert.AreEqual(3, rune.Count);
+            StringAssert.Contains("roll again", rune.Description);
+            Assert.AreEqual(ring.ItemName, entries[entries.Count - 1].Name, "quest items come last");
+            Assert.AreEqual(2, entries.Find(e => e.Name == potion.ItemName).Count);
+        }
+
+        [Test]
+        public void Bag_OpensWithItsButtonLeftOfTheMap_AndClosesAgain()
+        {
+            GameObject hud = Track(new GameObject("HUD", typeof(RectTransform)));
+            GameObject map = new GameObject("Button_Map_Toggle", typeof(RectTransform), typeof(Image), typeof(Button));
+            map.transform.SetParent(hud.transform, false);
+            RectTransform mapRect = map.GetComponent<RectTransform>();
+            mapRect.anchorMin = mapRect.anchorMax = mapRect.pivot = Vector2.one;
+            mapRect.sizeDelta = new Vector2(110f, 32f);
+            mapRect.anchoredPosition = new Vector2(-436f, -18f);
+            GameObject label = new GameObject("Label", typeof(RectTransform), typeof(TMPro.TextMeshProUGUI));
+            label.transform.SetParent(map.transform, false);
+
+            Button bag = CastleOfTheD20.UI.InventoryUI.EnsureBagButton(hud.transform);
+            Assert.IsNotNull(bag);
+            Assert.AreEqual(CastleOfTheD20.UI.InventoryUI.BagButtonName, bag.name);
+            Assert.AreEqual("BAG (I)", bag.GetComponentInChildren<TMPro.TMP_Text>().text);
+            RectTransform bagRect = bag.GetComponent<RectTransform>();
+            Assert.Less(bagRect.anchoredPosition.x, mapRect.anchoredPosition.x - mapRect.sizeDelta.x + 1f, "left of the map button");
+            Assert.AreEqual(mapRect.anchoredPosition.y, bagRect.anchoredPosition.y, 0.01f, "on the same row");
+            Assert.AreSame(bag, CastleOfTheD20.UI.InventoryUI.EnsureBagButton(hud.transform), "built once");
+
+            CastleOfTheD20.UI.InventoryUI ui = CastleOfTheD20.UI.InventoryUI.EnsureInstance();
+            spawned.Add(ui.gameObject);
+            Assert.IsTrue(ui.Open());
+            Assert.IsTrue(CastleOfTheD20.UI.InventoryUI.IsOpen);
+            ui.Close();
+            Assert.IsFalse(CastleOfTheD20.UI.InventoryUI.IsOpen);
+        }
+
+        [Test]
+        public void RuneOfFate_HasOneName_AndPipSellsCheaperThanBaldur()
+        {
+            Assert.AreEqual("Rune of Fate", AssetDatabase.LoadAssetAtPath<ItemSO>("Assets/Data/Item_RerollRuneStone.asset").ItemName);
+            foreach (var stock in HubDialogues.MerchantStock)
+            {
+                if (stock.id == ShopManager.REROLL_RUNE_ID) Assert.Less(stock.price, ShopManager.REROLL_RUNE_PRICE);
+                if (stock.id == ShopManager.GREATER_POTION_ID) Assert.Less(stock.price, ShopManager.GREATER_POTION_PRICE);
+            }
+        }
+
+        [Test]
+        public void Commander_HasNoOldHonorRoll_AndBaldurHasNoSpareCopies()
+        {
+            DialogueNodeSO intro = AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Commander_Intro.asset");
+            foreach (DialogueOption option in intro.Options)
+            {
+                StringAssert.DoesNotContain("DC 13", option.OptionText);
+            }
+            Assert.IsNull(AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Baldur_Intro.asset"));
+            Assert.IsNull(AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Baldur_Rumor.asset"));
+            Assert.IsNull(AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Commander_Check_Success.asset"));
+        }
+
+        [Test]
+        public void Elisa_SkipsArcaneRebuke_AndHerOwnChoiceNeedsNoRoll()
+        {
+            DialogueNodeSO intro = AssetDatabase.LoadAssetAtPath<DialogueNodeSO>("Assets/Data/Dialogues/Malakor_Intro.asset");
+            PlayerUnit mage = CreateHero("Character_Mage_Elira");
+            PlayerUnit knight = CreateHero("Character_Warrior_SirRoland");
+
+            Assert.AreSame(intro, BossChoices.PrepareIntro(BossChoices.MalakorBossId, intro, knight), "the knight keeps Arcane Rebuke");
+            DialogueNodeSO mageIntro = BossChoices.PrepareIntro(BossChoices.MalakorBossId, intro, mage);
+            Assert.AreEqual(intro.Options.Count - 1, mageIntro.Options.Count);
+            foreach (DialogueOption option in mageIntro.Options)
+            {
+                Assert.AreNotEqual(BossChoices.ArcaneRebukeTag, option.CombatDebuffTag);
+            }
+
+            foreach (DialogueOption option in BossChoices.BuildOptions(BossChoices.MalakorBossId, mage))
+            {
+                if (option.OptionText.StartsWith("[Mage]")) Assert.IsFalse(option.RequiresCheck, "she simply sees through");
+            }
+            Object.DestroyImmediate(mageIntro);
+        }
+
+        [Test]
+        public void Elisa_SeesThroughTheWitch_MirrorImagesShatter()
+        {
+            CreateHero("Character_Mage_Elira");
+            EnemyUnit decoy = CreateUnit<EnemyUnit>("Shadow_Decoy");
+            decoy.InitializeUnit();
+            ShadowMageMalakorBoss witch = CreateUnit<ShadowMageMalakorBoss>("Witch");
+            witch.InitializeUnit();
+
+            Assert.IsTrue(witch.SeesThrough);
+            StringAssert.Contains("[True]", witch.UnitName, "her true form is shown");
+            Assert.IsTrue(decoy.IsAlive, "the mirror image is there when the fight begins");
+            Assert.AreEqual(1, witch.ShatterMirrorImages());
+            Assert.IsFalse(decoy.IsAlive, "and shatters as soon as a turn starts");
+        }
+
+        [Test]
+        public void OtherHeroes_StillFaceTheWitchsMirrors()
+        {
+            CreateHero("Character_Warrior_SirRoland");
+            ShadowMageMalakorBoss witch = CreateUnit<ShadowMageMalakorBoss>("Witch");
+            witch.InitializeUnit();
+            Assert.IsFalse(witch.SeesThrough);
         }
 
         #endregion

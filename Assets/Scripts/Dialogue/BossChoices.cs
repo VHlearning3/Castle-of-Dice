@@ -8,7 +8,7 @@ namespace CastleOfTheD20.Dialogue
     /// <summary>
     /// Extra choices in the boss conversations (critical review C8, C9).
     /// Class options: the warrior challenges the Commander to an honour duel (his guard stays out), the mage
-    /// debates the flaw in Malakor's binding (no mirror image, his true form shown), the rogue lifts the King's
+    /// always sees through the Shadow Witch (her mirror images shatter), the rogue lifts the King's
     /// crown (-2 AC). Consequences: the Commander can be released from his oath and Malakor spared, both
     /// without a fight. A spared Malakor turns up in the King's fight to help or to betray. The choices are
     /// story flags, so they are saved and read by the bosses and the ending.
@@ -52,10 +52,9 @@ namespace CastleOfTheD20.Dialogue
                 case MalakorBossId:
                     if (cls == CharacterClassType.Mage)
                     {
-                        options.Add(Check("[Mage] Your binding holds only the loyal. It is already cracking; I can see it from here.",
-                            14, "Arcana / Intelligence Check", MalakorShakenFlag,
-                            Exit("Shadow Witch", "You... see the flaw? Then my mirrors are useless against you. Fight me as I am!"),
-                            Exit("Shadow Witch", "A student lecturing the master! My mirrors will teach you humility.")));
+                        // The mage always sees through the glamour (Vili, 2026-10-06): no roll, her mirror images shatter in the fight
+                        options.Add(new DialogueOption("[Mage] Your binding holds only the loyal, and your glamour cannot hide you from me. I see you, and I see through your mirrors.",
+                            Exit("Shadow Witch", "You... see the flaw? Then my mirrors are useless against you. Fight me as I am!")));
                     }
                     options.Add(Check("[Mercy] You wrote the counter-rune. Live, and help undo what you did.",
                         15, "Persuasion / Charisma Check", MalakorSparedFlag,
@@ -74,6 +73,40 @@ namespace CastleOfTheD20.Dialogue
                     break;
             }
             return options;
+        }
+
+        /// <summary>Combat tag of the Shadow Witch's "Arcane Rebuke" choice (her intro asset).</summary>
+        public const string ArcaneRebukeTag = "ArcaneHeresy";
+
+        /// <summary>
+        /// The boss's opening line for this hero. The mage already sees through the Witch, so her copy leaves
+        /// out the "Arcane Rebuke" roll everyone else gets. Returns <paramref name="intro"/> itself when nothing changes.
+        /// </summary>
+        public static DialogueNodeSO PrepareIntro(string bossId, DialogueNodeSO intro, PlayerUnit hero)
+        {
+            if (intro == null || bossId != MalakorBossId) return intro;
+            if (hero == null || hero.CharacterClass == null || hero.CharacterClass.ClassType != CharacterClassType.Mage) return intro;
+
+            List<DialogueOption> kept = new List<DialogueOption>();
+            bool removed = false;
+            for (int i = 0; i < intro.Options.Count; i++)
+            {
+                DialogueOption option = intro.Options[i];
+                if (option != null && option.CombatDebuffTag == ArcaneRebukeTag)
+                {
+                    removed = true;
+                    continue;
+                }
+                kept.Add(option);
+            }
+            if (!removed) return intro;
+
+            DialogueNodeSO copy = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            copy.name = intro.name + "_Mage";
+            copy.hideFlags = HideFlags.DontSave;
+            copy.Initialize(intro.SpeakerName, intro.DialogueText, intro.SpeakerPortrait, intro.IsExitNode);
+            copy.SetOptions(kept);
+            return copy;
         }
 
         /// <summary>

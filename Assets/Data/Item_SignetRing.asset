@@ -14,8 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_signet_ring
   itemName: Othelia's Signet Ring
-  description: Ancient golden seal bearing the noble crest of Othelia's ancestors.
-    Lost in the castle courtyard.
+  description: 'Queen Isolde''s golden signet ring, kept by Othelia''s family for generations. The Gargoyle King could refuse its wearer nothing.'
   itemIcon: {fileID: 0}
   itemType: 3
   buyPriceGold: 0

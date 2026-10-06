@@ -13,9 +13,8 @@ MonoBehaviour:
   m_Name: Item_RerollRuneStone
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_reroll_rune
-  itemName: Rune of Fate (D20 Reroll)
-  description: Mystical rune stone of Oakhaven. Allows the bearer to invoke a critical
-    D20 reroll.
+  itemName: Rune of Fate
+  description: 'A rune stone of Oakhaven. When one of your d20 rolls fails, break the rune to roll again.'
   itemIcon: {fileID: 0}
   itemType: 3
   buyPriceGold: 75

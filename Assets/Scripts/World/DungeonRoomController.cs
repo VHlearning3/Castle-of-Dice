@@ -344,7 +344,7 @@ namespace CastleOfTheD20.World
 
             isAwaitingBossDialogue = true;
             DialogueController.OnDialogueEnded += HandleBossDialogueEnded;
-            dialogue.StartDialogue(bossDialogueNpc.StartingDialogueNode, player, BossChoices.BuildOptions(bossIdentifier, player));
+            dialogue.StartDialogue(BossChoices.PrepareIntro(bossIdentifier, bossDialogueNpc.StartingDialogueNode, player), player, BossChoices.BuildOptions(bossIdentifier, player));
 
             // A one-line intro may already have ended (and started combat) inside StartDialogue
             if (dialogue.IsInDialogue || isEncounterTriggered) return true;

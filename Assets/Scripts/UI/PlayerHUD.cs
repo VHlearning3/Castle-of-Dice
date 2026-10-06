@@ -1065,6 +1065,11 @@ namespace CastleOfTheD20.UI
                 mbRect.pivot = new Vector2(1f, 1f);
                 mbRect.anchoredPosition = new Vector2(MapButtonRightEdge, -18f);
             }
+
+            // ========================================================
+            // 7. BAG (I) BUTTON: left of the map button; opens the inventory
+            // ========================================================
+            InventoryUI.EnsureBagButton(transform);
         }
 
         /// <summary>Name of the ruby bar image inside the HP slider's fill area.</summary>
