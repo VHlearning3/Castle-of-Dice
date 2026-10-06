@@ -31,6 +31,9 @@ namespace CastleOfTheD20.World
             base.Awake();
             promptMessage = "Open Chest";
             interactionRadius = Mathf.Max(interactionRadius, 3f);
+
+            // Glows like any other chest, so the disguise holds
+            PickupBeacon.Attach(transform, PickupBeacon.TreasureColor, () => isInteractable);
         }
 
         private void Start()

@@ -27,8 +27,11 @@ namespace CastleOfTheD20.Editor
         public const string LockedName = "Gate_Locked";
         public const string UnlockedName = "Gate_Open_Archway";
 
-        /// <summary>Width across the path (world z), the same span the old stone frame covered.</summary>
-        private const float TargetWidth = 9.4f;
+        /// <summary>Width across the path (world z): 1.6x the old stone frame's 9.4, so the gate stands out.</summary>
+        private const float TargetWidth = 15f;
+
+        /// <summary>How much bigger than the first (9.4 wide) version the gate is; the opening and walls follow.</summary>
+        private const float GateScale = TargetWidth / 9.4f;
 
         [MenuItem("CastleOfDice/Setup Forest Lockpick Gate", false, 14)]
         public static void SetupMenu()
@@ -76,7 +79,7 @@ namespace CastleOfTheD20.Editor
             GameObject open = PlaceModel(scene, UnlockedModelPath, UnlockedName, models.transform, g, openMat);
 
             // Both models share the same stone wings either side of the arch; keep the hero out of the stone
-            const float opening = 2.6f, wallHeight = 4.2f, wallDepth = 1.4f;
+            const float opening = 2.6f * GateScale, wallHeight = 4.2f * GateScale, wallDepth = 1.4f * GateScale;
             float wing = (TargetWidth - opening) * 0.5f;
             GameObject blockers = new GameObject("Gate_Wall_Blockers");
             blockers.transform.SetParent(models.transform, false);
@@ -89,9 +92,12 @@ namespace CastleOfTheD20.Editor
                 box.size = new Vector3(wallDepth, wallHeight, wing);
             }
 
-            // The box keeps its collider for clicking and blocking; the models are what the player sees
+            // The box keeps its collider for clicking and blocking; the models are what the player sees.
+            // It fills the (now bigger) arch opening from the ground up.
             Renderer slab = gate.GetComponent<Renderer>();
             if (slab != null) slab.enabled = false;
+            gate.transform.localScale = new Vector3(wallDepth, wallHeight, opening + 0.4f);
+            gate.transform.position = new Vector3(g.x, wallHeight * 0.5f, g.z);
 
             if (lockpick != null)
             {
@@ -99,6 +105,7 @@ namespace CastleOfTheD20.Editor
                 so.FindProperty("lockedModel").objectReferenceValue = locked;
                 so.FindProperty("unlockedModel").objectReferenceValue = open;
                 so.FindProperty("clearPassageOnUnlock").boolValue = true;
+                so.FindProperty("interactionRadius").floatValue = 3f;
                 so.ApplyModifiedPropertiesWithoutUndo();
             }
             if (locked != null) locked.SetActive(true);

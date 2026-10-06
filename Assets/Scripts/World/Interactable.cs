@@ -102,8 +102,9 @@ namespace CastleOfTheD20.World
             }
             else
             {
-                float distance = Vector3.Distance(transform.position, player.transform.position);
+                float distance = DistanceTo(player.transform.position);
                 Debug.Log($"[Interactable] Too far away to interact with '{promptMessage}' ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
+                ShowTooFarHint();
             }
         }
 
@@ -117,8 +118,39 @@ namespace CastleOfTheD20.World
         public virtual bool CanInteract(PlayerUnit player)
         {
             if (player == null || !isInteractable) return false;
-            float distance = Vector3.Distance(transform.position, player.transform.position);
-            return distance <= interactionRadius;
+            return DistanceTo(player.transform.position) <= interactionRadius;
+        }
+
+        /// <summary>
+        /// Ground distance from <paramref name="point"/> to this object: to the nearest side of its own collider
+        /// when it has one, else to its pivot. Height is ignored, so a tall gate whose pivot sits halfway up
+        /// (or a wide one the hero stands beside) is in reach from where the hero can actually stand.
+        /// </summary>
+        public float DistanceTo(Vector3 point)
+        {
+            Vector3 target = transform.position;
+            Collider col = GetComponent<Collider>();
+            if (col != null && col.enabled && col.gameObject.activeInHierarchy && !(col is MeshCollider mesh && !mesh.convex))
+            {
+                Vector3 probe = point;
+                probe.y = col.bounds.center.y;
+                target = col.ClosestPoint(probe);
+            }
+            float dx = target.x - point.x, dz = target.z - point.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
+        }
+
+        /// <summary>Popup shown when the hero clicks something out of reach.</summary>
+        public const string TooFarMessage = "Too far away. Walk closer.";
+
+        private static float s_lastTooFarHint = -10f;
+
+        /// <summary>Tells the player to walk closer (once per click, even when two click handlers see it).</summary>
+        public static void ShowTooFarHint()
+        {
+            if (Time.unscaledTime - s_lastTooFarHint < 0.3f) return;
+            s_lastTooFarHint = Time.unscaledTime;
+            CastleOfTheD20.UI.LockpickMinigameUI.ShowToast(TooFarMessage);
         }
 
         /// <summary>
@@ -128,7 +160,7 @@ namespace CastleOfTheD20.World
         {
             if (!CanInteract(player))
             {
-                float dist = player != null ? Vector3.Distance(transform.position, player.transform.position) : -1f;
+                float dist = player != null ? DistanceTo(player.transform.position) : -1f;
                 Debug.Log($"[Interactable] Cannot interact with '{promptMessage}': Out of range ({dist:F1}m > {interactionRadius:F1}m) or inactive.");
                 return;
             }
