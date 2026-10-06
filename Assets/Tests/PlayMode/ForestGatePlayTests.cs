@@ -16,7 +16,7 @@ namespace CastleOfTheD20.Tests.PlayMode
 {
     /// <summary>
     /// The Forest Path secret gate for every class: the hero walks up to the (big) locked gate, opens it
-    /// (Corvo through the lockpick minigame, Roland and Elira with their d20 check), walks through the
+    /// (only the Rogue, through the lockpick minigame; the knight and the mage are turned away), walks through the
     /// opening and reaches the Grand Archives. Also checks the zone exits carry a destination sign and the
     /// swamp blossoms glow until gathered. With GATE_SHOTS_DIR set, the Rogue run saves review screenshots.
     /// </summary>
@@ -44,10 +44,10 @@ namespace CastleOfTheD20.Tests.PlayMode
         public IEnumerator Rogue_PicksGateAndWalksThrough() => Run("Character_Rogue_Corvo");
 
         [UnityTest, Timeout(600000)]
-        public IEnumerator Warrior_BreaksGateAndWalksThrough() => Run("Character_Warrior_SirRoland");
+        public IEnumerator Warrior_CannotOpenTheGate() => Run("Character_Warrior_SirRoland");
 
         [UnityTest, Timeout(600000)]
-        public IEnumerator Mage_ReadsRuneAndWalksThrough() => Run("Character_Mage_Elira");
+        public IEnumerator Mage_CannotOpenTheGate() => Run("Character_Mage_Elira");
 
         private IEnumerator Run(string classAsset)
         {
@@ -134,18 +134,14 @@ namespace CastleOfTheD20.Tests.PlayMode
             }
             else
             {
-                float until = Time.realtimeSinceStartup + 120f;
-                while (gate.IsLocked && Time.realtimeSinceStartup < until)
-                {
-                    Hero().Heal(999);
-                    gate.Interact(Hero());
-                    float settle = Time.realtimeSinceStartup + 4f;
-                    while (gate.IsLocked && Time.realtimeSinceStartup < settle)
-                    {
-                        if (RerollableRoll.IsAwaitingDecision) RerollableRoll.Accept();
-                        yield return null;
-                    }
-                }
+                // Only the Rogue opens the gate (Vili, 2026-10-06); the others have their own quests
+                gate.Interact(Hero());
+                yield return Frames(3);
+                Time.timeScale = 1f;
+                Assert.IsTrue(gate.IsLocked, "the gate stays shut for " + classAsset);
+                Assert.IsFalse(LockpickMinigameUI.IsOpen, "no lockpick minigame for " + classAsset);
+                Assert.AreEqual(LockpickInteraction.CannotOpenSecretGateMessage, LockpickMinigameUI.Instance.VisibleToastMessage);
+                yield break;
             }
             Time.timeScale = 1f;
             Assert.IsFalse(gate.IsLocked, "the gate opened");

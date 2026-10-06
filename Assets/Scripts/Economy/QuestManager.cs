@@ -175,7 +175,13 @@ namespace CastleOfTheD20.Economy
             RegisterQuest(MainQuest.Create());
             SyncMainQuest();
 
-            if (registeredQuests.Count == 1)
+            // Each hero's own quest (only the hero's own one is ever handed out)
+            for (int i = 0; i < ClassQuests.All.Length; i++)
+            {
+                RegisterQuest(ClassQuests.Create(ClassQuests.All[i]));
+            }
+
+            if (registeredQuests.Count == 1 + ClassQuests.All.Length)
             {
                 // Player builds can only see quests serialized into questDatabase; flag the misconfiguration
                 // instead of silently papering over it with an editor-only AssetDatabase scan.

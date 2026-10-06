@@ -44,7 +44,7 @@ namespace CastleOfTheD20.Core
                 "Note in another hand: No one has relieved us in a very long time. Brother Tomas stopped breathing two winters ago. He still stands his post."),
             ["forest_hunter"] = new Note("Hunter's Last Entry",
                 "Day 9. The old library gate west of the path is shut with a lock no key of mine fits, " +
-                "but the stone around it is cracked and there is a rune cut above the latch. A strong arm could break it; a scholar could read it.\n\n" +
+                "and the lock is a smuggler's work, all fine pins and false turns. No strong arm will force it; only nimble fingers and a good pick would open it.\n\n" +
                 "Day 10. Something with too many bones followed me back to camp. I am leaving at first light."),
 
             // Zone 3: Castle Courtyard

@@ -67,6 +67,7 @@ namespace CastleOfTheD20.Tests
             SetStaticProperty(typeof(InventoryManager), "Instance", null);
             GridManager.Instance = null;
             SetStatic(typeof(GameManager), "_instance", null);
+            SetStatic(typeof(QuestManager), "instance", null);
             for (int i = spawned.Count - 1; i >= 0; i--)
             {
                 if (spawned[i] != null) Object.DestroyImmediate(spawned[i]);
@@ -318,9 +319,8 @@ namespace CastleOfTheD20.Tests
         #region C6, C7: Forest gate and new enemies
 
         [Test]
-        public void SecretGate_GivesWayToTheWarriorsStrength()
+        public void SecretGate_OpensForTheRogueOnly()
         {
-            PlayerUnit warrior = CreateHero("Character_Warrior_SirRoland");
             LockpickInteraction gate = Track(new GameObject("Gate")).AddComponent<LockpickInteraction>();
             GameObject passage = Track(new GameObject("Passage"));
             passage.SetActive(false);
@@ -329,11 +329,17 @@ namespace CastleOfTheD20.Tests
             so.FindProperty("rewardGold").intValue = 0;
             so.ApplyModifiedPropertiesWithoutUndo();
 
-            Assert.IsTrue(gate.OffersClassAlternative(warrior));
-            SeedFirstRoll(r => r == 20);
-            gate.TryClassAlternative(warrior);
-            Assert.IsFalse(gate.IsLocked);
-            Assert.IsTrue(passage.activeSelf);
+            foreach (string cls in new[] { "Character_Warrior_SirRoland", "Character_Mage_Elira" })
+            {
+                PlayerUnit hero = CreateHero(cls);
+                Assert.IsFalse(LockpickInteraction.CanPickLocks(hero), cls);
+                gate.Interact(hero);
+                Assert.IsTrue(gate.IsLocked, cls + " must not open the gate");
+                Assert.IsFalse(passage.activeSelf);
+                Assert.AreEqual(LockpickInteraction.CannotOpenSecretGateMessage, CastleOfTheD20.UI.LockpickMinigameUI.Instance.VisibleToastMessage);
+            }
+            Assert.IsTrue(LockpickInteraction.CanPickLocks(CreateHero("Character_Rogue_Corvo")));
+            Object.DestroyImmediate(CastleOfTheD20.UI.LockpickMinigameUI.Instance.gameObject);
         }
 
         [Test]
@@ -461,6 +467,184 @@ namespace CastleOfTheD20.Tests
             MusicManager music = Track(new GameObject("Music")).AddComponent<MusicManager>();
             Assert.IsNull(music.GetZoneExplorationClip(GameLocation.Village));
             Assert.IsNull(music.GetZoneExplorationClip(GameLocation.Forest), "No Explore_Forest song yet: the castle theme plays.");
+        }
+
+        #endregion
+
+        #region Each hero's own quest (Vili, 2026-10-06)
+
+        [Test]
+        public void TomeOrder_OnlyTheWitchsOrderSolvesTheShelf()
+        {
+            TomeOrderPuzzle puzzle = new TomeOrderPuzzle();
+            Assert.IsFalse(puzzle.IsFull);
+            puzzle.Place(1, 0);
+            puzzle.Place(0, 1);
+            for (int i = 2; i < puzzle.SlotCount; i++) puzzle.Place(i, i);
+            Assert.IsTrue(puzzle.IsFull);
+            Assert.IsFalse(puzzle.IsSolved, "Moon before Sun is wrong");
+
+            puzzle.Place(0, 0);
+            Assert.AreEqual(-1, puzzle.TomeIn(1), "moving a tome empties its old place");
+            Assert.AreEqual(-1, puzzle.SlotOf(1), "the tome it replaced goes back to the table");
+            puzzle.Place(1, 1);
+            Assert.IsTrue(puzzle.IsSolved);
+            StringAssert.Contains("Sun", TomeOrderPuzzle.Titles[0]);
+            StringAssert.Contains("Dark", TomeOrderPuzzle.Titles[4]);
+        }
+
+        [Test]
+        public void HeroQuestReward_GivesOwnHeroAWeaponUpgradeOnce()
+        {
+            QuestManager quests = CreateQuestManager();
+            PlayerUnit knight = CreateHero("Character_Warrior_SirRoland");
+            PlayerUnit mage = CreateHero("Character_Mage_Elira");
+            int knightBonus = knight.WeaponDamageBonus;
+
+            Assert.IsFalse(ClassQuests.GrantReward(ClassQuests.Knight, mage), "the mage gets nothing from the knight's chest");
+            Assert.IsTrue(ClassQuests.GrantReward(ClassQuests.Knight, knight));
+            Assert.AreEqual(knightBonus + 1, knight.WeaponDamageBonus);
+            Assert.AreEqual(QuestState.Completed, quests.GetQuestState(ClassQuests.Knight.QuestId), "found before being told: still marked done");
+            Assert.IsFalse(ClassQuests.GrantReward(ClassQuests.Knight, knight), "only once");
+            Assert.AreEqual(knightBonus + 1, knight.WeaponDamageBonus);
+        }
+
+        [Test]
+        public void HeroQuest_IsOfferedByItsOwnVillagerToItsOwnHeroOnly()
+        {
+            QuestManager quests = CreateQuestManager();
+            List<DialogueNodeSO> nodes = new List<DialogueNodeSO>();
+            PlayerUnit knight = CreateHero("Character_Warrior_SirRoland");
+            PlayerUnit mage = CreateHero("Character_Mage_Elira");
+            PlayerUnit rogue = CreateHero("Character_Rogue_Corvo");
+
+            DialogueOption knightAsk = ClassQuestDialogues.BuildOption("Baldur", knight, nodes);
+            Assert.IsNotNull(knightAsk);
+            StringAssert.StartsWith("[Warrior]", knightAsk.OptionText);
+            Assert.IsNull(ClassQuestDialogues.BuildOption("Baldur", mage, nodes), "Baldur's knight talk is the knight's only");
+            Assert.IsNull(ClassQuestDialogues.BuildOption("Barnaby", knight, nodes));
+            Assert.IsNotNull(ClassQuestDialogues.BuildOption("Elder Othelia", mage, nodes));
+            Assert.IsNotNull(ClassQuestDialogues.BuildOption("Innkeeper Barnaby", rogue, nodes));
+
+            // Accepting starts the quest; then the villager stops offering it
+            DialogueNodeSO answer = knightAsk.NextNodeSuccess;
+            StringAssert.Contains(ClassQuests.Knight.QuestId, answer.Options[0].CombatDebuffTag);
+            Assert.IsTrue(quests.StartQuest(ClassQuests.Knight.QuestId));
+            Assert.IsNull(ClassQuestDialogues.BuildOption("Baldur", knight, nodes));
+
+            // The choice sits on the opening line, before its exit
+            DialogueNodeSO opening = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            opening.Initialize("Mirabel", "Hello.");
+            opening.SetOptions(new List<DialogueOption> { new DialogueOption("Hi.", null), new DialogueOption("[Leave] Bye.", null) });
+            DialogueNodeSO withAsk = ClassQuestDialogues.WithOption(opening, ClassQuestDialogues.BuildOption("Othelia", mage, nodes), nodes);
+            Assert.AreEqual(3, withAsk.Options.Count);
+            StringAssert.StartsWith("[Mage]", withAsk.Options[1].OptionText);
+            StringAssert.StartsWith("[Leave]", withAsk.Options[2].OptionText);
+
+            Object.DestroyImmediate(opening);
+            foreach (DialogueNodeSO n in nodes) if (n != null) Object.DestroyImmediate(n);
+        }
+
+        [Test]
+        public void KnightCrates_BreakForTheKnightOnly()
+        {
+            CreateQuestManager();
+            GameObject go = Track(new GameObject("Crates"));
+            BoxCollider wall = go.AddComponent<BoxCollider>();
+            GameObject crate = Track(new GameObject("Crate"));
+            BreakableCrates crates = go.AddComponent<BreakableCrates>();
+            crates.Crates = new[] { crate.transform };
+            crates.Blockers = new Collider[] { wall };
+
+            crates.Interact(CreateHero("Character_Mage_Elira"));
+            Assert.IsFalse(crates.IsBroken);
+            Assert.AreEqual(BreakableCrates.TooSturdyMessage, CastleOfTheD20.UI.LockpickMinigameUI.Instance.VisibleToastMessage);
+
+            crates.Interact(CreateHero("Character_Warrior_SirRoland"));
+            Assert.IsTrue(crates.IsBroken);
+            Assert.IsFalse(wall.enabled, "the corner opens");
+            Assert.IsFalse(crate.activeSelf);
+            Assert.IsTrue(StoryFlags.Has(BreakableCrates.BrokenFlag), "stays broken on the next visit");
+            Object.DestroyImmediate(CastleOfTheD20.UI.LockpickMinigameUI.Instance.gameObject);
+        }
+
+        [Test]
+        public void WardedShelves_OpenOnlyAfterTheMagesPuzzle()
+        {
+            GameObject go = Track(new GameObject("Lectern"));
+            go.AddComponent<BoxCollider>();
+            GameObject left = Track(new GameObject("Left"));
+            GameObject right = Track(new GameObject("Right"));
+            GameObject roof = Track(new GameObject("Roof"));
+            TomeShelfPuzzle puzzle = go.AddComponent<TomeShelfPuzzle>();
+            puzzle.LeftShelf = left.transform;
+            puzzle.RightShelf = right.transform;
+            puzzle.Roof = roof;
+
+            puzzle.Interact(CreateHero("Character_Warrior_SirRoland"));
+            Assert.IsFalse(puzzle.IsOpened);
+            Assert.AreEqual(TomeShelfPuzzle.WardMessage, CastleOfTheD20.UI.LockpickMinigameUI.Instance.VisibleToastMessage);
+            Assert.IsFalse(CastleOfTheD20.UI.TomeShelfMinigameUI.IsOpen, "no minigame for the knight");
+
+            puzzle.Interact(CreateHero("Character_Mage_Elira"));
+            Assert.IsTrue(CastleOfTheD20.UI.TomeShelfMinigameUI.IsOpen, "the mage opens the minigame");
+            CastleOfTheD20.UI.TomeShelfMinigameUI ui = CastleOfTheD20.UI.TomeShelfMinigameUI.Instance;
+            for (int i = 0; i < 5; i++)
+            {
+                ui.ClickTome(i);
+                ui.ClickSlot(i);
+            }
+            Assert.IsTrue(CastleOfTheD20.UI.TomeShelfMinigameUI.CurrentPuzzle.IsSolved);
+            puzzle.Solve();
+            Assert.IsTrue(puzzle.IsOpened);
+            Assert.IsFalse(roof.activeSelf, "the secret room's roof lifts");
+            Assert.Greater(Vector3.Distance(left.transform.position, right.transform.position), 8f, "the great shelves slid apart");
+            Assert.IsTrue(StoryFlags.Has(TomeShelfPuzzle.OpenedFlag));
+
+            ui.Close();
+            Object.DestroyImmediate(ui.gameObject);
+            Object.DestroyImmediate(CastleOfTheD20.UI.LockpickMinigameUI.Instance.gameObject);
+        }
+
+        [Test]
+        public void HeroQuestSpots_ArePlacedInTheirZones()
+        {
+            EditorSceneManager.OpenScene("Assets/Scenes/Zone_5_CastleHall.unity", OpenSceneMode.Single);
+            BreakableCrates crates = Object.FindAnyObjectByType<BreakableCrates>();
+            Assert.IsNotNull(crates, "the knight's crates in the Castle Hall");
+            Assert.AreEqual(CharacterClassType.Warrior, RewardChestClass());
+
+            EditorSceneManager.OpenScene("Assets/Scenes/Zone_4_Library.unity", OpenSceneMode.Single);
+            TomeShelfPuzzle shelves = Object.FindAnyObjectByType<TomeShelfPuzzle>();
+            Assert.IsNotNull(shelves, "the mage's warded shelves in the Library");
+            Assert.IsNotNull(shelves.LeftShelf);
+            Assert.IsNotNull(shelves.RightShelf);
+            Assert.IsNotNull(shelves.Roof);
+            Assert.AreEqual(CharacterClassType.Mage, RewardChestClass());
+
+            EditorSceneManager.OpenScene("Assets/Scenes/Zone_2.5_SecretForestPath.unity", OpenSceneMode.Single);
+            Assert.AreEqual(CharacterClassType.Rogue, RewardChestClass(), "the rogue's strongbox on the Hidden Trail");
+
+            EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+        }
+
+        private static CharacterClassType? RewardChestClass()
+        {
+            ClassQuestReward reward = Object.FindAnyObjectByType<ClassQuestReward>();
+            if (reward == null) return null;
+            Assert.IsNotNull(reward.GetComponent<ChestRewardInteraction>());
+            return reward.QuestClass;
+        }
+
+        private QuestManager CreateQuestManager()
+        {
+            QuestManager quests = Track(new GameObject("C_Quests")).AddComponent<QuestManager>();
+            FieldInfo database = typeof(QuestManager).GetField("questDatabase", BindingFlags.Instance | BindingFlags.NonPublic);
+            database.SetValue(quests, new List<QuestSO> { AssetDatabase.LoadAssetAtPath<QuestSO>("Assets/Data/Quests/Quest_CellarPests.asset") });
+            SetStatic(typeof(QuestManager), "instance", quests);
+            Invoke(quests, "Awake");
+            Invoke(quests, "OnEnable");
+            return quests;
         }
 
         #endregion

@@ -92,13 +92,11 @@ namespace CastleOfTheD20.Core
         private void SubscribeToGameEvents()
         {
             GameManager.OnBossDefeated += HandleBossDefeated;
-            LockpickInteraction.OnLockpickAttempt += HandleLockpickAttempt;
         }
 
         private void UnsubscribeFromGameEvents()
         {
             GameManager.OnBossDefeated -= HandleBossDefeated;
-            LockpickInteraction.OnLockpickAttempt -= HandleLockpickAttempt;
         }
 
         #endregion
@@ -145,42 +143,6 @@ namespace CastleOfTheD20.Core
         {
             if (currentLevel >= PlayerUnit.MaxLevel) return;
             AdvanceToMilestone(currentLevel + 1, reason, showModal);
-        }
-
-        /// <summary>
-        /// Lockpick Secret Route Milestone Handler:
-        /// Rogue picking lock with secret passage / Nature Path unlocks Level 2.
-        /// </summary>
-        private void HandleLockpickAttempt(bool isSuccess)
-        {
-            if (!isSuccess || currentLevel >= 2) return;
-
-            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
-            if (player != null && player.CharacterClass != null && player.CharacterClass.ClassType == CharacterClassType.Rogue)
-            {
-                // Verify if this lockpick is linked to a secret path or nature door
-                LockpickInteraction[] locks = FindObjectsByType<LockpickInteraction>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-                foreach (var lk in locks)
-                {
-                    string lockName = lk.name.ToLowerInvariant();
-                    if (!lk.IsLocked && (lockName.Contains("nature") || lockName.Contains("secret") || lockName.Contains("path")))
-                    {
-                        AdvanceToMilestone(2, "Forest Path Secret Route Unlocked (Rogue)");
-                        break;
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Directly triggers Level 2 milestone for secret path unlocking.
-        /// </summary>
-        public void NotifySecretPathOpened()
-        {
-            if (currentLevel < 2)
-            {
-                AdvanceToMilestone(2, "Forest Path Secret Route Picked");
-            }
         }
 
         /// <summary>

@@ -154,35 +154,6 @@ namespace CastleOfTheD20.Tests
             Debug.Log("<color=#00e676>[PASS]</color> GiantElixirInteraction grants permanent +30 Max HP and full heal.");
         }
 
-        [Test]
-        public void LockpickInteraction_UnlockingSecretPath_AdvancesMilestone2()
-        {
-            GameObject gateObj = new GameObject("TestSecretGate");
-            gateObj.transform.SetParent(testContainer.transform);
-            LockpickInteraction lpi = gateObj.AddComponent<LockpickInteraction>();
-
-            GameObject hiddenPath = new GameObject("HiddenSecretDoor");
-            hiddenPath.transform.SetParent(testContainer.transform);
-            hiddenPath.SetActive(false);
-
-            SerializedObject so = new SerializedObject(lpi);
-            so.FindProperty("lockpickDC").intValue = 13;
-            so.FindProperty("hiddenPathObject").objectReferenceValue = hiddenPath;
-            so.FindProperty("rewardGold").intValue = 25;
-            so.ApplyModifiedProperties();
-
-            // Ensure PlayerProgressionManager is active
-            GameObject progObj = new GameObject("ProgressionManager");
-            progObj.transform.SetParent(testContainer.transform);
-            PlayerProgressionManager prog = progObj.AddComponent<PlayerProgressionManager>();
-
-            // Trigger secret path opening
-            prog.NotifySecretPathOpened();
-
-            Assert.GreaterOrEqual(prog.CurrentLevel, 2, "Opening secret route must advance hero to Milestone 2 (Shadows of the Castle).");
-
-            Debug.Log("<color=#00e676>[PASS]</color> Secret route lockpicking advances milestone to Milestone 2.");
-        }
 
         [Test]
         public void ZoneMusicSO_ResolvesAll7ZonesAndEncounters()
