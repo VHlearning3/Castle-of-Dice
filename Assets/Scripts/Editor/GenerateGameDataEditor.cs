@@ -382,7 +382,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO mageClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Mage_Elira.asset");
             if (ShouldInitialize(mageClass)) mageClass.Initialize(
                 type: CharacterClassType.Mage,
-                name: "Scholar Elisa Stareye",
+                name: "Scholar Elisa Star-Eye",
                 lore: "Academy arcanist seeking to unravel the ancient curses and retrieve lost grimoires hidden in the castle's depths.",
                 maxHp: 20,
                 ac: 12,
@@ -421,7 +421,7 @@ namespace CastleOfTheD20.Editor
                 EditorUtility.DisplayDialog(
                     "Castle of the D20",
                     $"Successfully generated {assetCount} game data assets in '{DataFolderPath}'!\n\n" +
-                    "- 3 Character Classes (Sir Roland the Brave, Elisa Stareye, Sylvaine the Veiled) with assigned abilities\n" +
+                    "- 3 Character Classes (Sir Roland the Brave, Elisa Star-Eye, Sylvaine the Veiled) with assigned abilities\n" +
                     "- 12 Abilities (4 per class)\n" +
                     "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
                     "- 4 Quests (Cellar Pests, Scrap for the Forge, Lost Signet Ring, Herbs for the Healer)\n" +

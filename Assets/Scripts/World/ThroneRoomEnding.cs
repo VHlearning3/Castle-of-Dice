@@ -342,7 +342,7 @@ namespace CastleOfTheD20.World
         public const string CreditsText =
             "<size=64><b><color=#ffd34d>CASTLE OF DICE</color></b></size>\n\n\n" +
             "<color=#ffd34d>Game design & development</color>\nVili\n\n" +
-            "<color=#ffd34d>Heroes</color>\nSir Roland the Brave, Warrior\nScholar Elisa Stareye, Mage\nSylvaine the Veiled, Rogue\n\n" +
+            "<color=#ffd34d>Heroes</color>\nSir Roland the Brave, Warrior\nScholar Elisa Star-Eye, Mage\nSylvaine the Veiled, Rogue\n\n" +
             "<color=#ffd34d>Villains</color>\nThe Cursed Commander\nThe Shadow Witch\nThe Gargoyle King\n\n" +
             "<color=#ffd34d>Music</color>\nScottish Harp (Pixabay)\n\n" +
             "<color=#ffd34d>Made with</color>\nUnity 6\n\n\n\n" +

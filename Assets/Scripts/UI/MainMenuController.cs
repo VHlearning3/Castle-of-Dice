@@ -811,7 +811,7 @@ namespace CastleOfTheD20.UI
 
             // 3 Class Cards
             CreateClassCard(csPanel.transform, "Warrior_Card", "Sir Roland the Brave", "WARRIOR", "High HP & AC. Frontline swordmaster.", new Vector2(-280f, 10f), () => SelectCharacterClass(warriorClass));
-            CreateClassCard(csPanel.transform, "Mage_Card", "Scholar Elisa Stareye", "MAGE", "Devastating Fireball area damage (3x3). Teleportation.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
+            CreateClassCard(csPanel.transform, "Mage_Card", "Scholar Elisa Star-Eye", "MAGE", "Devastating Fireball area damage (3x3). Teleportation.", new Vector2(0f, 10f), () => SelectCharacterClass(mageClass));
             CreateClassCard(csPanel.transform, "Rogue_Card", "Sylvaine the Veiled", "ROGUE", "Critical puncture damage, Smoke Bomb and lockpicking.", new Vector2(280f, 10f), () => SelectCharacterClass(rogueClass));
 
             // Back button

@@ -1254,7 +1254,7 @@ namespace CastleOfTheD20.UI
             {
                 heroNameText.text = !string.IsNullOrEmpty(trackedPlayer.UnitName) ? trackedPlayer.UnitName : "Sir Roland the Brave";
 
-                // Longer names ("Scholar Elisa Stareye") shrink to fit the card instead of being cut off
+                // Longer names ("Scholar Elisa Star-Eye") shrink to fit the card instead of being cut off
                 if (!heroNameText.enableAutoSizing)
                 {
                     heroNameText.fontSizeMax = heroNameText.fontSize;
