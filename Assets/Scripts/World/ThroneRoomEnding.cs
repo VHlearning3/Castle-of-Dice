@@ -136,6 +136,15 @@ namespace CastleOfTheD20.World
             BuildOverlay();
             PlayerUnit hero = FindAnyObjectByType<PlayerUnit>();
 
+            // 0. The King's crown: break it, or take it and live forever (the evil ending, Vili 2026-10-06)
+            yield return OfferTheCrown(hero);
+            if (StoryFlags.Has(EvilEndingFlag))
+            {
+                SaveSystem.SaveGame(CastleOfTheD20.Data.PlayerDataSO.Session, hero);
+                yield return PlayEvilEnding(hero);
+                yield break;
+            }
+
             // 1. The curse breaks: a white flash, a tremor and the stone giving way
             PlaySfx(SFXClipType.CriticalSuccess);
             AbilityVfx.PlayCameraShake(0.6f, 0.25f);
@@ -161,7 +170,7 @@ namespace CastleOfTheD20.World
             GameInput.SetExplorationInputEnabled(false);
 
             // 4. Stats, then credits
-            yield return ShowStats(hero);
+            yield return ShowStats(hero, "THE CURSE IS BROKEN", BuildStatsText(hero));
             yield return RollCredits();
 
             // 5. Back to the main menu in Oakhaven
@@ -172,6 +181,186 @@ namespace CastleOfTheD20.World
         {
             dialogueFinished = true;
         }
+
+        #region The Crown (evil ending)
+
+        /// <summary>Story flag: the hero put on the Gargoyle King's crown and became the undying ruler.</summary>
+        public const string EvilEndingFlag = "EvilEnding_CrownTaken";
+
+        private static readonly Color StoneSkin = new Color(0.52f, 0.52f, 0.56f, 1f);
+        private static readonly Color CurseRed = new Color(0.55f, 0.05f, 0.05f, 1f);
+
+        private DialogueNodeSO takeCrownNode;
+
+        private IEnumerator OfferTheCrown(PlayerUnit hero)
+        {
+            DialogueController dialogue = DialogueController.Instance;
+            if (dialogue == null) yield break;
+
+            dialogueFinished = false;
+            DialogueController.OnDialogueEnded += HandleDialogueEnded;
+            DialogueController.OnDialogueUpdated += HandleCrownNode;
+            dialogue.StartDialogue(BuildCrownChoice(hero, out takeCrownNode), hero);
+            while (!dialogueFinished && dialogue.IsInDialogue) yield return null;
+            DialogueController.OnDialogueUpdated -= HandleCrownNode;
+            DialogueController.OnDialogueEnded -= HandleDialogueEnded;
+            GameInput.SetExplorationInputEnabled(false);
+        }
+
+        private void HandleCrownNode(DialogueNodeSO node)
+        {
+            if (node != null && node == takeCrownNode) StoryFlags.Set(EvilEndingFlag);
+        }
+
+        /// <summary>
+        /// The dying King offers his crown: break it (the curse ends) or put it on (the hero never dies, and the
+        /// stone answers to them now). <paramref name="takeNode"/> is the node shown when the hero takes it.
+        /// </summary>
+        public static DialogueNodeSO BuildCrownChoice(PlayerUnit hero, out DialogueNodeSO takeNode)
+        {
+            bool stolen = StoryFlags.Has(BossChoices.CrownStolenFlag);
+
+            DialogueNodeSO broken = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            broken.hideFlags = HideFlags.DontSave;
+            broken.Initialize("The Gargoyle King", "The crown splits in two. The King's stone eyes close, and for the first time in a hundred years he smiles.");
+            broken.SetOptions(new List<DialogueOption> { new DialogueOption("[Continue]", null) });
+
+            takeNode = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            takeNode.hideFlags = HideFlags.DontSave;
+            takeNode.Initialize("The Gargoyle King",
+                "Cold runs from your brow down to your heart. Your heartbeat slows... and stops. You will not need it any more. " +
+                "Behind you, the King crumbles into gravel and laughter.");
+            takeNode.SetOptions(new List<DialogueOption> { new DialogueOption("[Continue]", null) });
+
+            DialogueNodeSO offer = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            offer.hideFlags = HideFlags.DontSave;
+            offer.Initialize("The Gargoyle King", stolen
+                ? "\"My crown... is in your pack, thief. Put it on. The stone will answer to you as it answered to me. You will never grow old. You will never die. Isn't that what every hero wants?\""
+                : "His crown rolls to your feet. \"Take it. The stone will answer to you as it answered to me. You will never grow old. You will never die. Isn't that what every hero wants?\"");
+            offer.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Break the crown] No one should rule forever. Rest, King.", broken),
+                new DialogueOption(stolen ? "[Take the crown] (Put the stolen crown on your head.)" : "[Take the crown] (Set the crown on your head.)", takeNode)
+            });
+            return offer;
+        }
+
+        /// <summary>
+        /// The evil ending: the curse does not break, it bows. The hero turns to living stone, the knights stay
+        /// statues, Othelia arrives to find a new undying ruler, and the credits roll under a darker title.
+        /// </summary>
+        private IEnumerator PlayEvilEnding(PlayerUnit hero)
+        {
+            PlaySfx(SFXClipType.CriticalFailure);
+            AbilityVfx.PlayCameraShake(0.8f, 0.3f);
+            if (flashImage != null) flashImage.color = new Color(CurseRed.r, CurseRed.g, CurseRed.b, 0f);
+            yield return Fade(flashImage, 0f, 0.85f, 0.4f);
+            StageMeeting(hero);
+            ShowCaption("The stone does not let go of the castle.\nIt bows to its new master.");
+            yield return Fade(flashImage, 0.85f, 0f, 1.6f);
+            yield return TurnToStone(hero, 2.5f);
+            yield return new WaitForSecondsRealtime(1.0f);
+            ShowCaption(string.Empty);
+
+            yield return OtheliaArrives(hero);
+
+            dialogueFinished = false;
+            DialogueController.OnDialogueEnded += HandleDialogueEnded;
+            DialogueController dialogue = DialogueController.Instance;
+            if (dialogue != null)
+            {
+                dialogue.StartDialogue(BuildEvilEndingDialogue(hero), hero);
+                while (!dialogueFinished && dialogue.IsInDialogue) yield return null;
+            }
+            DialogueController.OnDialogueEnded -= HandleDialogueEnded;
+            GameInput.SetExplorationInputEnabled(false);
+
+            bool king = hero != null && hero.CharacterClass != null && hero.CharacterClass.ClassType == CharacterClassType.Warrior;
+            yield return ShowStats(hero, king ? "A NEW STONE KING RISES" : "A NEW STONE QUEEN RISES", BuildEvilStatsText(hero));
+            yield return RollCredits();
+            ReturnToMainMenu();
+        }
+
+        private IEnumerator TurnToStone(PlayerUnit hero, float duration)
+        {
+            if (hero == null) yield break;
+            Renderer[] renderers = hero.GetComponentsInChildren<Renderer>(true);
+            var targets = new List<(Renderer renderer, int index, Color from)>();
+            for (int r = 0; r < renderers.Length; r++)
+            {
+                if (renderers[r] is ParticleSystemRenderer) continue;
+                Material[] mats = renderers[r].sharedMaterials;
+                for (int i = 0; i < mats.Length; i++)
+                {
+                    Material m = mats[i];
+                    if (m == null) continue;
+                    Color from = m.HasProperty(BaseColorId) ? m.GetColor(BaseColorId) : (m.HasProperty(ColorId) ? m.GetColor(ColorId) : Color.white);
+                    targets.Add((renderers[r], i, from));
+                }
+            }
+
+            var block = new MaterialPropertyBlock();
+            for (float t = 0f; t < duration; t += Time.unscaledDeltaTime)
+            {
+                ApplyStoneTint(targets, block, t / duration);
+                yield return null;
+            }
+            ApplyStoneTint(targets, block, 1f);
+        }
+
+        private static void ApplyStoneTint(List<(Renderer renderer, int index, Color from)> targets, MaterialPropertyBlock block, float k)
+        {
+            for (int i = 0; i < targets.Count; i++)
+            {
+                var (renderer, index, from) = targets[i];
+                if (renderer == null) continue;
+                float grey = from.grayscale;
+                Color stone = new Color(Mathf.Lerp(grey, StoneSkin.r, 0.5f), Mathf.Lerp(grey, StoneSkin.g, 0.5f), Mathf.Lerp(grey, StoneSkin.b, 0.5f), from.a);
+                Color c = Color.Lerp(from, stone, Mathf.SmoothStep(0f, 1f, k));
+                renderer.GetPropertyBlock(block, index);
+                block.SetColor(BaseColorId, c);
+                block.SetColor(ColorId, c);
+                renderer.SetPropertyBlock(block, index);
+            }
+        }
+
+        /// <summary>Othelia finds the hero wearing the crown.</summary>
+        public static DialogueNodeSO BuildEvilEndingDialogue(PlayerUnit hero)
+        {
+            string heroName = hero != null && !string.IsNullOrEmpty(hero.UnitName) ? hero.UnitName : "hero";
+
+            DialogueNodeSO third = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            third.hideFlags = HideFlags.DontSave;
+            third.Initialize(OtheliaName,
+                "Then Oakhaven will fear you, as it feared him. And one day someone will come up the castle road with dice in their hand... for you.");
+            third.SetOptions(new List<DialogueOption> { new DialogueOption("[End] Let them come.", null) });
+
+            DialogueNodeSO second = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            second.hideFlags = HideFlags.DontSave;
+            second.Initialize(OtheliaName, $"{heroName}... your skin is stone. Your heart is silent. Take it off, please, while you still can!");
+            second.SetOptions(new List<DialogueOption> { new DialogueOption("Kneel, Elder. Oakhaven has a new ruler, and I will rule it forever.", third) });
+
+            DialogueNodeSO first = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            first.hideFlags = HideFlags.DontSave;
+            first.Initialize(OtheliaName,
+                "I felt the stone stir again, all the way in Oakhaven. The knights are still statues. The halls are still cold. What have you done?");
+            first.SetOptions(new List<DialogueOption> { new DialogueOption("I won.", second) });
+            return first;
+        }
+
+        /// <summary>The closing numbers of the evil ending.</summary>
+        public static string BuildEvilStatsText(PlayerUnit hero)
+        {
+            string heroName = hero != null && !string.IsNullOrEmpty(hero.UnitName) ? hero.UnitName : "The hero";
+            int gold = InventoryManager.Instance != null ? InventoryManager.Instance.CurrentGold : 0;
+            return $"<b>{heroName}</b> took the Gargoyle King's crown and will never die\n\n" +
+                   $"Combat turns taken:   <color=#ffd34d><b>{AdventureStats.TurnsTaken}</b></color>\n" +
+                   $"Natural 20s rolled:   <color=#ffd34d><b>{AdventureStats.NaturalTwenties}</b></color>\n" +
+                   $"Gold in the purse:   <color=#ffd34d><b>{gold}</b></color>\n" +
+                   $"Times fallen:   <color=#ffd34d><b>{AdventureStats.Deaths}</b></color>";
+        }
+
+        #endregion
 
         /// <summary>
         /// Behind the white flash, brings the hero to the Great Hall door where Othelia will appear, with the
@@ -355,16 +544,16 @@ namespace CastleOfTheD20.World
             "<color=#ffd34d>Made with</color>\nUnity 6\n\n\n\n" +
             "<size=48><b>Thank you for playing!</b></size>";
 
-        private IEnumerator ShowStats(PlayerUnit hero)
+        private IEnumerator ShowStats(PlayerUnit hero, string heading, string statsBody)
         {
             GameObject panel = CreatePanel("Ending_Stats", new Color(0.03f, 0.03f, 0.06f, 0.92f));
             CanvasGroup group = panel.AddComponent<CanvasGroup>();
 
-            TMP_Text title = CreateText(panel.transform, "Title", "THE CURSE IS BROKEN", 60f, UITheme.GoldAccent, FontStyles.Bold);
+            TMP_Text title = CreateText(panel.transform, "Title", heading, 60f, UITheme.GoldAccent, FontStyles.Bold);
             title.rectTransform.anchoredPosition = new Vector2(0f, 300f);
             title.rectTransform.sizeDelta = new Vector2(1400f, 90f);
 
-            TMP_Text stats = CreateText(panel.transform, "Stats", BuildStatsText(hero), 36f, UITheme.CreamText, FontStyles.Normal);
+            TMP_Text stats = CreateText(panel.transform, "Stats", statsBody, 36f, UITheme.CreamText, FontStyles.Normal);
             stats.rectTransform.anchoredPosition = new Vector2(0f, 20f);
             stats.rectTransform.sizeDelta = new Vector2(1200f, 420f);
             stats.lineSpacing = 18f;

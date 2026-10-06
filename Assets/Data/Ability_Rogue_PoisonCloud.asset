@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.AbilitySO
   abilityID: rogue_poison_cloud
   abilityName: Poison Cloud
-  description: 'Burst a vial of toxic smoke up to 3 tiles away: every enemy in the 3x3 cloud takes 1d4 and is poisoned for 3 turns. Cooldown 3.'
+  description: 'Burst a vial of toxic smoke up to 3 tiles away: every enemy in the 3x3 cloud makes a CON save against your DC. On a failure it takes 1d4 and is poisoned for 3 turns, on a success half the damage. Cooldown 3.'
   abilityIcon: {fileID: 21300000, guid: 419e157f41cf2b5c7f60861fca018033, type: 3}
   targetType: 1
   range: 3

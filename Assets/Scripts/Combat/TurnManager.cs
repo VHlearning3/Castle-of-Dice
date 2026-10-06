@@ -353,6 +353,12 @@ namespace CastleOfTheD20.Combat
                 if (pendingSurprised[i] != null && activeUnits.Contains(pendingSurprised[i])) surprisedUnits.Add(pendingSurprised[i]);
             }
             pendingSurprised.Clear();
+            if (!string.IsNullOrEmpty(pendingAwarenessMessage))
+            {
+                Debug.Log("[TurnManager] " + pendingAwarenessMessage);
+                CombatUIController.Instance?.LogCombatMessage(pendingAwarenessMessage);
+            }
+            pendingAwarenessMessage = null;
 
             // Ensure CombatUIController is awake and active
             CombatUIController.Instance?.EnsureActiveAndReady(true);
@@ -369,14 +375,16 @@ namespace CastleOfTheD20.Combat
         // Units that lose their first turn in the next fight / the running fight (Vili, 2026-10-06)
         private readonly List<CombatUnit> pendingSurprised = new List<CombatUnit>(4);
         private readonly List<CombatUnit> surprisedUnits = new List<CombatUnit>(4);
+        private string pendingAwarenessMessage;
 
         /// <summary>
         /// Marks units that will be surprised in the next <see cref="StartCombat(List{CombatUnit}, bool)"/>: they
         /// lose their turn in the first round.
         /// </summary>
-        public void SetSurprisedForNextFight(IEnumerable<CombatUnit> units)
+        public void SetSurprisedForNextFight(IEnumerable<CombatUnit> units, string message = null)
         {
             pendingSurprised.Clear();
+            pendingAwarenessMessage = message;
             if (units == null) return;
             foreach (CombatUnit unit in units)
             {

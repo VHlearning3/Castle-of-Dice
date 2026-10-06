@@ -84,6 +84,65 @@ namespace CastleOfTheD20.World
 
         #endregion
 
+        #region Sneaking
+
+        /// <summary>Key that toggles sneaking while exploring.</summary>
+        public const KeyCode SneakKey = KeyCode.V;
+
+        /// <summary>Walking speed while sneaking, as a share of the normal speed.</summary>
+        public const float SneakSpeedFactor = 0.5f;
+
+        /// <summary>
+        /// Whether the hero is sneaking (V): walking slowly and quietly, so walking into a fight calls for a
+        /// Stealth check that can surprise the enemies (Vili, 2026-10-06).
+        /// </summary>
+        public static bool IsSneaking { get; private set; }
+
+        /// <summary>Fired when sneaking starts or stops.</summary>
+        public static event Action<bool> OnSneakChanged;
+
+        /// <summary>Starts or stops sneaking.</summary>
+        public static void SetSneaking(bool sneaking)
+        {
+            if (IsSneaking == sneaking) return;
+            IsSneaking = sneaking;
+            OnSneakChanged?.Invoke(sneaking);
+        }
+
+        private static readonly int IsWalkingHash = Animator.StringToHash("IsWalking");
+        private Animator walkParamAnimator;
+        private bool animatorHasWalk;
+
+        // Models with a separate walk clip (the mage) walk while sneaking instead of running
+        private void SetSneakWalk(bool walking)
+        {
+            if (animator == null || animator.runtimeAnimatorController == null) return;
+            if (walkParamAnimator != animator)
+            {
+                walkParamAnimator = animator;
+                animatorHasWalk = false;
+                AnimatorControllerParameter[] parameters = animator.parameters;
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    if (parameters[i].nameHash == IsWalkingHash && parameters[i].type == AnimatorControllerParameterType.Bool) animatorHasWalk = true;
+                }
+            }
+            if (animatorHasWalk) animator.SetBool(IsWalkingHash, walking);
+        }
+
+        private void HandleSneakToggle()
+        {
+            if (!GameInput.GetKeyDown(SneakKey)) return;
+            if (UI.InventoryUI.IsOpen || UI.StoryPanelUI.IsOpen) return;
+
+            SetSneaking(!IsSneaking);
+            UI.LockpickMinigameUI.ShowToast(IsSneaking
+                ? "Sneaking (V): walk quietly and catch enemies off guard."
+                : "You stop sneaking.");
+        }
+
+        #endregion
+
         #region Unity Lifecycle
 
         private void Awake()
@@ -219,6 +278,7 @@ namespace CastleOfTheD20.World
                 return;
             }
 
+            HandleSneakToggle();
             HandleLocomotion();
         }
 
@@ -292,6 +352,7 @@ namespace CastleOfTheD20.World
 
                 IsMoving = true;
                 if (animator != null) animator.SetBool(IsMovingHash, true);
+                SetSneakWalk(IsSneaking);
 
                 if (!wasMoving && debugLogging)
                 {
@@ -325,7 +386,8 @@ namespace CastleOfTheD20.World
                     verticalVelocity += gravity * Time.deltaTime;
                 }
 
-                Vector3 motion = moveDirection * moveSpeed + Vector3.up * verticalVelocity;
+                float speed = IsSneaking ? moveSpeed * SneakSpeedFactor : moveSpeed;
+                Vector3 motion = moveDirection * speed + Vector3.up * verticalVelocity;
                 characterController.Move(motion * Time.deltaTime);
             }
         }

@@ -68,12 +68,12 @@ namespace CastleOfTheD20.World
             DialogueNodeSO start = Node(MerchantName,
                 "A customer! Do you know how long I have been stuck in this hall? Since the stone came, that is how long. " +
                 "The guards will not let me out and the dead do not buy anything. Scrolls, potions, runes: everything must go.");
-            DialogueNodeSO bought = Node(MerchantName, "A pleasure! Read the scroll before a fight and it does the rest. Anything else?");
+            DialogueNodeSO bought = Node(MerchantName, "A pleasure! Read the scroll in the thick of a fight, when you need it most. Anything else?");
             DialogueNodeSO poor = Node(MerchantName, "Ah. Gold first, friend. Even trapped peddlers have principles.");
             DialogueNodeSO about = Node(MerchantName,
-                "Scroll of Warding: the next fight starts with a mana shield that stops two blows.\n" +
-                "Scroll of Embers: the next fight starts with fire raining on every enemy.\n" +
-                "Both burn themselves up when the fighting begins. The rune lets you roll again when fate fails you.");
+                "Scroll of Warding: read it in a fight and a mana shield stops the next two blows.\n" +
+                "Scroll of Embers: read it in a fight and fire rains on every enemy.\n" +
+                "Reading one takes your action, and it burns up as you read. The rune lets you roll again when fate fails you.");
 
             List<DialogueOption> options = new List<DialogueOption>();
             for (int i = 0; i < MerchantStock.Length; i++)

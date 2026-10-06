@@ -140,7 +140,8 @@ namespace CastleOfTheD20.UI
             // 4. Attack Check & Damage / Potency Formula
             if (formulaText != null)
             {
-                formulaText.text = BuildStatsText(ability, player.PrimaryAttributeBonus, player.WeaponDamageBonus, player.MaxHP);
+                formulaText.text = BuildStatsText(ability, player.PrimaryAttributeBonus, player.WeaponDamageBonus, player.MaxHP,
+                    HeroAttributes.GetAttackBonus(player), HeroAttributes.GetSaveDC(player));
             }
 
             // 5. Full Ability Description (Generously wrapped, never clipped)
@@ -225,7 +226,8 @@ namespace CastleOfTheD20.UI
         /// <summary>
         /// The card's Hit Check, Potency and Cooldown lines, matching what AbilityExecutor actually does.
         /// </summary>
-        public static string BuildStatsText(AbilitySO ability, int attributeBonus, int weaponBonus, int maxHP)
+        public static string BuildStatsText(AbilitySO ability, int attributeBonus, int weaponBonus, int maxHP,
+            int attackBonus = int.MinValue, int saveDC = 0)
         {
             if (ability == null) return string.Empty;
 
@@ -236,14 +238,25 @@ namespace CastleOfTheD20.UI
                 cooldownStr = $"\n<color=#8FB8DE>Cooldown:</color> {cooldownTurns} turn{(cooldownTurns == 1 ? "" : "s")}";
             }
 
-            return $"<color=#E67E22>Hit Check:</color> {GetCheckLabel(ability, attributeBonus)}\n" +
-                   $"<color=#E74C3C>Potency:</color> {GetPotencyLabel(ability, attributeBonus, weaponBonus, maxHP)}{cooldownStr}";
+            // What it costs this turn: the action or the bonus action (D&D action economy, Vili 2026-10-06)
+            string costStr = $"\n<color=#7FD4FF>Cost:</color> {ActionEconomy.CostLabel(ActionEconomy.GetCost(ability))}";
+
+            int toHit = attackBonus == int.MinValue ? attributeBonus : attackBonus;
+            return $"<color=#E67E22>Hit Check:</color> {GetCheckLabel(ability, toHit, saveDC)}\n" +
+                   $"<color=#E74C3C>Potency:</color> {GetPotencyLabel(ability, attributeBonus, weaponBonus, maxHP)}{costStr}{cooldownStr}";
         }
 
-        private static string GetCheckLabel(AbilitySO ability, int attributeBonus)
+        private static string GetCheckLabel(AbilitySO ability, int attributeBonus, int saveDC)
         {
             string id = ability.BaseAbilityID.ToLowerInvariant();
             string roll = $"d20 {(attributeBonus < 0 ? "-" : "+")} {Mathf.Abs(attributeBonus)}";
+
+            // Saving-throw abilities: the enemies roll against the hero's DC
+            if (saveDC > 0 && CombatRules.TryGetSave(ability, out HeroAttribute save, out bool halfOnSave))
+            {
+                string target = ability.TargetType == AbilityTargetType.SingleTarget ? "Target" : "Each enemy";
+                return $"{target} makes a {HeroAttributes.GetShortName(save)} save vs. DC {saveDC}{(halfOnSave ? " (half on a save)" : "")}";
+            }
 
             // War Cry rolls against every adjacent enemy even though its data needs no single check
             if (id.Contains("war_cry")) return $"{roll} vs. each enemy's AC";

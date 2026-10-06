@@ -997,6 +997,7 @@ namespace CastleOfTheD20.UI
             {
                 ClearHoveredTile();
                 EnemyFocus.TileHovered = null;
+                UpdateHitChancePreview(null);
                 return;
             }
 
@@ -1004,11 +1005,129 @@ namespace CastleOfTheD20.UI
             {
                 ClearHoveredTile();
                 EnemyFocus.TileHovered = null;
+                UpdateHitChancePreview(null);
                 return;
             }
 
             HandleCombatTileRaycast();
         }
+
+        #region Hit Chance Preview (Vili, 2026-10-06)
+
+        private TMP_Text hitChanceText;
+        private EnemyUnit hitChanceTarget;
+        private int hitChanceSlot = -2;
+        private int hitChanceSignature;
+
+        /// <summary>The label over the hovered enemy that tells the roll needed and the chance.</summary>
+        public TMP_Text HitChanceText => hitChanceText;
+
+        /// <summary>
+        /// While the hero aims at an enemy, a label over it shows what the selected ability (or the main attack)
+        /// needs on the d20 and the chance, or the enemy's saving throw against it.
+        /// </summary>
+        private void UpdateHitChancePreview(EnemyUnit enemy)
+        {
+            if (enemy == null || activePlayer == null || !enemy.IsAlive)
+            {
+                if (hitChanceText != null && hitChanceText.gameObject.activeSelf) hitChanceText.gameObject.SetActive(false);
+                hitChanceTarget = null;
+                return;
+            }
+
+            int slot = selectedAbilitySlot >= 0 ? selectedAbilitySlot : 0;
+            AbilitySO ability = activePlayer.GetAbility(slot);
+            if (ability == null || ability.TargetType == AbilityTargetType.Self || ability.TargetsEmptyTile)
+            {
+                UpdateHitChancePreview(null);
+                return;
+            }
+
+            EnsureHitChanceLabel();
+            if (hitChanceText == null) return;
+
+            // Rebuild the text only when what it depends on changes (no per-frame strings)
+            int signature = enemy.ArmorClass * 397 ^ HeroAttributes.GetAttackBonus(activePlayer) * 31
+                ^ (int)CombatRules.AttackAdvantage(activePlayer, enemy) * 7 ^ activePlayer.GridPosition.GetHashCode();
+            if (enemy != hitChanceTarget || slot != hitChanceSlot || signature != hitChanceSignature)
+            {
+                hitChanceTarget = enemy;
+                hitChanceSlot = slot;
+                hitChanceSignature = signature;
+                hitChanceText.text = BuildHitChanceText(activePlayer, ability, enemy, GridManager.Instance);
+            }
+            if (!hitChanceText.gameObject.activeSelf) hitChanceText.gameObject.SetActive(true);
+
+            Camera cam = combatCamera != null ? combatCamera : Camera.main;
+            RectTransform canvasRect = hitChanceText.rectTransform.parent as RectTransform;
+            if (cam == null || canvasRect == null) return;
+            Vector3 screen = cam.WorldToScreenPoint(enemy.transform.position + Vector3.up * 2.7f);
+            if (screen.z < 0f) return;
+            Canvas canvas = canvasRect.GetComponentInParent<Canvas>();
+            Camera uiCam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
+            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, uiCam, out Vector2 local))
+            {
+                hitChanceText.rectTransform.anchoredPosition = local;
+            }
+        }
+
+        private void EnsureHitChanceLabel()
+        {
+            if (hitChanceText != null) return;
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            Transform root = canvas != null ? canvas.rootCanvas.transform : transform;
+
+            GameObject obj = new GameObject("HitChance_Label", typeof(RectTransform), typeof(TextMeshProUGUI));
+            obj.transform.SetParent(root, false);
+            RectTransform rect = (RectTransform)obj.transform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            rect.pivot = new Vector2(0.5f, 0f);
+            rect.sizeDelta = new Vector2(520f, 60f);
+
+            hitChanceText = obj.GetComponent<TMP_Text>();
+            hitChanceText.fontSize = 19f;
+            hitChanceText.alignment = TextAlignmentOptions.Bottom;
+            hitChanceText.color = UITheme.CreamText;
+            hitChanceText.richText = true;
+            hitChanceText.raycastTarget = false;
+            hitChanceText.outlineWidth = 0.25f;
+            hitChanceText.outlineColor = new Color32(0, 0, 0, 255);
+            obj.SetActive(false);
+        }
+
+        /// <summary>
+        /// "Sword Slash: need 11+ vs AC 14 / 50% to hit", or for a saving-throw ability "Fireball: Skeleton DEX
+        /// save +2 vs DC 13 / 55% to fail".
+        /// </summary>
+        public static string BuildHitChanceText(PlayerUnit hero, AbilitySO ability, EnemyUnit enemy, GridManager grid)
+        {
+            if (hero == null || ability == null || enemy == null) return string.Empty;
+
+            if (CombatRules.TryGetSave(ability, out HeroAttribute attribute, out bool halfOnSave))
+            {
+                int dc = HeroAttributes.GetSaveDC(hero);
+                int bonus = enemy.GetSaveBonus(attribute);
+                int failPercent = 100 - CombatRules.SuccessPercent(bonus, dc, AdvantageType.None);
+                string half = halfOnSave ? ", half on a save" : string.Empty;
+                return $"<color=#F6D578>{ability.AbilityName}</color>: {HeroAttributes.GetShortName(attribute)} save {(bonus < 0 ? "-" : "+")}{Mathf.Abs(bonus)} vs DC {dc}\n" +
+                       $"<b><size=24>{failPercent}%</size></b> to fail{half}";
+            }
+
+            if (!ability.RequiresCheck) return $"<color=#F6D578>{ability.AbilityName}</color>: always works";
+
+            int attack = HeroAttributes.GetAttackBonus(hero);
+            int cover = grid != null ? grid.GetCoverArmorBonus(hero.GridPosition, enemy.GridPosition) : 0;
+            int ac = enemy.ArmorClass + cover;
+            AdvantageType advantage = CombatRules.AttackAdvantage(hero, enemy);
+            int need = CombatRules.NeededRoll(attack, ac);
+            int percent = CombatRules.SuccessPercent(attack, ac, advantage);
+            string coverText = cover > 0 ? $" (+{cover} cover)" : string.Empty;
+            string advText = advantage == AdvantageType.Advantage ? ", Advantage" : advantage == AdvantageType.Disadvantage ? ", Disadvantage" : string.Empty;
+            return $"<color=#F6D578>{ability.AbilityName}</color>: need {need}+ vs AC {ac}{coverText}\n" +
+                   $"<b><size=24>{percent}%</size></b> to hit{advText}";
+        }
+
+        #endregion
 
         private bool IsEnemyOnTile(GridTile tile)
         {
@@ -1168,6 +1287,8 @@ namespace CastleOfTheD20.UI
                 EnemyFocus.TileHovered = GetEnemyOnTile(targetTile);
             }
 
+            UpdateHitChancePreview(EnemyFocus.TileHovered as EnemyUnit);
+
             // Detect left click on tile
             if (targetTile != null && GameInput.GetLeftMouseButtonDown())
             {
@@ -1282,7 +1403,9 @@ namespace CastleOfTheD20.UI
 
                     if (abilityRanges.Count > i && abilityRanges[i] != null)
                     {
-                        abilityRanges[i].text = ability.TargetType == AbilityTargetType.Self ? "Self" : $"Rng: {ability.Range}";
+                        string range = ability.TargetType == AbilityTargetType.Self ? "Self" : $"Rng: {ability.Range}";
+                        // Bonus actions are marked on their card (D&D action economy, Vili 2026-10-06)
+                        abilityRanges[i].text = ActionEconomy.IsBonusAction(ability) ? range + "  <color=#7FD4FF>Bonus</color>" : range;
                     }
 
                     if (abilityIcons.Count > i && abilityIcons[i] != null)
@@ -1302,7 +1425,7 @@ namespace CastleOfTheD20.UI
                     // Enable/disable based on whether action has already been used, or the ability is cooling down
                     int cooldown = activePlayer.GetCooldownRemaining(i);
                     SetCooldownBadge(i, cooldown);
-                    abilityButtons[i].interactable = !activePlayer.HasActedThisTurn && cooldown <= 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
+                    abilityButtons[i].interactable = !activePlayer.IsAbilityCostSpent(i) && cooldown <= 0 && TurnManager.Instance?.CurrentState == TurnState.PlayerTurn;
 
                     // Highlight selected ability button state
                     Image btnImg = abilityButtons[i].GetComponent<Image>();
@@ -1329,6 +1452,7 @@ namespace CastleOfTheD20.UI
 
             RefreshMoveButton();
             RefreshRingButton();
+            RefreshActionRow();
         }
 
         #region Queen's Ring (critical review C3)
@@ -1408,6 +1532,235 @@ namespace CastleOfTheD20.UI
                 activePlayer.HasActedThisTurn = true;
                 LogCombatMessage($"{activePlayer.UnitName} raises Queen Isolde's ring. The Gargoyle King's stone armour cracks for 2 turns!");
             }
+            selectedAbilitySlot = -1;
+            RefreshAbilityBar();
+            UpdateMovementHighlights();
+        }
+
+        #endregion
+
+        #region Action Row: Dash, Dodge, Disengage, scrolls and poison (Vili, 2026-10-06)
+
+        private const float ActionRowY = 84f;
+        private const float ActionRowStartX = 420f;   // right of the Queen's Ring button (ends at 390)
+        private const float ActionButtonWidth = 128f;
+        private const float ActionButtonHeight = 48f;
+        private const float ActionButtonGap = 8f;
+        private const float EconomyLineY = 57f;      // inside the tray, above the ability cards
+
+        /// <summary>The basic actions and combat items on the row above the action bar.</summary>
+        public enum RowAction { Dash, Dodge, Disengage, Warding, Embers, Poison }
+
+        private static readonly RowAction[] RowOrder =
+        {
+            RowAction.Dash, RowAction.Dodge, RowAction.Disengage, RowAction.Warding, RowAction.Embers, RowAction.Poison
+        };
+
+        private readonly Button[] rowButtons = new Button[6];
+        private readonly TMP_Text[] rowLabels = new TMP_Text[6];
+        private TMP_Text economyText;
+
+        /// <summary>The row button for <paramref name="action"/> (null until the bar is built).</summary>
+        public Button GetRowButton(RowAction action) => rowButtons[(int)action];
+
+        /// <summary>The "Action ● Bonus ● Move ● Reaction" line.</summary>
+        public TMP_Text EconomyText => economyText;
+
+        private void EnsureActionRow()
+        {
+            if (moveButton == null || combatActionBar == null) return;
+
+            for (int i = 0; i < RowOrder.Length; i++)
+            {
+                if (rowButtons[i] != null) continue;
+                RowAction action = RowOrder[i];
+                string objectName = "ActionRow_" + action;
+                Transform existing = combatActionBar.transform.Find(objectName);
+                Button button = existing != null ? existing.GetComponent<Button>() : Instantiate(moveButton, combatActionBar.transform, false);
+                if (button == null) continue;
+
+                button.name = objectName;
+                button.onClick.RemoveAllListeners();
+                button.onClick.AddListener(() => OnRowActionClicked(action));
+
+                RectTransform rect = button.GetComponent<RectTransform>();
+                rect.anchorMin = new Vector2(0f, 0.5f);
+                rect.anchorMax = new Vector2(0f, 0.5f);
+                rect.pivot = new Vector2(0f, 0.5f);
+                rect.sizeDelta = new Vector2(ActionButtonWidth, ActionButtonHeight);
+
+                TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
+                if (label != null)
+                {
+                    label.fontSize = 13f;
+                    label.richText = true;
+                    label.lineSpacing = -12f;
+                }
+
+                rowButtons[i] = button;
+                rowLabels[i] = label;
+                button.gameObject.SetActive(false);
+            }
+
+            if (economyText == null)
+            {
+                Transform existing = combatActionBar.transform.Find("Action_Economy");
+                GameObject textObj = existing != null
+                    ? existing.gameObject
+                    : new GameObject("Action_Economy", typeof(RectTransform), typeof(TextMeshProUGUI));
+                textObj.transform.SetParent(combatActionBar.transform, false);
+                RectTransform rect = (RectTransform)textObj.transform;
+                rect.anchorMin = new Vector2(0f, 0.5f);
+                rect.anchorMax = new Vector2(0f, 0.5f);
+                rect.pivot = new Vector2(0f, 0.5f);
+                rect.anchoredPosition = new Vector2(14f, EconomyLineY);
+                rect.sizeDelta = new Vector2(620f, 24f);
+                economyText = textObj.GetComponent<TMP_Text>();
+                economyText.fontSize = 14f;
+                economyText.fontStyle = FontStyles.Bold;
+                economyText.alignment = TextAlignmentOptions.MidlineLeft;
+                economyText.richText = true;
+                economyText.raycastTarget = false;
+                economyText.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+        }
+
+        private void RefreshActionRow()
+        {
+            EnsureActionRow();
+
+            TurnManager tm = TurnManager.Instance;
+            bool heroTurn = activePlayer != null && tm != null && tm.IsCombatActive && tm.CurrentState == TurnState.PlayerTurn;
+
+            float x = ActionRowStartX;
+            for (int i = 0; i < RowOrder.Length; i++)
+            {
+                Button button = rowButtons[i];
+                if (button == null) continue;
+
+                RowAction action = RowOrder[i];
+                bool show = heroTurn && IsRowActionShown(action);
+                if (button.gameObject.activeSelf != show) button.gameObject.SetActive(show);
+                if (!show) continue;
+
+                ((RectTransform)button.transform).anchoredPosition = new Vector2(x, ActionRowY);
+                x += ActionButtonWidth + ActionButtonGap;
+                button.interactable = CanDoRowAction(action);
+                if (rowLabels[i] != null) rowLabels[i].text = RowActionLabel(action);
+            }
+
+            if (economyText != null)
+            {
+                economyText.gameObject.SetActive(heroTurn);
+                if (heroTurn) economyText.text = BuildEconomyText(activePlayer);
+            }
+        }
+
+        /// <summary>"● Action  ● Bonus  ● Move  ● Reaction": lit while still available this turn.</summary>
+        public static string BuildEconomyText(PlayerUnit hero)
+        {
+            if (hero == null) return string.Empty;
+            return Pip("Action", !hero.HasActedThisTurn, "#8FD18F") + "    "
+                 + Pip("Bonus action", !hero.HasUsedBonusActionThisTurn, "#7FD4FF") + "    "
+                 + Pip("Move", !hero.HasMovedThisTurn && hero.MovementRange > 0, "#F6D578") + "    "
+                 + Pip("Reaction", !hero.HasUsedReactionThisRound && hero.ReactionWeapon != null, "#E8A07A");
+        }
+
+        private static string Pip(string label, bool available, string color)
+        {
+            return available
+                ? $"<color={color}>• {label}</color>"
+                : $"<color=#5E6470>· {label}</color>";
+        }
+
+        private bool IsRowActionShown(RowAction action)
+        {
+            switch (action)
+            {
+                case RowAction.Warding: return CombatScrolls.Count(CombatScrolls.WardingScrollId) > 0;
+                case RowAction.Embers: return CombatScrolls.Count(CombatScrolls.EmbersScrollId) > 0;
+                case RowAction.Poison: return PoisonVialCount() > 0;
+                default: return true;
+            }
+        }
+
+        private bool CanDoRowAction(RowAction action)
+        {
+            if (activePlayer == null || activePlayer.IsWalking) return false;
+            switch (action)
+            {
+                case RowAction.Dash: return activePlayer.CanDash;
+                case RowAction.Dodge: return activePlayer.CanDodge;
+                case RowAction.Disengage: return activePlayer.CanDisengage;
+                case RowAction.Warding: return CombatScrolls.CanRead(activePlayer, CombatScrolls.WardingScrollId);
+                case RowAction.Embers: return CombatScrolls.CanRead(activePlayer, CombatScrolls.EmbersScrollId);
+                case RowAction.Poison: return !activePlayer.HasUsedBonusActionThisTurn && activePlayer.PoisonCoatingBonus <= 0 && PoisonVialCount() > 0;
+                default: return false;
+            }
+        }
+
+        private string RowActionLabel(RowAction action)
+        {
+            string mobilityCost = activePlayer != null && activePlayer.GetMobilityActionCost() == ActionCost.BonusAction ? "Bonus action" : "Action";
+            switch (action)
+            {
+                case RowAction.Dash: return "Dash\n<size=10><color=#A4B7D1>" + mobilityCost + ": 2x move</color></size>";
+                case RowAction.Dodge: return "Dodge\n<size=10><color=#A4B7D1>Action: hard to hit</color></size>";
+                case RowAction.Disengage: return "Disengage\n<size=10><color=#A4B7D1>" + mobilityCost + ": safe retreat</color></size>";
+                case RowAction.Warding: return "Warding Scroll (" + CombatScrolls.Count(CombatScrolls.WardingScrollId) + ")\n<size=10><color=#A4B7D1>Action: 2-hit shield</color></size>";
+                case RowAction.Embers: return "Ember Scroll (" + CombatScrolls.Count(CombatScrolls.EmbersScrollId) + ")\n<size=10><color=#A4B7D1>Action: 2d4 to all</color></size>";
+                default: return "Poison Blade (" + PoisonVialCount() + ")\n<size=10><color=#A4B7D1>Bonus action</color></size>";
+            }
+        }
+
+        private static int PoisonVialCount()
+        {
+            Economy.InventoryManager inventory = Economy.InventoryManager.Instance;
+            if (inventory == null) return 0;
+            ItemSO vial = inventory.FindItemByID(Economy.ShopManager.POISON_VIAL_ID);
+            return vial != null ? inventory.GetItemCount(vial) : 0;
+        }
+
+        /// <summary>Takes a basic action or uses a combat item from the action row.</summary>
+        public void OnRowActionClicked(RowAction action)
+        {
+            LocatePlayer();
+            TurnManager tm = TurnManager.Instance;
+            if (activePlayer == null || activePlayer.IsWalking || tm == null || tm.CurrentState != TurnState.PlayerTurn) return;
+            if (RerollableRoll.IsAwaitingDecision || !CanDoRowAction(action)) return;
+
+            bool done = false;
+            switch (action)
+            {
+                case RowAction.Dash:
+                    done = activePlayer.Dash();
+                    if (done) LogCombatMessage($"{activePlayer.UnitName} dashes: {activePlayer.MovementRange} tiles of movement this turn.");
+                    break;
+                case RowAction.Dodge:
+                    done = activePlayer.Dodge();
+                    if (done) LogCombatMessage($"{activePlayer.UnitName} takes the Dodge action: attacks against them have Disadvantage until their next turn.");
+                    break;
+                case RowAction.Disengage:
+                    done = activePlayer.Disengage();
+                    if (done) LogCombatMessage($"{activePlayer.UnitName} disengages: moving away provokes no free attacks this turn.");
+                    break;
+                case RowAction.Warding:
+                    done = CombatScrolls.ReadWarding(activePlayer);
+                    break;
+                case RowAction.Embers:
+                    done = CombatScrolls.ReadEmbers(activePlayer, tm.ActiveUnits);
+                    break;
+                case RowAction.Poison:
+                    if (Economy.InventoryManager.Instance != null && Economy.InventoryManager.Instance.TryCoatWithPoisonVial(activePlayer))
+                    {
+                        activePlayer.HasUsedBonusActionThisTurn = true;
+                        LogCombatMessage($"{activePlayer.UnitName} coats their blade with poison: the next hit deals +{activePlayer.PoisonCoatingBonus} damage.");
+                        done = true;
+                    }
+                    break;
+            }
+
+            if (!done) return;
             selectedAbilitySlot = -1;
             RefreshAbilityBar();
             UpdateMovementHighlights();
@@ -1589,7 +1942,7 @@ namespace CastleOfTheD20.UI
         private void OnAbilitySlotClicked(int slotIndex)
         {
             LocatePlayer();
-            if (activePlayer == null || activePlayer.HasActedThisTurn || activePlayer.IsWalking) return;
+            if (activePlayer == null || activePlayer.IsAbilityCostSpent(slotIndex) || activePlayer.IsWalking) return;
 
             int cooldown = activePlayer.GetCooldownRemaining(slotIndex);
             if (cooldown > 0)
@@ -1726,9 +2079,10 @@ namespace CastleOfTheD20.UI
             bool isEnemy = occupyingUnit != null && occupyingUnit is EnemyUnit;
 
             // An explosive barrel: hit it with the selected ability, or the main attack (B6)
-            if (tile.Barrel != null && !activePlayer.HasActedThisTurn)
+            int barrelSlot = selectedAbilitySlot >= 0 ? selectedAbilitySlot : 0;
+            if (tile.Barrel != null && !activePlayer.IsAbilityCostSpent(barrelSlot))
             {
-                int slot = selectedAbilitySlot >= 0 ? selectedAbilitySlot : 0;
+                int slot = barrelSlot;
                 if (activePlayer.AttackBarrel(slot, tile.Barrel))
                 {
                     LogCombatMessage($"{activePlayer.UnitName} sets off the explosive barrel!");
@@ -1791,9 +2145,11 @@ namespace CastleOfTheD20.UI
         {
             if (activePlayer == null || targetTile == null) return;
 
-            if (activePlayer.HasActedThisTurn)
+            if (activePlayer.IsAbilityCostSpent(slotIndex))
             {
-                LogCombatMessage($"{activePlayer.UnitName} has already used their action this turn.");
+                LogCombatMessage(activePlayer.GetAbilityCost(slotIndex) == ActionCost.BonusAction
+                    ? $"{activePlayer.UnitName} has already used their bonus action this turn."
+                    : $"{activePlayer.UnitName} has already used their action this turn.");
                 return;
             }
 

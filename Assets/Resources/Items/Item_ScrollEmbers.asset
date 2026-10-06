@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: scroll_embers
   itemName: Scroll of Embers
-  description: 'Read automatically when your next fight starts: fire rains on every enemy for 2d4.'
+  description: 'Read it in a fight (your action): fire rains on every enemy for 2d4 (DEX save DC 13 for half).'
   itemIcon: {fileID: 21300000, guid: 5a06691486527a87d9356ae3de1ddc5e, type: 3}
   itemType: 0
   buyPriceGold: 50

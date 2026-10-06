@@ -221,6 +221,16 @@ namespace CastleOfTheD20.UI
                 milestoneName += $"\nNew ability: {cachedPlayerUnit.CharacterClass.Level4Ability.AbilityName}";
             }
 
+            // Every level adds hit points by itself; level 5 also raises the proficiency bonus (Vili, 2026-10-06)
+            if (cachedPlayerUnit != null && cachedPlayerUnit.CharacterClass != null)
+            {
+                milestoneName += $"\n+{PlayerUnit.HitPointsPerLevel(cachedPlayerUnit.CharacterClass.ClassType)} Max HP";
+                if (HeroAttributes.ProficiencyBonus(pendingMilestoneLevel) > HeroAttributes.ProficiencyBonus(pendingMilestoneLevel - 1))
+                {
+                    milestoneName += $", proficiency bonus +{HeroAttributes.ProficiencyBonus(pendingMilestoneLevel)}";
+                }
+            }
+
             if (titleText != null)
             {
                 titleText.text = $"LEVEL UP! - LEVEL {pendingMilestoneLevel}";

@@ -59,6 +59,9 @@ namespace CastleOfTheD20.UI
             public string Description;
             public Sprite Icon;
             public ItemType Type;
+
+            /// <summary>The item's ID (magic items get a Wear / Take off button).</summary>
+            public string ItemID;
         }
 
         #region Public API
@@ -124,7 +127,7 @@ namespace CastleOfTheD20.UI
                 ItemSO item = pair.Key;
                 if (item == null || pair.Value <= 0 || item.ItemType == ItemType.ScrapMetal) continue;
                 if (item.ItemID == ShopManager.REROLL_RUNE_ID) continue; // counted below
-                entries.Add(new Entry { Name = item.ItemName, Count = pair.Value, Description = item.Description, Icon = item.ItemIcon, Type = item.ItemType });
+                entries.Add(new Entry { Name = item.ItemName, Count = pair.Value, Description = item.Description, Icon = item.ItemIcon, Type = item.ItemType, ItemID = item.ItemID });
             }
 
             if (inventory.RerollScrollCount > 0)
@@ -211,6 +214,7 @@ namespace CastleOfTheD20.UI
         {
             switch (type)
             {
+                case ItemType.Wondrous: return -1; // worn magic items first
                 case ItemType.Consumable: return 0;
                 case ItemType.WeaponUpgrade: return 1;
                 case ItemType.ArmorUpgrade: return 2;
@@ -292,7 +296,40 @@ namespace CastleOfTheD20.UI
             descRect.anchorMin = descRect.anchorMax = new Vector2(0f, 1f);
             descRect.pivot = new Vector2(0f, 1f);
             descRect.anchoredPosition = new Vector2(80f, -34f);
+
+            // Worn magic items can be taken off and put back on (the Shadow Cloak hides the hero from every fight)
+            if (entry.Type == ItemType.Wondrous && MagicItems.IsMagicItem(entry.ItemID))
+            {
+                name.rectTransform.sizeDelta = new Vector2(PanelWidth - 330f, 30f);
+                desc.rectTransform.sizeDelta = new Vector2(PanelWidth - 330f, 38f);
+                BuildWearButton(row, entry.ItemID);
+            }
             return row.gameObject;
+        }
+
+        /// <summary>Label of a magic item's toggle: what pressing it does.</summary>
+        public static string WearButtonLabel(string itemId) => MagicItems.IsWorn(itemId) ? "Take off" : "Wear";
+
+        private void BuildWearButton(RectTransform row, string itemId)
+        {
+            bool worn = MagicItems.IsWorn(itemId);
+            RectTransform buttonRect = Rect("Wear_Toggle", row, new Vector2(120f, 40f), Vector2.zero);
+            buttonRect.anchorMin = buttonRect.anchorMax = new Vector2(1f, 0.5f);
+            buttonRect.pivot = new Vector2(1f, 0.5f);
+            buttonRect.anchoredPosition = new Vector2(-12f, 0f);
+            Image image = buttonRect.gameObject.AddComponent<Image>();
+            image.color = worn ? new Color(0.30f, 0.24f, 0.16f, 1f) : new Color(0.18f, 0.40f, 0.22f, 1f);
+            Button button = buttonRect.gameObject.AddComponent<Button>();
+            button.targetGraphic = image;
+            TMP_Text label = Text("Label", buttonRect, WearButtonLabel(itemId), 18f, UITheme.CreamText, Vector2.zero, new Vector2(120f, 40f));
+            label.fontStyle = FontStyles.Bold;
+            button.onClick.AddListener(() =>
+            {
+                bool nowWorn = MagicItems.ToggleWorn(itemId);
+                LockpickMinigameUI.ShowToast(nowWorn ? "You put it on." : "You take it off and pack it away.");
+                SFXManager.Instance?.PlaySFX(SFXClipType.ButtonClick, Vector3.zero);
+                Refresh();
+            });
         }
 
         #endregion

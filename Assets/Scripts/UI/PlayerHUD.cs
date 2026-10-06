@@ -1053,6 +1053,9 @@ namespace CastleOfTheD20.UI
             RectTransform canvasRect = transform.parent as RectTransform;
             PotionQuickBar.EnsureBar(canvasRect != null ? canvasRect : hudRect, slotFrameSprite, pillBadgeSprite, potionSprite);
 
+            // Under the hero card: Inspiration, sneaking, the Shadow Cloak and the character sheet key (Vili, 2026-10-06)
+            if (Application.isPlaying) HeroStatusBadges.Ensure(transform, pillBadgeSprite);
+
             // ========================================================
             // 6. MAP (M) BUTTON: left of the quest card, clear of its header
             // ========================================================

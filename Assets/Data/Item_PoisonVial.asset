@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.ItemSO
   itemID: item_poison_vial
   itemName: Poison Vial
-  description: 'Potent herbal extract. Coats your blade when a fight begins: the
+  description: 'Potent herbal extract. Coat your blade in a fight (bonus action): the
     first hit deals +5 damage.'
   itemIcon: {fileID: 21300000, guid: 04910c7979aa3786c5b25a7b0cf59172, type: 3}
   itemType: 0

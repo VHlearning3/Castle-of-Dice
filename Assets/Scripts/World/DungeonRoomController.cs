@@ -303,11 +303,43 @@ namespace CastleOfTheD20.World
         /// </summary>
         private void OnTriggerEnter(Collider other)
         {
+            TryStartFor(other);
+        }
+
+        /// <summary>A hero who takes the Shadow Cloak off while standing in the room is noticed then.</summary>
+        private void OnTriggerStay(Collider other)
+        {
+            if (unseenNoticeShown && !Economy.MagicItems.IsUnseen) TryStartFor(other);
+        }
+
+        /// <summary>The Gargoyle King's room: the only foe who sees through the Shadow Cloak.</summary>
+        public bool IsKingRoom => string.Equals(bossIdentifier, "GargoyleKing", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Whether the hero walks through unnoticed: the Shadow Cloak hides them from everyone but the Gargoyle
+        /// King (Vili, 2026-10-06).
+        /// </summary>
+        public bool HeroGoesUnnoticed => Economy.MagicItems.IsUnseen && !IsKingRoom;
+
+        private bool unseenNoticeShown;
+
+        private void TryStartFor(Collider other)
+        {
             if (isEncounterTriggered || currentState != RoomState.Unexplored) return;
 
             // Check if the entering object is tagged "Player"
             if (other.CompareTag("Player") || other.GetComponent<PlayerUnit>() != null)
             {
+                if (HeroGoesUnnoticed)
+                {
+                    if (!unseenNoticeShown)
+                    {
+                        unseenNoticeShown = true;
+                        UI.LockpickMinigameUI.ShowToast("Wrapped in the Shadow Cloak, you slip past unseen. (Take it off in the bag to fight.)");
+                    }
+                    return;
+                }
+
                 // Disable the trigger collider immediately so this event only fires once
                 if (triggerCollider != null)
                 {
@@ -623,6 +655,9 @@ namespace CastleOfTheD20.World
             {
                 if (activeParticipants.Count > 0)
                 {
+                    // Sneaking up on the enemies, or walking into an ambush, decides who is surprised
+                    List<CombatUnit> surprised = ResolveAwareness(player, activeParticipants, out string awareness);
+                    turnManager.SetSurprisedForNextFight(surprised, awareness);
                     turnManager.StartCombat(activeParticipants);
                 }
                 else
@@ -642,6 +677,86 @@ namespace CastleOfTheD20.World
 
             OnRoomCombatStarted?.Invoke(this);
         }
+
+        #region Surprise
+
+        /// <summary>DC of the Perception check that spots an ambush.</summary>
+        public const int AmbushPerceptionDC = 13;
+
+        /// <summary>An ambush room: its key or name says so (the Forest Path's skeleton archer and cultist).</summary>
+        public bool IsAmbush =>
+            (!string.IsNullOrEmpty(roomKey) && roomKey.IndexOf("Ambush", StringComparison.OrdinalIgnoreCase) >= 0)
+            || name.IndexOf("Ambush", StringComparison.OrdinalIgnoreCase) >= 0;
+
+        /// <summary>
+        /// D&D surprise (Vili, 2026-10-06), for regular fights only (bosses are waiting for the hero):
+        /// - a hero sneaking (V) makes a Stealth check against the enemies' best passive Perception; on a success
+        ///   every enemy is surprised and loses its first turn (the Shadow Cloak gives Advantage);
+        /// - walking into an ambush without sneaking, the hero makes a Perception check (DC 13) or is surprised.
+        /// Returns the units that will be surprised; <paramref name="message"/> tells how it went (for the combat log).
+        /// </summary>
+        public List<CombatUnit> ResolveAwareness(PlayerUnit hero, List<CombatUnit> participants, out string message)
+        {
+            List<CombatUnit> surprised = new List<CombatUnit>();
+            message = null;
+            if (hero == null || participants == null || !string.IsNullOrEmpty(bossIdentifier)) return surprised;
+
+            bool sneaking = PlayerExplorationMovement.IsSneaking || Economy.MagicItems.IsUnseen;
+            PlayerExplorationMovement.SetSneaking(false); // the fight is on: everyone sees everyone now
+
+            if (sneaking)
+            {
+                int dc = 0;
+                for (int i = 0; i < participants.Count; i++)
+                {
+                    if (participants[i] is EnemyUnit enemy && enemy.IsAlive) dc = Mathf.Max(dc, enemy.PassivePerception);
+                }
+                if (dc <= 0) return surprised;
+
+                AdvantageType advantage = Economy.MagicItems.HasStealthAdvantage ? AdvantageType.Advantage : AdvantageType.None;
+                DiceResult stealth = RollAwareness(hero, HeroSkill.Stealth, dc, advantage, "Stealth");
+                if (stealth.isSuccess)
+                {
+                    for (int i = 0; i < participants.Count; i++)
+                    {
+                        if (participants[i] is EnemyUnit enemy && enemy.IsAlive) surprised.Add(enemy);
+                    }
+                    message = ($"{hero.UnitName} creeps up unseen (Stealth {stealth.finalTotal} vs {dc}): the enemies are surprised!");
+                }
+                else
+                {
+                    message = ($"A twig snaps (Stealth {stealth.finalTotal} vs {dc}): the enemies hear {hero.UnitName} coming.");
+                }
+                return surprised;
+            }
+
+            if (IsAmbush)
+            {
+                DiceResult perception = RollAwareness(hero, HeroSkill.Perception, AmbushPerceptionDC, AdvantageType.None, "Perception");
+                if (perception.isSuccess)
+                {
+                    message = ($"{hero.UnitName} spots the ambush in time (Perception {perception.finalTotal} vs {AmbushPerceptionDC}).");
+                }
+                else
+                {
+                    surprised.Add(hero);
+                    message = ($"Ambush! {hero.UnitName} is caught off guard (Perception {perception.finalTotal} vs {AmbushPerceptionDC}).");
+                }
+            }
+            return surprised;
+        }
+
+        private static DiceResult RollAwareness(PlayerUnit hero, HeroSkill skill, int dc, AdvantageType advantage, string title)
+        {
+            DiceResult roll = DiceSystem.RollD20(HeroAttributes.GetSkillBonus(hero, skill), dc, advantage);
+            if (Application.isPlaying && UI.DiceUIController.Instance != null)
+            {
+                UI.DiceUIController.Instance.ShowDiceRoll(roll, title);
+            }
+            return roll;
+        }
+
+        #endregion
 
         /// <summary>
         /// Public method called when all room enemies are defeated.
