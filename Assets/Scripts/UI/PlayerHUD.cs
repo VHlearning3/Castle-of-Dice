@@ -602,6 +602,7 @@ namespace CastleOfTheD20.UI
                     slRect.anchorMax = Vector2.one;
                     slRect.sizeDelta = Vector2.zero;
                     slRect.anchoredPosition = Vector2.zero;
+                    slRect.localScale = Vector3.one; // the village scene's slider was stretched 3x tall
 
                     Image trackImg = healthSlider.GetComponentInChildren<Image>(true);
                     if (trackImg != null && barTrackSprite != null)
@@ -610,6 +611,9 @@ namespace CastleOfTheD20.UI
                         trackImg.type = Image.Type.Sliced;
                         trackImg.color = Color.white;
                     }
+                    if (trackImg != null) StretchFull(trackImg.rectTransform, 0f);
+
+                    EnsureHealthFill();
 
                     if (sliderFillImage != null && barFillRubySprite != null)
                     {
@@ -629,7 +633,8 @@ namespace CastleOfTheD20.UI
                     htRect.sizeDelta = Vector2.zero;
                     htRect.anchoredPosition = Vector2.zero;
                     healthText.alignment = TextAlignmentOptions.Center;
-                    healthText.fontSize = 12.5f;
+                    healthText.enableAutoSizing = false;
+                    healthText.fontSize = 14f;
                     healthText.fontStyle = FontStyles.Bold;
                     healthText.color = Color.white;
                 }
@@ -972,23 +977,8 @@ namespace CastleOfTheD20.UI
                 qcBg.color = Color.white;
             }
 
-            // 3A. Header row (Clean text, no emojis)
-            Transform qHeaderTr = questCardObj.transform.Find("Quest_Header_Text");
-            GameObject qHeaderObj = qHeaderTr != null ? qHeaderTr.gameObject : new GameObject("Quest_Header_Text", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
-            qHeaderObj.transform.SetParent(questCardObj.transform, false);
-            questHeaderText = qHeaderObj.GetComponent<TMP_Text>();
-            questHeaderText.text = "QUEST OBJECTIVES";
-            questHeaderText.fontSize = 11.5f;
-            questHeaderText.fontStyle = FontStyles.Bold;
-            questHeaderText.characterSpacing = 1.5f;
-            questHeaderText.alignment = TextAlignmentOptions.MidlineLeft;
-            questHeaderText.color = new Color(0.92f, 0.78f, 0.38f, 1f); // Rich gold
-            RectTransform qhRect = qHeaderObj.GetComponent<RectTransform>();
-            qhRect.anchorMin = new Vector2(0f, 1f);
-            qhRect.anchorMax = new Vector2(1f, 1f);
-            qhRect.pivot = new Vector2(0f, 1f);
-            qhRect.anchoredPosition = new Vector2(18f, -12f);
-            qhRect.sizeDelta = new Vector2(-36f, 18f);
+            // 3A. The "QUEST OBJECTIVES" title belongs to QuestHUDUIController's header row (3D), which also
+            // removes the stray copies older builds left on the card.
 
             // 3B. Gold Divider Line
             Transform dividerTr = questCardObj.transform.Find("Divider_Gold");
@@ -1040,6 +1030,7 @@ namespace CastleOfTheD20.UI
                 questHUD = questCardObj.AddComponent<QuestHUDUIController>();
             }
             questHUD.AutoLocateOrBuildHierarchy();
+            questHeaderText = questHUD.HeaderTitleText;
 
             // ========================================================
             // 4. COMBAT STATS: hero stats block + enemy cards under the zone banner
@@ -1074,6 +1065,78 @@ namespace CastleOfTheD20.UI
                 mbRect.pivot = new Vector2(1f, 1f);
                 mbRect.anchoredPosition = new Vector2(MapButtonRightEdge, -18f);
             }
+        }
+
+        /// <summary>Name of the ruby bar image inside the HP slider's fill area.</summary>
+        public const string HealthFillName = "HP_Fill";
+
+        /// <summary>
+        /// Gives the HP slider a ruby fill bar behind the "HP: x / y" text. The village scene's slider only
+        /// had an empty "Fill Area", so the bar never showed and only the number changed.
+        /// </summary>
+        private void EnsureHealthFill()
+        {
+            if (healthSlider == null) return;
+
+            healthSlider.interactable = false;
+            healthSlider.transition = Selectable.Transition.None;
+            healthSlider.direction = Slider.Direction.LeftToRight;
+            healthSlider.minValue = 0f;
+            healthSlider.wholeNumbers = false;
+            healthSlider.handleRect = null;
+
+            Transform fillArea = healthSlider.transform.Find("Fill Area");
+            if (fillArea == null)
+            {
+                GameObject areaObj = new GameObject("Fill Area", typeof(RectTransform));
+                areaObj.transform.SetParent(healthSlider.transform, false);
+                fillArea = areaObj.transform;
+            }
+            fillArea.SetAsLastSibling();
+            StretchFull((RectTransform)fillArea, 3f);
+
+            Transform fillTr = fillArea.Find(HealthFillName);
+            if (fillTr == null)
+            {
+                Image existing = sliderFillImage != null && sliderFillImage.transform.IsChildOf(fillArea) ? sliderFillImage : null;
+                if (existing != null)
+                {
+                    fillTr = existing.transform;
+                }
+                else
+                {
+                    GameObject fillObj = new GameObject(HealthFillName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+                    fillObj.transform.SetParent(fillArea, false);
+                    fillTr = fillObj.transform;
+                }
+            }
+
+            RectTransform fillRect = (RectTransform)fillTr;
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = new Vector2(0f, 1f); // the slider drives anchorMax.x from the HP ratio
+            fillRect.pivot = new Vector2(0f, 0.5f);
+            fillRect.offsetMin = Vector2.zero;
+            fillRect.offsetMax = Vector2.zero;
+            fillRect.localScale = Vector3.one;
+
+            sliderFillImage = fillTr.GetComponent<Image>();
+            sliderFillImage.raycastTarget = false;
+            if (barFillRubySprite == null)
+            {
+                sliderFillImage.color = normalRubyColor;
+            }
+
+            healthSlider.fillRect = fillRect;
+        }
+
+        private static void StretchFull(RectTransform rect, float inset)
+        {
+            rect.anchorMin = Vector2.zero;
+            rect.anchorMax = Vector2.one;
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.offsetMin = new Vector2(inset, inset);
+            rect.offsetMax = new Vector2(-inset, -inset);
+            rect.localScale = Vector3.one;
         }
 
         #endregion

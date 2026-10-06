@@ -373,6 +373,26 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
+        /// True during the frame the encounter debug overlay hotkey [F3] was pressed (Editor and development builds).
+        /// </summary>
+        public static bool IsDebugOverlayHotkeyPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.f3Key.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            try
+            {
+                return Input.GetKeyDown(KeyCode.F3);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
         /// True during the frame the Quest Journal hotkey [J] was pressed.
         /// </summary>
         public static bool IsJournalHotkeyPressed()

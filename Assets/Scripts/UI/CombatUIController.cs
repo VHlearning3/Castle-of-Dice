@@ -820,6 +820,18 @@ namespace CastleOfTheD20.UI
             }
 
             AbilityTooltipUI.SetThemeSprites(panelDarkSprite, slotFrameSprite, dividerGoldSprite, defaultAbilityIconSprite);
+
+            // 6. Combat log history on the right edge, parented to the canvas so it stays up on enemy turns
+            Canvas canvas = GetComponentInParent<Canvas>(true);
+            RectTransform canvasRect = canvas != null ? canvas.rootCanvas.transform as RectTransform : null;
+            CombatLogPanel logPanel = CombatLogPanel.Ensure(canvasRect, panelDarkSprite, dividerGoldSprite);
+            if (logPanel != null && logPanel.LogText != null)
+            {
+                combatLogText = logPanel.LogText;
+                combatLogText.text = string.Join("\n", logHistory);
+            }
+
+            EnsureEndTurnGlow();
         }
 
         #endregion
@@ -909,15 +921,7 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            if (combatLogText != null)
-            {
-                combatLogText.margin = Vector4.zero;
-                combatLogText.enableAutoSizing = true;
-                combatLogText.fontSizeMin = 12f;
-                combatLogText.fontSizeMax = 20f;
-                combatLogText.textWrappingMode = TextWrappingModes.Normal;
-                combatLogText.raycastTarget = false;
-            }
+            // combatLogText is styled by CombatLogPanel (fixed size, newest line at the bottom)
         }
 
         private void OnDestroy()
@@ -946,6 +950,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnCombatEnded += HandleCombatEnded;
             TurnManager.OnCombatVictoryScrapAwarded += HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged += HandleUnitDamaged;
+            CombatUnit.OnAnyUnitDied += HandleUnitDied;
             GridTile.OnTileClicked += HandleTileMouseDown;
         }
 
@@ -957,6 +962,7 @@ namespace CastleOfTheD20.UI
             TurnManager.OnCombatEnded -= HandleCombatEnded;
             TurnManager.OnCombatVictoryScrapAwarded -= HandleCombatVictoryScrapAwarded;
             CombatUnit.OnAnyUnitDamaged -= HandleUnitDamaged;
+            CombatUnit.OnAnyUnitDied -= HandleUnitDied;
             GridTile.OnTileClicked -= HandleTileMouseDown;
         }
 
@@ -985,6 +991,8 @@ namespace CastleOfTheD20.UI
 
         private void Update()
         {
+            UpdateEndTurnPulse();
+
             if (GameManager.Instance == null || GameManager.Instance.CurrentMode != GamePlayMode.Combat)
             {
                 ClearHoveredTile();
@@ -1952,6 +1960,87 @@ namespace CastleOfTheD20.UI
             }
         }
 
+        private const string EndTurnGlowName = "EndTurn_Glow";
+        private Image endTurnGlow;
+        private bool endTurnPulsing;
+
+        /// <summary>
+        /// True on the hero's turn once both the move and the action are spent (or the hero cannot move at
+        /// all): End Turn is the only thing left to press, so it pulses.
+        /// </summary>
+        public bool ShouldHighlightEndTurn()
+        {
+            if (activePlayer == null || !activePlayer.IsAlive || activePlayer.IsWalking) return false;
+            if (GameManager.Instance == null || GameManager.Instance.CurrentMode != GamePlayMode.Combat) return false;
+            if (TurnManager.Instance == null || TurnManager.Instance.CurrentState != TurnState.PlayerTurn) return false;
+            if (TurnManager.Instance.CurrentActiveUnit != null && TurnManager.Instance.CurrentActiveUnit != activePlayer) return false;
+
+            bool moveSpent = activePlayer.HasMovedThisTurn || activePlayer.MovementRange <= 0;
+            return moveSpent && activePlayer.HasActedThisTurn;
+        }
+
+        /// <summary>Gold glow behind the End Turn button (a sibling drawn just before it).</summary>
+        private void EnsureEndTurnGlow()
+        {
+            if (endTurnButton == null || combatActionBar == null) return;
+
+            Transform bar = endTurnButton.transform.parent;
+            Transform existing = bar.Find(EndTurnGlowName);
+            GameObject glowObj = existing != null
+                ? existing.gameObject
+                : new GameObject(EndTurnGlowName, typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            glowObj.transform.SetParent(bar, false);
+            // Drawn just before the button, also when this runs again with the glow already in place
+            glowObj.transform.SetSiblingIndex(endTurnButton.transform.GetSiblingIndex());
+            endTurnButton.transform.SetSiblingIndex(glowObj.transform.GetSiblingIndex() + 1);
+
+            RectTransform endRect = (RectTransform)endTurnButton.transform;
+            RectTransform glowRect = (RectTransform)glowObj.transform;
+            glowRect.anchorMin = endRect.anchorMin;
+            glowRect.anchorMax = endRect.anchorMax;
+            glowRect.pivot = new Vector2(0.5f, 0.5f);
+            glowRect.sizeDelta = endRect.sizeDelta + new Vector2(24f, 24f);
+            glowRect.anchoredPosition = endRect.anchoredPosition + new Vector2((0.5f - endRect.pivot.x) * endRect.sizeDelta.x, (0.5f - endRect.pivot.y) * endRect.sizeDelta.y);
+            glowRect.localScale = Vector3.one;
+
+            endTurnGlow = glowObj.GetComponent<Image>();
+            if (buttonHoverSprite != null)
+            {
+                endTurnGlow.sprite = buttonHoverSprite;
+                endTurnGlow.type = Image.Type.Sliced;
+            }
+            endTurnGlow.raycastTarget = false;
+            endTurnGlow.color = new Color(1f, 0.80f, 0.30f, 0f);
+            endTurnPulsing = false;
+        }
+
+        private void UpdateEndTurnPulse()
+        {
+            if (endTurnButton == null) return;
+
+            bool pulse = ShouldHighlightEndTurn();
+            if (!pulse && !endTurnPulsing) return;
+
+            Transform endTr = endTurnButton.transform;
+            if (!pulse)
+            {
+                endTurnPulsing = false;
+                endTr.localScale = Vector3.one;
+                if (endTurnGlow != null) endTurnGlow.color = new Color(1f, 0.80f, 0.30f, 0f);
+                return;
+            }
+
+            endTurnPulsing = true;
+            float wave = (Mathf.Sin(Time.unscaledTime * 5f) + 1f) * 0.5f;
+            float scale = 1f + 0.06f * wave;
+            endTr.localScale = new Vector3(scale, scale, 1f);
+            if (endTurnGlow != null)
+            {
+                endTurnGlow.color = new Color(1f, 0.82f, 0.32f, 0.45f + 0.55f * wave);
+                endTurnGlow.rectTransform.localScale = new Vector3(scale, scale, 1f);
+            }
+        }
+
         private void OnEndTurnClicked()
         {
             selectedAbilitySlot = -1;
@@ -2017,7 +2106,7 @@ namespace CastleOfTheD20.UI
 
             if (unit != null)
             {
-                LogCombatMessage($"--- Turn: {unit.UnitName} ---");
+                LogCombatMessage($"<color=#F6D578><b>{unit.UnitName}'s turn</b></color>");
             }
 
             bool isPlayer = unit is PlayerUnit;
@@ -2033,8 +2122,14 @@ namespace CastleOfTheD20.UI
 
         private void HandleUnitDamaged(CombatUnit unit, int damage, bool isCritical)
         {
-            string critLabel = isCritical ? " [CRITICAL HIT!]" : "";
-            LogCombatMessage($"{unit.UnitName} took {damage} damage{critLabel}. (HP: {unit.CurrentHP}/{unit.MaxHP})");
+            string critLabel = isCritical ? " <color=#FFB347>[CRITICAL HIT!]</color>" : "";
+            LogCombatMessage($"{unit.UnitName} took <color=#FF7B6B>{damage} damage</color>{critLabel}. (HP: {unit.CurrentHP}/{unit.MaxHP})");
+        }
+
+        private void HandleUnitDied(CombatUnit unit)
+        {
+            if (unit == null || TurnManager.Instance == null || !TurnManager.Instance.IsCombatActive) return;
+            LogCombatMessage($"<color=#FF7B6B><b>{unit.UnitName} falls!</b></color>");
         }
 
         private void HandleCombatEnded(bool isVictory)
@@ -2123,7 +2218,8 @@ namespace CastleOfTheD20.UI
             if (string.IsNullOrWhiteSpace(message)) return;
 
             logHistory.Add(message);
-            if (logHistory.Count > maxLogLines)
+            int cap = Mathf.Max(maxLogLines, MinLogLines);
+            while (logHistory.Count > cap)
             {
                 logHistory.RemoveAt(0);
             }
@@ -2132,6 +2228,34 @@ namespace CastleOfTheD20.UI
             {
                 combatLogText.text = string.Join("\n", logHistory);
             }
+        }
+
+        /// <summary>Lines kept even when an older scene serialized a smaller maxLogLines.</summary>
+        public const int MinLogLines = 40;
+
+        /// <summary>The lines currently in the combat log, oldest first.</summary>
+        public IReadOnlyList<string> LogHistory => logHistory;
+
+        /// <summary>
+        /// One attack roll for the combat log, e.g. "Scholar Elira rolls 14 +3 = 17 vs Skeleton Archer (AC 13): Hit".
+        /// <paramref name="target"/> may be empty when the roll is not aimed at a named unit.
+        /// </summary>
+        public static string FormatAttackRoll(string attacker, string target, DiceResult roll)
+        {
+            string against = string.IsNullOrEmpty(target) ? $"AC {roll.targetDC}" : $"{target} (AC {roll.targetDC})";
+            string outcome = roll.isCriticalSuccess ? "<color=#7CFC9A><b>Natural 20, critical hit!</b></color>"
+                : roll.isCriticalFail ? "<color=#FF7B6B><b>Natural 1, miss!</b></color>"
+                : roll.isSuccess ? "<color=#7CFC9A>Hit</color>"
+                : "<color=#C0C6CF>Miss</color>";
+            string sign = roll.bonus >= 0 ? "+" : "-";
+            return $"{attacker} rolls {roll.rawRoll} {sign}{Mathf.Abs(roll.bonus)} = {roll.finalTotal} vs {against}: {outcome}";
+        }
+
+        /// <summary>Writes an attack roll to the combat log when the combat UI exists.</summary>
+        public static void LogAttackRoll(string attacker, string target, DiceResult roll)
+        {
+            CombatUIController ui = instance != null ? instance : FindAnyObjectByType<CombatUIController>(FindObjectsInactive.Include);
+            if (ui != null) ui.LogCombatMessage(FormatAttackRoll(attacker, target, roll));
         }
 
         /// <summary>

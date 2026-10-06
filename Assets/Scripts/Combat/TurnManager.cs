@@ -282,6 +282,9 @@ namespace CastleOfTheD20.Combat
                 return;
             }
 
+            // A new fight starts a fresh combat log
+            CombatUIController.Instance?.ClearLog();
+
             // Turn order (critical review B7): everyone rolls initiative, d20 + DEX, so an enemy can strike first
             RollInitiative();
 

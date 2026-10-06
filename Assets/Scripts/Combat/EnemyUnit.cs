@@ -355,6 +355,7 @@ namespace CastleOfTheD20.Combat
             DiceResult hitCheck = DiceSystem.RollD20(AttackBonus, target.ArmorClass + coverBonus, advantage);
 
             Debug.Log($"[EnemyUnit] {unitName} {verb} {target.UnitName}: {hitCheck}");
+            UI.CombatUIController.LogAttackRoll(unitName, target.UnitName, hitCheck);
             if (grid != null && grid.GetDistance(gridPosition, target.GridPosition) > 1)
             {
                 AbilityVfx.PlayRangedBolt(this, target, hitCheck.isSuccess);

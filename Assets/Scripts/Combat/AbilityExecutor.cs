@@ -173,13 +173,20 @@ namespace CastleOfTheD20.Combat
         /// </summary>
         public static void RollToHit(CombatUnit caster, int bonus, int targetArmorClass, AdvantageType advantage, Action<DiceResult> onResolved)
         {
+            string attacker = caster != null ? caster.UnitName : "Someone";
+            Action<DiceResult> logged = result =>
+            {
+                UI.CombatUIController.LogAttackRoll(attacker, null, result);
+                onResolved(result);
+            };
+
             if (caster is PlayerUnit)
             {
-                RerollableRoll.Roll(bonus, targetArmorClass, advantage, onResolved);
+                RerollableRoll.Roll(bonus, targetArmorClass, advantage, logged);
             }
             else
             {
-                onResolved(DiceSystem.RollD20(bonus, targetArmorClass, advantage));
+                logged(DiceSystem.RollD20(bonus, targetArmorClass, advantage));
             }
         }
 

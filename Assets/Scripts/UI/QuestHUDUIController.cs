@@ -506,8 +506,9 @@ namespace CastleOfTheD20.UI
             }
 
             headerTitleText = titleTr.GetComponent<TMP_Text>();
+            RemoveDuplicateHeaderTitles(rootTr, headerTitleText);
             headerTitleText.text = "QUEST OBJECTIVES";
-            headerTitleText.fontSize = 12f;
+            headerTitleText.fontSize = HeaderTitleFontSize;
             headerTitleText.fontStyle = FontStyles.Bold;
             headerTitleText.characterSpacing = 1.5f;
             headerTitleText.color = new Color(0.92f, 0.78f, 0.38f, 1f); // Rich gold
@@ -621,6 +622,34 @@ namespace CastleOfTheD20.UI
             spawnedEntries.Clear();
             QuestEntryUI[] existingEntries = questListContainer.GetComponentsInChildren<QuestEntryUI>(true);
             spawnedEntries.AddRange(existingEntries);
+        }
+
+        /// <summary>Point size of the "QUEST OBJECTIVES" title.</summary>
+        public const float HeaderTitleFontSize = 15f;
+
+        /// <summary>The one "QUEST OBJECTIVES" title in the header row.</summary>
+        public TMP_Text HeaderTitleText => headerTitleText;
+
+        /// <summary>
+        /// Older HUD builds left extra "QUEST OBJECTIVES" texts on the card (one from PlayerHUD at the card
+        /// root, one more in the header row), drawn on top of each other. Keeps only <paramref name="keep"/>.
+        /// </summary>
+        private static void RemoveDuplicateHeaderTitles(Transform cardRoot, TMP_Text keep)
+        {
+            TMP_Text[] texts = cardRoot.GetComponentsInChildren<TMP_Text>(true);
+            for (int i = 0; i < texts.Length; i++)
+            {
+                TMP_Text text = texts[i];
+                if (text == keep) continue;
+                if (text.name != "Quest_Header_Text" && text.name != "Header_Title_Text") continue;
+
+                GameObject stray = text.gameObject;
+                stray.SetActive(false);
+                if (Application.isPlaying)
+                    Destroy(stray);
+                else
+                    DestroyImmediate(stray);
+            }
         }
 
         public void LoadThemeSpritesIfMissing()
