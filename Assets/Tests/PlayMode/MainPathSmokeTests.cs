@@ -116,9 +116,9 @@ namespace CastleOfTheD20.Tests.PlayMode
                 && dialogue.CurrentNode.SpeakerName == HubDialogues.MerchantName);
             dialogue?.EndDialogue();
 
-            // 6. Library: Shadow Mage Malakor
+            // 6. Library: the Shadow Witch
             yield return Travel("Zone_4_Library");
-            yield return Fight("Shadow Mage Malakor", r => r.bossIdentifier == "ShadowMageMalakor");
+            yield return Fight("Shadow Witch", r => r.bossIdentifier == "ShadowMageMalakor");
             Step("Malakor counted as defeated", GameManager.Instance != null && GameManager.Instance.IsMalakorDefeated);
 
             // 7. Tower: rune pillars and the mimic

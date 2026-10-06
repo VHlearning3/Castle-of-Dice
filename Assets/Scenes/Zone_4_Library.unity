@@ -11582,7 +11582,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dcca5a3c84ac244789c722d5bace623, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.VillageNPC
-  promptMessage: Challenge Shadow Mage Malakor
+  promptMessage: Challenge Shadow Witch
   interactionRadius: 4.5
   isInteractable: 1
   npcName: Village NPC
@@ -13485,7 +13485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 813fd4d6982903442937498fba1000b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.World.LoreNote
-  promptMessage: 'Read: Malakor''s Research Journal'
+  promptMessage: 'Read: The Witch''s Research Journal'
   interactionRadius: 2.5
   isInteractable: 1
   noteId: library_journal

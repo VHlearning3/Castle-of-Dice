@@ -9346,7 +9346,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 813fd4d6982903442937498fba1000b2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.World.LoreNote
-  promptMessage: 'Read: The Captain''s Oath'
+  promptMessage: 'Read: The Old Commander''s Oath'
   interactionRadius: 2.5
   isInteractable: 1
   noteId: courtyard_oath

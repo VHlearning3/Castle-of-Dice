@@ -21,7 +21,7 @@ namespace CastleOfTheD20.Editor
     /// 1. Zone_1_VillageAndCellar (Start, Village, Shop, Cellar combat encounter)
     /// 2. Zone_2_ForestPath (Forest path with branching route and PUZZLE + GATE secret lockpick door)
     /// 3. Zone_3_CastleCourtyard (Wing 1 Boss Chamber: Cursed Commander + 1 minion)
-    /// 4. Zone_4_Library (Wing 2 Boss Chamber: Shadow Mage Malakor + 1 minion)
+    /// 4. Zone_4_Library (Wing 2 Boss Chamber: Shadow Witch + 1 minion)
     /// 5. Zone_5_CastleHall (Central Hall Safe Haven Hub & SavePoint.cs Rune Shrine)
     /// 6. Zone_6_Tower (Hidden Treasure Tower: Signet Ring & Giant Elixir +30 Max HP)
     /// 7. Zone_7_ThroneRoom (Wing 3 Final Boss Chamber: The Gargoyle King)
@@ -449,7 +449,7 @@ namespace CastleOfTheD20.Editor
                 grid.transform.position = new Vector3(0f, 0.05f, 10f);
             }
 
-            // Enemies: 1 Shadow Decoy + Boss: Shadow Mage Malakor (Max 1-2 enemies!)
+            // Enemies: 1 Shadow Decoy + Boss: Shadow Witch (Max 1-2 enemies!)
             GameObject enemiesRoot = new GameObject("Enemies");
             List<GameObject> enemyList = new List<GameObject>();
 
@@ -462,7 +462,7 @@ namespace CastleOfTheD20.Editor
             enemyList.Add(bossObj);
 
             // Pre-combat Dialogue NPC
-            GameObject bossNpc = CreateBossDialogueNPC("NPC_Malakor", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Challenge Shadow Mage Malakor", null);
+            GameObject bossNpc = CreateBossDialogueNPC("NPC_Malakor", new Vector3(0f, 1.0f, -12f), metalMat, "Assets/Data/Dialogues/Malakor_Intro.asset", "Challenge Shadow Witch", null);
 
             // Reward Chest
             GameObject chestObj = CreateRewardChest("Library_Reward_Chest", new Vector3(0f, 0.4f, 30f), woodMat, goldMat, chestPrefab, null, 60, greaterPotion);

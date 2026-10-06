@@ -756,7 +756,7 @@ namespace CastleOfTheD20.UI
             CreateNode(nodesRoot, KeyCourtyard, "CASTLE COURTYARD",
                 "Wing 1. The Cursed Commander guards the gate.", courtyard);
             CreateNode(nodesRoot, KeyLibrary, "GRAND ARCHIVES",
-                "Wing 2. Library of the Shadow Mage Malakor.", library);
+                "Wing 2. Library of the Shadow Witch.", library);
             CreateNode(nodesRoot, KeyHall, "THE GREAT HALL",
                 "Central hub with the Runestone save altar.", hall);
             CreateNode(nodesRoot, KeyTower, "TREASURE TOWER",

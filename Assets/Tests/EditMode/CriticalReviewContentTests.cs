@@ -96,8 +96,42 @@ namespace CastleOfTheD20.Tests
             {
                 Assert.GreaterOrEqual(counts.TryGetValue(z, out int n) ? n : 0, 2, z + " needs 2 notes");
             }
-            StringAssert.Contains("Gareth", LoreTexts.Get("courtyard_oath").Body, "The Commander was the King's guard captain.");
-            StringAssert.Contains("will not die", LoreTexts.Get("library_journal").Body, "Malakor cast the curse at the King's request.");
+            StringAssert.Contains("Captain of the King's Guard", LoreTexts.Get("courtyard_oath").Body, "The old commander was the King's guard captain.");
+            StringAssert.Contains("will not die", LoreTexts.Get("library_journal").Body, "The Witch cast the curse at the King's request.");
+        }
+
+        /// <summary>
+        /// One name per boss (Vili, 2026-10-06): Cursed Commander, Shadow Witch and The Gargoyle King, and in
+        /// letters "the old commander", "the Witch" and "the King". The old names must not reach the player.
+        /// </summary>
+        [Test]
+        public void StoryTexts_UseTheBossNamesOnly()
+        {
+            List<string> texts = new List<string>();
+            foreach (string id in LoreTexts.AllIds)
+            {
+                texts.Add(LoreTexts.Get(id).Title);
+                texts.Add(LoreTexts.Get(id).Body);
+            }
+            texts.AddRange(UI.TutorialHints.IntroPages);
+            for (int step = 0; step <= MainQuest.StepCount; step++) texts.Add(MainQuest.GetObjective(step));
+            texts.Add(DoorTeleporter.SealedThroneRoomMessage);
+
+            StoryFlags.Set(BossChoices.CommanderReleasedFlag);
+            StoryFlags.Set(BossChoices.MalakorSparedFlag);
+            StoryFlags.Set(BossChoices.MalakorHelpedFlag);
+            texts.Add(BossChoices.BuildEpilogue());
+
+            foreach (string text in texts)
+            {
+                foreach (string old in new[] { "Malakor", "Gareth", "Aldred", "Petrified King", "Shadow Mage" })
+                {
+                    StringAssert.DoesNotContain(old, text);
+                }
+            }
+            StringAssert.Contains("Shadow Witch", BossChoices.BuildEpilogue());
+            StringAssert.Contains("The Witch", LoreTexts.Get("throne_queen").Body);
+            StringAssert.Contains("the old commander", LoreTexts.Get("courtyard_roster").Body);
         }
 
         [Test]
@@ -361,7 +395,7 @@ namespace CastleOfTheD20.Tests
             room.ResolvePeacefully();
             Assert.IsTrue(room.IsCleared);
             Assert.IsTrue(gameManager.IsCommanderDefeated, "The campaign moves on.");
-            StringAssert.Contains("Gareth", BossChoices.BuildEpilogue());
+            StringAssert.Contains("Cursed Commander", BossChoices.BuildEpilogue());
             Invoke(room, "OnDestroy");
         }
 

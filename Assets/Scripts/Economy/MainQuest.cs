@@ -5,8 +5,8 @@ namespace CastleOfTheD20.Economy
 {
     /// <summary>
     /// The main story quest "Break the Castle's Curse" (critical review C2). It is active from the start of
-    /// every adventure and tells the player where to go next: the Cursed Commander, Shadow Mage Malakor, then
-    /// the Petrified King. Its steps follow the campaign's defeated bosses, so it can never disagree with them.
+    /// every adventure and tells the player where to go next: the Cursed Commander, Shadow Witch, then
+    /// the Gargoyle King. Its steps follow the campaign's defeated bosses, so it can never disagree with them.
     /// </summary>
     public static class MainQuest
     {
@@ -19,8 +19,8 @@ namespace CastleOfTheD20.Economy
         private static readonly string[] StepObjectives =
         {
             "Defeat the Cursed Commander at the Castle Courtyard",
-            "Defeat Shadow Mage Malakor in the Library",
-            "Face the Petrified King in the Throne Room"
+            "Defeat the Shadow Witch in the Library",
+            "Face the Gargoyle King in the Throne Room"
         };
 
         private static readonly string[] StepLocations =

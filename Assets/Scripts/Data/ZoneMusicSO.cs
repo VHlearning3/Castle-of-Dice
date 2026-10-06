@@ -43,7 +43,7 @@ namespace CastleOfTheD20.Data
         [Tooltip("Combat theme for Wing 1 Boss (Cursed Commander).")]
         [SerializeField] private MusicTrackType cursedCommanderTrack = MusicTrackType.CursedCommanderCombat;
 
-        [Tooltip("Combat theme for Wing 2 Boss (Shadow Mage Malakor).")]
+        [Tooltip("Combat theme for Wing 2 Boss (Shadow Witch).")]
         [SerializeField] private MusicTrackType malakorTrack = MusicTrackType.MalakorCombat;
 
         [Tooltip("Combat theme for Wing 3 Final Boss (Gargoyle King Phase 1).")]

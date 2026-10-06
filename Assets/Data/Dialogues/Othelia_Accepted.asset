@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Dialogue.DialogueNodeSO
   speakerName: Elder Othelia
   speakerPortrait: {fileID: 0}
-  dialogueText: 'Thank you, brave adventurer! My family''s signet ring was carried off to the castle''s treasure tower when the curse fell. The way there is long and dangerous, so stay alive!'
+  dialogueText: 'Thank you, brave adventurer! My family kept Queen Isolde''s ring for generations, until the castle''s stone guards came down to Oakhaven and carried it off to the treasure tower. The way there is long and dangerous, so stay alive!'
   options:
   - optionText: '[Leave] I shall search the tower for your ring.'
     requiresCheck: 0

@@ -50,7 +50,7 @@ namespace CastleOfTheD20.Editor
             new Def { name = "Mimic", group = "Enemies", path = Visuals + "Visual_Enemy_Mimic.prefab" },
             new Def { name = "Grey Wolf", group = "Enemies", path = Visuals + "Visual_Enemy_Wolf.prefab", note = "Enemy_Wolf.prefab is ready; no scene uses it yet." },
             new Def { name = "Cursed Commander", group = "Bosses", path = Visuals + "Visual_Boss_CursedCommander.prefab" },
-            new Def { name = "Shadow Mage Malakor", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image." },
+            new Def { name = "Shadow Witch", group = "Bosses", path = Visuals + "Visual_Boss_Malakor.prefab", note = "Also his mirror image." },
             new Def { name = "Gargoyle King (stage 1)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage1.prefab" },
             new Def { name = "Gargoyle King (Stone Form)", group = "Bosses", path = Visuals + "Visual_Boss_Golem_Stage2.prefab" },
         };

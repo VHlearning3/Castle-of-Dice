@@ -1381,7 +1381,7 @@ namespace CastleOfTheD20.UI
                     break;
                 case GameLocation.Library:
                     zoneTitleText.text = "Grand Archives";
-                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Wing 2 • Shadow Mage Malakor";
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Wing 2 • Shadow Witch";
                     break;
                 case GameLocation.CrownHall:
                     zoneTitleText.text = "The Throne Room";

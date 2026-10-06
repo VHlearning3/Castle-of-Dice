@@ -24,14 +24,14 @@ namespace CastleOfTheD20.UI
 
         public static readonly string[] IntroPages =
         {
-            "Above the village of Oakhaven stands the castle of King Aldred. For as long as anyone can remember, its windows " +
+            "Above the village of Oakhaven stands the castle of the Gargoyle King. For as long as anyone can remember, its windows " +
             "have been dark, and on quiet nights the villagers hear armour moving on the walls.",
 
-            "The old stories say the King feared death so much that he asked his court mage, Malakor, to make him live forever. " +
-            "The ritual worked, after a fashion: the castle and everyone sworn to it turned to living stone.",
+            "The old stories say the Gargoyle King, once a living man, feared death so much that he asked his court sorceress, the Shadow Witch, to make him live forever. " +
+            "The ritual worked, after a fashion: he, his castle and everyone sworn to him turned to living stone.",
 
-            "Three guardians still keep the castle: the Cursed Commander at the gates, Malakor among his books, " +
-            "and the Petrified King on his throne. Break all three and the curse breaks with them.",
+            "Three guardians still keep the castle: the Cursed Commander at the gates, the Shadow Witch among her books, " +
+            "and the Gargoyle King on his throne. Break all three and the curse breaks with them.",
 
             "Talk to the villagers first. Baldur the smith, Barnaby at the tavern, Mirabel the healer and Elder Othelia all need help, " +
             "and every coin and potion will count. When you are ready, take the forest road north to the castle."

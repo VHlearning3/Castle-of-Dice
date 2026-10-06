@@ -189,9 +189,9 @@ namespace CastleOfTheD20.Bosses
         {
             if (choicesAnnounced) return;
             choicesAnnounced = true;
-            if (crownStolen) Say("Without his crown the King's stone skin is thinner (-2 AC).");
-            if (malakorHelps == true) Say("Malakor appears at the door: his counter-rune tears at the King's stone!");
-            else if (malakorHelps == false) Say("Malakor appears at the door... and shields the King! \"Forgive me. He promised me forever.\"");
+            if (crownStolen) Say("Without his crown the Gargoyle King's stone skin is thinner (-2 AC).");
+            if (malakorHelps == true) Say("The Shadow Witch appears at the door: her counter-rune tears at the Gargoyle King's stone!");
+            else if (malakorHelps == false) Say("The Shadow Witch appears at the door... and shields the Gargoyle King! \"Forgive me. He promised me forever.\"");
         }
 
         private void CheckIntimidationDebuff()
@@ -278,7 +278,7 @@ namespace CastleOfTheD20.Bosses
                 ringBrokenArmorTurns--;
                 if (ringBrokenArmorTurns == 0)
                 {
-                    Say("The stone creeps back over the King's chest.");
+                    Say("The stone creeps back over the Gargoyle King's chest.");
                 }
             }
         }
@@ -315,7 +315,7 @@ namespace CastleOfTheD20.Bosses
         {
             if (target == null || !target.IsAlive) return;
 
-            Say($"The King's eyes flare grey. {target.UnitName} must resist his petrifying gaze (CON DC {GazeSaveDC})!");
+            Say($"The Gargoyle King's eyes flare grey. {target.UnitName} must resist his petrifying gaze (CON DC {GazeSaveDC})!");
             int conBonus = HeroAttributes.GetModifier(target, HeroAttribute.Constitution);
             RerollableRoll.Roll(conBonus, GazeSaveDC, AdvantageType.None, save =>
             {
@@ -341,7 +341,7 @@ namespace CastleOfTheD20.Bosses
             if (!CanBeShownTheRing) return false;
             ringUsed = true;
             ringBrokenArmorTurns = Mathf.Max(1, turns);
-            Say("\"Isolde... my queen?\" The King stares at the ring, and his stone armour cracks away!");
+            Say("\"Isolde... my queen?\" The Gargoyle King stares at the ring, and his stone armour cracks away!");
             return true;
         }
 
@@ -381,7 +381,7 @@ namespace CastleOfTheD20.Bosses
                 tile.HazardWarning = true;
                 markedQuakeTiles.Add(tile);
             }
-            Say("The King raises his fists: the ground marked in red will shake on his next turn!");
+            Say("The Gargoyle King raises his fists: the ground marked in red will shake on his next turn!");
             OnQuakeTelegraphed?.Invoke(this, center);
         }
 

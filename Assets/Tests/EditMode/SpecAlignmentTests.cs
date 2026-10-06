@@ -314,7 +314,7 @@ namespace CastleOfTheD20.Tests
             boss.InitializeUnit();
             boss.MoveToTile(grid.GetTileAt(new Vector2Int(6, 6)));
 
-            Assert.AreEqual("Shadow Mage Malakor", decoy.UnitName, "Without Arcane Heresy the illusion must look like Malakor.");
+            Assert.AreEqual("Shadow Witch", decoy.UnitName, "Without Arcane Heresy the illusion must look like the Shadow Witch.");
             Assert.AreEqual(1, boss.ActiveDecoys.Count);
 
             boss.SpawnIllusionDecoys();
