@@ -236,10 +236,13 @@ namespace CastleOfTheD20.Tests.PlayMode
             while (Time.realtimeSinceStartup < talkUntil)
             {
                 CloseLevelUp();
-                if (DialogueController.Instance != null && DialogueController.Instance.IsInDialogue)
+                DialogueController dialogue = DialogueController.Instance;
+                string speaker = dialogue != null && dialogue.IsInDialogue && dialogue.CurrentNode != null ? dialogue.CurrentNode.SpeakerName : null;
+                // Only the surrender talks: the crown choice after the King belongs to the ending
+                if (speaker == SurrenderDialogues.WitchSpeaker || (speaker != null && speaker.IndexOf("Cultist", StringComparison.OrdinalIgnoreCase) >= 0))
                 {
-                    Step("Surrender talk opened", true);
-                    DialogueController.Instance.EndDialogue();
+                    Step($"Surrender talk opened ({speaker})", true);
+                    dialogue.EndDialogue();
                 }
                 yield return null;
             }

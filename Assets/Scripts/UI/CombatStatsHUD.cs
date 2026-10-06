@@ -478,7 +478,7 @@ namespace CastleOfTheD20.UI
             StatusEffectController effects = player.StatusEffects;
 
             sb.Clear();
-            AppendSigned(sb, player.PrimaryAttributeBonus);
+            AppendSigned(sb, HeroAttributes.GetAttackBonus(player)); // attribute + proficiency (D&D rules, 2026-10-06)
             heroHitValue.text = sb.ToString();
 
             sb.Clear();
@@ -502,9 +502,15 @@ namespace CastleOfTheD20.UI
                 sb.Append(" (+").Append(player.MaxHPBonus).Append(')');
             }
             int effectAC = effects != null ? effects.GetArmorClassBonus() : 0;
-            sb.Append("   <color=#D1AD59>Base AC</color> ").Append(player.ArmorClass - player.ArmorClassBonus - effectAC);
+            int itemAC = Economy.MagicItems.ArmorBonus;
+            sb.Append("   <color=#D1AD59>Base AC</color> ").Append(player.ArmorClass - player.ArmorClassBonus - effectAC - itemAC);
             sb.Append("   <color=#D1AD59>Armor upgrades</color> ");
             AppendSigned(sb, player.ArmorClassBonus);
+            if (itemAC > 0)
+            {
+                sb.Append("   <color=#D1AD59>Shield</color> ");
+                AppendSigned(sb, itemAC);
+            }
             heroDetailText.text = sb.ToString();
 
             sb.Clear();
@@ -526,6 +532,7 @@ namespace CastleOfTheD20.UI
             {
                 long h = 23;
                 h = h * 31 + player.PrimaryAttributeBonus;
+                h = h * 31 + player.Level;
                 h = h * 31 + player.WeaponDamageBonus;
                 h = h * 31 + player.ArmorClass;
                 h = h * 31 + player.ArmorClassBonus;

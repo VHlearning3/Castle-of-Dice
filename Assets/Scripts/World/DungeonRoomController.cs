@@ -699,10 +699,9 @@ namespace CastleOfTheD20.World
         {
             List<CombatUnit> surprised = new List<CombatUnit>();
             message = null;
-            if (hero == null || participants == null || !string.IsNullOrEmpty(bossIdentifier)) return surprised;
-
             bool sneaking = PlayerExplorationMovement.IsSneaking || Economy.MagicItems.IsUnseen;
             PlayerExplorationMovement.SetSneaking(false); // the fight is on: everyone sees everyone now
+            if (hero == null || participants == null || !string.IsNullOrEmpty(bossIdentifier)) return surprised;
 
             if (sneaking)
             {

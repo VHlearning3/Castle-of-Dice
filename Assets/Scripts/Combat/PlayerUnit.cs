@@ -288,11 +288,20 @@ namespace CastleOfTheD20.Combat
             {
                 gameObject.AddComponent<World.ShadowCloakVisual>();
             }
+
+            // Putting a magic item on or off changes AC and movement: the HUD re-reads the hero
+            Economy.MagicItems.OnWornChanged += HandleMagicItemWorn;
         }
 
         private void OnDestroy()
         {
             OnHealthChanged -= ReportHealthToSession;
+            Economy.MagicItems.OnWornChanged -= HandleMagicItemWorn;
+        }
+
+        private void HandleMagicItemWorn(string itemId)
+        {
+            if (this != null) NotifyHealthChanged();
         }
 
         // Keeps the zone-to-zone HP in the session store up to date (critical review A9)

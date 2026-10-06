@@ -186,7 +186,7 @@ namespace CastleOfTheD20.Tests
             statsHUD.SetPlayer(hero);
             statsHUD.RefreshHero(true);
 
-            Assert.AreEqual("+3", HeroValue("Stat_Cell_Hit"));
+            Assert.AreEqual("+5", HeroValue("Stat_Cell_Hit"), "STR +3 and proficiency +2 (D&D rules, Vili 2026-10-06)");
             Assert.AreEqual("+0", HeroValue("Stat_Cell_Weapon"));
             Assert.AreEqual("14", HeroValue("Stat_Cell_Armor"));
             Assert.AreEqual("4", HeroValue("Stat_Cell_Move"));

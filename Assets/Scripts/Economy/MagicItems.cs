@@ -44,12 +44,33 @@ namespace CastleOfTheD20.Economy
             return itemId == OathkeeperShieldId || itemId == ShadowCloakId || itemId == BootsOfStridingId;
         }
 
+        // The item assets, looked up once per inventory (the HUD reads AC and movement every frame)
+        private static InventoryManager cachedFor;
+        private static ItemSO shieldItem;
+        private static ItemSO cloakItem;
+        private static ItemSO bootsItem;
+
+        private static ItemSO Lookup(InventoryManager inventory, string itemId)
+        {
+            if (cachedFor != inventory)
+            {
+                cachedFor = inventory;
+                shieldItem = inventory.FindItemByID(OathkeeperShieldId);
+                cloakItem = inventory.FindItemByID(ShadowCloakId);
+                bootsItem = inventory.FindItemByID(BootsOfStridingId);
+            }
+            if (itemId == OathkeeperShieldId) return shieldItem;
+            if (itemId == ShadowCloakId) return cloakItem;
+            if (itemId == BootsOfStridingId) return bootsItem;
+            return inventory.FindItemByID(itemId);
+        }
+
         /// <summary>Whether the bag holds the item.</summary>
         public static bool Owns(string itemId)
         {
             InventoryManager inventory = InventoryManager.Instance;
             if (inventory == null) return false;
-            ItemSO item = inventory.FindItemByID(itemId);
+            ItemSO item = Lookup(inventory, itemId);
             return item != null && inventory.HasItem(item, 1);
         }
 

@@ -68,7 +68,14 @@ namespace CastleOfTheD20.UI
                 else DestroyImmediate(transform.GetChild(i).gameObject);
             }
 
-            Pill("Badge_Sheet", "[C] Character", SheetColor, pillSprite, 118f).SetActive(true);
+            // The character sheet pill is also a button
+            GameObject sheet = Pill("Badge_Sheet", "[C] Character", SheetColor, pillSprite, 118f);
+            Image sheetImage = sheet.GetComponent<Image>();
+            sheetImage.raycastTarget = true;
+            Button sheetButton = sheet.AddComponent<Button>();
+            sheetButton.targetGraphic = sheetImage;
+            sheetButton.onClick.AddListener(CharacterSheetUI.Toggle);
+            sheet.SetActive(true);
             inspiredPill = Pill("Badge_Inspired", "INSPIRED", InspiredColor, pillSprite, 100f);
             sneakPill = Pill("Badge_Sneaking", "SNEAKING (V)", SneakColor, pillSprite, 126f);
             unseenPill = Pill("Badge_Unseen", "UNSEEN (cloak)", UnseenColor, pillSprite, 130f);

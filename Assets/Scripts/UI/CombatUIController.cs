@@ -1061,14 +1061,29 @@ namespace CastleOfTheD20.UI
             Camera cam = combatCamera != null ? combatCamera : Camera.main;
             RectTransform canvasRect = hitChanceText.rectTransform.parent as RectTransform;
             if (cam == null || canvasRect == null) return;
-            Vector3 screen = cam.WorldToScreenPoint(enemy.transform.position + Vector3.up * 2.7f);
-            if (screen.z < 0f) return;
             Canvas canvas = canvasRect.GetComponentInParent<Canvas>();
             Camera uiCam = canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay ? canvas.worldCamera : null;
-            if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screen, uiCam, out Vector2 local))
+
+            // Over the enemy's head, or under its feet when the head is up among the HUD cards
+            Vector3 head = cam.WorldToScreenPoint(enemy.transform.position + Vector3.up * 2.7f);
+            if (head.z < 0f) return;
+            if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, head, uiCam, out Vector2 local)) return;
+            float topLimit = canvasRect.rect.height * 0.5f - 300f;
+            RectTransform labelRect = hitChanceText.rectTransform;
+            if (local.y + labelRect.sizeDelta.y > topLimit)
             {
-                hitChanceText.rectTransform.anchoredPosition = local;
+                Vector3 feet = cam.WorldToScreenPoint(enemy.transform.position - Vector3.up * 0.2f);
+                if (RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, feet, uiCam, out Vector2 below))
+                {
+                    labelRect.pivot = new Vector2(0.5f, 1f);
+                    hitChanceText.alignment = TextAlignmentOptions.Top;
+                    labelRect.anchoredPosition = below;
+                    return;
+                }
             }
+            labelRect.pivot = new Vector2(0.5f, 0f);
+            hitChanceText.alignment = TextAlignmentOptions.Bottom;
+            labelRect.anchoredPosition = local;
         }
 
         private void EnsureHitChanceLabel()
@@ -1592,14 +1607,44 @@ namespace CastleOfTheD20.UI
                 TMP_Text label = button.GetComponentInChildren<TMP_Text>(true);
                 if (label != null)
                 {
-                    label.fontSize = 13f;
+                    label.fontSize = 14f;
                     label.richText = true;
-                    label.lineSpacing = -12f;
+                    label.lineSpacing = -8f;
                 }
+
+                // Hovering a row button explains it on the hint line above the row
+                RowActionHint hint = button.GetComponent<RowActionHint>() ?? button.gameObject.AddComponent<RowActionHint>();
+                hint.Owner = this;
+                hint.Action = action;
 
                 rowButtons[i] = button;
                 rowLabels[i] = label;
                 button.gameObject.SetActive(false);
+            }
+
+            if (rowHintText == null)
+            {
+                Transform existing = combatActionBar.transform.Find("Action_Row_Hint");
+                GameObject hintObj = existing != null
+                    ? existing.gameObject
+                    : new GameObject("Action_Row_Hint", typeof(RectTransform), typeof(TextMeshProUGUI));
+                hintObj.transform.SetParent(combatActionBar.transform, false);
+                RectTransform hintRect = (RectTransform)hintObj.transform;
+                hintRect.anchorMin = new Vector2(0f, 0.5f);
+                hintRect.anchorMax = new Vector2(0f, 0.5f);
+                hintRect.pivot = new Vector2(0f, 0.5f);
+                hintRect.anchoredPosition = new Vector2(ActionRowStartX, ActionRowY + ActionButtonHeight * 0.5f + 16f);
+                hintRect.sizeDelta = new Vector2(820f, 26f);
+                rowHintText = hintObj.GetComponent<TMP_Text>();
+                rowHintText.fontSize = 15f;
+                rowHintText.alignment = TextAlignmentOptions.MidlineLeft;
+                rowHintText.color = UITheme.CreamText;
+                rowHintText.richText = true;
+                rowHintText.raycastTarget = false;
+                rowHintText.outlineWidth = 0.25f;
+                rowHintText.outlineColor = new Color32(0, 0, 0, 255);
+                rowHintText.textWrappingMode = TextWrappingModes.NoWrap;
+                rowHintText.text = string.Empty;
             }
 
             if (economyText == null)
@@ -1622,6 +1667,32 @@ namespace CastleOfTheD20.UI
                 economyText.richText = true;
                 economyText.raycastTarget = false;
                 economyText.textWrappingMode = TextWrappingModes.NoWrap;
+            }
+        }
+
+        private TMP_Text rowHintText;
+
+        /// <summary>The line above the action row that explains the hovered button.</summary>
+        public TMP_Text RowHintText => rowHintText;
+
+        /// <summary>Shows (or with null, clears) the explanation of a row button.</summary>
+        public void ShowRowHint(RowAction? action)
+        {
+            if (rowHintText == null) return;
+            rowHintText.text = action.HasValue ? RowActionDescription(action.Value) : string.Empty;
+        }
+
+        /// <summary>What each row button does, in one line.</summary>
+        public static string RowActionDescription(RowAction action)
+        {
+            switch (action)
+            {
+                case RowAction.Dash: return "<b>Dash</b>: this turn's move reaches twice as far (or move again after moving).";
+                case RowAction.Dodge: return "<b>Dodge</b>: attacks against you have Disadvantage until your next turn.";
+                case RowAction.Disengage: return "<b>Disengage</b>: walk away from enemies this turn without giving free attacks.";
+                case RowAction.Warding: return "<b>Scroll of Warding</b>: a mana shield stops the next two blows.";
+                case RowAction.Embers: return "<b>Scroll of Embers</b>: 2d4 fire to every enemy (DEX save DC 13 for half).";
+                default: return "<b>Poison Vial</b>: coat your blade; your next hit deals extra poison damage.";
             }
         }
 
@@ -1654,6 +1725,7 @@ namespace CastleOfTheD20.UI
                 economyText.gameObject.SetActive(heroTurn);
                 if (heroTurn) economyText.text = BuildEconomyText(activePlayer);
             }
+            if (!heroTurn) ShowRowHint(null);
         }
 
         /// <summary>"● Action  ● Bonus  ● Move  ● Reaction": lit while still available this turn.</summary>
@@ -1701,15 +1773,17 @@ namespace CastleOfTheD20.UI
 
         private string RowActionLabel(RowAction action)
         {
-            string mobilityCost = activePlayer != null && activePlayer.GetMobilityActionCost() == ActionCost.BonusAction ? "Bonus action" : "Action";
+            bool cunning = activePlayer != null && activePlayer.GetMobilityActionCost() == ActionCost.BonusAction;
+            const string ActionTag = "\n<size=11><color=#8FD18F>Action</color></size>";
+            const string BonusTag = "\n<size=11><color=#7FD4FF>Bonus action</color></size>";
             switch (action)
             {
-                case RowAction.Dash: return "Dash\n<size=10><color=#A4B7D1>" + mobilityCost + ": 2x move</color></size>";
-                case RowAction.Dodge: return "Dodge\n<size=10><color=#A4B7D1>Action: hard to hit</color></size>";
-                case RowAction.Disengage: return "Disengage\n<size=10><color=#A4B7D1>" + mobilityCost + ": safe retreat</color></size>";
-                case RowAction.Warding: return "Warding Scroll (" + CombatScrolls.Count(CombatScrolls.WardingScrollId) + ")\n<size=10><color=#A4B7D1>Action: 2-hit shield</color></size>";
-                case RowAction.Embers: return "Ember Scroll (" + CombatScrolls.Count(CombatScrolls.EmbersScrollId) + ")\n<size=10><color=#A4B7D1>Action: 2d4 to all</color></size>";
-                default: return "Poison Blade (" + PoisonVialCount() + ")\n<size=10><color=#A4B7D1>Bonus action</color></size>";
+                case RowAction.Dash: return "Dash" + (cunning ? BonusTag : ActionTag);
+                case RowAction.Dodge: return "Dodge" + ActionTag;
+                case RowAction.Disengage: return "Disengage" + (cunning ? BonusTag : ActionTag);
+                case RowAction.Warding: return "Warding (" + CombatScrolls.Count(CombatScrolls.WardingScrollId) + ")" + ActionTag;
+                case RowAction.Embers: return "Embers (" + CombatScrolls.Count(CombatScrolls.EmbersScrollId) + ")" + ActionTag;
+                default: return "Poison (" + PoisonVialCount() + ")" + BonusTag;
             }
         }
 
