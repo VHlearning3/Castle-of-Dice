@@ -17,7 +17,7 @@ MonoBehaviour:
   dialogueText: The Cursed Commander wears ancient plate and wields a heavy shield.
     But centuries in the damp courtyard have rusted the armor joints at his knees.
     Aim for the greaves and he won't be able to deflect your blows! (Enemy AC reduced
-    by 2 for first 2 rounds)
+    by 2 for the whole fight)
   options:
   - optionText: '[Blacksmith] Good to know. Let me see what you have for sale.'
     requiresCheck: 0

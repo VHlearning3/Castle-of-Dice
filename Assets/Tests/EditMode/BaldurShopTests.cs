@@ -237,13 +237,13 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void ScrapConversion_StillPaysTenGoldEach()
+        public void ScrapConversion_PaysFiveGoldEach()
         {
             inventory.AddScrapMetal(4);
 
-            Assert.AreEqual(40, shop.ConvertScrapToGold());
+            Assert.AreEqual(20, shop.ConvertScrapToGold()); // 5 gold a piece since 2026-10-06
             Assert.AreEqual(0, inventory.ScrapMetalCount);
-            Assert.AreEqual(40, inventory.CurrentGold);
+            Assert.AreEqual(20, inventory.CurrentGold);
         }
 
         #endregion

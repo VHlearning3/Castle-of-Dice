@@ -94,7 +94,7 @@ namespace CastleOfTheD20.UI
         [SerializeField] private Image scrapActionIconImage;
 
         [Header("Scrap Conversion")]
-        [Tooltip("Button to convert all collected scrap metal into gold (1 Scrap = 10 Gold).")]
+        [Tooltip("Button to convert all collected scrap metal into gold (1 Scrap = 5 Gold).")]
         [SerializeField] private Button sellAllScrapButton;
 
         [Tooltip("Label on the scrap button showing potential gold payout.")]
@@ -1460,7 +1460,7 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
-        /// The scrap salvage row at the top of the Sell tab (1 scrap = 10 gold).
+        /// The scrap salvage row at the top of the Sell tab (1 scrap = 5 gold).
         /// </summary>
         private void BuildScrapRow()
         {
@@ -1808,7 +1808,7 @@ namespace CastleOfTheD20.UI
         #region Economy Actions
 
         /// <summary>
-        /// Converts all available scrap metal pieces to gold coins at 1 Scrap = 10 Gold.
+        /// Converts all available scrap metal pieces to gold coins at 1 Scrap = 5 Gold.
         /// </summary>
         public void SellAllScrap()
         {

@@ -28,17 +28,15 @@ namespace CastleOfTheD20.Bosses
         [Tooltip("Dialogue debuff tag checked at encounter start.")]
         [SerializeField] private string dialogueDebuffTag = "CommanderArmorWeakened";
 
-        [Tooltip("Number of combat rounds the AC debuff lasts.")]
-        [SerializeField] private int debuffDurationRounds = 2;
 
         #endregion
 
         #region Private State
 
         private bool hasSpawnedAdds = false;
-        private int remainingDebuffRounds = 0;
         private int roundsTracked = 0;
-        private bool earnedSoldiersHonor = false;
+        // Baldur's tip about the rusted greaves: -2 AC for the whole fight (Vili, 2026-10-06)
+        private bool armorWeakened = false;
         private readonly List<EnemyUnit> summonedSkeletons = new List<EnemyUnit>();
 
         // The Courtyard's own skeleton guard: hidden when the fight starts, called in at 50% HP (spec)
@@ -51,19 +49,18 @@ namespace CastleOfTheD20.Bosses
         /// <summary>Whether skeleton reinforcements have already been summoned.</summary>
         public bool HasSpawnedAdds => hasSpawnedAdds;
 
-        /// <summary>Remaining turns of the dialogue AC penalty.</summary>
-        public int RemainingDebuffRounds => remainingDebuffRounds;
+        /// <summary>Whether Baldur's tip weakens the Commander's armour in this fight.</summary>
+        public bool IsArmorWeakened => armorWeakened;
 
         /// <summary>
-        /// Effective Armor Class. If the pre-combat dialogue check was passed,
-        /// AC is reduced by 2 for the first 2 rounds.
+        /// Effective Armor Class: 2 lower for the whole fight when the hero asked Baldur about the castle defences.
         /// </summary>
         public override int ArmorClass
         {
             get
             {
                 int baseAc = base.ArmorClass;
-                return remainingDebuffRounds > 0 ? Mathf.Max(10, baseAc - 2) : baseAc;
+                return armorWeakened ? Mathf.Max(10, baseAc - 2) : baseAc;
             }
         }
 
@@ -93,7 +90,6 @@ namespace CastleOfTheD20.Bosses
             // A retry after the hero falls starts the fight over: no leftover summons, reinforcements again at 50%
             hasSpawnedAdds = false;
             roundsTracked = 0;
-            remainingDebuffRounds = 0;
             DestroySummonedSkeletons();
 
             base.InitializeUnit();
@@ -116,18 +112,11 @@ namespace CastleOfTheD20.Bosses
         private void CheckDialogueDebuff()
         {
             DialogueController dialogue = DialogueController.Instance;
+            // The tip is a saved story flag and is not used up, so it also holds on a retry or after a reload
             if (dialogue != null && (dialogue.HasCombatDebuff(dialogueDebuffTag) || dialogue.HasCombatDebuff("SoldiersHonor")))
             {
-                earnedSoldiersHonor = true;
-                dialogue.ConsumeCombatDebuff(dialogueDebuffTag);
-                dialogue.ConsumeCombatDebuff("SoldiersHonor");
-            }
-
-            // The hero who won the honor check keeps that edge when retrying the fight
-            if (earnedSoldiersHonor)
-            {
-                remainingDebuffRounds = debuffDurationRounds;
-                Debug.Log($"[CursedCommander] Soldier's Honor check succeeded! Commander's armor is weakened (-2 AC) for {remainingDebuffRounds} rounds.");
+                armorWeakened = true;
+                Debug.Log("[CursedCommander] Baldur's tip: the Commander's rusted greaves weaken his armour (-2 AC) for the whole fight.");
             }
         }
 
@@ -150,16 +139,7 @@ namespace CastleOfTheD20.Bosses
         {
             base.OnTurnActionFinished();
 
-            // Decrement dialogue AC debuff after each boss action round
             roundsTracked++;
-            if (remainingDebuffRounds > 0)
-            {
-                remainingDebuffRounds--;
-                if (remainingDebuffRounds == 0)
-                {
-                    Debug.Log("[CursedCommander] The Commander recovered his stance. AC weakness has worn off.");
-                }
-            }
         }
 
         #endregion

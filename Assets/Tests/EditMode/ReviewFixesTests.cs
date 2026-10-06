@@ -137,7 +137,7 @@ namespace CastleOfTheD20.Tests
 
             king.EnterStoneForm();
             Assert.IsTrue(king.IsStoneFormActive);
-            Assert.AreEqual(firstPhaseAc + 3, king.ArmorClass);
+            Assert.AreEqual(firstPhaseAc + GargoyleKingBoss.StoneFormArmorBonus, king.ArmorClass);
 
             king.Die(); // Stone Form's Mana Shield would absorb a killing blow here
             Assert.IsFalse(king.IsAlive);
@@ -146,7 +146,7 @@ namespace CastleOfTheD20.Tests
 
             Assert.IsTrue(king.IsAlive);
             Assert.IsFalse(king.IsStoneFormActive, "A retry faces the first-phase King.");
-            Assert.AreEqual(firstPhaseAc, king.ArmorClass, "Stone Form's +3 AC must not carry into the retry.");
+            Assert.AreEqual(firstPhaseAc, king.ArmorClass, "Stone Form's extra AC must not carry into the retry.");
             Assert.AreEqual(king.MaxHP, king.CurrentHP);
 
             // He reaches Stone Form again at half health
