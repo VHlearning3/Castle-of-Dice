@@ -36,7 +36,7 @@ namespace CastleOfTheD20.UI
         [Tooltip("Text on continue button (e.g. 'Continue').")]
         [SerializeField] private TMP_Text continueButtonText;
 
-        [Tooltip("Text on reroll button (e.g. 'Use Reroll Scroll (2)').")]
+        [Tooltip("Text on reroll button (e.g. 'Use Rune of Fate (2)').")]
         [SerializeField] private TMP_Text rerollButtonText;
 
         [Header("Button Container (Optional)")]
@@ -188,7 +188,7 @@ namespace CastleOfTheD20.UI
 
             if (rerollButtonText != null)
             {
-                rerollButtonText.text = "Use Reroll Scroll";
+                rerollButtonText.text = "Use Rune of Fate";
                 rerollButtonText.fontSize = 12f;
             }
         }
@@ -250,7 +250,7 @@ namespace CastleOfTheD20.UI
                     rerollButton.interactable = true;
                     if (rerollButtonText != null)
                     {
-                        rerollButtonText.text = $"Use Reroll Scroll ({scrolls})";
+                        rerollButtonText.text = $"Use Rune of Fate ({scrolls})";
                     }
                 }
                 else

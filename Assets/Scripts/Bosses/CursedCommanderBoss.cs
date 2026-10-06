@@ -11,7 +11,7 @@ namespace CastleOfTheD20.Bosses
     /// Courtyard & Watchtower Boss: The Cursed Commander.
     /// Wields a heavy shield giving high baseline Armor Class.
     /// Spawns 2 Skeleton adds when health drops to 50% or below.
-    /// Susceptible to pre-combat dialogue check ("Soldier's Honor"): -2 AC for the first 2 combat rounds.
+    /// Baldur's tip about the rusted greaves ("CommanderArmorWeakened"): -2 AC for the first 2 combat rounds.
     /// </summary>
     public class CursedCommanderBoss : EnemyUnit, IReinforcementSummoner
     {

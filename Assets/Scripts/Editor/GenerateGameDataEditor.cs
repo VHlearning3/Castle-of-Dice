@@ -565,17 +565,6 @@ namespace CastleOfTheD20.Editor
             EditorUtility.SetDirty(baldurStart);
             assetCount++;
 
-            // Backward compatibility aliases
-            DialogueNodeSO baldurIntro = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Intro.asset");
-            if (ShouldInitialize(baldurIntro)) baldurIntro.Initialize(baldurStart.SpeakerName, baldurStart.DialogueText, baldurStart.SpeakerPortrait, baldurStart.IsExitNode);
-            baldurIntro.SetOptions(new List<DialogueOption>(baldurStart.Options));
-            EditorUtility.SetDirty(baldurIntro);
-
-            DialogueNodeSO baldurRumor = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Baldur_Rumor.asset");
-            if (ShouldInitialize(baldurRumor)) baldurRumor.Initialize(baldurLore.SpeakerName, baldurLore.DialogueText, baldurLore.SpeakerPortrait, baldurLore.IsExitNode);
-            baldurRumor.SetOptions(new List<DialogueOption>(baldurLore.Options));
-            EditorUtility.SetDirty(baldurRumor);
-
             // 3. Innkeeper Barnaby Dialogue Tree
             DialogueNodeSO barnabyAccepted = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Barnaby_Accepted.asset");
             if (ShouldInitialize(barnabyAccepted)) barnabyAccepted.Initialize(
@@ -661,7 +650,7 @@ namespace CastleOfTheD20.Editor
             if (ShouldInitialize(itemSignetRing)) itemSignetRing.Initialize(
                 id: "item_signet_ring",
                 name: "Othelia's Signet Ring",
-                desc: "Ancient golden seal bearing the noble crest of Othelia's ancestors. Lost in the castle courtyard.",
+                desc: "Queen Isolde's golden signet ring, kept by Othelia's family for generations. The Gargoyle King could refuse its wearer nothing.",
                 type: ItemType.QuestItem,
                 buyPrice: 0,
                 sellPrice: 0,
@@ -674,8 +663,8 @@ namespace CastleOfTheD20.Editor
             ItemSO itemRerollRune = GetOrCreateAsset<ItemSO>($"{DataFolderPath}/Item_RerollRuneStone.asset");
             if (ShouldInitialize(itemRerollRune)) itemRerollRune.Initialize(
                 id: "item_reroll_rune",
-                name: "Rune of Fate (D20 Reroll)",
-                desc: "Mystical rune stone of Oakhaven. Allows the bearer to invoke a critical D20 reroll.",
+                name: "Rune of Fate",
+                desc: "A rune stone of Oakhaven. When one of your d20 rolls fails, break the rune to roll again.",
                 type: ItemType.QuestItem,
                 buyPrice: ShopManager.REROLL_RUNE_PRICE,
                 sellPrice: 35,
@@ -890,17 +879,6 @@ namespace CastleOfTheD20.Editor
             assetCount++;
 
             // 6. Boss 1: Cursed Commander Dialogue (Siipi 1: Alapiha)
-            DialogueNodeSO commanderSuccess = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Success.asset");
-            if (ShouldInitialize(commanderSuccess)) commanderSuccess.Initialize(
-                speaker: "Cursed Commander",
-                text: "An oath...? It echoes across centuries in my mind... A moment of hesitation! My armor splinters!",
-                portrait: null,
-                isExit: true
-            );
-            commanderSuccess.SetOptions(new List<DialogueOption>());
-            EditorUtility.SetDirty(commanderSuccess);
-            assetCount++;
-
             DialogueNodeSO commanderFail = GetOrCreateAsset<DialogueNodeSO>($"{dialogueFolder}/Commander_Check_Fail.asset");
             if (ShouldInitialize(commanderFail)) commanderFail.Initialize(
                 speaker: "Cursed Commander",
@@ -921,15 +899,6 @@ namespace CastleOfTheD20.Editor
             );
             commanderIntro.SetOptions(new List<DialogueOption>
             {
-                new DialogueOption(
-                    "[DC 13 Soldier's Honor] The oath of the royal guard still binds you! Remember your honor and serve the curse no longer!",
-                    commanderSuccess,
-                    true,
-                    13,
-                    "Honor / Persuasion Check",
-                    commanderFail,
-                    "SoldiersHonor"
-                ),
                 new DialogueOption("[Fight] Your words are hollow, undead fiend. Prepare for destruction!", commanderFail, false, 10, "", null, "")
             });
             EditorUtility.SetDirty(commanderIntro);

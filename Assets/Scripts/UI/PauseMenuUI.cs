@@ -85,7 +85,7 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public static bool OtherWindowUsesEscape()
         {
-            if (StoryPanelUI.IsOpen || LockpickMinigameUI.IsOpen || TomeShelfMinigameUI.IsOpen || RerollableRoll.IsAwaitingDecision) return true;
+            if (StoryPanelUI.IsOpen || LockpickMinigameUI.IsOpen || TomeShelfMinigameUI.IsOpen || InventoryUI.UsesEscape || RerollableRoll.IsAwaitingDecision) return true;
             if (ShopUIController.Instance != null && ShopUIController.Instance.IsShopOpen) return true;
             if (DungeonMapUIController.Instance != null && DungeonMapUIController.Instance.IsMapOpen) return true;
             QuestJournalUI journal = FindAnyObjectByType<QuestJournalUI>();

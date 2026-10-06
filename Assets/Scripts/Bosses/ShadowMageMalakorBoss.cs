@@ -13,6 +13,8 @@ namespace CastleOfTheD20.Bosses
     /// from a hero who closes in. When hit he teleports away, but at most every other turn.
     /// Spawns one illusionary decoy (Mirror Image) that also fires weaker shadow bolts.
     /// Pre-combat hook: If the player passed the DC 14 Arcane Heresy check, the true Malakor is revealed immediately.
+    /// Scholar Elisa (the mage) always sees through her glamour (Vili, 2026-10-06): the true Witch is shown, and every
+    /// mirror image is visible but shatters as soon as a turn begins.
     /// </summary>
     public class ShadowMageMalakorBoss : EnemyUnit, IReinforcementSummoner
     {
@@ -43,6 +45,9 @@ namespace CastleOfTheD20.Bosses
         public const int ShadowBoltRange = 4;
         private readonly List<EnemyUnit> activeDecoys = new List<EnemyUnit>();
         private readonly List<EnemyUnit> conjuredDecoys = new List<EnemyUnit>();
+
+        // The mage sees through the glamour: mirror images shatter as soon as a turn begins
+        private bool seesThrough;
 
         #endregion
 
@@ -88,6 +93,7 @@ namespace CastleOfTheD20.Bosses
 
             base.InitializeUnit();
 
+            seesThrough = HeroSeesThroughGlamour(FindAnyObjectByType<PlayerUnit>());
             CheckArcaneHeresyDebuff();
             AdoptStandingDecoys();
 
@@ -139,7 +145,7 @@ namespace CastleOfTheD20.Bosses
         {
             DialogueController dialogue = DialogueController.Instance;
             // The mage's arcane debate (critical review C8) pierces the glamour too
-            if (StoryFlags.Has(BossChoices.MalakorShakenFlag)) isRealMalakorRevealed = true;
+            if (seesThrough || StoryFlags.Has(BossChoices.MalakorShakenFlag)) isRealMalakorRevealed = true;
 
             if (dialogue != null && (dialogue.HasCombatDebuff(arcaneHeresyTag) || dialogue.HasCombatDebuff("MalakorRevealed")))
             {
@@ -192,7 +198,7 @@ namespace CastleOfTheD20.Bosses
         /// </summary>
         public bool HoldsBackAtStart(EnemyUnit ally)
         {
-            return ally != null && ally != this && StoryFlags.Has(BossChoices.MalakorShakenFlag)
+            return ally != null && ally != this && !seesThrough && StoryFlags.Has(BossChoices.MalakorShakenFlag)
                 && ally.name.IndexOf("Decoy", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
@@ -211,6 +217,60 @@ namespace CastleOfTheD20.Bosses
             if (decoy == null) return;
             decoy.ConfigureAttackRange(ShadowBoltRange);
             decoy.ConfigureDamageDice(1, 6, 0);
+        }
+
+        #endregion
+
+        #region The Mage Sees Through
+
+        /// <summary>Scholar Elisa (the mage) always sees through the Witch's glamour.</summary>
+        public static bool HeroSeesThroughGlamour(PlayerUnit hero)
+        {
+            return hero != null && hero.CharacterClass != null && hero.CharacterClass.ClassType == CharacterClassType.Mage;
+        }
+
+        /// <summary>Whether this fight's hero sees through the glamour.</summary>
+        public bool SeesThrough => seesThrough;
+
+        private void OnEnable()
+        {
+            TurnManager.OnUnitTurnStarted += HandleTurnStarted;
+        }
+
+        protected override void OnDisable()
+        {
+            base.OnDisable();
+            TurnManager.OnUnitTurnStarted -= HandleTurnStarted;
+        }
+
+        private void HandleTurnStarted(CombatUnit unit)
+        {
+            if (seesThrough && IsAlive) ShatterMirrorImages();
+        }
+
+        /// <summary>
+        /// The mage sees the mirror images for what they are: each living one shatters. Called as every turn
+        /// begins, so the images are seen on the battlefield but never get to act. Returns how many shattered.
+        /// </summary>
+        public int ShatterMirrorImages()
+        {
+            int shattered = 0;
+            for (int i = 0; i < activeDecoys.Count; i++)
+            {
+                EnemyUnit decoy = activeDecoys[i];
+                if (decoy == null || !decoy.IsAlive || !decoy.gameObject.activeInHierarchy) continue;
+
+                World.FloatingCombatText.Instance?.ShowText(decoy.transform.position + Vector3.up * 2f, "SHATTERED!", new Color(0.75f, 0.6f, 1f));
+                decoy.Die();
+                shattered++;
+            }
+            if (shattered > 0)
+            {
+                string message = "Elisa sees through the illusion: the mirror image shatters!";
+                Debug.Log("[ShadowMageMalakor] " + message);
+                UI.CombatUIController.Instance?.LogCombatMessage(message);
+            }
+            return shattered;
         }
 
         #endregion
@@ -266,7 +326,7 @@ namespace CastleOfTheD20.Bosses
             hasSpawnedIllusions = true;
 
             // Shaken by the mage's debate, he cannot hold the mirror spell
-            if (StoryFlags.Has(BossChoices.MalakorShakenFlag))
+            if (!seesThrough && StoryFlags.Has(BossChoices.MalakorShakenFlag))
             {
                 Debug.Log("[ShadowMageMalakor] Shaken, Malakor's mirror spell fizzles.");
                 return;
