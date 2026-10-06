@@ -103,13 +103,7 @@ namespace CastleOfTheD20.UI
             }
 
             string archetypeStr = player.CharacterClass != null ? player.CharacterClass.ClassName : "Combat";
-            string targetStr = ability.TargetType switch
-            {
-                AbilityTargetType.Self => "Self Buff",
-                AbilityTargetType.SingleTarget => "Single Target",
-                AbilityTargetType.Area3x3 => $"Area of Effect ({ability.AreaOfEffectRadius}x{ability.AreaOfEffectRadius})",
-                _ => ability.TargetType.ToString()
-            };
+            string targetStr = GetTargetLabel(ability);
 
             if (subtitleText != null)
             {
@@ -138,39 +132,15 @@ namespace CastleOfTheD20.UI
             }
 
             // 3. Range & Target Profile
-            string rangeStr = ability.TargetType == AbilityTargetType.Self
-                ? "Self (In-place)"
-                : $"{ability.Range} Tile{(ability.Range > 1 ? "s" : "")}";
-
             if (typeAndRangeText != null)
             {
-                typeAndRangeText.text = $"<color=#F6D578>Range:</color> {rangeStr}   |   <color=#F6D578>Targeting:</color> {targetStr}";
+                typeAndRangeText.text = $"<color=#F6D578>Range:</color> {GetRangeLabel(ability)}   |   <color=#F6D578>Targeting:</color> {targetStr}";
             }
 
             // 4. Attack Check & Damage / Potency Formula
             if (formulaText != null)
             {
-                string checkStr = ability.RequiresCheck ? "d20 + Bonus >= Enemy AC" : "Automatic Success";
-                string dmgStr;
-
-                if (ability.DealsDamage)
-                {
-                    // Area spells do not use the blacksmith's weapon upgrade
-                    bool usesWeapon = ability.TargetType == AbilityTargetType.SingleTarget;
-                    int weaponBonus = usesWeapon ? player.WeaponDamageBonus : 0;
-                    string bonusStr = weaponBonus > 0 ? $" (incl. +{weaponBonus} Blacksmith)" : "";
-                    dmgStr = $"{ability.GetDamageFormula(player.PrimaryAttributeBonus, weaponBonus)} Damage{bonusStr}";
-                }
-                else
-                {
-                    dmgStr = "Defensive Stance / Status Buff";
-                }
-
-                int cooldownTurns = AbilityCooldowns.GetCooldownTurns(ability);
-                string cooldownStr = cooldownTurns > 0
-                    ? $"\n<color=#8FB8DE>Cooldown:</color> {cooldownTurns} turns"
-                    : string.Empty;
-                formulaText.text = $"<color=#E67E22>Hit Check:</color> {checkStr}\n<color=#E74C3C>Potency:</color> {dmgStr}{cooldownStr}";
+                formulaText.text = BuildStatsText(ability, player.PrimaryAttributeBonus, player.WeaponDamageBonus, player.MaxHP);
             }
 
             // 5. Full Ability Description (Generously wrapped, never clipped)
@@ -218,6 +188,136 @@ namespace CastleOfTheD20.UI
                 tooltipOverlayInstance.SetActive(false);
             }
         }
+
+        #region Card Text
+
+        /// <summary>What the ability aims at, e.g. "Area of Effect (3x3)" (the area is 2 x radius + 1 tiles wide).</summary>
+        public static string GetTargetLabel(AbilitySO ability)
+        {
+            if (ability == null) return string.Empty;
+            string id = ability.BaseAbilityID.ToLowerInvariant();
+            if (id.Contains("war_cry")) return "All Adjacent Enemies";
+            if (id.Contains("blink") || id.Contains("shadow_step") || id.Contains("shadowstep")) return "Empty Tile";
+
+            switch (ability.TargetType)
+            {
+                case AbilityTargetType.Self:
+                    return "Self Buff";
+                case AbilityTargetType.SingleTarget:
+                    return "Single Target";
+                case AbilityTargetType.Area3x3:
+                    int width = Mathf.Max(1, ability.AreaOfEffectRadius) * 2 + 1;
+                    return $"Area of Effect ({width}x{width})";
+                default:
+                    return ability.TargetType.ToString();
+            }
+        }
+
+        /// <summary>How far the ability reaches; War Cry and self buffs act where the hero stands.</summary>
+        public static string GetRangeLabel(AbilitySO ability)
+        {
+            if (ability == null) return string.Empty;
+            if (ability.TargetType == AbilityTargetType.Self) return "Self";
+            if (ability.BaseAbilityID.ToLowerInvariant().Contains("war_cry")) return "Around You";
+            return $"{ability.Range} Tile{(ability.Range == 1 ? "" : "s")}";
+        }
+
+        /// <summary>
+        /// The card's Hit Check, Potency and Cooldown lines, matching what AbilityExecutor actually does.
+        /// </summary>
+        public static string BuildStatsText(AbilitySO ability, int attributeBonus, int weaponBonus, int maxHP)
+        {
+            if (ability == null) return string.Empty;
+
+            string cooldownStr = string.Empty;
+            int cooldownTurns = AbilityCooldowns.GetCooldownTurns(ability);
+            if (cooldownTurns > 0)
+            {
+                cooldownStr = $"\n<color=#8FB8DE>Cooldown:</color> {cooldownTurns} turn{(cooldownTurns == 1 ? "" : "s")}";
+            }
+
+            return $"<color=#E67E22>Hit Check:</color> {GetCheckLabel(ability, attributeBonus)}\n" +
+                   $"<color=#E74C3C>Potency:</color> {GetPotencyLabel(ability, attributeBonus, weaponBonus, maxHP)}{cooldownStr}";
+        }
+
+        private static string GetCheckLabel(AbilitySO ability, int attributeBonus)
+        {
+            string id = ability.BaseAbilityID.ToLowerInvariant();
+            string roll = $"d20 {(attributeBonus < 0 ? "-" : "+")} {Mathf.Abs(attributeBonus)}";
+
+            // War Cry rolls against every adjacent enemy even though its data needs no single check
+            if (id.Contains("war_cry")) return $"{roll} vs. each enemy's AC";
+            if (!ability.RequiresCheck) return "None (always works)";
+            return ability.TargetType == AbilityTargetType.Area3x3
+                ? $"{roll} vs. each enemy's AC"
+                : $"{roll} vs. target's AC";
+        }
+
+        private static string GetPotencyLabel(AbilitySO ability, int attributeBonus, int weaponBonus, int maxHP)
+        {
+            string id = ability.BaseAbilityID.ToLowerInvariant();
+
+            // Abilities that deal no damage come first: their Rank 2 copies carry +3 Base Value too,
+            // which would otherwise read as "3 Damage"
+            if (id.Contains("iron_will"))
+            {
+                int heal = Mathf.Max(1, Mathf.RoundToInt(maxHP * 0.30f)) + Mathf.Max(0, ability.BaseValue);
+                return $"Heals {heal} HP and removes Poison, Frostbite and Blind";
+            }
+            if (id.Contains("shield_block"))
+            {
+                int armor = ability.IsRank2 ? StatusEffectController.ShieldWallRank2ArmorBonus : StatusEffectController.ShieldWallArmorBonus;
+                string counter = weaponBonus > 0 ? $"1d6 + {weaponBonus}" : "1d6";
+                return $"+{armor} AC until your next turn; {counter} counterattack when an adjacent enemy misses";
+            }
+            if (id.Contains("mana_shield"))
+            {
+                int charges = ability.IsRank2 ? 2 : 1;
+                return $"Absorbs the next {(charges == 1 ? "hit" : charges + " hits")} for up to {TurnsText(ability.EffectDurationTurns)}";
+            }
+            if (id.Contains("smoke_bomb"))
+            {
+                return $"Blind for {TurnsText(ability.EffectDurationTurns)} (Disadvantage on attacks)";
+            }
+            if (id.Contains("shadow_step") || id.Contains("shadowstep"))
+            {
+                return "Teleport without provoking attacks; Advantage on your next attack";
+            }
+            if (id.Contains("blink"))
+            {
+                return ability.IsRank2
+                    ? "Teleport without provoking attacks; Advantage on your next attack"
+                    : "Teleport without provoking attacks";
+            }
+            if (id.Contains("lockpick"))
+            {
+                return "Opens locked doors and chests while exploring";
+            }
+
+            if (ability.DealsDamage)
+            {
+                // The blacksmith's upgrade counts for single-target strikes and Retaliation, not for area attacks
+                bool usesWeapon = ability.TargetType == AbilityTargetType.SingleTarget || id.Contains("retaliation");
+                int bonus = usesWeapon ? Mathf.Max(0, weaponBonus) : 0;
+                string bonusStr = bonus > 0 ? $" (incl. +{bonus} Blacksmith)" : "";
+                string formula = ability.GetDamageFormula(attributeBonus, bonus);
+                if (id.Contains("retaliation")) return $"{formula} Damage to each melee attacker{bonusStr}";
+                if (id.Contains("backstab")) return $"{formula} Damage{bonusStr}, x2 vs. Blind or after Shadow Step";
+                return $"{formula} Damage{bonusStr}";
+            }
+
+            return ability.AppliedEffect != StatusEffectType.None
+                ? $"{ability.AppliedEffect} for {TurnsText(ability.EffectDurationTurns)}"
+                : "No damage";
+        }
+
+        private static string TurnsText(int turns)
+        {
+            turns = Mathf.Max(1, turns);
+            return turns == 1 ? "1 turn" : $"{turns} turns";
+        }
+
+        #endregion
 
         private static void LoadThemeSprites()
         {

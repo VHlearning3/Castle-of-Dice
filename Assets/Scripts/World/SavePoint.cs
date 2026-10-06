@@ -98,7 +98,8 @@ namespace CastleOfTheD20.World
 
             SaveSystem.SaveGame(dataSO, player);
 
-            // 3. Audio & Particle Feedback
+            // 3. Audio & Particle Feedback: the blue glow, rising sparkles and light pulse over the bowl
+            AbilityVfx.PlaySaveShrine(transform);
             if (communeParticles != null)
             {
                 communeParticles.Play();

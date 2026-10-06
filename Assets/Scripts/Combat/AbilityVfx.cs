@@ -12,6 +12,8 @@ namespace CastleOfTheD20.Combat
     /// (shockwave ring, camera shake, pushed enemies sliding back) and Malakor's teleport (purple vortex).
     /// Also the mage's Fireball (flying orb and fiery 3x3 blast) and Frostbite (icy bolt and shards), the potion heal glow, plus
     /// lasting status auras: frost around a slowed unit and a glowing bubble while Mana Shield is up.
+    /// The rogue's Smoke Bomb leaves a grey cloud over its area while its Blind lasts, and using a save
+    /// shrine plays a blue glow in its bowl.
     /// Game logic has already moved the unit when an effect starts; the effect only animates the
     /// unit's model and plays particles, so it never delays turns or changes occupancy.
     /// Built at runtime from pooled particle systems and an always-included shader (WebGL safe).
@@ -49,6 +51,14 @@ namespace CastleOfTheD20.Combat
         private static readonly Color ShieldBubbleColor = new Color(0.35f, 0.7f, 1f, 0.2f);
         private static readonly Color HealRed = new Color(1f, 0.35f, 0.35f, 1f);
         private static readonly Color HealGlow = new Color(1f, 0.85f, 0.75f, 1f);
+        private static readonly Color SmokeBombLight = new Color(0.62f, 0.63f, 0.66f, 0.95f);
+        private static readonly Color SmokeBombDark = new Color(0.38f, 0.39f, 0.42f, 0.95f);
+        private static readonly Color ShrineBlue = new Color(0.25f, 0.6f, 1f, 1f);
+        private static readonly Color ShrineCore = new Color(0.75f, 0.92f, 1f, 1f);
+
+        private const float SmokeBombThrowDuration = 0.35f;
+        private const float SmokeBombPuffsPerTile = 11f;
+        private const float ShrineGlowDuration = 1.8f;
 
         private const float FireballFlightDuration = 0.22f;
         private const float FrostboltFlightDuration = 0.3f;
@@ -119,6 +129,24 @@ namespace CastleOfTheD20.Combat
 
         private readonly Dictionary<CombatUnit, StatusAura> frostAuras = new Dictionary<CombatUnit, StatusAura>();
         private readonly Dictionary<CombatUnit, StatusAura> shieldAuras = new Dictionary<CombatUnit, StatusAura>();
+
+        /// <summary>A Smoke Bomb cloud hanging over its area until the Blind it caused has worn off.</summary>
+        private class SmokeCloud
+        {
+            public CombatUnit Caster;
+            public readonly List<Vector3> TileCenters = new List<Vector3>();
+            public readonly List<CombatUnit> Blinded = new List<CombatUnit>();
+            public float TileSize;
+            public int CasterTurnsLeft;
+            public bool Billowing;
+            public float EmitDebt;
+        }
+
+        private readonly List<SmokeCloud> smokeClouds = new List<SmokeCloud>();
+        private ParticleSystem cloudSmoke;
+
+        private Light shrineLight;
+        private Coroutine shrineRoutine;
 
         private Transform shakeCamera;
         private Vector3 shakeOffset;
@@ -356,6 +384,54 @@ namespace CastleOfTheD20.Combat
             }
         }
 
+        /// <summary>
+        /// Rogue Smoke Bomb: a canister arcs to the target and bursts into a grey cloud over the whole area.
+        /// The cloud keeps billowing until the caster's turns for <paramref name="durationTurns"/> have come round
+        /// and no unit it blinded is still Blind; it also clears when the fight ends.
+        /// </summary>
+        public static void PlaySmokeBomb(CombatUnit caster, List<GridTile> area, List<CombatUnit> blinded, int durationTurns)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || caster == null || area == null || area.Count == 0) return;
+
+            GridManager grid = GridManager.Instance;
+            SmokeCloud cloud = new SmokeCloud
+            {
+                Caster = caster,
+                TileSize = grid != null ? grid.EffectiveTileSize : 1.6f,
+                CasterTurnsLeft = Mathf.Max(1, durationTurns)
+            };
+
+            Vector3 center = Vector3.zero;
+            for (int i = 0; i < area.Count; i++)
+            {
+                if (area[i] == null) continue;
+                Vector3 p = grid != null ? grid.GetWorldPosition(area[i].GridPosition) : area[i].transform.position;
+                cloud.TileCenters.Add(p);
+                center += p;
+            }
+            if (cloud.TileCenters.Count == 0) return;
+            center /= cloud.TileCenters.Count;
+            if (blinded != null) cloud.Blinded.AddRange(blinded);
+
+            vfx.smokeClouds.Add(cloud);
+            vfx.StartCoroutine(vfx.SmokeBombThrowRoutine(caster, cloud, center));
+        }
+
+        /// <summary>
+        /// The player used a save shrine: blue light fills its bowl, sparkles rise out of it, a ring of light
+        /// spreads from the rim and a soft blue light pulses over the surroundings.
+        /// </summary>
+        public static void PlaySaveShrine(Transform shrine)
+        {
+            AbilityVfx vfx = GetOrCreate();
+            if (vfx == null || shrine == null) return;
+
+            Vector3 bowl = MeasureBowl(shrine, out float width);
+            if (vfx.shrineRoutine != null) vfx.StopCoroutine(vfx.shrineRoutine);
+            vfx.shrineRoutine = vfx.StartCoroutine(vfx.SaveShrineRoutine(bowl, width));
+        }
+
         #endregion
 
         #region Unity Lifecycle
@@ -382,8 +458,18 @@ namespace CastleOfTheD20.Combat
             }
         }
 
+        private void OnEnable()
+        {
+            TurnManager.OnUnitTurnStarted += HandleUnitTurnStarted;
+            TurnManager.OnCombatEnded += HandleCombatEnded;
+        }
+
         private void OnDisable()
         {
+            TurnManager.OnUnitTurnStarted -= HandleUnitTurnStarted;
+            TurnManager.OnCombatEnded -= HandleCombatEnded;
+            smokeClouds.Clear();
+
             // Never leave a model shrunken, spun or mid-slide if the scene tears down mid-effect
             foreach (KeyValuePair<Transform, VisualAnim> pair in visualAnims)
             {
@@ -407,6 +493,7 @@ namespace CastleOfTheD20.Combat
         {
             FollowAuras(frostAuras);
             FollowAuras(shieldAuras);
+            FeedSmokeClouds();
 
             // Runs after CameraFollow (execution order 1000), so the offset only affects what is rendered
             if (shakeTimeLeft <= 0f) return;
@@ -725,6 +812,202 @@ namespace CastleOfTheD20.Combat
                 else bounds.Encapsulate(r.bounds);
             }
             return found ? Mathf.Clamp(bounds.size.y, 1.2f, 2.6f) : 1.8f;
+        }
+
+        #endregion
+
+        #region Smoke Bomb & Save Shrine
+
+        private IEnumerator SmokeBombThrowRoutine(CombatUnit caster, SmokeCloud cloud, Vector3 center)
+        {
+            // The canister arcs from the rogue's hand, trailing grey wisps
+            Vector3 from = caster.transform.position + Vector3.up * 1.3f + caster.transform.forward * 0.3f;
+            Vector3 to = center + Vector3.up * 0.2f;
+            float arcHeight = 1.2f + Vector3.Distance(from, to) * 0.15f;
+            float t = 0f;
+            while (t < SmokeBombThrowDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / SmokeBombThrowDuration);
+                Vector3 pos = Vector3.Lerp(from, to, p) + Vector3.up * (Mathf.Sin(p * Mathf.PI) * arcHeight);
+                flash.Emit(FlashParams(pos, SmokeBombDark, 0.35f), 1);
+                yield return null;
+            }
+
+            if (!smokeClouds.Contains(cloud)) yield break; // the fight ended mid-throw
+
+            // Pop: a white flash and a ring of smoke rushing out over the tiles, then the cloud settles in
+            flash.Emit(FlashParams(to + Vector3.up * 0.4f, Color.white, 1.6f), 1);
+            float spread = cloud.TileSize * 1.2f;
+            for (int i = 0; i < 20; i++)
+            {
+                float angle = i / 20f * Mathf.PI * 2f;
+                Vector3 dir = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle));
+                ParticleSystem.EmitParams puff = new ParticleSystem.EmitParams
+                {
+                    position = to + dir * 0.3f + Vector3.up * Random.Range(0.1f, 0.6f),
+                    velocity = dir * Random.Range(spread, spread * 1.8f) + Vector3.up * 0.4f,
+                    startColor = Color.Lerp(SmokeBombLight, SmokeBombDark, Random.value),
+                    startSize = Random.Range(0.9f, 1.4f),
+                    startLifetime = Random.Range(0.8f, 1.1f)
+                };
+                cloudSmoke.Emit(puff, 1);
+            }
+            for (int i = 0; i < cloud.TileCenters.Count; i++)
+            {
+                for (int k = 0; k < 6; k++) EmitCloudPuff(cloud, cloud.TileCenters[i]);
+            }
+            PlaySound(SFXClipType.SpellCast, to, 0.35f);
+            cloud.Billowing = true;
+        }
+
+        /// <summary>Keeps every live cloud topped up with new puffs, a steady few per tile each second.</summary>
+        private void FeedSmokeClouds()
+        {
+            for (int i = 0; i < smokeClouds.Count; i++)
+            {
+                SmokeCloud cloud = smokeClouds[i];
+                if (!cloud.Billowing) continue;
+
+                cloud.EmitDebt += Time.deltaTime * SmokeBombPuffsPerTile * cloud.TileCenters.Count;
+                while (cloud.EmitDebt >= 1f)
+                {
+                    cloud.EmitDebt -= 1f;
+                    EmitCloudPuff(cloud, cloud.TileCenters[Random.Range(0, cloud.TileCenters.Count)]);
+                }
+            }
+        }
+
+        private void EmitCloudPuff(SmokeCloud cloud, Vector3 tileCenter)
+        {
+            float half = cloud.TileSize * 0.45f;
+            ParticleSystem.EmitParams puff = new ParticleSystem.EmitParams
+            {
+                position = tileCenter + new Vector3(Random.Range(-half, half), Random.Range(0.15f, 1.5f), Random.Range(-half, half)),
+                velocity = new Vector3(Random.Range(-0.2f, 0.2f), Random.Range(0.05f, 0.25f), Random.Range(-0.2f, 0.2f)),
+                startColor = Color.Lerp(SmokeBombLight, SmokeBombDark, Random.value),
+                startSize = Random.Range(1.4f, 2.2f) * (cloud.TileSize / 1.6f),
+                startLifetime = Random.Range(2.2f, 3.2f)
+            };
+            cloudSmoke.Emit(puff, 1);
+        }
+
+        private void HandleUnitTurnStarted(CombatUnit unit)
+        {
+            for (int i = smokeClouds.Count - 1; i >= 0; i--)
+            {
+                SmokeCloud cloud = smokeClouds[i];
+                if (unit == cloud.Caster) cloud.CasterTurnsLeft--;
+
+                bool casterDone = cloud.CasterTurnsLeft <= 0 || cloud.Caster == null || !cloud.Caster.IsAlive;
+                if (casterDone && !AnyStillBlind(cloud))
+                {
+                    // Stop feeding the cloud; the puffs already in the air thin out over a couple of seconds
+                    smokeClouds.RemoveAt(i);
+                }
+            }
+        }
+
+        private static bool AnyStillBlind(SmokeCloud cloud)
+        {
+            for (int i = 0; i < cloud.Blinded.Count; i++)
+            {
+                CombatUnit u = cloud.Blinded[i];
+                if (u != null && u.IsAlive && u.StatusEffects != null && u.StatusEffects.HasEffect(StatusEffectType.Blind)) return true;
+            }
+            return false;
+        }
+
+        private void HandleCombatEnded(bool victory)
+        {
+            smokeClouds.Clear();
+        }
+
+        /// <summary>Top centre of the shrine's model (where its bowl is) and how wide the model is.</summary>
+        private static Vector3 MeasureBowl(Transform shrine, out float width)
+        {
+            Renderer[] renderers = shrine.GetComponentsInChildren<Renderer>();
+            bool found = false;
+            Bounds bounds = default;
+            for (int i = 0; i < renderers.Length; i++)
+            {
+                Renderer r = renderers[i];
+                if (r is ParticleSystemRenderer || r is LineRenderer || !r.enabled) continue;
+                if (!found) { bounds = r.bounds; found = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+
+            if (!found)
+            {
+                width = 1f;
+                return shrine.position + Vector3.up * 1f;
+            }
+            width = Mathf.Clamp(Mathf.Max(bounds.size.x, bounds.size.z), 0.6f, 2.5f);
+            return new Vector3(bounds.center.x, bounds.max.y - 0.05f, bounds.center.z);
+        }
+
+        private IEnumerator SaveShrineRoutine(Vector3 bowl, float width)
+        {
+            if (shrineLight == null)
+            {
+                GameObject lightObj = new GameObject("ShrineLight");
+                lightObj.transform.SetParent(transform, false);
+                shrineLight = lightObj.AddComponent<Light>();
+                shrineLight.type = LightType.Point;
+                shrineLight.color = ShrineBlue;
+                shrineLight.shadows = LightShadows.None;
+            }
+            shrineLight.transform.position = bowl + Vector3.up * 0.6f;
+            shrineLight.range = 4f + width * 2f;
+            shrineLight.intensity = 0f;
+            shrineLight.enabled = true;
+
+            // Opening burst: a bright flash in the bowl and a ring of light spreading from the rim
+            flash.Emit(FlashParams(bowl + Vector3.up * 0.2f, ShrineCore, width * 1.8f), 1);
+            flash.Emit(FlashParams(bowl + Vector3.up * 0.3f, ShrineBlue, width * 2.8f), 1);
+            StartCoroutine(ExpandRing(bowl + Vector3.up * 0.05f, width * 0.3f, width * 2.2f, ShrineBlue));
+
+            float rimRadius = width * 0.32f;
+            float sparkleDebt = 0f;
+            float nextGlow = 0f;
+            float t = 0f;
+            while (t < ShrineGlowDuration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.Clamp01(t / ShrineGlowDuration);
+                float swell = Mathf.Sin(Mathf.Min(1f, p * 1.6f) * Mathf.PI * 0.5f) * (1f - p * p);
+
+                shrineLight.intensity = 5f * swell;
+
+                // The bowl stays lit with a pulsing blue glow
+                if (t >= nextGlow)
+                {
+                    nextGlow = t + 0.1f;
+                    flash.Emit(FlashParams(bowl + Vector3.up * 0.12f, Color.Lerp(ShrineBlue, ShrineCore, 0.35f), width * (0.9f + 0.25f * swell)), 1);
+                }
+
+                // Sparkles rise out of the bowl, thinning out towards the end
+                sparkleDebt += Time.deltaTime * 70f * (1f - p);
+                while (sparkleDebt >= 1f)
+                {
+                    sparkleDebt -= 1f;
+                    Vector2 disc = Random.insideUnitCircle * rimRadius;
+                    ParticleSystem.EmitParams mote = new ParticleSystem.EmitParams
+                    {
+                        position = bowl + new Vector3(disc.x, 0.05f, disc.y),
+                        velocity = new Vector3(disc.x * 0.6f, Random.Range(1.4f, 2.8f), disc.y * 0.6f),
+                        startColor = Random.value < 0.35f ? ShrineCore : ShrineBlue,
+                        startSize = Random.Range(0.1f, 0.22f),
+                        startLifetime = Random.Range(0.7f, 1.2f)
+                    };
+                    sparks.Emit(mote, 1);
+                }
+                yield return null;
+            }
+
+            shrineLight.intensity = 0f;
+            shrineLight.enabled = false;
+            shrineRoutine = null;
         }
 
         #endregion
@@ -1220,6 +1503,29 @@ namespace CastleOfTheD20.Combat
             iceRenderer.renderMode = ParticleSystemRenderMode.Stretch;
             iceRenderer.velocityScale = 0.05f;
             iceRenderer.lengthScale = 1.3f;
+
+            // Smoke Bomb cloud: big soft grey puffs that fade in, drift and fade out (fed by LateUpdate)
+            cloudSmoke = CreateSystem("SmokeBombCloud", ParticleSystemSimulationSpace.World, 1200,
+                lifetime: new ParticleSystem.MinMaxCurve(2.2f, 3.2f),
+                speed: new ParticleSystem.MinMaxCurve(0f),
+                size: new ParticleSystem.MinMaxCurve(1.1f, 1.8f),
+                gravity: 0f);
+            ParticleSystem.MainModule cloudMain = cloudSmoke.main;
+            cloudMain.startColor = new ParticleSystem.MinMaxGradient(SmokeBombLight, SmokeBombDark);
+            cloudMain.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            ParticleSystem.ColorOverLifetimeModule cloudCol = cloudSmoke.colorOverLifetime;
+            cloudCol.enabled = true;
+            Gradient cloudFade = new Gradient();
+            cloudFade.SetKeys(
+                new[] { new GradientColorKey(Color.white, 0f), new GradientColorKey(Color.white, 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(1f, 0.25f), new GradientAlphaKey(1f, 0.65f), new GradientAlphaKey(0f, 1f) });
+            cloudCol.color = new ParticleSystem.MinMaxGradient(cloudFade);
+            ParticleSystem.SizeOverLifetimeModule cloudSize = cloudSmoke.sizeOverLifetime;
+            cloudSize.enabled = true;
+            cloudSize.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.25f)));
+            ParticleSystem.RotationOverLifetimeModule cloudSpin = cloudSmoke.rotationOverLifetime;
+            cloudSpin.enabled = true;
+            cloudSpin.z = new ParticleSystem.MinMaxCurve(-0.4f, 0.4f);
 
             for (int i = 0; i < rings.Length; i++)
             {

@@ -474,15 +474,19 @@ namespace CastleOfTheD20.Combat
             int radius = Mathf.Max(1, ability.AreaOfEffectRadius);
             Debug.Log($"[AbilityExecutor] {caster.UnitName} throws a Smoke Bomb at {targetGridPos} (radius {radius})!");
 
+            int duration = Mathf.Max(1, ability.EffectDurationTurns);
             List<GridTile> affected = grid.GetTilesInRadius(targetGridPos, radius);
+            List<CombatUnit> blinded = new List<CombatUnit>();
             foreach (var tile in affected)
             {
                 if (tile.IsOccupied && tile.OccupyingUnit != null && tile.OccupyingUnit != caster)
                 {
-                    tile.OccupyingUnit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: Mathf.Max(1, ability.EffectDurationTurns));
+                    tile.OccupyingUnit.StatusEffects?.ApplyEffect(StatusEffectType.Blind, durationTurns: duration);
+                    blinded.Add(tile.OccupyingUnit);
                 }
             }
 
+            AbilityVfx.PlaySmokeBomb(caster, affected, blinded, duration);
             return true;
         }
 
@@ -636,7 +640,8 @@ namespace CastleOfTheD20.Combat
         {
             Debug.Log($"[AbilityExecutor] {caster.UnitName} applies {ability.AbilityName} to self.");
 
-            if (ability.BaseValue > 0)
+            // Base Value heals only a self buff without damage dice (Retaliation's Rank 2 +3 is damage, not healing)
+            if (ability.BaseValue > 0 && ability.DamageDiceCount <= 0)
             {
                 caster.Heal(ability.BaseValue);
             }
