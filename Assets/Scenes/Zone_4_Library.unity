@@ -5007,7 +5007,7 @@ Transform:
   m_GameObject: {fileID: 597166966}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6, y: 1.4, z: 12}
+  m_LocalPosition: {x: 6, y: 1.4, z: 5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6734,7 +6734,7 @@ Transform:
   m_GameObject: {fileID: 784360747}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1.7, z: 18}
+  m_LocalPosition: {x: 0, y: 1.7, z: 9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -14354,15 +14354,15 @@ MonoBehaviour:
   stageDialogueNpcAtBoss: 1
   generateGridOnCombat: 1
   gridCenterOffset: {x: 0, y: 0, z: 0}
-  gridWidth: 20
-  gridHeight: 20
+  gridWidth: 19
+  gridHeight: 19
   fitGridAroundPlayer: 1
   gridAreaXZ:
     serializedVersion: 2
-    x: 0
-    y: 0
-    width: 0
-    height: 0
+    x: -15.5
+    y: -19
+    width: 31
+    height: 31
   gridTileSize: 1.6
   clearGridOnCombatResolved: 1
 --- !u!65 &1149914911
@@ -14384,8 +14384,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 74, y: 6, z: 88}
-  m_Center: {x: 7, y: 0, z: -10}
+  m_Size: {x: 31, y: 6, z: 31}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!4 &1149914912
 Transform:
   m_ObjectHideFlags: 0
@@ -14395,7 +14395,7 @@ Transform:
   m_GameObject: {fileID: 1149914909}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.5, z: 10}
+  m_LocalPosition: {x: 0, y: 2.5, z: -3.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17007,7 +17007,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 10
+      value: -3.5
       objectReference: {fileID: 0}
     - target: {fileID: 1000000001, guid: 58e11a2f6027a4d468167819e0ccbc92, type: 3}
       propertyPath: m_LocalRotation.w
