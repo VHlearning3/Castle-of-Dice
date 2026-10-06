@@ -15,9 +15,9 @@ def mat(name, rgb, rough=0.8, metal=0.0):
     m.diffuse_color = (*rgb, 1)
     return m
 
-M_STONE = mat("Door_Stone", (0.74, 0.71, 0.64))
-M_STONE_DARK = mat("Door_StoneTrim", (0.62, 0.59, 0.53))
-M_WOOD = mat("Door_Wood", (0.42, 0.24, 0.11), 0.7)
+M_STONE = mat("Door_Stone", (0.70, 0.66, 0.57))
+M_STONE_DARK = mat("Door_StoneTrim", (0.58, 0.55, 0.48))
+M_WOOD = mat("Door_Wood", (0.36, 0.19, 0.08), 0.7)
 M_WOOD_DARK = mat("Door_WoodDark", (0.20, 0.11, 0.05), 0.9)
 M_IRON = mat("Door_Iron", (0.10, 0.10, 0.11), 0.45, 0.6)
 M_VOID = mat("Door_Passage", (0.035, 0.03, 0.03), 1.0)
@@ -57,7 +57,7 @@ class MeshBuilder:
                  cz + radius * math.sin(rot + 2 * math.pi * i / sides)) for i in range(sides)]
         return self.prism(poly, cy - depth, cy, m)
 
-    def finish(self, name, parent=None, location=(0, 0, 0), bevel=0.0, smooth_angle=35):
+    def finish(self, name, parent=None, location=(0, 0, 0), bevel=0.0, smooth_angle=35, bevel_segments=1):
         me = bpy.data.meshes.new(name)
         bmesh.ops.recalc_face_normals(self.bm, faces=self.bm.faces)
         self.bm.to_mesh(me)
@@ -72,7 +72,7 @@ class MeshBuilder:
         if bevel > 0:
             bv = ob.modifiers.new("Bevel", "BEVEL")
             bv.width = bevel
-            bv.segments = 1
+            bv.segments = bevel_segments
             bv.limit_method = "ANGLE"
             bv.angle_limit = math.radians(40)
             bv.harden_normals = False
@@ -117,49 +117,63 @@ def build_door(name, width, spring, c, leaves, planks_per_leaf, origin_x):
 
     # ---------- stone frame ----------
     fb = MeshBuilder()
-    # jambs: quoined blocks, alternating long and short
-    block_h = spring / 5.0
+    R = 0.12  # how far the rounded arch moulding stands proud of the wall face
+    # jambs: a squat base block, a smooth shaft and an impost block where the arch springs
+    base_h = 0.55
     for side in (-1, 1):
-        for i in range(5):
-            z0, z1 = i * block_h, (i + 1) * block_h
-            w = T + (0.12 if i % 2 == 0 else 0.0)
-            xa, xb = hw, hw + w
-            if side < 0:
-                xa, xb = -xb, -xa
-            fb.box(xa, xb, D0, D1, z0, z1, M_STONE)
+        def sx(a, b):
+            return (a, b) if side > 0 else (-b, -a)
+        xa, xb = sx(hw - 0.04, hw + T + 0.1)
+        fb.box(xa, xb, D0 - R - 0.06, D1, 0.0, base_h, M_STONE_DARK)
         # impost block at the spring line (the "block segment" at mid height)
-        xa, xb = hw - 0.04, hw + T + 0.2
-        if side < 0:
-            xa, xb = -xb, -xa
-        fb.box(xa, xb, D0 - 0.06, D1, spring - 0.12, spring + 0.16, M_STONE_DARK)
+        xa, xb = sx(hw - 0.05, hw + T + 0.12)
+        fb.box(xa, xb, D0 - R - 0.08, D1, spring - 0.06, spring + 0.3, M_STONE_DARK)
 
-    # voussoirs
-    segs = 4
-    key_t = 0.86
+    # one continuous rounded moulding: up the left jamb, over the arch and down the right jamb
+    centre_r = (-c, spring)          # right half of the arch is centred left of the middle
+    stations = []
     for side in (-1, 1):
-        for i in range(segs):
-            t0 = key_t * i / segs
-            t1 = key_t * (i + 1) / segs
-            if i == 0:
-                t0 = 0.0
-            pi0 = arch_point(side, t0, hw, c, spring)
-            pi1 = arch_point(side, t1, hw, c, spring)
-            po1 = arch_point(side, t1, hw, c, spring, T)
-            po0 = arch_point(side, t0, hw, c, spring, T)
-            poly = [pi0, po0, po1, pi1]
-            if side < 0:
-                poly = list(reversed(poly))
-            if i == 0:
-                # first voussoir starts above the impost block
-                poly = [(x, max(z, spring + 0.16)) for x, z in poly]
-            fb.prism(poly, D0, D1, M_STONE)
+        pts = []
+        for k in range(3):           # straight jamb shaft
+            z = base_h + (spring - base_h) * k / 3
+            pts.append((side * hw, z, side * 1.0, 0.0))
+        for k in range(13):          # arch curve to the apex
+            t = k / 12
+            x, z = arch_point(1, t, hw, c, spring)
+            nx, nz = x - centre_r[0], z - centre_r[1]
+            ln = math.hypot(nx, nz)
+            pts.append((side * x, z, side * nx / ln, nz / ln))
+        stations.append(pts)
+    path = stations[0] + list(reversed(stations[1][:-1]))
+    yf = D0 - R
+    profile = []                     # (radial offset, y) around the moulding's cross-section
+    for k in range(9):               # rounded front: a half-round from the inner to the outer edge
+        a = math.pi * k / 8
+        profile.append((T * 0.5 - T * 0.5 * math.cos(a), yf + 0.22 * (1.0 - math.sin(a))))
+    profile += [(T, D1), (0.0, D1)]
+    bm = fb.bm
+    mi = fb.mat_index(M_STONE)
+    rings = []
+    for px, pz, nx, nz in path:
+        rings.append([bm.verts.new((px + nx * r, y, pz + nz * r)) for r, y in profile])
+    m = len(profile)
+    for i in range(len(rings) - 1):
+        a, b = rings[i], rings[i + 1]
+        for j in range(m):
+            jn = (j + 1) % m
+            f = bm.faces.new((a[j], a[jn], b[jn], b[j]))
+            f.material_index = mi
+    for ring in (rings[0], rings[-1]):
+        f = bm.faces.new(ring)
+        f.material_index = mi
+    key_t = 0.86
     # keystone: taller, proud of the face
     kl = arch_point(-1, key_t, hw, c, spring)
     kr = arch_point(1, key_t, hw, c, spring)
     apex = spring + rise
     ktop = apex + T + 0.22
     kw_top = (kr[0] - kl[0]) * 0.5 + 0.12
-    fb.prism([(kl[0], kl[1]), (kr[0], kr[1]), (kw_top, ktop), (-kw_top, ktop)], D0 - 0.08, D1, M_STONE_DARK)
+    fb.prism([(kl[0], kl[1]), (kr[0], kr[1]), (kw_top, ktop), (-kw_top, ktop)], D0 - R - 0.1, D1, M_STONE_DARK)
     # spandrel fill above the arch up to the lintel course so the frame reads as one wall piece
     top_z = apex + T + 0.22
     outer_x = hw + T + 0.12
@@ -184,7 +198,7 @@ def build_door(name, width, spring, c, leaves, planks_per_leaf, origin_x):
     # step and threshold
     fb.box(-hw - T - 0.35, hw + T + 0.35, D0 - 0.75, D0 + 0.02, 0.0, 0.14, M_STONE_DARK)
     fb.box(-hw, hw, D0, D1, 0.0, 0.06, M_STONE_DARK)
-    frame = fb.finish(name + "_Frame", root, bevel=0.035)
+    frame = fb.finish(name + "_Frame", root, bevel=0.04, bevel_segments=2)
 
     # ---------- dark passage behind the opening ----------
     pb = MeshBuilder()
@@ -240,32 +254,32 @@ def build_door(name, width, spring, c, leaves, planks_per_leaf, origin_x):
             h = lambda x: spring + arch_rise(x, hw - 0.012, c) - 0.01
             poly = [(x0, 0.06), (x1, 0.06), (x1, h(x1)), (xm, h(xm)), (x0, h(x0))]
             lb.prism([(x - hinge_x, z) for x, z in poly], leaf_y0, leaf_y0 + plank_d, M_WOOD)
-        # iron bands
-        for bz in (spring * 0.27, spring * 0.78):
-            lb.box(lo - hinge_x + 0.01, hi - hinge_x - 0.01, leaf_y0 - 0.03, leaf_y0 + 0.005, bz - 0.065, bz + 0.065, M_IRON)
-            # rivets
+        # thick rounded iron bands across both leaves
+        for bz in (spring * 0.12, spring * 0.66):
+            lb.box(lo - hinge_x + 0.01, hi - hinge_x - 0.01, leaf_y0 - 0.06, leaf_y0 + 0.005, bz - 0.085, bz + 0.085, M_IRON)
             for k in range(n):
                 rx = lo + (k + 0.5) * pw - hinge_x
-                lb.cyl((rx, leaf_y0 - 0.03, bz), 0.022, 0.018, 6, M_IRON)
-        # pentagonal knob on the meeting edge side
-        knob_x = (inner + side * 0.2) if leaves == 2 else (inner - 0.2)
-        kz = 1.2
-        lb.cyl((knob_x - hinge_x, leaf_y0 - 0.005, kz), 0.085, 0.02, 5, M_IRON, rot=math.pi / 2)
-        lb.cyl((knob_x - hinge_x, leaf_y0 - 0.025, kz), 0.055, 0.07, 5, M_IRON, rot=math.pi / 2)
-        # latch bar (left leaf of a pair, or the single leaf) with a ring handle plate
+                lb.cyl((rx, leaf_y0 - 0.06, bz), 0.026, 0.02, 6, M_IRON)
+        # big pentagonal knob near the meeting edge: a rim plate with a raised boss
+        knob_x = (inner + side * 0.24) if leaves == 2 else (inner - 0.24)
+        kz = spring * 0.42
+        lb.cyl((knob_x - hinge_x, leaf_y0 - 0.005, kz), 0.16, 0.035, 5, M_IRON, rot=math.pi / 2)
+        lb.cyl((knob_x - hinge_x, leaf_y0 - 0.04, kz), 0.095, 0.07, 5, M_IRON, rot=math.pi / 2)
         if (leaves == 2 and side < 0) or leaves == 1:
-            lz = kz + 0.28
-            if leaves == 2:
-                bx0, bx1 = inner - 0.45, inner + 0.12
-            else:
-                bx0, bx1 = inner - 0.5, inner - 0.04
-            lb.box(bx0 - hinge_x, bx1 - hinge_x, leaf_y0 - 0.065, leaf_y0 - 0.025, lz - 0.025, lz + 0.025, M_IRON)
-            lb.box(bx0 + 0.02 - hinge_x, bx0 + 0.08 - hinge_x, leaf_y0 - 0.03, leaf_y0, lz - 0.06, lz + 0.06, M_IRON)
-        elif leaves == 2:
-            lz = kz + 0.28
-            # catch the bar drops into
-            lb.box(inner + 0.06 - hinge_x, inner + 0.14 - hinge_x, leaf_y0 - 0.075, leaf_y0, lz - 0.06, lz + 0.06, M_IRON)
-        leaf = lb.finish(leaf_name, root, location=(hinge_x, 0, 0), bevel=0.008)
+            # wooden drop bar low on the leaf, held by two iron staples
+            bz = spring * 0.27
+            bx0 = lo + 0.12 if leaves == 2 else lo + 0.1
+            bx1 = inner + 0.18 if leaves == 2 else hi - 0.1
+            lb.box(bx0 - hinge_x, bx1 - hinge_x, leaf_y0 - 0.1, leaf_y0, bz - 0.06, bz + 0.06, M_WOOD)
+            for sxp in (bx0 + 0.12, (bx0 + bx1) * 0.5):
+                lb.box(sxp - 0.03 - hinge_x, sxp + 0.03 - hinge_x, leaf_y0 - 0.115, leaf_y0, bz - 0.085, bz + 0.085, M_IRON)
+        if (leaves == 2 and side > 0) or leaves == 1:
+            # iron latch strap running from the knob toward the hinge
+            sz = kz + 0.02
+            sx0 = knob_x + 0.1 if leaves == 2 else knob_x - 0.5
+            sx1 = knob_x + 0.5 if leaves == 2 else knob_x - 0.1
+            lb.box(sx0 - hinge_x, sx1 - hinge_x, leaf_y0 - 0.05, leaf_y0, sz - 0.05, sz + 0.05, M_IRON)
+        leaf = lb.finish(leaf_name, root, location=(hinge_x, 0, 0), bevel=0.018, bevel_segments=2)
     return root
 
 
