@@ -152,7 +152,14 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return Frames(5);
             if (takeShots) yield return Shot(Path.Combine(shots, "forest_gate_open.png"));
 
-            // Walk through the opening to the secret door into the Grand Archives
+            // Behind the gate a door now leads onto the Hidden Trail, and its sign says so
+            DoorTeleporter toTrail = FindDoor(SecretForestPath.SceneName);
+            Assert.IsNotNull(toTrail, "the secret door behind the gate leads onto the trail");
+            ZoneExitSign trailSign = toTrail.transform.parent.GetComponentInChildren<ZoneExitSign>();
+            Assert.IsNotNull(trailSign, "the trail door has a sign");
+            Assert.AreEqual(SecretForestPath.DisplayName, trailSign.Label.text);
+
+            // Walk through the opening to the secret door onto the trail
             CharacterController cc = Hero().GetComponent<CharacterController>();
             float walkUntil = Time.realtimeSinceStartup + 25f;
             while (SceneManager.GetActiveScene().name == "Zone_2_ForestPath" && Time.realtimeSinceStartup < walkUntil)
@@ -166,7 +173,81 @@ namespace CastleOfTheD20.Tests.PlayMode
                 yield return null;
             }
             yield return WaitForLoad();
-            Assert.AreEqual("Zone_4_Library", SceneManager.GetActiveScene().name, "walked through the gate into the Grand Archives");
+            Assert.AreEqual(SecretForestPath.SceneName, SceneManager.GetActiveScene().name, "walked through the gate onto the Hidden Trail");
+            Assert.AreEqual(GameLocation.Forest, GameManager.Instance.CurrentLocation, "the trail counts as the Forest");
+            GameObject arrival = GameObject.Find(SecretForestPath.SpawnFromForest);
+            Assert.IsNotNull(arrival, "the trail's landing spot from the Forest");
+            Assert.Less(Flat(Hero().transform.position - arrival.transform.position), 2.5f, "the hero lands at the trail's start");
+            Assert.AreEqual(0, UnityEngine.Object.FindObjectsByType<DungeonRoomController>(FindObjectsSortMode.None).Length, "no fights on the trail");
+            Assert.IsNotNull(FindDoor("Zone_2_ForestPath"), "an arch leads back to the Forest Path");
+            DoorTeleporter toLibrary = FindDoor("Zone_4_Library");
+            Assert.IsNotNull(toLibrary, "the trail ends at a door into the Library");
+            SwingDoor libraryDoor = toLibrary.transform.parent.GetComponentInChildren<SwingDoor>();
+            Assert.IsNotNull(libraryDoor, "the Library door is the wooden single door");
+            Assert.AreEqual(1, libraryDoor.Leaves.Length, "a single leaf");
+            Assert.IsFalse(libraryDoor.IsOpen, "shut while the hero is far away");
+            if (takeShots) yield return Shot(Path.Combine(shots, "trail_start.png"));
+
+            // Follow the trail north; the door swings open as the hero comes near and its trigger leads in
+            Vector3[] trail =
+            {
+                new Vector3(2.5f, 0f, -17f), new Vector3(-2.5f, 0f, -7f), new Vector3(2f, 0f, 3f),
+                new Vector3(-1.5f, 0f, 13f), new Vector3(0f, 0f, 30f)
+            };
+            int next = 0;
+            bool midShot = false, doorChecked = false;
+            walkUntil = Time.realtimeSinceStartup + 60f;
+            while (SceneManager.GetActiveScene().name == SecretForestPath.SceneName && Time.realtimeSinceStartup < walkUntil)
+            {
+                cc = Hero() != null ? Hero().GetComponent<CharacterController>() : null;
+                if (cc != null && cc.enabled)
+                {
+                    Vector3 hero = Hero().transform.position;
+                    Vector3 to = trail[next] - hero;
+                    to.y = 0f;
+                    if (to.magnitude < 1.2f && next < trail.Length - 1) next++;
+                    if (takeShots && !midShot && hero.z > -6f)
+                    {
+                        midShot = true;
+                        yield return Shot(Path.Combine(shots, "trail_middle.png"));
+                    }
+                    if (!doorChecked && hero.z > libraryDoor.transform.position.z - 5.5f)
+                    {
+                        doorChecked = true;
+                        Assert.IsTrue(libraryDoor.IsOpen, "the door opens for the hero");
+                        // Stand still while it swings, then check it is wide open
+                        float swing = Time.time + 1.2f;
+                        while (Time.time < swing) yield return null;
+                        Assert.Greater(libraryDoor.OpenAmount, 0.99f, "the door swung fully open");
+                        if (takeShots) yield return Shot(Path.Combine(shots, "trail_library_door_open.png"));
+                    }
+                    cc.Move(to.normalized * (5f * Time.deltaTime) + Vector3.down * 0.05f);
+                }
+                yield return null;
+            }
+            yield return WaitForLoad();
+            Assert.AreEqual("Zone_4_Library", SceneManager.GetActiveScene().name, "the trail's door leads into the Grand Archives");
+            GameObject sideSpawn = GameObject.Find(SecretForestPath.LibrarySpawnFromTrail);
+            Assert.IsNotNull(sideSpawn, "the Library has a landing spot at its secret side door");
+            Assert.Less(Flat(Hero().transform.position - sideSpawn.transform.position), 2.5f, "the hero arrives by the side door");
+            DoorTeleporter sideDoor = FindDoor(SecretForestPath.SceneName);
+            Assert.IsNotNull(sideDoor, "the Library's side door leads back to the trail");
+            Assert.IsNotNull(sideDoor.transform.parent.GetComponentInChildren<SwingDoor>(), "the side door is the wooden single door");
+            DoorTeleporter hall = FindDoor("Zone_5_CastleHall");
+            Assert.IsNotNull(hall.transform.parent.GetComponentInChildren<SwingDoor>(), "the Library's hall gate is the wooden double door");
+            Assert.AreEqual(2, hall.transform.parent.GetComponentInChildren<SwingDoor>().Leaves.Length);
+            if (takeShots)
+            {
+                yield return Frames(20);
+                yield return Shot(Path.Combine(shots, "library_side_door.png"));
+                yield return ShotFrom(hall.transform.parent.position + hall.transform.parent.rotation * new Vector3(0f, 0f, -6f), Path.Combine(shots, "library_hall_double_door.png"));
+            }
+        }
+
+        private static float Flat(Vector3 v)
+        {
+            v.y = 0f;
+            return v.magnitude;
         }
 
         private static IEnumerator PlayMinigame(LockpickInteraction gate)

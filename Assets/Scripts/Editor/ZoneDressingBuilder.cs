@@ -62,6 +62,10 @@ namespace CastleOfTheD20.Editor
         {
             Init();
             Dress("Zone_2_ForestPath", 2002, DressForest);
+            if (File.Exists("Assets/Scenes/" + SecretForestPath.SceneName + ".unity"))
+            {
+                Dress(SecretForestPath.SceneName, 2525, DressSecretTrail);
+            }
             Dress("Zone_3_CastleCourtyard", 3003, DressCourtyard);
             Dress("Zone_4_Library", 4004, DressLibrary);
             Dress("Zone_5_CastleHall", 5005, DressHall);
@@ -1081,6 +1085,185 @@ namespace CastleOfTheD20.Editor
             }, 1f, Col.None);
             lockGo.transform.SetParent(gate.transform, true);
             PointLight("Gold_Lock_Glow", frame, new Vector3(-24.2f, 2.6f, 15f), Hex("ffd76a"), 6f, 1.2f, true);
+        }
+
+        #endregion
+
+        #region Zone 2.5: Hidden Trail (secret forest path)
+
+        /// <summary>The narrow trail from the arch back to the Forest Path (south) to the Library's side door (north).</summary>
+        public static readonly List<Vector3> SecretTrail = new List<Vector3>
+        {
+            new Vector3(0f, 0f, -27f), new Vector3(2.5f, 0f, -17f), new Vector3(-2.5f, 0f, -7f), new Vector3(2f, 0f, 3f),
+            new Vector3(-1.5f, 0f, 13f), new Vector3(0f, 0f, 23f)
+        };
+
+        /// <summary>Where the Library's outer wall stands at the trail's north end (its door is placed by SecretForestPathBuilder).</summary>
+        public const float SecretTrailWallZ = 24f;
+
+        /// <summary>Dresses only the Hidden Trail scene (CastleOfDice/Build Hidden Trail runs this after laying out the scene).</summary>
+        public static void DressSecretForestPath()
+        {
+            Init();
+            Dress(SecretForestPath.SceneName, 2525, DressSecretTrail);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void DressSecretTrail()
+        {
+            SetFloor("Forest_Ground", "Forest");
+            // Deeper in the woods than the Forest Path: low, warm sun through a closer canopy and a greener haze
+            Mood(Hex("ffe2b4"), 0.95f, new Vector3(50f, -55f, 0f),
+                Hex("86ab9c"), Hex("98b27f"), Hex("34472b"),
+                Hex("b4c7a6"), 24f, 95f, null);
+            SetLight("ForestLight_South", Hex("9fe08a"), 1.1f);
+            SetLight("ForestLight_North", Hex("8ad0c0"), 1.1f);
+
+            Transform paths = Group("Paths").transform;
+            Ribbon("Hidden_Trail", paths, SecretTrail, 3.4f, 0.02f, "Dirt");
+
+            // The Library's outer wall closes the trail, with buttresses and ivy; the door frame sits in its gap
+            Transform wall = Group("Library_Outer_Wall").transform;
+            const float frameHalf = 3.0f, wallTop = 8.5f, frameTop = 6.3f, wallHalf = 22f, thick = 1.4f;
+            float wz = SecretTrailWallZ + thick * 0.5f + 0.2f;
+            for (int side = -1; side <= 1; side += 2)
+            {
+                float cx = side * (frameHalf + wallHalf) * 0.5f;
+                Prop("Trail_Wall", "Wall_" + (side < 0 ? "W" : "E"), wall, new Vector3(cx, 0f, wz), 0f, pb =>
+                {
+                    pb.Box("StoneLight", new Vector3(0f, wallTop * 0.5f, 0f), new Vector3(wallHalf - frameHalf, wallTop, thick));
+                    pb.Box("Stone", new Vector3(0f, 0.3f, -0.1f), new Vector3(wallHalf - frameHalf, 0.6f, thick + 0.2f));
+                    for (float mx = -(wallHalf - frameHalf) * 0.5f + 0.6f; mx < (wallHalf - frameHalf) * 0.5f; mx += 1.6f)
+                    {
+                        pb.Box("StoneLight", new Vector3(mx, wallTop + 0.45f, 0f), new Vector3(0.9f, 0.9f, thick));
+                    }
+                }, 1f, Col.Box);
+                foreach (float bx in new[] { 7f, 13f, 19f })
+                {
+                    Prop("Trail_Buttress", "Buttress", wall, new Vector3(side * bx, 0f, wz - thick * 0.5f - 0.5f), 0f, pb =>
+                    {
+                        pb.Box("Stone", new Vector3(0f, 3.2f, 0f), new Vector3(1.3f, 6.4f, 1.0f));
+                        pb.Box("StoneLight", new Vector3(0f, 6.6f, 0.2f), new Vector3(1.4f, 0.5f, 0.7f));
+                    }, 1f, Col.Box);
+                }
+            }
+            Prop("Trail_Wall_Top", "Wall_Over_Door", wall, new Vector3(0f, 0f, wz), 0f, pb =>
+            {
+                pb.Box("StoneLight", new Vector3(0f, (frameTop + wallTop) * 0.5f, 0f), new Vector3(frameHalf * 2f + 0.2f, wallTop - frameTop, thick));
+                pb.Box("StoneLight", new Vector3(-0.8f, wallTop + 0.45f, 0f), new Vector3(0.9f, 0.9f, thick));
+                pb.Box("StoneLight", new Vector3(0.8f, wallTop + 0.45f, 0f), new Vector3(0.9f, 0.9f, thick));
+            }, 1f, Col.None);
+            // Ivy creeping up the stone
+            Prop("Trail_Ivy", "Ivy", wall, new Vector3(0f, 0f, wz - thick * 0.5f - 0.03f), 0f, pb =>
+            {
+                pb.Box("LeafDark", new Vector3(-6.5f, 2.6f, 0f), new Vector3(2.2f, 5.2f, 0.05f));
+                pb.Box("Leaf", new Vector3(-5.9f, 4.2f, -0.02f), new Vector3(1.2f, 2.6f, 0.05f));
+                pb.Box("LeafDark", new Vector3(10.8f, 3.4f, 0f), new Vector3(1.8f, 6.8f, 0.05f));
+                pb.Box("Leaf", new Vector3(11.4f, 1.6f, -0.02f), new Vector3(1.4f, 3.2f, 0.05f));
+                pb.Box("Leaf", new Vector3(-12.5f, 1.4f, 0f), new Vector3(2.4f, 2.8f, 0.05f));
+            }, 1f, Col.None);
+
+            // Close ranks of pines and broadleaf trees on both sides make the trail feel hidden
+            Transform trees = Group("Trail_Trees").transform;
+            var treeSpots = new List<Vector3>();
+            for (float z = -29f; z <= 21f; z += 3.1f)
+            {
+                float px = TrailX(z);
+                for (int side = -1; side <= 1; side += 2)
+                {
+                    foreach (Vector2 band in new[] { new Vector2(11f, 13.5f), new Vector2(14.5f, 17.5f), new Vector2(18.5f, 21f) })
+                    {
+                        float x = px + side * Rand(band.x, band.y);
+                        float zz = z + Rand(-1.2f, 1.2f);
+                        if (zz < -22f && Mathf.Abs(x) < 7.5f) continue; // the arch back to the Forest Path
+                        if (zz > 20f && band.x < 12f) continue;         // keep the wall's foot clear
+                        string pick = band.x < 12f ? Pick(new[] { "Pine_tree", "Pine_tree_2", "Tree_1", "Tree_4" })
+                                                  : Pick(new[] { "Pine_tree", "Pine_tree_2", "Pine_tree_2_1", "Tree_1" });
+                        Place(pick, trees, new Vector3(x, 0f, zz), Rand(0f, 360f), Rand(0.85f, 1.25f));
+                        treeSpots.Add(new Vector3(x, 0f, zz));
+                    }
+                }
+            }
+            // A screen of trees behind the arch so the south edge is forest, not void
+            for (float x = -21f; x <= 21f; x += 3.4f)
+            {
+                if (Mathf.Abs(x) < 5f) continue;
+                Place(Pick(new[] { "Pine_tree", "Pine_tree_2" }), trees, new Vector3(x + Rand(-0.8f, 0.8f), 0f, -33.5f + Rand(-1f, 1f)), Rand(0f, 360f), Rand(0.9f, 1.2f));
+            }
+            for (float x = -4f; x <= 4f; x += 2.6f)
+            {
+                Place("Pine_tree_2", trees, new Vector3(x, 0f, -36f + Rand(-0.6f, 0.6f)), Rand(0f, 360f), Rand(0.9f, 1.1f));
+            }
+
+            // Logs, stumps and a mossy waystone with a thieves' mark (an X over a line: "the way is clear")
+            Transform rocks = Group("Rocks_And_Logs").transform;
+            Place("Log", rocks, new Vector3(4.2f, 0.3f, -11f), 70f, 0.8f);
+            Place("Stump", rocks, new Vector3(-4.2f, 0f, -14f), 30f, 0.9f);
+            Place("Stump", rocks, new Vector3(5f, 0f, 9f), 120f, 0.8f);
+            Place("Rock_3", rocks, new Vector3(-4.5f, 0f, 6f), 200f, 0.45f);
+            Place("Rock_1", rocks, new Vector3(4.8f, 0f, -22f), 15f, 0.6f);
+            Prop("Trail_Waystone", "Waystone", rocks, new Vector3(-3.6f, 0f, -2f), 25f, pb =>
+            {
+                pb.Box("StoneDark", new Vector3(0f, 0.75f, 0f), new Vector3(0.7f, 1.5f, 0.4f));
+                pb.Box("StoneDark", new Vector3(0f, 1.55f, 0f), new Vector3(0.5f, 0.2f, 0.36f));
+                pb.Box("GoldGlow", new Vector3(0f, 1.05f, -0.21f), new Vector3(0.05f, 0.42f, 0.02f), new Vector3(0f, 0f, 40f));
+                pb.Box("GoldGlow", new Vector3(0f, 1.05f, -0.21f), new Vector3(0.05f, 0.42f, 0.02f), new Vector3(0f, 0f, -40f));
+                pb.Box("GoldGlow", new Vector3(0f, 0.74f, -0.21f), new Vector3(0.3f, 0.04f, 0.02f));
+                pb.Box("Leaf", new Vector3(0.12f, 1.62f, 0.02f), new Vector3(0.4f, 0.08f, 0.3f));
+            }, 1f, Col.Box);
+
+            // Glowing mushrooms and fireflies light the way at the trail's bends
+            Transform glow = Group("Trail_Glow").transform;
+            foreach (Vector3 spot in new[] { new Vector3(-3.6f, 0f, -18f), new Vector3(3.8f, 0f, -4f), new Vector3(-3.4f, 0f, 11f), new Vector3(3f, 0f, 19f) })
+            {
+                for (int i = 0; i < 4; i++)
+                {
+                    PlaceVisual(Pick(new[] { "Mushroom_1", "Mushroom_2", "Mushroom_3" }), glow, spot + new Vector3(Rand(-0.8f, 0.8f), 0f, Rand(-0.8f, 0.8f)), Rand(0f, 360f), Rand(0.45f, 0.75f));
+                }
+                PointLight("Mushroom_Glow", glow, spot + new Vector3(0f, 0.8f, 0f), Hex("9affc8"), 5f, 0.9f, true);
+            }
+            Particles("Fireflies", root, new Vector3(0f, 1.6f, -2f), new Vector3(14f, 2.5f, 48f), 40, 6f, 0.25f, 0.05f, 0.1f, new Color(0.85f, 1f, 0.55f, 0.9f), 0f);
+
+            // Undergrowth off the trail
+            Transform under = Group("Undergrowth").transform;
+            ScatterTrail(under, new[] { "Grass_1", "Grass_2", "Grass_3" }, 110, 0.9f, 1.4f, 2.1f, treeSpots);
+            ScatterTrail(under, new[] { "Fern" }, 40, 0.7f, 1.1f, 2.4f, treeSpots);
+            ScatterTrail(under, new[] { "Flowers_1", "Flowers_2", "Flower" }, 18, 0.8f, 1.1f, 2.2f, treeSpots);
+            ScatterTrail(under, new[] { "Bush_1", "Bush_2" }, 18, 0.8f, 1.2f, 3.2f, treeSpots);
+        }
+
+        private static float TrailX(float z)
+        {
+            for (int i = 0; i < SecretTrail.Count - 1; i++)
+            {
+                Vector3 a = SecretTrail[i], b = SecretTrail[i + 1];
+                if (z <= b.z || i == SecretTrail.Count - 2)
+                {
+                    float t = Mathf.Clamp01((z - a.z) / (b.z - a.z));
+                    return Mathf.Lerp(a.x, b.x, t);
+                }
+            }
+            return 0f;
+        }
+
+        private static void ScatterTrail(Transform parent, string[] prefabNames, int count, float minScale, float maxScale, float clearance, List<Vector3> trees)
+        {
+            int placed = 0, tries = 0;
+            while (placed < count && tries < count * 20)
+            {
+                tries++;
+                Vector3 p = new Vector3(Rand(-20f, 20f), 0f, Rand(-29f, 22f));
+                if (DistToPolyline(p, SecretTrail) < clearance) continue;
+                if ((new Vector2(p.x, p.z + 27f)).sqrMagnitude < 16f) continue; // the arch's threshold
+                bool blocked = false;
+                foreach (Vector3 t in trees)
+                {
+                    if ((t - p).sqrMagnitude < 0.8f) { blocked = true; break; }
+                }
+                if (blocked) continue;
+                PlaceVisual(Pick(prefabNames), parent, p, Rand(0f, 360f), Rand(minScale, maxScale));
+                placed++;
+            }
         }
 
         #endregion

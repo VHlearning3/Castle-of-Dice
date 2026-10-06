@@ -4981,7 +4981,7 @@ GameObject:
   - component: {fileID: 191600770}
   - component: {fileID: 191600769}
   m_Layer: 0
-  m_Name: Door_Forest_Library_Secret_Trigger
+  m_Name: Door_Forest_SecretPath_Trigger
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5014,14 +5014,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f10af947a1666b44b8f089b3cded1026, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.World.DoorTeleporter
-  promptMessage: Slip into the Grand Archives (Secret Path)
+  promptMessage: Follow the hidden trail
   interactionRadius: 4.5
   isInteractable: 1
   destination: {fileID: 0}
   fallbackDestination: {x: 0, y: 0, z: 0}
-  destinationZone: Library
-  targetSceneName: Zone_4_Library
-  targetSpawnPointName: Spawn_From_SecretPath
+  destinationZone: Forest
+  targetSceneName: Zone_2.5_SecretForestPath
+  targetSpawnPointName: Spawn_From_ForestPath
   triggerOnWalk: 1
   teleportCooldown: 1
   teleportSound: {fileID: 0}
@@ -39631,7 +39631,7 @@ GameObject:
   - component: {fileID: 1451053019}
   - component: {fileID: 1451053018}
   m_Layer: 0
-  m_Name: Spawn_From_Library
+  m_Name: Spawn_From_SecretPath
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -49827,7 +49827,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1859032223}
   m_Layer: 0
-  m_Name: Door_Forest_Library_Secret
+  m_Name: Door_Forest_SecretPath
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

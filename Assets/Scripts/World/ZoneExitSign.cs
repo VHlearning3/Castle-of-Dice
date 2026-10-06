@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using CastleOfTheD20.Core;
@@ -66,6 +67,7 @@ namespace CastleOfTheD20.World
         public static string DestinationName(DoorTeleporter door)
         {
             if (door == null) return string.Empty;
+            if (SecretForestPath.IsScene(door.TargetSceneName)) return SecretForestPath.DisplayName;
             if (!string.IsNullOrEmpty(door.DestinationZone) && Enum.TryParse(door.DestinationZone, true, out GameLocation loc))
             {
                 return DungeonMapUIController.GetZoneDisplayName(loc);
@@ -86,7 +88,8 @@ namespace CastleOfTheD20.World
         private static Transform GateRoot(Transform door)
         {
             Transform parent = door.parent;
-            if (parent != null && parent.name.StartsWith("Door_", StringComparison.Ordinal) && parent.Find("Arch_Model") != null)
+            if (parent != null && parent.name.StartsWith("Door_", StringComparison.Ordinal)
+                && (parent.Find("Arch_Model") != null || parent.GetComponentInChildren<SwingDoor>(true) != null))
             {
                 return parent;
             }
@@ -170,15 +173,12 @@ namespace CastleOfTheD20.World
         private void BuildBraziers(Transform root)
         {
             Light first = null;
-            foreach (Transform child in root)
+            foreach (Vector3 top in PillarTops(root))
             {
-                if (!child.name.StartsWith("DecoPillar", StringComparison.Ordinal)) continue;
-                if (!TryRendererBounds(child, out Bounds pillar)) continue;
-
                 GameObject brazier = new GameObject("Brazier");
                 brazier.layer = 2;
                 brazier.transform.SetParent(transform, true);
-                brazier.transform.position = new Vector3(pillar.center.x, pillar.max.y, pillar.center.z);
+                brazier.transform.position = top;
 
                 Primitive(PrimitiveType.Cylinder, "Bowl", brazier.transform, new Vector3(0f, 0.14f, 0f), new Vector3(0.95f, 0.14f, 0.95f), s_ironMaterial);
                 Primitive(PrimitiveType.Cylinder, "Coals", brazier.transform, new Vector3(0f, 0.26f, 0f), new Vector3(0.75f, 0.03f, 0.75f), s_trimMaterial);
@@ -191,7 +191,7 @@ namespace CastleOfTheD20.World
                     GameObject lightGo = new GameObject("Gate_Light");
                     lightGo.layer = 2;
                     lightGo.transform.SetParent(transform, false);
-                    lightGo.transform.position = new Vector3(transform.position.x, pillar.max.y + 0.6f, transform.position.z);
+                    lightGo.transform.position = new Vector3(transform.position.x, top.y + 0.6f, transform.position.z);
                     first = lightGo.AddComponent<Light>();
                     first.type = LightType.Point;
                     first.shadows = LightShadows.None;
@@ -203,6 +203,26 @@ namespace CastleOfTheD20.World
 
             glow = first;
             glowBase = first != null ? first.intensity : 0f;
+        }
+
+        /// <summary>Name prefix of the empty marks on top of a castle door model's pillars, where the braziers stand.</summary>
+        public const string PillarTopPrefix = "PillarTop";
+
+        /// <summary>Tops of the gate's pillars: the old DecoPillar props, or the PillarTop marks on a castle door model.</summary>
+        private static List<Vector3> PillarTops(Transform root)
+        {
+            var tops = new List<Vector3>(2);
+            foreach (Transform child in root)
+            {
+                if (!child.name.StartsWith("DecoPillar", StringComparison.Ordinal)) continue;
+                if (!TryRendererBounds(child, out Bounds pillar)) continue;
+                tops.Add(new Vector3(pillar.center.x, pillar.max.y, pillar.center.z));
+            }
+            foreach (Transform t in root.GetComponentsInChildren<Transform>())
+            {
+                if (t.name.StartsWith(PillarTopPrefix, StringComparison.Ordinal)) tops.Add(t.position);
+            }
+            return tops;
         }
 
         private static void CreateFlame(Transform parent)
