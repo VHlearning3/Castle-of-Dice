@@ -73,6 +73,9 @@ namespace CastleOfTheD20.World
 
         // Quest status conversations built at runtime; destroyed when replaced
         private readonly List<DialogueNodeSO> questDialogueNodes = new List<DialogueNodeSO>();
+
+        // Nodes built for the hero's own quest choice (ClassQuestDialogues), rebuilt on every talk
+        private readonly List<DialogueNodeSO> classQuestNodes = new List<DialogueNodeSO>();
         private DialogueOption shopSideOption;
 
         #endregion
@@ -229,6 +232,15 @@ namespace CastleOfTheD20.World
 
             DialogueNodeSO openingNode = BuildQuestOpeningNode() ?? startingDialogueNode;
 
+            // The hero's own quest, offered by this villager (Baldur, Othelia or Barnaby)
+            ReleaseNodes(classQuestNodes);
+            DialogueOption classQuestOption = ClassQuestDialogues.BuildOption(npcName, player, classQuestNodes)
+                ?? ClassQuestDialogues.BuildOption(name, player, classQuestNodes);
+            if (classQuestOption != null)
+            {
+                openingNode = ClassQuestDialogues.WithOption(openingNode, classQuestOption, classQuestNodes);
+            }
+
             List<DialogueOption> extraOptions = null;
             if (OffersFight)
             {
@@ -295,13 +307,18 @@ namespace CastleOfTheD20.World
 
         private void ReleaseQuestDialogueNodes()
         {
-            for (int i = 0; i < questDialogueNodes.Count; i++)
+            ReleaseNodes(questDialogueNodes);
+        }
+
+        private static void ReleaseNodes(List<DialogueNodeSO> nodes)
+        {
+            for (int i = 0; i < nodes.Count; i++)
             {
-                if (questDialogueNodes[i] == null) continue;
-                if (Application.isPlaying) Destroy(questDialogueNodes[i]);
-                else DestroyImmediate(questDialogueNodes[i]);
+                if (nodes[i] == null) continue;
+                if (Application.isPlaying) Destroy(nodes[i]);
+                else DestroyImmediate(nodes[i]);
             }
-            questDialogueNodes.Clear();
+            nodes.Clear();
         }
 
         private void OnDisable()

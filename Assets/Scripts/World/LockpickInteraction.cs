@@ -89,6 +89,9 @@ namespace CastleOfTheD20.World
         /// <summary>Popup shown when a non-Rogue tries to pick a lock.</summary>
         public const string CannotLockpickMessage = "Can't lockpick";
 
+        /// <summary>Popup shown when the knight or the mage tries the Forest Path's secret gate.</summary>
+        public const string CannotOpenSecretGateMessage = "The lock is far too fine for you.\nOnly a rogue's fingers could pick it.";
+
         /// <summary>Fired when a lockpicking minigame ends in success or failure (not when the Rogue steps away): (isSuccess).</summary>
         public static event Action<bool> OnLockpickAttempt;
 
@@ -150,17 +153,12 @@ namespace CastleOfTheD20.World
                 return;
             }
 
-            // Tiirikointi is the Rogue's exploration passive. A secret gate also gives way to the other
-            // classes their own way (critical review C6): the warrior breaks it, the mage reads its rune.
+            // Tiirikointi is the Rogue's exploration passive. Only the Rogue opens locks, the Forest Path's
+            // secret gate included (Vili, 2026-10-06); the knight and the mage have their own quests instead.
             if (!CanPickLocks(player))
             {
-                if (OffersClassAlternative(player))
-                {
-                    TryClassAlternative(player);
-                    return;
-                }
                 Debug.Log($"[LockpickInteraction] {player.UnitName} can't pick locks (Rogue only).");
-                LockpickMinigameUI.ShowToast(CannotLockpickMessage);
+                LockpickMinigameUI.ShowToast(hiddenPathObject != null ? CannotOpenSecretGateMessage : CannotLockpickMessage);
                 return;
             }
 
@@ -172,56 +170,7 @@ namespace CastleOfTheD20.World
             LockpickMinigameUI.Open(minigame, title, outcome => HandleMinigameFinished(player, outcome));
         }
 
-        /// <summary>STR check for the warrior to break a secret gate.</summary>
-        public const int ForceGateDC = 15;
-
-        /// <summary>INT check for the mage to read a secret gate's warding rune.</summary>
-        public const int ReadRuneDC = 14;
-
-        /// <summary>Secret gates (they hide a passage) can be opened by every class; chests stay the Rogue's.</summary>
-        public bool OffersClassAlternative(PlayerUnit player)
-        {
-            if (player == null || player.CharacterClass == null || hiddenPathObject == null) return false;
-            CharacterClassType type = player.CharacterClass.ClassType;
-            return type == CharacterClassType.Warrior || type == CharacterClassType.Mage;
-        }
-
-        private bool resolvingAlternative;
-
-        /// <summary>
-        /// Warrior: d20 + STR vs DC 15 to break the gate. Mage: d20 + INT vs DC 14 to read the rune.
-        /// A failed attempt can be tried again; the warrior bruises a shoulder (1 damage).
-        /// </summary>
-        public void TryClassAlternative(PlayerUnit player)
-        {
-            if (resolvingAlternative || !isLocked) return;
-
-            bool warrior = player.CharacterClass.ClassType == CharacterClassType.Warrior;
-            HeroAttribute attribute = warrior ? HeroAttribute.Strength : HeroAttribute.Intelligence;
-            int dc = warrior ? ForceGateDC : ReadRuneDC;
-            string title = warrior ? "Break the Gate / Strength" : "Read the Warding Rune / Intelligence";
-
-            resolvingAlternative = true;
-            RerollableRoll.Roll(HeroAttributes.GetModifier(player, attribute), dc, AdvantageType.None, result =>
-            {
-                resolvingAlternative = false;
-                if (!isLocked) return;
-
-                if (result.isSuccess)
-                {
-                    LockpickMinigameUI.ShowToast(warrior ? "The gate gives way!" : "The rune fades and the lock opens!");
-                    HandleLockpickSuccess(player);
-                    OnLockpickAttempt?.Invoke(true);
-                }
-                else
-                {
-                    LockpickMinigameUI.ShowToast(warrior ? "The gate holds. Try again." : "The rune resists you. Try again.");
-                    if (warrior) player.TakeDamage(1);
-                }
-            }, title);
-        }
-
-        /// <summary>Only the Rogue (Varjo-Corvo) can pick locks.</summary>
+        /// <summary>Only the Rogue (Sylvaine the Veiled) can pick locks.</summary>
         public static bool CanPickLocks(PlayerUnit player)
         {
             return player != null && player.CharacterClass != null && player.CharacterClass.ClassType == CharacterClassType.Rogue;
@@ -278,11 +227,6 @@ namespace CastleOfTheD20.World
             {
                 hiddenPathObject.SetActive(true);
                 Debug.Log("[LockpickInteraction] A secret passage has been revealed!");
-
-                if (PlayerProgressionManager.Instance != null)
-                {
-                    PlayerProgressionManager.Instance.NotifySecretPathOpened();
-                }
             }
 
             OnUnlocked?.Invoke();
