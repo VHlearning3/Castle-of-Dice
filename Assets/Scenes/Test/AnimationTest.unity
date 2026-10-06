@@ -451,7 +451,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.DevTools.AnimationTestBench
   entries:
-  - displayName: Sir Roland
+  - displayName: Sir Roland the Brave
     group: Heroes
     prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
     modelChild: Knight_Model
@@ -486,7 +486,7 @@ MonoBehaviour:
     - Base Layer.warrior_retaliation
     - Base Layer.Die
     - Base Layer.Victory
-  - displayName: Scholar Elira
+  - displayName: Scholar Elisa Stareye
     group: Heroes
     prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
     modelChild: Mage_Model
@@ -521,7 +521,7 @@ MonoBehaviour:
     - Base Layer.Attack
     - Base Layer.Die
     - Base Layer.Victory
-  - displayName: Shadow-Corvo
+  - displayName: Sylvaine the Veiled
     group: Heroes
     prefab: {fileID: 2464302212963280834, guid: 0ea933dbd7d765f43b38e91c21e47d12, type: 3}
     modelChild: Rogue_Model

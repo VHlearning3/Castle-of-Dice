@@ -367,7 +367,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO warriorClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Warrior_SirRoland.asset");
             if (ShouldInitialize(warriorClass)) warriorClass.Initialize(
                 type: CharacterClassType.Warrior,
-                name: "Sir Roland",
+                name: "Sir Roland the Brave",
                 lore: "Veteran of the royal guard who donned his ancestral plate armor to purge his fallen castle of undead abominations.",
                 maxHp: 30,
                 ac: 14,
@@ -382,7 +382,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO mageClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Mage_Elira.asset");
             if (ShouldInitialize(mageClass)) mageClass.Initialize(
                 type: CharacterClassType.Mage,
-                name: "Scholar Elira",
+                name: "Scholar Elisa Stareye",
                 lore: "Academy arcanist seeking to unravel the ancient curses and retrieve lost grimoires hidden in the castle's depths.",
                 maxHp: 20,
                 ac: 12,
@@ -397,7 +397,7 @@ namespace CastleOfTheD20.Editor
             CharacterClassSO rogueClass = GetOrCreateAsset<CharacterClassSO>($"{DataFolderPath}/Character_Rogue_Corvo.asset");
             if (ShouldInitialize(rogueClass)) rogueClass.Initialize(
                 type: CharacterClassType.Rogue,
-                name: "Shadow-Corvo",
+                name: "Sylvaine the Veiled",
                 lore: "Tavern-bred opportunist and lockpick specialist who knows the castle's secret passageways better than anyone.",
                 maxHp: 25,
                 ac: 13,
@@ -421,7 +421,7 @@ namespace CastleOfTheD20.Editor
                 EditorUtility.DisplayDialog(
                     "Castle of the D20",
                     $"Successfully generated {assetCount} game data assets in '{DataFolderPath}'!\n\n" +
-                    "- 3 Character Classes (Sir Roland, Elira, Corvo) with assigned abilities\n" +
+                    "- 3 Character Classes (Sir Roland the Brave, Elisa Stareye, Sylvaine the Veiled) with assigned abilities\n" +
                     "- 12 Abilities (4 per class)\n" +
                     "- 4 Items (Potion, Sharpened Blade, Runic Armor, Scrap Metal)\n" +
                     "- 4 Quests (Cellar Pests, Scrap for the Forge, Lost Signet Ring, Herbs for the Healer)\n" +

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Character_Mage_Elira
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.CharacterClassSO
   classType: 1
-  characterName: Scholar Elira
+  characterName: Scholar Elisa Stareye
   backgroundLore: Academy arcanist seeking to unravel the ancient curses and retrieve
     lost grimoires hidden in the castle's depths.
   baseMaxHealth: 20

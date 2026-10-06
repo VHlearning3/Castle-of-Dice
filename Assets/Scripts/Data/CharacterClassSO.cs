@@ -16,10 +16,10 @@ namespace CastleOfTheD20.Data
         #region Serialized Fields
 
         [Header("Class Identity")]
-        [Tooltip("Core class archetype: Warrior (Sir Roland), Mage (Elira), or Rogue (Shadow-Corvo).")]
+        [Tooltip("Core class archetype: Warrior (Sir Roland the Brave), Mage (Scholar Elisa Stareye), or Rogue (Sylvaine the Veiled).")]
         [SerializeField] private CharacterClassType classType = CharacterClassType.Warrior;
 
-        [Tooltip("Canonical name of the character (e.g. 'Sir Roland', 'Scholar Elira', 'Shadow-Corvo').")]
+        [Tooltip("Canonical name of the character (e.g. 'Sir Roland the Brave', 'Scholar Elisa Stareye', 'Sylvaine the Veiled').")]
         [SerializeField] private string characterName = "Hero";
 
         [Tooltip("Narrative lore, history, and motivations described in character selection.")]

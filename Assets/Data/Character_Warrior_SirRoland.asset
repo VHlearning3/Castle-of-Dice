@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Character_Warrior_SirRoland
   m_EditorClassIdentifier: Assembly-CSharp::CastleOfTheD20.Data.CharacterClassSO
   classType: 0
-  characterName: Sir Roland
+  characterName: Sir Roland the Brave
   backgroundLore: Veteran of the royal guard who donned his ancestral plate armor
     to purge his fallen castle of undead abominations.
   baseMaxHealth: 30

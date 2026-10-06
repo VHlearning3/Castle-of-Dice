@@ -34,9 +34,9 @@ namespace CastleOfTheD20.Editor
 
         private static readonly Def[] Defs =
         {
-            new Def { name = "Sir Roland", group = "Heroes", path = PlayerHero, child = "Knight_Model", heroClass = CharacterClassType.Warrior, note = "Sword and shield are saved on his hand bones in PlayerHero." },
-            new Def { name = "Scholar Elira", group = "Heroes", path = PlayerHero, child = "Mage_Model", weapons = true, heroClass = CharacterClassType.Mage, note = "Staff attached from HeroWeaponMounts, as in the game." },
-            new Def { name = "Shadow-Corvo", group = "Heroes", path = PlayerHero, child = "Rogue_Model", weapons = true, heroClass = CharacterClassType.Rogue, note = "Daggers attached from HeroWeaponMounts, as in the game." },
+            new Def { name = "Sir Roland the Brave", group = "Heroes", path = PlayerHero, child = "Knight_Model", heroClass = CharacterClassType.Warrior, note = "Sword and shield are saved on his hand bones in PlayerHero." },
+            new Def { name = "Scholar Elisa Stareye", group = "Heroes", path = PlayerHero, child = "Mage_Model", weapons = true, heroClass = CharacterClassType.Mage, note = "Staff attached from HeroWeaponMounts, as in the game." },
+            new Def { name = "Sylvaine the Veiled", group = "Heroes", path = PlayerHero, child = "Rogue_Model", weapons = true, heroClass = CharacterClassType.Rogue, note = "Daggers attached from HeroWeaponMounts, as in the game." },
             new Def { name = "Baldur the Smith", group = "NPCs", path = Npcs + "NPC_Baldur_Smith.prefab" },
             new Def { name = "Barnaby", group = "NPCs", path = Npcs + "NPC_Barnaby_3dmodel.prefab" },
             new Def { name = "Pip the Peddler (ghost)", group = "NPCs", path = Visuals + "Visual_NPC_Pip_Ghost.prefab", note = "Floats in place; talk and trade only." },

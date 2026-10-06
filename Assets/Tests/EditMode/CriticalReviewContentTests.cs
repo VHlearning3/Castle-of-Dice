@@ -134,6 +134,15 @@ namespace CastleOfTheD20.Tests
             StringAssert.Contains("the old commander", LoreTexts.Get("courtyard_roster").Body);
         }
 
+        /// <summary>The heroes' names (Vili, 2026-10-06).</summary>
+        [Test]
+        public void Heroes_CarryTheirNames()
+        {
+            Assert.AreEqual("Sir Roland the Brave", AssetDatabase.LoadAssetAtPath<CharacterClassSO>("Assets/Data/Character_Warrior_SirRoland.asset").CharacterName);
+            Assert.AreEqual("Scholar Elisa Stareye", AssetDatabase.LoadAssetAtPath<CharacterClassSO>("Assets/Data/Character_Mage_Elira.asset").CharacterName);
+            Assert.AreEqual("Sylvaine the Veiled", AssetDatabase.LoadAssetAtPath<CharacterClassSO>("Assets/Data/Character_Rogue_Corvo.asset").CharacterName);
+        }
+
         [Test]
         public void ZoneScenes_CarryTheirNotesAndContent()
         {
