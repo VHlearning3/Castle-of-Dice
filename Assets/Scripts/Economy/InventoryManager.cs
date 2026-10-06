@@ -99,10 +99,17 @@ namespace CastleOfTheD20.Economy
                         Debug.LogWarning($"[InventoryManager] Saved item '{itemIds[i]}' is not in the item catalog and was skipped.");
                         continue;
                     }
-                    if (itemCounts[i] > 0)
+                    if (itemCounts[i] <= 0) continue;
+
+                    if (ShopManager.IsUpgrade(item))
                     {
-                        items[item] = itemCounts[i];
+                        // Older saves kept a quest's Sharpened Blade in the bag, where it could never be used:
+                        // apply it now instead (audit 2026-10-06)
+                        ShopManager.ApplyUpgrade(item, FindAnyObjectByType<PlayerUnit>(), Mathf.Max(1, item.StatBonusValue) * itemCounts[i]);
+                        continue;
                     }
+
+                    items[item] = itemCounts[i];
                 }
             }
 

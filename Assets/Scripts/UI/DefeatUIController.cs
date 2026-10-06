@@ -99,22 +99,36 @@ namespace CastleOfTheD20.UI
                 defeatModalPanel.SetActive(true);
             }
 
+            // A lost fist fight with a villager is no death in the castle (audit 2026-10-06)
+            bool brawl = NpcBrawlerUnit.Active != null;
+
             if (titleText != null)
             {
-                titleText.text = "YOUR HERO HAS FALLEN";
+                titleText.text = brawl ? "KNOCKED DOWN!" : "YOUR HERO HAS FALLEN";
             }
 
             if (messageText != null)
             {
-                messageText.text = string.IsNullOrEmpty(customMessage)
-                    ? "The shadows of the castle were too strong this time...\nYet fortune's dice may still turn in your favor."
-                    : customMessage;
+                string defaultMessage = brawl
+                    ? $"{NpcBrawlerUnit.Active.UnitName} wins the scuffle and offers you a hand up.\nNo harm done, only your pride."
+                    : "The shadows of the castle were too strong this time...\nYet fortune's dice may still turn in your favor.";
+                messageText.text = string.IsNullOrEmpty(customMessage) ? defaultMessage : customMessage;
             }
+
+            SetButtonLabel(retryButton, brawl ? "Rematch" : "Try Again");
+            SetButtonLabel(returnToVillageButton, brawl ? "Walk It Off" : "Return to Oakhaven");
 
             if (SFXManager.Instance != null)
             {
                 SFXManager.Instance.PlaySFX(SFXClipType.Defeat);
             }
+        }
+
+        private static void SetButtonLabel(Button button, string label)
+        {
+            if (button == null) return;
+            TMP_Text text = button.GetComponentInChildren<TMP_Text>(true);
+            if (text != null) text.text = label;
         }
 
         public void Hide()
@@ -215,7 +229,9 @@ namespace CastleOfTheD20.UI
             NpcBrawlerUnit brawl = NpcBrawlerUnit.Active;
             if (brawl != null)
             {
+                // Walk it off: the hero gets up where the scuffle was instead of being sent to the village start
                 brawl.Recover();
+                return;
             }
 
             // The lost fight waits, unlocked, until the hero walks back in

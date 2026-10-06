@@ -107,6 +107,12 @@ namespace CastleOfTheD20.World
         private BoxCollider triggerCollider;
         private bool isEncounterTriggered = false;
         private bool isAwaitingBossDialogue = false;
+
+        // Where the hero was before this room's fight switched the location to roomLocation (the village above
+        // the Cellar); put back when the fight ends so music, banner and map follow the hero again
+        private bool hasLocationBeforeCombat;
+        private GameLocation locationBeforeCombat;
+
         private readonly List<Pose> enemyStartPoses = new List<Pose>();
         private Pose bossDialogueNpcStartPose;
 
@@ -601,6 +607,8 @@ namespace CastleOfTheD20.World
             {
                 if (Enum.TryParse<GameLocation>(roomLocation, true, out GameLocation parsedLocation))
                 {
+                    hasLocationBeforeCombat = true;
+                    locationBeforeCombat = GameManager.Instance.CurrentLocation;
                     GameManager.Instance.SetLocation(parsedLocation);
                 }
                 GameManager.Instance.SetState(GamePlayMode.Combat);
@@ -677,6 +685,8 @@ namespace CastleOfTheD20.World
                 }
             }
 
+            RestoreLocationBeforeCombat();
+
             // 4. Clear the combat grid once exploration resumes
             if (clearGridOnCombatResolved && GridManager.Instance != null)
             {
@@ -718,6 +728,7 @@ namespace CastleOfTheD20.World
 
             currentState = RoomState.Unexplored;
             isEncounterTriggered = false;
+            RestoreLocationBeforeCombat();
 
             SetBarriersLocked(false);
 
@@ -818,6 +829,17 @@ namespace CastleOfTheD20.World
             else if (player < center - halfSpan + margin) center = player + halfSpan - margin;
 
             return hasArea ? Mathf.Clamp(center, minCenter, maxCenter) : center;
+        }
+
+        /// <summary>
+        /// Puts the location back to where the hero stood before the fight (audit 2026-10-06: after the cellar
+        /// rats it stayed "Cellar", so the castle song and the cellar banner followed the hero into the village).
+        /// </summary>
+        private void RestoreLocationBeforeCombat()
+        {
+            if (!hasLocationBeforeCombat) return;
+            hasLocationBeforeCombat = false;
+            GameManager.Instance?.SetLocation(locationBeforeCombat);
         }
 
         private void SetBarriersLocked(bool locked)

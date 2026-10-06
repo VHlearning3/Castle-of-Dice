@@ -200,13 +200,32 @@ namespace CastleOfTheD20.Tests.PlayMode
                 yield return Frames(3);
             }
 
-            yield return AutoBattle(label);
+            // A natural 20 at the wrong moment can still drop the hero: try again like a player would (the
+            // defeat panel's Try Again), so the main path is not failed by the dice alone (audit 2026-10-06)
+            const int Attempts = 3;
+            for (int attempt = 1; attempt <= Attempts; attempt++)
+            {
+                if (attempt > 1)
+                {
+                    DefeatUIController defeat = UnityEngine.Object.FindAnyObjectByType<DefeatUIController>();
+                    if (defeat != null) defeat.Hide();
+                    PlayerUnit fallen = UnityEngine.Object.FindAnyObjectByType<PlayerUnit>(FindObjectsInactive.Include);
+                    if (fallen != null) fallen.Revive();
+                    room.ResetEncounter();
+                    room.TriggerEncounter();
+                }
+
+                yield return AutoBattle(attempt == 1 ? label : $"{label} (try {attempt})", lossAllowed: attempt < Attempts);
+                bool lost = TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.Defeat;
+                if (room.IsCleared || !lost) break;
+            }
+
             yield return Frames(10);
             Step($"{label}: room cleared", room.IsCleared);
             CloseLevelUp();
         }
 
-        private IEnumerator AutoBattle(string label)
+        private IEnumerator AutoBattle(string label, bool lossAllowed = false)
         {
             float until = Time.realtimeSinceStartup + 600f;
             int heroTurns = 0;
@@ -236,7 +255,10 @@ namespace CastleOfTheD20.Tests.PlayMode
 
             bool won = TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.Victory;
             string end = TurnManager.Instance != null ? TurnManager.Instance.CurrentState.ToString() : "no TurnManager";
-            Step(won ? $"{label}: won in {heroTurns} hero turns" : $"{label}: ended in {end} after {heroTurns} hero turns", won);
+            bool retrying = !won && lossAllowed && end == TurnState.Defeat.ToString();
+            Step(won ? $"{label}: won in {heroTurns} hero turns"
+                : retrying ? $"{label}: lost to the dice after {heroTurns} hero turns, trying again"
+                : $"{label}: ended in {end} after {heroTurns} hero turns", won || retrying);
         }
 
         private IEnumerator HeroTurn(PlayerUnit hero)

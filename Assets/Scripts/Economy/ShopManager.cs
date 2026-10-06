@@ -178,11 +178,33 @@ namespace CastleOfTheD20.Economy
             return item != null && (item.ItemType == ItemType.WeaponUpgrade || item.ItemType == ItemType.ArmorUpgrade);
         }
 
+        /// <summary>Story flag prefix of Baldur's own upgrades, e.g. "BaldurUpgrade:Weapon:2" (saved with the adventure).</summary>
+        public const string UpgradeFlagPrefix = "BaldurUpgrade:";
+
+        private static string UpgradeFlag(ItemSO item, int tier)
+        {
+            return UpgradeFlagPrefix + (item.ItemType == ItemType.WeaponUpgrade ? "Weapon:" : "Armor:") + tier;
+        }
+
         /// <summary>
-        /// Current upgrade level (0..3) for a weapon or armor upgrade item. Reads the hero when one is
-        /// given, otherwise the session progression data.
+        /// How many times Baldur has improved this (0..3): the shop's own tiers. Bonuses from elsewhere (the hero's
+        /// own quest, a quest reward) do not count, so they never make Baldur's prices jump or cap him early
+        /// (audit 2026-10-06).
         /// </summary>
         public static int GetUpgradeLevel(ItemSO item, PlayerUnit player)
+        {
+            if (!IsUpgrade(item)) return 0;
+
+            int tiers = 0;
+            while (tiers < MAX_UPGRADE_LEVEL && StoryFlags.Has(UpgradeFlag(item, tiers + 1))) tiers++;
+            return tiers;
+        }
+
+        /// <summary>
+        /// The hero's whole permanent bonus for a weapon or armor upgrade item, from every source. Reads the hero
+        /// when one is given, otherwise the session progression data.
+        /// </summary>
+        public static int GetCurrentBonus(ItemSO item, PlayerUnit player)
         {
             if (!IsUpgrade(item)) return 0;
 
@@ -198,7 +220,7 @@ namespace CastleOfTheD20.Economy
                 bonus = item.ItemType == ItemType.WeaponUpgrade ? data.WeaponDamageBonus : data.ArmorClassBonus;
             }
 
-            return Mathf.Clamp(bonus, 0, MAX_UPGRADE_LEVEL);
+            return Mathf.Max(0, bonus);
         }
 
         /// <summary>
@@ -269,6 +291,7 @@ namespace CastleOfTheD20.Economy
 
             if (IsUpgrade(item))
             {
+                StoryFlags.Set(UpgradeFlag(item, GetUpgradeLevel(item, targetPlayer) + 1));
                 ApplyUpgrade(item, targetPlayer);
             }
             else
@@ -281,21 +304,34 @@ namespace CastleOfTheD20.Economy
             return ShopPurchaseResult.Success;
         }
 
-        private static void ApplyUpgrade(ItemSO item, PlayerUnit targetPlayer)
+        /// <summary>
+        /// Raises the hero's permanent damage or armor by one (one of Baldur's upgrades).
+        /// </summary>
+        public static void ApplyUpgrade(ItemSO item, PlayerUnit targetPlayer)
         {
+            ApplyUpgrade(item, targetPlayer, 1);
+        }
+
+        /// <summary>
+        /// Applies <paramref name="amount"/> points of a weapon or armor upgrade. Quest rewards that are upgrade
+        /// items use this too, so they take effect at once instead of sitting unusable in the bag.
+        /// </summary>
+        public static void ApplyUpgrade(ItemSO item, PlayerUnit targetPlayer, int amount)
+        {
+            if (!IsUpgrade(item) || amount <= 0) return;
             bool isWeapon = item.ItemType == ItemType.WeaponUpgrade;
 
             if (targetPlayer != null)
             {
                 if (isWeapon)
                 {
-                    targetPlayer.AddWeaponDamageBonus(1);
-                    Debug.Log($"[ShopManager] Baldur sharpened {targetPlayer.UnitName}'s weapon (+1 DMG)!");
+                    targetPlayer.AddWeaponDamageBonus(amount);
+                    Debug.Log($"[ShopManager] {targetPlayer.UnitName}'s weapon improved (+{amount} DMG)!");
                 }
                 else
                 {
-                    targetPlayer.AddArmorClassBonus(1);
-                    Debug.Log($"[ShopManager] Baldur reinforced {targetPlayer.UnitName}'s armor (+1 AC)!");
+                    targetPlayer.AddArmorClassBonus(amount);
+                    Debug.Log($"[ShopManager] {targetPlayer.UnitName}'s armor improved (+{amount} AC)!");
                 }
                 return;
             }
@@ -303,8 +339,8 @@ namespace CastleOfTheD20.Economy
             // No hero in the scene: store the upgrade in the session data so the next hero picks it up.
             PlayerDataSO data = PlayerDataSO.Session;
             if (data == null) return;
-            if (isWeapon) data.WeaponDamageBonus += 1;
-            else data.ArmorClassBonus += 1;
+            if (isWeapon) data.WeaponDamageBonus += amount;
+            else data.ArmorClassBonus += amount;
         }
 
         #endregion

@@ -650,6 +650,7 @@ namespace CastleOfTheD20.Core
             switch (newLocation)
             {
                 case GameLocation.Village:
+                case GameLocation.Cellar:
                     PlayTrack(MusicTrackType.Village, DEFAULT_FADE_DURATION);
                     break;
                 case GameLocation.Forest:
@@ -781,7 +782,9 @@ namespace CastleOfTheD20.Core
             MusicTrackType targetTrack = MusicTrackType.Village;
             if (GameManager.Instance != null)
             {
-                if (GameManager.Instance.CurrentLocation == GameLocation.Village)
+                // The cellar lies under Oakhaven: its exploration song is the village's
+                GameLocation location = GameManager.Instance.CurrentLocation;
+                if (location == GameLocation.Village || location == GameLocation.Cellar)
                 {
                     targetTrack = MusicTrackType.Village;
                 }

@@ -100,6 +100,9 @@ namespace CastleOfTheD20.World
 
         #region Sequence
 
+        /// <summary>Story flag of a finished adventure (the Gargoyle King beaten and the ending seen).</summary>
+        public const string AdventureCompleteFlag = "AdventureComplete";
+
         private void HandleGameWon()
         {
             if (hasStarted) return;
@@ -118,6 +121,10 @@ namespace CastleOfTheD20.World
                 settle += Time.unscaledDeltaTime;
                 yield return null;
             }
+
+            // The finished adventure is saved, so Continue no longer goes back to before the King (audit 2026-10-06)
+            StoryFlags.Set(AdventureCompleteFlag);
+            SaveSystem.SaveGame(CastleOfTheD20.Data.PlayerDataSO.Session, FindAnyObjectByType<PlayerUnit>());
 
             GameInput.SetExplorationInputEnabled(false);
             if (DungeonMapUIController.Instance != null && DungeonMapUIController.Instance.IsMapOpen)

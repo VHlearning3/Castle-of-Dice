@@ -1768,7 +1768,9 @@ namespace CastleOfTheD20.UI
         /// <summary>
         /// Short, player-facing description of what buying the item does right now.
         /// </summary>
-        private static string GetBuyDescription(ItemSO item, int level)
+        /// <param name="level">Baldur's own upgrades so far (0..3).</param>
+        /// <param name="bonus">The hero's whole bonus: Baldur's work plus quest rewards.</param>
+        private static string GetBuyDescription(ItemSO item, int level, int bonus)
         {
             switch (item.ItemID)
             {
@@ -1786,11 +1788,11 @@ namespace CastleOfTheD20.UI
             string stat = isWeapon ? "DMG" : "AC";
             if (level >= ShopManager.MAX_UPGRADE_LEVEL)
             {
-                return $"Baldur can't improve it further. <color=#F6D578>+{level} {stat}</color>";
+                return $"Baldur can't improve it further. <color=#F6D578>+{bonus} {stat}</color>";
             }
-            return level == 0
+            return bonus == 0
                 ? $"Permanent +1 {stat}."
-                : $"Now <color=#F6D578>+{level} {stat}</color>. Next level: +{level + 1} {stat}.";
+                : $"Now <color=#F6D578>+{bonus} {stat}</color>. Next level: +{bonus + 1} {stat}.";
         }
 
         private static string GetBuyTitle(ItemSO item, int owned)
@@ -1860,8 +1862,8 @@ namespace CastleOfTheD20.UI
                 case ShopPurchaseResult.Success:
                     if (ShopManager.IsUpgrade(item))
                     {
-                        int level = ShopManager.GetUpgradeLevel(item, player);
-                        string what = item.ItemType == ItemType.WeaponUpgrade ? $"Your blade now deals +{level} DMG" : $"Your armor now gives +{level} AC";
+                        int bonus = ShopManager.GetCurrentBonus(item, player);
+                        string what = item.ItemType == ItemType.WeaponUpgrade ? $"Your blade now deals +{bonus} DMG" : $"Your armor now gives +{bonus} AC";
                         ShowFeedback($"<b>Clang!</b> {what}. (-{price}g)", true);
                         PlayShopSound(SFXClipType.SwordHit);
                     }
@@ -1971,7 +1973,7 @@ namespace CastleOfTheD20.UI
 
                 ApplyIcon(row);
                 if (row.Title != null) row.Title.text = GetBuyTitle(item, owned);
-                if (row.Desc != null) row.Desc.text = GetBuyDescription(item, level);
+                if (row.Desc != null) row.Desc.text = GetBuyDescription(item, level, isUpgrade ? ShopManager.GetCurrentBonus(item, player) : 0);
                 if (row.Background != null) row.Background.color = maxed ? RowTintMaxed : RowTint;
 
                 if (row.Pips != null)

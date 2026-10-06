@@ -462,6 +462,53 @@ namespace CastleOfTheD20.Tests
             return obj;
         }
 
+        #region Audit 2026-10-06
+
+        [Test]
+        public void CompleteQuest_UpgradeReward_IsAppliedToTheHeroNotTheBag()
+        {
+            PlayerDataSO previousSession = PlayerDataSO.Session;
+            PlayerDataSO session = Track(ScriptableObject.CreateInstance<PlayerDataSO>());
+            PlayerDataSO.Session = session;
+            try
+            {
+                Combat.PlayerUnit hero = Track(new GameObject("Test_Hero")).AddComponent<Combat.PlayerUnit>();
+                ItemSO blade = CreateItem("upgrade_sharpened_blade", "Sharpened Blade", ItemType.WeaponUpgrade);
+                blade.Initialize("upgrade_sharpened_blade", "Sharpened Blade", "", ItemType.WeaponUpgrade, 50, 20, 1, false);
+                QuestSO bladeQuest = CreateQuest("quest_blade", "Scrap for the Forge", 5, 50, 0, blade);
+                bladeQuest.ConfigureObjective(QuestObjectiveType.ScrapMetal, "Collect scrap metal", "Won from fights", "Baldur");
+                quests.RegisterQuest(bladeQuest);
+
+                quests.StartQuest("quest_blade");
+                inventory.AddScrapMetal(5);
+                Assert.IsTrue(quests.CompleteQuest("quest_blade"));
+
+                Assert.AreEqual(1, hero.WeaponDamageBonus, "Baldur's blade sharpens the hero's weapon at once.");
+                Assert.AreEqual(0, inventory.GetItemCount(blade), "It never sits unusable in the bag.");
+            }
+            finally
+            {
+                PlayerDataSO.Session = previousSession;
+            }
+        }
+
+        [Test]
+        public void RestoreState_ResetsQuestsLeftOutOfTheSave()
+        {
+            // Accepted and finished after the save was made, then the run was abandoned without saving
+            quests.StartQuest("quest_rats");
+            quests.StartQuest("quest_ring");
+
+            quests.RestoreState(new List<string> { "quest_herbs" }, new List<int> { (int)QuestState.InProgress }, new List<int> { 2 });
+
+            Assert.AreEqual(QuestState.NotStarted, quests.GetQuestState("quest_rats"));
+            Assert.AreEqual(QuestState.NotStarted, quests.GetQuestState("quest_ring"));
+            Assert.AreEqual(QuestState.InProgress, quests.GetQuestState("quest_herbs"));
+            Assert.AreEqual(2, quests.GetQuestProgress("quest_herbs"));
+        }
+
+        #endregion
+
         private void TrackAll(List<DialogueNodeSO> nodes)
         {
             for (int i = 0; i < nodes.Count; i++) spawned.Add(nodes[i]);

@@ -34,6 +34,7 @@ namespace CastleOfTheD20.Tests
         [SetUp]
         public void SetUp()
         {
+            StoryFlags.Clear(); // Baldur's upgrade tiers are story flags
             sessionData = ScriptableObject.CreateInstance<PlayerDataSO>();
             PlayerDataSO.Session = sessionData;
 
@@ -76,6 +77,36 @@ namespace CastleOfTheD20.Tests
             SetStaticProperty(typeof(ShopManager), "Instance", null);
             PlayerDataSO.Session = null;
             if (sessionData != null) Object.DestroyImmediate(sessionData);
+            StoryFlags.Clear();
+        }
+
+        [Test]
+        public void BonusFromAQuest_DoesNotUseUpBaldursTiers()
+        {
+            // The hero's own quest gives +1 weapon damage; Baldur still starts at his first tier
+            hero.AddWeaponDamageBonus(1);
+            Assert.AreEqual(0, ShopManager.GetUpgradeLevel(blade, hero));
+            Assert.AreEqual(50, ShopManager.GetBuyPrice(blade, hero));
+
+            inventory.AddGold(50 + 75 + 100);
+            for (int i = 0; i < ShopManager.MAX_UPGRADE_LEVEL; i++)
+            {
+                Assert.AreEqual(ShopPurchaseResult.Success, shop.TryBuyItem(blade, hero));
+            }
+            Assert.AreEqual(4, hero.WeaponDamageBonus, "Three of Baldur's upgrades on top of the quest's +1.");
+            Assert.AreEqual(ShopPurchaseResult.MaxLevel, shop.TryBuyItem(blade, hero));
+            Assert.AreEqual(4, ShopManager.GetCurrentBonus(blade, hero));
+        }
+
+        [Test]
+        public void BladeLeftInTheBagByAnOlderSave_IsAppliedOnLoad()
+        {
+            inventory.RestoreItems(new List<string> { ShopManager.SHARPENED_BLADE_ID, ShopManager.SMALL_POTION_ID }, new List<int> { 1, 2 });
+
+            Assert.AreEqual(1, hero.WeaponDamageBonus);
+            Assert.AreEqual(0, inventory.GetItemCount(blade), "An upgrade never sits unusable in the bag.");
+            Assert.AreEqual(2, inventory.GetItemCount(smallPotion));
+            Assert.AreEqual(0, ShopManager.GetUpgradeLevel(blade, hero), "A quest's blade is not one of Baldur's tiers.");
         }
 
         #region Upgrade Tiers

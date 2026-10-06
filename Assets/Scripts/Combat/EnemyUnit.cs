@@ -77,6 +77,18 @@ namespace CastleOfTheD20.Combat
             return Mathf.Max(1, DiceSystem.RollDamage(damageDiceCount, damageDiceSides) + damageDiceBonus);
         }
 
+        /// <summary>
+        /// Damage of a natural-20 hit on the hero. With damage dice only the dice are doubled (a second roll of
+        /// them), not the flat bonus, so the Shadow Witch tops out at 19 instead of one-shotting a 25 HP hero with
+        /// 22 (audit 2026-10-06). Flat-damage enemies still deal double.
+        /// </summary>
+        public int RollCriticalDamage()
+        {
+            int damage = RollAttackDamage();
+            if (!HasDamageDice) return damage * 2;
+            return damage + DiceSystem.RollDamage(damageDiceCount, damageDiceSides);
+        }
+
         /// <summary>Attack distance in grid tiles.</summary>
         public int AttackRange => attackRange;
 
@@ -363,9 +375,8 @@ namespace CastleOfTheD20.Combat
 
             if (hitCheck.isSuccess)
             {
-                // Double damage on Natural 20
-                int damage = RollAttackDamage();
-                int finalDamage = hitCheck.isCriticalSuccess ? damage * 2 : damage;
+                // Natural 20: the damage dice are doubled
+                int finalDamage = hitCheck.isCriticalSuccess ? RollCriticalDamage() : RollAttackDamage();
                 target.TakeDamage(finalDamage, hitCheck.isCriticalSuccess);
             }
             else

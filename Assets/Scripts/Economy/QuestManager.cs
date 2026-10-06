@@ -386,7 +386,13 @@ namespace CastleOfTheD20.Economy
             {
                 TakeObjectiveItems(quest, inventory);
                 inventory.AddGold(totalGold);
-                if (rewardItem != null)
+                if (rewardItem != null && ShopManager.IsUpgrade(rewardItem))
+                {
+                    // A weapon or armor upgrade takes effect at once; the bag has no way to use it later
+                    int points = Mathf.Max(1, rewardItem.StatBonusValue) * Mathf.Max(1, quest.RewardItemAmount);
+                    ShopManager.ApplyUpgrade(rewardItem, FindAnyObjectByType<PlayerUnit>(), points);
+                }
+                else if (rewardItem != null)
                 {
                     inventory.AddItem(rewardItem, quest.RewardItemAmount);
                 }
@@ -561,6 +567,16 @@ namespace CastleOfTheD20.Economy
         {
             if (questIds == null || states == null) return;
 
+            // Quests left out of the save start over: a run abandoned without saving (Quit to Main Menu, then
+            // Continue) must not leave its accepted or finished quests behind (audit 2026-10-06)
+            questStates.Clear();
+            questProgress.Clear();
+            foreach (KeyValuePair<string, QuestSO> entry in registeredQuests)
+            {
+                questStates[entry.Key] = entry.Value.DefaultState;
+                questProgress[entry.Key] = 0;
+            }
+
             int count = Mathf.Min(questIds.Count, states.Count);
             for (int i = 0; i < count; i++)
             {
@@ -569,7 +585,12 @@ namespace CastleOfTheD20.Economy
 
                 questStates[id] = (QuestState)states[i];
                 questProgress[id] = progress != null && i < progress.Count ? progress[i] : 0;
-                OnQuestStateUpdated?.Invoke(id, questStates[id]);
+            }
+
+            // Tell markers, journal and HUD about every quest, the reset ones included
+            foreach (KeyValuePair<string, QuestState> entry in new List<KeyValuePair<string, QuestState>>(questStates))
+            {
+                OnQuestStateUpdated?.Invoke(entry.Key, entry.Value);
             }
 
             SyncMainQuest();

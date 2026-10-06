@@ -21,26 +21,30 @@ Kohdeympäristö: **Unity 6 (6000.3.14f1 LTS) WebGL (60 FPS)** | C# (.NET Standa
 
 1. **D20-Sääntöjärjestelmä:**
    - Kaikki toiminnot ratkaistaan kaavalla: `d20 + bonus >= AC / DC`. Nat 20 = tuplavahinko, Nat 1 = automaattinen huti.
+   - Vihollisen Nat 20 tuplaa vain vahinkonopat, ei kiinteää bonusta (`EnemyUnit.RollCriticalDamage`, 6.10.2026); sankarin Nat 20 tuplaa koko vahingon.
    - Älykäs nopanheiton pysäytys (`DiceUIController`): Jos pelaajalla on *Uudelleenheitto-käärö (Rune of Reroll)*, heitto pysähtyy valintaan `[Jatka]` tai `[Käytä käärö]`. Ilman kääröä heitto etenee automaattisesti 1.0 sekunnin jälkeen.
 2. **Sankariluokat (Sooloseikkailu):**
+   - Pelaajalle näkyvät nimet (6.10.2026): Sir Roland the Brave, Scholar Elisa Star-Eye, Sylvaine the Veiled; pomot Cursed Commander, Shadow Witch ja The Gargoyle King. Vanhat nimet (Malakor, Elira, Corvo, Kivettymiskuningas) elävät vain sisäisissä tunnisteissa ja tiedostonimissä.
+   - Tasot 1–5 tulevat neljästä virstanpylväästä (`PlayerProgressionManager`); taso 4 tuo viidennen kyvyn.
    - 🛡️ **Soturi (Sir Roland):** 30 HP, 14 AC, Liike 4. Kyvyt: *Miekansivallus*, *Kilpimuuri* (+4 AC & vastaisku), *Sotahuuto* (3x3 työntö), *Rautainen tahto* (parannus).
    - 🔮 **Velho (Oppinut Elira):** 20 HP, 12 AC, Liike 3. Kyvyt: *Jäänsäde*, *Tulipallo* (3x3 AoE), *Mana-kilpi* (100% absorptio), *Blink* (5–7 ruudun teleportti).
-   - 🗡️ **Varas (Varjo-Corvo):** 25 HP, 13 AC, Liike 5. Kyvyt: *Myrkkytikari*, *Selkäänpuukotus* (Advantage + tuplavahinko), *Savupommi*, **Varjoaskel (Shadow Step)** (3 ruudun teleportti + Advantage). *Tiirikointi* on passiivinen tutkimustaito (`LockpickInteraction.cs`).
+   - 🗡️ **Varas (Varjo-Corvo):** 25 HP, 13 AC, Liike 5. Kyvyt: *Myrkkytikari*, *Selkäänpuukotus* (Advantage vain Varjoaskeleen jälkeen, critical review B3), *Savupommi*, **Varjoaskel (Shadow Step)** (3 ruudun teleportti + Advantage). *Tiirikointi* on passiivinen tutkimustaito (`LockpickInteraction.cs`).
 3. **12x12 Taktinen Ruudukko & Taistelutempon Eristys:**
-   - Taistelualueet luodaan 12x12 koossa (`gridWidth = 12`, `gridHeight = 12`, `tileSize = 1.6f`) `GridManager.cs`- ja `DungeonRoomController.cs`-ohjaimilla.
+   - Taistelualueet luodaan 12x12 koossa (`gridWidth = 12`, `gridHeight = 12`, `tileSize = 1.6f`) `GridManager.cs`- ja `DungeonRoomController.cs`-ohjaimilla. Pomohuoneet ovat tietoisesti isompia: Komentaja 32x32, Noita 19x19, Kuningas 20x20 (enintään 32x32).
    - Taisteluissa on **1 eliitti tai max 2 vihollista**. Pomon apujoukot on rajoitettu 1 yksikköön.
    - Voitetusta taistelusta myönnetään aina 2–10 romumetallia (`TurnManager.AwardCombatVictoryScrap()`).
 4. **7 Pelialueen Maailmankartta:**
    - `0: Zone_1_VillageAndCellar` (Kylä, paja, taverna, kellari)
-   - `1: Zone_2_ForestPath` (Metsäpolku, DC 13 salaportti)
-   - `2: Zone_3_CastleCourtyard` (1. Pomo: Kirottu Komentaja)
-   - `3: Zone_4_Library` (2. Pomo: Varjomaagi Malakor)
+   - `1: Zone_2_ForestPath` (Metsäpolku, DC 13 salaportti vain Varkaalle)
+   - `Zone_2.5_SecretForestPath` (Hidden Trail: salaportilta Kirjaston sivuovelle)
+   - `2: Zone_3_CastleCourtyard` (1. Pomo: Cursed Commander)
+   - `3: Zone_4_Library` (2. Pomo: Shadow Witch, sisäinen id ShadowMageMalakor)
    - `4: Zone_5_CastleHall` (Keskushalli, turva-alue & `SavePoint.cs` Ruunikivialttari)
    - `5: Zone_6_Tower` (Aarretorni: Othelian sormus & +30 Max HP Eliksiiri)
-   - `6: Zone_7_ThroneRoom` (3. Pomo: Kivettymiskuningas)
+   - `6: Zone_7_ThroneRoom` (3. Pomo: The Gargoyle King)
 5. **Kylätalous (Seppä Baldur):**
    - Romumetallin myynti: 1 romu = 5 Kultaa (muutettu 6.10.2026).
-   - Ostot: Terveysjuoma (15g tai 25g), Teroitettu miekka (+1 Pysyvä DMG, 50-60g), Haarniskapäivitys (+1 Pysyvä AC, 50-100g).
+   - Ostot: Terveysjuoma (15g tai 25g), Teroitettu miekka (+1 Pysyvä DMG) ja Haarniskapäivitys (+1 Pysyvä AC), kumpikin 50/75/100g, enintään 3 Baldurin omaa päivitystä. Baldurin pykälät lasketaan `BaldurUpgrade:`-tarinalipuista, joten tehtävistä saatu +DMG ei kuluta niitä.
 
 animator.SetTrigger("Attack");
 yield return new WaitForSeconds(0.35f);
