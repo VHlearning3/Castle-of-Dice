@@ -45,6 +45,13 @@ Kohdeympäristö: **Unity 6 (6000.3.14f1 LTS) WebGL (60 FPS)** | C# (.NET Standa
 5. **Kylätalous (Seppä Baldur):**
    - Romumetallin myynti: 1 romu = 5 Kultaa (muutettu 6.10.2026).
    - Ostot: Terveysjuoma (15g tai 25g), Teroitettu miekka (+1 Pysyvä DMG) ja Haarniskapäivitys (+1 Pysyvä AC), kumpikin 50/75/100g, enintään 3 Baldurin omaa päivitystä. Baldurin pykälät lasketaan `BaldurUpgrade:`-tarinalipuista, joten tehtävistä saatu +DMG ei kuluta niitä.
+6. **D&D-säännöt (6.10.2026):**
+   - Taitobonus +2 (taso 5: +3) osumaan, luokan taitoihin ja kahteen pelastusheittoon; DC = 8 + taito + pääominaisuus (`HeroAttributes`). Varkaalla Expertise (Stealth, Sleight of Hand).
+   - Viholliset heittävät pelastusheitot (`EnemyUnit.SaveProfile`, `CombatRules.TryGetSave`): Fireball DEX ½, War Cry STR ½, Arcane Chains STR ½, Poison Cloud CON ½, Smoke Bomb CON.
+   - Vuorossa liike + toiminto + bonustoiminto (`ActionEconomy`: Iron Will, Blink, Shadow Step, juoma, myrkkypullo; varkaan Dash/Disengage) ja reaktio (vapaalyönti pakenevaan, ei velholla). Toimintorivi: Dash, Dodge, Disengage, käärö (toiminto), myrkky.
+   - Death's Door kerran taistelussa (DC 10, ei nyrkkitappelussa), HP joka tasolta (6/5/4), yllätys: hiiviminen (V) → Stealth, väijytys → Perception DC 13.
+   - Antautuminen vain kultistilla (25 %, WIS DC 12) ja Noidalla (20 %; Isolden sormus = aina) → `SurrenderDialogues`. Inspiraatio hyvistä teoista (`HeroicInspiration`). Evil ending: kruunu (`ThroneRoomEnding.EvilEndingFlag`).
+   - Taikaesineet (`MagicItems`, `Resources/Items`, `ItemType.Wondrous`) ja tutkittavat kohdat (`InvestigationSpawner`) sijoitetaan ajossa, ei skeneihin. Hahmokortti: C.
 
 animator.SetTrigger("Attack");
 yield return new WaitForSeconds(0.35f);

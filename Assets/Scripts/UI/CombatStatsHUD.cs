@@ -63,7 +63,8 @@ namespace CastleOfTheD20.UI
             StatusEffectType.Frostbite,
             StatusEffectType.Blind,
             StatusEffectType.Immobilized,
-            StatusEffectType.Retaliation
+            StatusEffectType.Retaliation,
+            StatusEffectType.Dodging
         };
 
         #endregion
@@ -553,6 +554,7 @@ namespace CastleOfTheD20.UI
                 case StatusEffectType.ShieldWall: return "Shield Wall";
                 case StatusEffectType.Immobilized: return "Can't move";
                 case StatusEffectType.Retaliation: return "Retaliation";
+                case StatusEffectType.Dodging: return "Dodging";
                 default: return type.ToString();
             }
         }

@@ -23,6 +23,11 @@ namespace CastleOfTheD20.Core
         // Story flags of good deeds that inspire the hero when they happen
         private static readonly string[] GoodDeedFlags = { "CommanderReleased", "MalakorSpared" };
 
+        static HeroicInspiration()
+        {
+            Register();
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Register()
         {

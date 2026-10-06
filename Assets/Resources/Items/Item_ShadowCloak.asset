@@ -15,7 +15,7 @@ MonoBehaviour:
   itemID: wondrous_shadow_cloak
   itemName: Shadow Cloak
   description: 'Woven from the Witch''s own shadows. Worn: Advantage on Stealth, and no one notices you except the Gargoyle King. Take it off to fight.'
-  itemIcon: {fileID: 0}
+  itemIcon: {fileID: 21300000, guid: de2a585c5492497ab5386217f8d8a288, type: 3}
   itemType: 5
   buyPriceGold: 0
   sellPriceGold: 0

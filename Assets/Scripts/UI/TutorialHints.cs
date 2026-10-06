@@ -41,10 +41,10 @@ namespace CastleOfTheD20.UI
 
         private const string CombatHints =
             "<b>1. Move</b>: press <b>Move</b> and click a blue tile. You may move once per turn.\n\n" +
-            "<b>2. Attack</b>: click an ability card, then an enemy in range (red tile). Clicking an enemy uses your first ability. " +
-            "You roll d20 + bonus against its Armour Class.\n\n" +
-            "<b>3. Drink a potion</b>: press <b>[Q]</b> or the potion slot on your card when you are hurt. It uses your action.\n\n" +
-            "<b>4. End the turn</b>: press the hourglass button when you are done. Then the enemies act.";
+            "<b>2. Act</b>: click an ability card, then an enemy (red tile); hover an enemy to see your chance. " +
+            "Each turn you also have a <b>bonus action</b> (cards marked Bonus, potions) and the row above the bar: Dash, Dodge, Disengage.\n\n" +
+            "<b>3. Drink a potion</b>: press <b>[Q]</b> or the potion slot on your card when you are hurt. It uses your bonus action.\n\n" +
+            "<b>4. End the turn</b>: press the hourglass button when you are done. Then the enemies act. [C] shows your character sheet.";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()

@@ -145,14 +145,16 @@ namespace CastleOfTheD20.Tests
         #region B3: balance
 
         [Test]
-        public void WarCry_RollsToHit()
+        public void WarCry_IsAStrengthSave_AgainstTheHerosDC()
         {
             PlayerUnit hero = CreateHero("Character_Warrior_SirRoland", new Vector2Int(5, 5));
             EnemyUnit wall = CreateEnemy("Iron Wall", new Vector2Int(6, 5), hp: 40, ac: 40, damage: 1, bonus: 0);
             StartCombat(hero, wall);
 
-            int rolled = 0;
-            System.Action<DiceResult> watch = r => rolled = r.rawRoll;
+            // D&D rules (Vili, 2026-10-06): the enemy makes a STR save; its AC no longer matters
+            bool seen = false;
+            DiceResult save = default;
+            System.Action<DiceResult> watch = r => { if (!seen) { save = r; seen = true; } };
             DiceSystem.OnDiceRolled += watch;
             int slot = FindSlot(hero, "warrior_war_cry");
             try
@@ -163,10 +165,17 @@ namespace CastleOfTheD20.Tests
             {
                 DiceSystem.OnDiceRolled -= watch;
             }
-            Assert.Greater(rolled, 0, "War Cry rolls to hit.");
-            Assume.That(rolled, Is.LessThan(20), "A natural 20 always hits.");
-            Assert.AreEqual(40, wall.CurrentHP, "A missed War Cry deals no damage.");
-            Assert.AreEqual(new Vector2Int(6, 5), wall.GridPosition, "A missed War Cry pushes no one.");
+            Assert.IsTrue(seen, "War Cry makes the enemy roll a saving throw.");
+            Assert.AreEqual(HeroAttributes.GetSaveDC(hero), save.targetDC, "Against the hero's save DC.");
+            Assert.Less(wall.CurrentHP, 40, "Hit or saved, War Cry hurts (half on a save).");
+            if (save.isSuccess)
+            {
+                Assert.AreEqual(new Vector2Int(6, 5), wall.GridPosition, "A successful save stands firm.");
+            }
+            else
+            {
+                Assert.AreNotEqual(new Vector2Int(6, 5), wall.GridPosition, "A failed save is pushed back.");
+            }
         }
 
         [Test]

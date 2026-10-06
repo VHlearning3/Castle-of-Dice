@@ -223,6 +223,26 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return Frames(10);
             Step($"{label}: room cleared", room.IsCleared);
             CloseLevelUp();
+
+            // A foe who surrendered (the Witch, a cultist) talks once the fight is over: answer and move on
+            yield return EndSurrenderTalk();
+        }
+
+        private IEnumerator EndSurrenderTalk()
+        {
+            float until = Time.realtimeSinceStartup + 4f;
+            while (Time.realtimeSinceStartup < until && SurrenderDialogues.Pending.Count > 0) yield return null;
+            float talkUntil = Time.realtimeSinceStartup + 4f;
+            while (Time.realtimeSinceStartup < talkUntil)
+            {
+                CloseLevelUp();
+                if (DialogueController.Instance != null && DialogueController.Instance.IsInDialogue)
+                {
+                    Step("Surrender talk opened", true);
+                    DialogueController.Instance.EndDialogue();
+                }
+                yield return null;
+            }
         }
 
         private IEnumerator AutoBattle(string label, bool lossAllowed = false)

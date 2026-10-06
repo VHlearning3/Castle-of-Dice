@@ -139,16 +139,8 @@ namespace CastleOfTheD20.Tests
             PlayerUnit warrior = CreatePlayer(new Vector2Int(5, 5));
             EnemyUnit enemy = CreateEnemy("Spec_Enemy", new Vector2Int(6, 5), hp: 20, ac: 12);
 
-            // War Cry rolls to hit since the critical review (B3): seed a plain hit (not a natural 20)
-            for (int seed = 1; seed < 10000; seed++)
-            {
-                int roll = new System.Random(seed).Next(1, 21);
-                if (roll >= 12 && roll < 20)
-                {
-                    DiceSystem.SetSeed(seed);
-                    break;
-                }
-            }
+            // War Cry is a STR save against the hero's DC (D&D rules, Vili 2026-10-06): seed a failed save
+            SeedFirstRolls(2, 11, 1);
 
             Assert.IsTrue(executor.ExecuteAbility(warrior, warCry, warrior.GridPosition));
 
@@ -188,12 +180,51 @@ namespace CastleOfTheD20.Tests
             EnemyUnit corner = CreateEnemy("Spec_Corner", new Vector2Int(6, 6), hp: 20, ac: 10);
             EnemyUnit outside = CreateEnemy("Spec_Outside", new Vector2Int(7, 5), hp: 20, ac: 10);
 
+            // Fireball is a DEX save (D&D rules, Vili 2026-10-06): both enemies in the blast fail theirs
+            SeedFirstRolls(2, 11, 2);
             Assert.IsTrue(executor.ExecuteAbility(mage, fireball, new Vector2Int(5, 5)));
 
             Assert.AreEqual(15, center.CurrentHP, "The enemy on the target tile is burned.");
             Assert.AreEqual(15, corner.CurrentHP, "An enemy on a corner of the 3x3 area is burned too.");
             Assert.AreEqual(20, outside.CurrentHP, "Two tiles from the centre is outside the blast.");
             Assert.AreEqual(mage.MaxHP, mage.CurrentHP, "The mage standing in the blast is not hurt.");
+        }
+
+        [Test]
+        public void Fireball_ASuccessfulDexSave_TakesHalf()
+        {
+            AbilitySO fireball = ScriptableObject.CreateInstance<AbilitySO>();
+            Track(fireball);
+            fireball.Initialize("mage_fireball", "Fireball", "", AbilityTargetType.Area3x3, 4, 1, 6, false,
+                StatusEffectType.None, 0, "CastSpell", null, 0, 0, false);
+
+            PlayerUnit mage = CreatePlayer(new Vector2Int(4, 5));
+            EnemyUnit center = CreateEnemy("Spec_Center", new Vector2Int(5, 5), hp: 20, ac: 10);
+
+            SeedFirstRolls(19, 20, 1);
+            Assert.IsTrue(executor.ExecuteAbility(mage, fireball, new Vector2Int(5, 5)));
+            Assert.AreEqual(17, center.CurrentHP, "Half of 6 on a successful save.");
+        }
+
+        /// <summary>Seeds the dice so the first <paramref name="count"/> d20s fall in min..max.</summary>
+        private static void SeedFirstRolls(int min, int max, int count)
+        {
+            for (int seed = 1; seed < 100000; seed++)
+            {
+                System.Random rng = new System.Random(seed);
+                bool ok = true;
+                for (int i = 0; i < count && ok; i++)
+                {
+                    int roll = rng.Next(1, 21);
+                    ok = roll >= min && roll <= max;
+                }
+                if (ok)
+                {
+                    DiceSystem.SetSeed(seed);
+                    return;
+                }
+            }
+            Assert.Fail("No seed found.");
         }
 
         [Test]

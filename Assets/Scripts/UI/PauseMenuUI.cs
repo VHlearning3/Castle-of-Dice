@@ -192,10 +192,12 @@ namespace CastleOfTheD20.UI
 
         public const string HelpText =
             "<b>Exploring</b>: click the ground or use WASD to walk. Click people and objects to talk or use them. " +
-            "[M] map, [J] quest journal, [Q] drink a potion.\n\n" +
-            "<b>Combat</b>: on your turn you may Move once and use one ability. Click an ability, then an enemy. " +
-            "Every attack is d20 + bonus against the target's AC; a natural 20 doubles the damage, a natural 1 always misses.\n\n" +
-            "<b>Tactics</b>: walking away from an enemy next to you gives it a free attack (Blink and Shadow Step do not). " +
+            "[M] map, [J] quest journal, [I] bag, [C] character sheet, [Q] drink a potion, [V] sneak (a Stealth check can surprise the enemies).\n\n" +
+            "<b>Combat</b>: each turn you have a move, an action and a bonus action, and a reaction each round. " +
+            "Attacks are d20 + attribute + proficiency against AC; Fireball, War Cry and smoke make the enemies roll saving throws. " +
+            "A natural 20 doubles the damage, a natural 1 always misses. At 0 HP you get one Death's Door save per fight.\n\n" +
+            "<b>Tactics</b>: walking away from an enemy next to you gives it a free attack (Disengage, Blink and Shadow Step do not); " +
+            "a fleeing enemy gives you one too. Dash doubles your move, Dodge makes you hard to hit. " +
             "Strong abilities need a few turns to recharge (the number on the icon). Crates give cover, pillars block arrows, " +
             "and the red barrel explodes.\n\n" +
             "<b>Saving</b>: pray at the rune shrine in the Castle Hall or save from this menu outside a fight.";

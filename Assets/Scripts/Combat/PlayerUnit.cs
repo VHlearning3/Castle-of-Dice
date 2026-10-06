@@ -282,6 +282,12 @@ namespace CastleOfTheD20.Combat
         {
             base.Awake();
             OnHealthChanged += ReportHealthToSession;
+
+            // The Shadow Cloak's dusky look while it is worn
+            if (Application.isPlaying && GetComponent<World.ShadowCloakVisual>() == null)
+            {
+                gameObject.AddComponent<World.ShadowCloakVisual>();
+            }
         }
 
         private void OnDestroy()
@@ -494,7 +500,8 @@ namespace CastleOfTheD20.Combat
             if (deathsDoorUsedThisFight || !IsAlive || amount <= 0 || amount < currentHP) return false;
             if (StatusEffects != null && StatusEffects.ManaShieldCharges > 0) return false; // the shield takes it
             TurnManager tm = TurnManager.Instance;
-            return tm != null && tm.IsCombatActive;
+            // Real fights only: a village fist fight that knocks the hero down simply ends
+            return tm != null && tm.IsCombatActive && tm.AwardsVictoryScrap;
         }
 
         private void ResolveDeathsDoor(DiceResult save)

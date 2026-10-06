@@ -62,7 +62,12 @@ namespace CastleOfTheD20.Core
             "Resting at the Great Hall's Runestone Shrine fully restores your health and saves your progress.",
             "Combat encounters reward 2 to 10 scrap metal pieces used for blacksmith weapon upgrades.",
             "Shadow Step allows the Rogue to teleport up to 3 tiles and gain Advantage on the next attack.",
-            "Defeat both the Cursed Commander and the Shadow Witch to open the Throne Room gate."
+            "Defeat both the Cursed Commander and the Shadow Witch to open the Throne Room gate.",
+            "Press V to sneak: walk into a fight unseen and a Stealth check can catch the enemies off guard.",
+            "Press C for your character sheet: attributes, saving throws, skills and what each action costs.",
+            "Hover an enemy in combat to see the roll you need and your chance to hit.",
+            "Drinking a potion is a bonus action: you can still attack in the same turn.",
+            "Heroic deeds earn Inspiration: one free reroll when the dice fail you."
         };
 
         #endregion

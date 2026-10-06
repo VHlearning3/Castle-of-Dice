@@ -122,7 +122,7 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void Combat_DrinkingSpendsTheAction_ButNotTheMove()
+        public void Combat_DrinkingSpendsTheBonusAction_NotTheActionOrTheMove()
         {
             SetCombatActive(true);
             inventory.AddItem(largePotion, 2);
@@ -130,7 +130,8 @@ namespace CastleOfTheD20.Tests
 
             Assert.AreEqual(PotionUseCheck.Ready, PotionQuickBar.TryDrink(largePotion, hero));
             Assert.AreEqual(30, hero.CurrentHP, "Healing is capped at max HP");
-            Assert.IsTrue(hero.HasActedThisTurn);
+            Assert.IsTrue(hero.HasUsedBonusActionThisTurn, "Drinking is a bonus action (Vili, 2026-10-06).");
+            Assert.IsFalse(hero.HasActedThisTurn, "The hero can still attack after drinking.");
             Assert.IsFalse(hero.HasMovedThisTurn);
 
             hero.TakeDamage(10);
