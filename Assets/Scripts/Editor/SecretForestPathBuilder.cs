@@ -100,7 +100,7 @@ namespace CastleOfTheD20.Editor
             SceneManager.MoveGameObjectToScene(layout, scene);
 
             // Spawns: just inside the arch from the Forest Path, and in front of the Library door
-            Transform fromForest = Spawn(layout.transform, SecretForestPath.SpawnFromForest, new Vector3(0f, 0.5f, -18f), 0f);
+            Transform fromForest = Spawn(layout.transform, SecretForestPath.SpawnFromForest, new Vector3(0f, 0.5f, -14f), 0f);
             Spawn(layout.transform, SecretForestPath.SpawnFromLibrary, new Vector3(0f, 0.5f, 17.5f), 180f);
 
             // South: forest arch back to the Forest Path (same arch and pillars as the Forest's own exits)
