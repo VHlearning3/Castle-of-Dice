@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Core;
@@ -13,7 +14,7 @@ namespace CastleOfTheD20.World
     /// [Q]/[E] or a middle-mouse (or right-mouse) drag turn it around the hero, the scroll wheel zooms and tilts
     /// (flatter close in, more top-down far out), WASD and the arrows pan it away from the hero and [Home]
     /// centres it again. It also centres itself when the hero is sent somewhere new.
-    /// Walls, roofs and ceilings between the camera and the hero are cut away (drawn as shadows only and
+    /// Walls, roofs, ceilings and doorways between the camera and the hero are cut away (drawn as shadows only and
     /// ignored by clicks, see <see cref="IsCutAway"/>); terrain and room shells around the hero pull the camera in.
     /// </summary>
     public class CameraFollow : MonoBehaviour
@@ -83,6 +84,9 @@ namespace CastleOfTheD20.World
         [Tooltip("Closest the camera may be pulled in to the hero by terrain or a room shell.")]
         [SerializeField] private float minPulledDistance = 1.8f;
 
+        [Tooltip("Meshes without colliders this close to a door (metres, on the ground) are cut away like walls: door frames, exit signs, gatehouses.")]
+        [SerializeField] private float doorwayDecorRadius = 6f;
+
         #endregion
 
         #region Private State
@@ -92,6 +96,10 @@ namespace CastleOfTheD20.World
         private const int GridTileLayer = 6;
         private const float CutAwayHoldTime = 0.25f;
         private const int MaxCutAwayRenderers = 60;
+        private const float DoorwayPieceMinSize = 1.2f;  // braziers, torches and trim stay as they are
+        private const float DoorwayPieceMaxSize = 24f;   // ground, roads and whole battlement rings are never cut
+        private const int MaxDoorwayRenderers = 400;
+        private const float DoorwayRescanDelay = 1f;     // exit signs and other runtime pieces are built after the load
 
         private float currentYaw;
         private float targetYaw;
@@ -116,6 +124,11 @@ namespace CastleOfTheD20.World
         private readonly Dictionary<Collider, float> cutColliders = new Dictionary<Collider, float>();
         private readonly List<Collider> cutColliderList = new List<Collider>();
         private static readonly Renderer[] NoRenderers = new Renderer[0];
+        private readonly List<Renderer> doorwayRenderers = new List<Renderer>();
+        private static readonly List<Collider> colliderBuffer = new List<Collider>();
+        private bool doorwaysCollected;
+        private int doorwayScanFrame;
+        private float doorwayRescanAt = -1f;
 
         private struct CutAwayRenderer
         {
@@ -190,13 +203,22 @@ namespace CastleOfTheD20.World
         {
             s_active = this;
             DungeonRoomController.OnRoomCombatStarted += HandleRoomCombatStarted;
+            SceneManager.sceneLoaded += HandleSceneLoaded;
+            ScheduleDoorwayScan();
         }
 
         private void OnDisable()
         {
             DungeonRoomController.OnRoomCombatStarted -= HandleRoomCombatStarted;
+            SceneManager.sceneLoaded -= HandleSceneLoaded;
             RestoreAllCutAway();
+            doorwayRenderers.Clear();
             if (s_active == this) s_active = null;
+        }
+
+        private void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            ScheduleDoorwayScan();
         }
 
         /// <summary>
@@ -519,10 +541,149 @@ namespace CastleOfTheD20.World
                     if (cutAny) cutColliders[col] = now;
                     else allowed = Mathf.Min(allowed, PulledDistanceFor(hit, heroLook, focus));
                 }
+
+                CutAwayDoorways(heroLook, cameraPoint, now);
             }
 
             RestoreStaleCutAway(now);
             return allowed;
+        }
+
+        /// <summary>
+        /// Doorways have no solid colliders, so the sight check never meets them: a hero who had just come through
+        /// a castle door stood with the camera outside it, hidden by the door frame and its "To ..." sign
+        /// (Vili, 2026-10-07). Their meshes are collected once per scene and tested by their boxes instead.
+        /// </summary>
+        private void CutAwayDoorways(Vector3 heroLook, Vector3 cameraPoint, float now)
+        {
+            if ((!doorwaysCollected && Time.frameCount >= doorwayScanFrame) || (doorwayRescanAt > 0f && now >= doorwayRescanAt))
+            {
+                if (doorwayRescanAt > 0f && now >= doorwayRescanAt) doorwayRescanAt = -1f;
+                CollectDoorwayRenderers();
+            }
+
+            for (int i = doorwayRenderers.Count - 1; i >= 0; i--)
+            {
+                Renderer rend = doorwayRenderers[i];
+                if (rend == null)
+                {
+                    doorwayRenderers.RemoveAt(i);
+                    continue;
+                }
+                if (!rend.enabled || !rend.gameObject.activeInHierarchy) continue;
+
+                Bounds box = rend.bounds;
+                box.Expand(sightRadius * 2f);
+                if (!SegmentHitsBox(heroLook, cameraPoint, box)) continue;
+
+                // The world box of a turned or arched piece is loose: the piece's own box decides
+                Matrix4x4 toLocal = rend.transform.worldToLocalMatrix;
+                if (!SegmentHitsBox(toLocal.MultiplyPoint3x4(heroLook), toLocal.MultiplyPoint3x4(cameraPoint), rend.localBounds)) continue;
+
+                CutAway(rend, now);
+            }
+        }
+
+        // First scan on the next frame, after the new scene's Start() calls have built the exit signs
+        private void ScheduleDoorwayScan()
+        {
+            doorwaysCollected = false;
+            doorwayScanFrame = Time.frameCount + 1;
+            doorwayRescanAt = Time.unscaledTime + DoorwayRescanDelay;
+        }
+
+        /// <summary>
+        /// The pieces of every door (frame, leaves, exit sign) and the dressing around it without colliders of
+        /// its own (gatehouse lintels, arches). People, chests and pickups stay visible.
+        /// </summary>
+        private void CollectDoorwayRenderers()
+        {
+            doorwaysCollected = true;
+            doorwayRenderers.Clear();
+
+            DoorTeleporter[] doors = FindObjectsByType<DoorTeleporter>(FindObjectsSortMode.None);
+            if (doors.Length == 0) return;
+
+            float radiusSqr = doorwayDecorRadius * doorwayDecorRadius;
+            MeshRenderer[] renderers = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
+            for (int i = 0; i < renderers.Length && doorwayRenderers.Count < MaxDoorwayRenderers; i++)
+            {
+                MeshRenderer rend = renderers[i];
+                if (rend.shadowCastingMode == ShadowCastingMode.ShadowsOnly && !cutRenderers.ContainsKey(rend)) continue;
+                int layer = rend.gameObject.layer;
+                if (layer == UnitLayer || layer == GridTileLayer) continue;
+                if (target != null && rend.transform.IsChildOf(target)) continue;
+
+                Bounds box = rend.bounds;
+                float size = Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z));
+                if (size < DoorwayPieceMinSize || size > DoorwayPieceMaxSize) continue;
+                if (rend.GetComponentInParent<CombatUnit>() != null) continue;
+
+                Interactable owner = rend.GetComponentInParent<Interactable>();
+                if (owner != null && !(owner is DoorTeleporter)) continue;
+                if (owner == null && (HasSolidCollider(rend.transform) || !NearAnyDoor(box, doors, radiusSqr))) continue;
+
+                doorwayRenderers.Add(rend);
+            }
+        }
+
+        // Pieces with a collider of their own are found by the sight check
+        private static bool HasSolidCollider(Transform t)
+        {
+            for (Transform p = t; p != null; p = p.parent)
+            {
+                p.GetComponents(colliderBuffer);
+                for (int i = 0; i < colliderBuffer.Count; i++)
+                {
+                    if (colliderBuffer[i].enabled && !colliderBuffer[i].isTrigger) return true;
+                }
+            }
+            return false;
+        }
+
+        private static bool NearAnyDoor(Bounds box, DoorTeleporter[] doors, float radiusSqr)
+        {
+            for (int i = 0; i < doors.Length; i++)
+            {
+                if (doors[i] == null) continue;
+                Vector3 door = doors[i].transform.position;
+                door.y = box.center.y;
+                if (box.SqrDistance(door) <= radiusSqr) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Whether the segment from <paramref name="from"/> to <paramref name="to"/> passes through <paramref name="box"/>.</summary>
+        public static bool SegmentHitsBox(Vector3 from, Vector3 to, Bounds box)
+        {
+            Vector3 min = box.min;
+            Vector3 max = box.max;
+            Vector3 dir = to - from;
+            float enter = 0f;
+            float exit = 1f;
+            for (int axis = 0; axis < 3; axis++)
+            {
+                float origin = from[axis];
+                float step = dir[axis];
+                if (Mathf.Abs(step) < 1e-6f)
+                {
+                    if (origin < min[axis] || origin > max[axis]) return false;
+                    continue;
+                }
+
+                float t1 = (min[axis] - origin) / step;
+                float t2 = (max[axis] - origin) / step;
+                if (t1 > t2)
+                {
+                    float swap = t1;
+                    t1 = t2;
+                    t2 = swap;
+                }
+                if (t1 > enter) enter = t1;
+                if (t2 < exit) exit = t2;
+                if (enter > exit) return false;
+            }
+            return true;
         }
 
         // The sight check runs from the hero, but the camera is placed from the (maybe panned) look point

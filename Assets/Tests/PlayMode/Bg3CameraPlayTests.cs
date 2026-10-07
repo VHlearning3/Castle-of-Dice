@@ -139,7 +139,84 @@ namespace CastleOfTheD20.Tests.PlayMode
             }
         }
 
+        /// <summary>
+        /// Vili, 2026-10-07: arriving through a castle door left the hero hidden behind the door frame and its
+        /// "To ..." sign, which have no colliders, so the check above missed them. Every door arrival, with the
+        /// zone's own starting view: no mesh is drawn between the camera and the hero.
+        /// </summary>
+        [UnityTest, Timeout(600000)]
+        public IEnumerator DoorArrivals_HeroStaysInView()
+        {
+            string[,] arrivals =
+            {
+                { "Zone_2_ForestPath", "Spawn_From_Village" },
+                { "Zone_2_ForestPath", "Spawn_From_Courtyard" },
+                { "Zone_2_ForestPath", "Spawn_From_SecretPath" },
+                { "Zone_2.5_SecretForestPath", "Spawn_From_ForestPath" },
+                { "Zone_2.5_SecretForestPath", "Spawn_From_Library" },
+                { "Zone_4_Library", "Spawn_From_Hall" },
+                { "Zone_4_Library", "Spawn_From_SecretForestPath" },
+                { "Zone_5_CastleHall", "Spawn_From_Courtyard" },
+                { "Zone_5_CastleHall", "Spawn_From_Library" },
+                { "Zone_5_CastleHall", "Spawn_From_ThroneRoom" },
+                { "Zone_5_CastleHall", "Spawn_From_Tower" },
+                { "Zone_6_Tower", "Spawn_From_Hall" },
+                { "Zone_7_ThroneRoom", "Spawn_From_Hall" },
+                { "Zone_3_CastleCourtyard", "Spawn_From_Forest" },
+                { "Zone_3_CastleCourtyard", "Spawn_From_Hall" }, // last: the Cursed Commander greets the hero here
+            };
+            yield return NewAdventure();
+            var problems = new System.Collections.Generic.List<string>();
+            for (int i = 0; i < arrivals.GetLength(0); i++)
+            {
+                string zone = arrivals[i, 0];
+                string spawn = arrivals[i, 1];
+                SceneLoader.Instance.LoadScene(zone, spawn);
+                yield return Frames(2);
+                yield return WaitForLoad();
+                StoryPanelUI.CloseIfOpen();
+                Assert.AreEqual(zone, SceneManager.GetActiveScene().name);
+                yield return new WaitForSecondsRealtime(0.5f);
+
+                CameraFollow follow = UnityEngine.Object.FindAnyObjectByType<CameraFollow>();
+                Assert.IsNotNull(follow, zone);
+                string blocker = FirstMeshInView(follow);
+                if (blocker != null) problems.Add($"{zone} from {spawn}: {blocker}");
+                yield return Shot($"arrival_{zone}_{spawn}.png");
+            }
+            Assert.IsEmpty(problems, string.Join("\n", problems));
+        }
+
         #region Helpers
+
+        /// <summary>
+        /// The first mesh drawn between the camera and the hero's head, found by its own box (doorways, signs and
+        /// dressing have no colliders), or null. Ground, roads and battlement rings are too big to be in the way.
+        /// </summary>
+        private static string FirstMeshInView(CameraFollow follow)
+        {
+            Transform hero = Hero().transform;
+            Vector3 head = hero.position + Vector3.up * 1.2f;
+            Vector3 cam = follow.transform.position;
+            foreach (MeshRenderer rend in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+            {
+                if (!rend.enabled || rend.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
+                if (rend.transform.IsChildOf(hero) || rend.GetComponentInParent<CombatUnit>() != null) continue;
+                Bounds box = rend.bounds;
+                if (Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z)) > 24f) continue;
+                if (!CameraFollow.SegmentHitsBox(head, cam, box)) continue;
+
+                Matrix4x4 toLocal = rend.transform.worldToLocalMatrix;
+                Bounds local = rend.localBounds;
+                Vector3 localHead = toLocal.MultiplyPoint3x4(head);
+                if (local.Contains(localHead)) continue; // a room shell around the hero pulls the camera in instead
+                if (!CameraFollow.SegmentHitsBox(localHead, toLocal.MultiplyPoint3x4(cam), local)) continue;
+                return $"'{PathOf(rend.transform)}' between the camera {cam} and the hero {head}";
+            }
+            return null;
+        }
+
+        private static string PathOf(Transform t) => t.parent == null ? t.name : PathOf(t.parent) + "/" + t.name;
 
         /// <summary>Nothing drawn stands between the camera and the hero's head (cut-away walls are drawn as shadow only).</summary>
         private static void AssertViewClear(CameraFollow follow, string where)
