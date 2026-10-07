@@ -7,7 +7,8 @@ namespace CastleOfTheD20.World
 {
     /// <summary>
     /// Real-time 3D exploration character controller for Castle of the D20.
-    /// Handles WASD / arrow key locomotion oriented relative to the main camera,
+    /// Walks the hero to clicked spots along runtime NavMesh paths (Baldur's Gate 3 controls; WASD pans the camera),
+    /// with gamepad stick steering relative to the main camera,
     /// smooth rotational steering, gravity and slope grounding via CharacterController.
     /// Yields control and automatically snaps to the nearest grid tile when transitioning into turn-based combat.
     /// </summary>
@@ -215,7 +216,7 @@ namespace CastleOfTheD20.World
             if (debugLogging)
             {
                 GamePlayMode currentMode = GameManager.Instance != null ? GameManager.Instance.CurrentMode : GamePlayMode.Exploration;
-                Debug.Log($"[PlayerExplorationMovement] Start: Active GamePlayMode is '{currentMode}'. Ready for WASD movement.");
+                Debug.Log($"[PlayerExplorationMovement] Start: Active GamePlayMode is '{currentMode}'. Ready for click-to-move.");
             }
 
             // Check for StartSpawnPoint in scene and spawn here on initial game launch
@@ -256,7 +257,7 @@ namespace CastleOfTheD20.World
                 if (debugLogging && attemptedInput.sqrMagnitude > 0.001f && (Time.time - lastBlockedInputLogTime > 2.0f))
                 {
                     lastBlockedInputLogTime = Time.time;
-                    Debug.Log("[PlayerExplorationMovement] WASD input ignored outside Exploration mode.");
+                    Debug.Log("[PlayerExplorationMovement] Gamepad movement ignored outside Exploration mode.");
                 }
 
                 // Stop the run cycle too, otherwise the knight keeps running through combat/dialogue
@@ -274,6 +275,7 @@ namespace CastleOfTheD20.World
                     if (debugLogging) Debug.Log("[PlayerExplorationMovement] Locomotion halted due to mode transition.");
                 }
 
+                if (HasDestination) StopMoving();
                 ApplyGravityOnly();
                 return;
             }
@@ -317,7 +319,8 @@ namespace CastleOfTheD20.World
         /// </summary>
         private Vector3 PollRawInput()
         {
-            Vector2 move2D = GameInput.GetMovementVector();
+            // WASD pans the camera now (Baldur's Gate 3 controls); the hero walks by mouse click or gamepad stick
+            Vector2 move2D = GameInput.GetGamepadMoveVector();
             return new Vector3(move2D.x, 0f, move2D.y);
         }
 
@@ -328,8 +331,24 @@ namespace CastleOfTheD20.World
             Vector3 moveDirection = Vector3.zero;
 
             bool wasMoving = IsMoving;
+            IsSteeredDirectly = inputDirection.sqrMagnitude > 0.001f;
+            if (IsSteeredDirectly && HasDestination) StopMoving();
+            if (HasDestination && !GameInput.IsExplorationInputEnabled) StopMoving();
 
-            if (inputDirection.sqrMagnitude > 0.001f)
+            Vector3 clickDirection = HasDestination ? SteerAlongPath() : Vector3.zero;
+
+            if (clickDirection.sqrMagnitude > 0.001f)
+            {
+                moveDirection = clickDirection;
+                CurrentMoveDirection = moveDirection;
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+
+                IsMoving = true;
+                if (animator != null) animator.SetBool(IsMovingHash, true);
+                SetSneakWalk(IsSneaking);
+            }
+            else if (inputDirection.sqrMagnitude > 0.001f)
             {
                 // Project camera orientation onto horizontal XZ plane
                 Vector3 camForward = cam != null ? cam.transform.forward : Vector3.forward;
@@ -392,6 +411,189 @@ namespace CastleOfTheD20.World
             }
         }
 
+        #endregion
+
+        #region Click To Move
+
+        private const int MaxPathCorners = 64;
+        private const float CornerReachDistance = 0.25f;
+        private const float StuckCheckInterval = 0.5f;
+        private const float StuckMinProgress = 0.12f;
+
+        private readonly Vector3[] pathCorners = new Vector3[MaxPathCorners];
+        private int pathCornerCount;
+        private int pathCornerIndex;
+        private Interactable pendingInteraction;
+        private float nextStuckCheckTime;
+        private Vector3 stuckCheckPosition;
+
+        /// <summary>Whether the hero is walking to a clicked spot.</summary>
+        public bool HasDestination { get; private set; }
+
+        /// <summary>Whether a gamepad stick is steering the hero this frame.</summary>
+        public bool IsSteeredDirectly { get; private set; }
+
+        /// <summary>Goes up by one every time the hero is sent somewhere new (the camera re-centres on it).</summary>
+        public int DestinationVersion { get; private set; }
+
+        /// <summary>
+        /// Walks the hero to <paramref name="point"/> along a NavMesh path (straight when there is none),
+        /// as a click on the ground does in Baldur's Gate 3. Returns false outside exploration.
+        /// </summary>
+        public bool MoveTo(Vector3 point, bool showMarker = true)
+        {
+            return BeginMove(point, null, showMarker);
+        }
+
+        /// <summary>
+        /// Walks the hero up to <paramref name="target"/> and uses it on arrival (talk, open, pick up).
+        /// </summary>
+        public bool WalkToInteract(Interactable target)
+        {
+            if (target == null) return false;
+            if (playerUnit != null && target.CanInteract(playerUnit))
+            {
+                target.TriggerInteraction(playerUnit);
+                return true;
+            }
+
+            Vector3 goal = target.transform.position;
+            Collider col = target.GetComponent<Collider>();
+            if (col == null) col = target.GetComponentInChildren<Collider>();
+            if (col != null && col.enabled && !(col is MeshCollider mesh && !mesh.convex))
+            {
+                Vector3 probe = transform.position;
+                probe.y = col.bounds.center.y;
+                goal = col.ClosestPoint(probe);
+                goal.y = transform.position.y;
+            }
+            return BeginMove(goal, target, false);
+        }
+
+        /// <summary>Stops a click-to-move walk where the hero stands.</summary>
+        public void StopMoving()
+        {
+            HasDestination = false;
+            pendingInteraction = null;
+            pathCornerCount = 0;
+            pathCornerIndex = 0;
+            ClickMoveMarker.Hide();
+        }
+
+        private bool BeginMove(Vector3 point, Interactable interaction, bool showMarker)
+        {
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration) return false;
+            if (!GameInput.IsExplorationInputEnabled) return false;
+
+            Vector3 from = transform.position;
+            pathCornerCount = 0;
+            if (RuntimeNavMesh.EnsureCovers(from, point, transform))
+            {
+                pathCornerCount = RuntimeNavMesh.FindPath(from, point, pathCorners);
+            }
+
+            if (pathCornerCount < 2)
+            {
+                // No path found: walk straight and let the CharacterController slide along what is in the way
+                pathCorners[0] = from;
+                pathCorners[1] = point;
+                pathCornerCount = 2;
+            }
+            else if (interaction == null)
+            {
+                // A click just off the NavMesh (a rug, a step) still ends where the player clicked
+                Vector3 last = pathCorners[pathCornerCount - 1];
+                if (pathCornerCount < MaxPathCorners && FlatDistance(last, point) > 0.3f && FlatDistance(last, point) < 1.5f)
+                {
+                    pathCorners[pathCornerCount++] = point;
+                }
+            }
+
+            pathCornerIndex = 1;
+            pendingInteraction = interaction;
+            HasDestination = true;
+            DestinationVersion++;
+            nextStuckCheckTime = Time.time + StuckCheckInterval;
+            stuckCheckPosition = from;
+
+            if (showMarker) ClickMoveMarker.Show(pathCorners[pathCornerCount - 1]);
+            return true;
+        }
+
+        /// <summary>Direction to walk this frame towards the next path corner, or zero when the walk ended.</summary>
+        private Vector3 SteerAlongPath()
+        {
+            Vector3 pos = transform.position;
+
+            if (pendingInteraction != null)
+            {
+                if (pendingInteraction == null || !pendingInteraction.isActiveAndEnabled || !pendingInteraction.IsInteractable)
+                {
+                    StopMoving();
+                    return Vector3.zero;
+                }
+                if (playerUnit != null && pendingInteraction.CanInteract(playerUnit))
+                {
+                    Interactable reached = pendingInteraction;
+                    StopMoving();
+                    FaceFlat(reached.transform.position - pos);
+                    reached.TriggerInteraction(playerUnit);
+                    return Vector3.zero;
+                }
+            }
+
+            while (pathCornerIndex < pathCornerCount && FlatDistance(pos, pathCorners[pathCornerIndex]) < CornerReachDistance)
+            {
+                pathCornerIndex++;
+            }
+            if (pathCornerIndex >= pathCornerCount)
+            {
+                ArriveOrGiveUp();
+                return Vector3.zero;
+            }
+
+            if (Time.time >= nextStuckCheckTime)
+            {
+                if (FlatDistance(pos, stuckCheckPosition) < StuckMinProgress)
+                {
+                    ArriveOrGiveUp();
+                    return Vector3.zero;
+                }
+                stuckCheckPosition = pos;
+                nextStuckCheckTime = Time.time + StuckCheckInterval;
+            }
+
+            Vector3 to = pathCorners[pathCornerIndex] - pos;
+            to.y = 0f;
+            return to.sqrMagnitude > 0.0001f ? to.normalized : Vector3.zero;
+        }
+
+        private void ArriveOrGiveUp()
+        {
+            Interactable wanted = pendingInteraction;
+            StopMoving();
+            if (wanted == null || playerUnit == null) return;
+
+            if (wanted.CanInteract(playerUnit)) wanted.TriggerInteraction(playerUnit);
+            else Interactable.ShowTooFarHint();
+        }
+
+        private void FaceFlat(Vector3 direction)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude > 0.0001f) transform.rotation = Quaternion.LookRotation(direction);
+        }
+
+        private static float FlatDistance(Vector3 a, Vector3 b)
+        {
+            float dx = a.x - b.x, dz = a.z - b.z;
+            return Mathf.Sqrt(dx * dx + dz * dz);
+        }
+
+        #endregion
+
+        #region Gravity
+
         private void ApplyGravityOnly()
         {
             if (characterController == null || !characterController.enabled) return;
@@ -418,6 +620,7 @@ namespace CastleOfTheD20.World
         /// </summary>
         public void TeleportTo(Vector3 worldPosition, Quaternion worldRotation)
         {
+            StopMoving();
             bool ccWasEnabled = characterController != null && characterController.enabled;
             if (characterController != null) characterController.enabled = false;
 

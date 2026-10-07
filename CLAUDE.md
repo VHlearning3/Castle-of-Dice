@@ -67,6 +67,7 @@ SFXManager.Instance.PlaySFX(SFXClipType.SwordHit, transform.position);
    - Kaikissa skeneissä `EventSystem`-objektissa on `InputSystemUIInputModule` (`module.AssignDefaultActions()`).
    - Pelin syöte haetaan New Input Systemin kautta (`GameInput.cs`). Tilavaihdoissa kytketään kartat puhtaasti:
      `inputActions.Exploration.Disable(); inputActions.Combat.Enable();`
+   - **BG3-ohjaus (7.10.2026):** hiiren klikkaus kävelee (`PlayerInteractionRaycaster` → `PlayerExplorationMovement.MoveTo`, polut ajossa rakennetusta NavMeshistä `RuntimeNavMesh`), klikkaus esineeseen/NPC:hen kävelee viereen ja käyttää sen. Kamera (`CameraFollow`): Q/E ja keskihiiren veto kääntävät, rulla zoomaa ja kallistaa, WASD/nuolet panoroivat, Home keskittää; seinät kameran ja sankarin välissä piilotetaan (`CameraFollow.IsCutAway`). Peliohjain liikuttaa sankaria suoraan.
 2. **WebGL Air-Gap & Zero-GC Muistisäännöt:**
    - Älä koskaan tee `System.IO`-kovalevykutsuja tai ulkoisia HTTP-kutsuja pelisilmukassa.
    - Tallennus: JSON-sarjallistus selaimen `PlayerPrefs`-muistiin (`SaveSystem.cs`).
@@ -77,7 +78,7 @@ SFXManager.Instance.PlaySFX(SFXClipType.SwordHit, transform.position);
 4. **Persistent Managers (`DontDestroyOnLoad`):**
    - Aloitusskeneen sijoitetaan `_CoreManagers`: `GameManager`, `SceneLoader`, `MusicManager`, `SFXManager`, `PlayerProgressionManager`.
 5. **UI Canvas (1920x1080 Match 0.5):**
-   - `Hero_Status_Card` (Top-Left): Crest, HP-bar, Kulta, Romu, Pika-HP-juoma [Q].
+   - `Hero_Status_Card` (Top-Left): Crest, HP-bar, Kulta, Romu, Pika-HP-juoma [H].
    - `Zone_Indicator_Banner` (Top-Center): Alueen nimi.
    - `Quest_Tracker_Card` (Top-Right): Tehtävät (`QuestHUDUIController.cs`).
    - `CombatActionBar` (Bottom-Center): 4 kykyä + End Turn -nappi tiimalasilla.

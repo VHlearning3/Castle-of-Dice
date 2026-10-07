@@ -333,18 +333,119 @@ namespace CastleOfTheD20.Core
         }
 
         /// <summary>
-        /// True during the frame the Quick Potion hotkey [Q] was pressed.
+        /// Gamepad-only hero movement (left stick / d-pad). The keyboard's WASD and arrows pan the camera
+        /// instead, as in Baldur's Gate 3 (Vili, 2026-10-07); the mouse moves the hero by clicking.
         /// </summary>
-        public static bool IsQuickPotionHotkeyPressed()
+        public static Vector2 GetGamepadMoveVector()
         {
-            if (Keyboard.current != null && Keyboard.current.qKey.wasPressedThisFrame)
+            if (!IsExplorationInputEnabled || Gamepad.current == null) return Vector2.zero;
+
+            Vector2 move = Vector2.zero;
+            Vector2 stick = Gamepad.current.leftStick.ReadValue();
+            if (stick.sqrMagnitude > 0.04f) move += stick;
+            if (Gamepad.current.dpad.right.isPressed) move.x += 1f;
+            if (Gamepad.current.dpad.left.isPressed) move.x -= 1f;
+            if (Gamepad.current.dpad.up.isPressed) move.y += 1f;
+            if (Gamepad.current.dpad.down.isPressed) move.y -= 1f;
+            return new Vector2(Mathf.Clamp(move.x, -1f, 1f), Mathf.Clamp(move.y, -1f, 1f));
+        }
+
+        /// <summary>
+        /// Camera pan from WASD and the arrow keys (X = right, Y = forward), as in Baldur's Gate 3.
+        /// </summary>
+        public static Vector2 GetCameraPanVector()
+        {
+            if (!IsExplorationInputEnabled) return Vector2.zero;
+
+            float horizontal = 0f, vertical = 0f;
+            if (Keyboard.current != null)
+            {
+                var k = Keyboard.current;
+                if (k.dKey.isPressed || k.rightArrowKey.isPressed) horizontal += 1f;
+                if (k.aKey.isPressed || k.leftArrowKey.isPressed) horizontal -= 1f;
+                if (k.wKey.isPressed || k.upArrowKey.isPressed) vertical += 1f;
+                if (k.sKey.isPressed || k.downArrowKey.isPressed) vertical -= 1f;
+            }
+            else
+            {
+                try
+                {
+                    if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) horizontal += 1f;
+                    if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) horizontal -= 1f;
+                    if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) vertical += 1f;
+                    if (Input.GetKey(KeyCode.S) || Input.GetKey(KeyCode.DownArrow)) vertical -= 1f;
+                }
+                catch
+                {
+                    // Ignored if legacy input is unavailable
+                }
+            }
+            return new Vector2(horizontal, vertical);
+        }
+
+        /// <summary>
+        /// Camera turn from the keyboard: -1 while [Q] is held (turn left), +1 while [E] is held (turn right).
+        /// </summary>
+        public static float GetCameraRotateAxis()
+        {
+            if (!IsExplorationInputEnabled) return 0f;
+
+            float axis = 0f;
+            if (Keyboard.current != null)
+            {
+                if (Keyboard.current.qKey.isPressed) axis -= 1f;
+                if (Keyboard.current.eKey.isPressed) axis += 1f;
+                return axis;
+            }
+
+            try
+            {
+                if (Input.GetKey(KeyCode.Q)) axis -= 1f;
+                if (Input.GetKey(KeyCode.E)) axis += 1f;
+            }
+            catch
+            {
+                // Ignored if legacy input is unavailable
+            }
+            return axis;
+        }
+
+        /// <summary>
+        /// True during the frame the "centre the camera on the hero" hotkey [Home] was pressed (as in Baldur's Gate 3).
+        /// </summary>
+        public static bool IsRecentreCameraPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.homeKey.wasPressedThisFrame)
             {
                 return true;
             }
 
             try
             {
-                return Input.GetKeyDown(KeyCode.Q);
+                return Input.GetKeyDown(KeyCode.Home);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Key that drinks a potion. It was [Q] until Q/E started turning the camera (2026-10-07).</summary>
+        public const KeyCode QuickPotionKey = KeyCode.H;
+
+        /// <summary>
+        /// True during the frame the Quick Potion hotkey [H] was pressed.
+        /// </summary>
+        public static bool IsQuickPotionHotkeyPressed()
+        {
+            if (Keyboard.current != null && Keyboard.current.hKey.wasPressedThisFrame)
+            {
+                return true;
+            }
+
+            try
+            {
+                return Input.GetKeyDown(QuickPotionKey);
             }
             catch
             {

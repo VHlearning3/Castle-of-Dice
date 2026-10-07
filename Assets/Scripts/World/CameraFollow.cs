@@ -1,14 +1,20 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using UnityEngine.Rendering;
+using UnityEngine.UI;
 using CastleOfTheD20.Combat;
 using CastleOfTheD20.Core;
 
 namespace CastleOfTheD20.World
 {
     /// <summary>
-    /// Smooth isometric and dynamic follow camera for Castle of the D20.
-    /// Tracks the player hero in LateUpdate with smooth damping, and can slowly
-    /// orbit/turn towards the direction the player is walking for an intuitive,
-    /// modern exploration camera experience.
+    /// Baldur's Gate 3 style camera (Vili, 2026-10-07), the same in exploration and combat:
+    /// [Q]/[E] or a middle-mouse (or right-mouse) drag turn it around the hero, the scroll wheel zooms and tilts
+    /// (flatter close in, more top-down far out), WASD and the arrows pan it away from the hero and [Home]
+    /// centres it again. It also centres itself when the hero is sent somewhere new.
+    /// Walls, roofs and ceilings between the camera and the hero are cut away (drawn as shadows only and
+    /// ignored by clicks, see <see cref="IsCutAway"/>); terrain and room shells around the hero pull the camera in.
     /// </summary>
     public class CameraFollow : MonoBehaviour
     {
@@ -22,11 +28,11 @@ namespace CastleOfTheD20.World
         [SerializeField] private bool autoFindPlayer = true;
 
         [Header("Offset & Positioning")]
-        [Tooltip("Isometric world-space offset from the target (e.g. (0, 10, -8)).")]
+        [Tooltip("The zone's starting view: its length sets the starting zoom, its direction the starting heading.")]
         [SerializeField] private Vector3 offset = new Vector3(-6f, 8f, -8f);
 
         [Header("Smoothing & Damping")]
-        [Tooltip("Approximate time in seconds to reach the target position (lower is snappier, higher is smoother).")]
+        [Tooltip("Approximate time in seconds for the view to catch up with the hero.")]
         [Range(0.01f, 1.0f)]
         [SerializeField] private float smoothTime = 0.2f;
 
@@ -34,58 +40,90 @@ namespace CastleOfTheD20.World
         [SerializeField] private float maxSpeed = 50f;
 
         [Header("Rotation & Orientation")]
-        [Tooltip("If true, automatically aligns camera rotation to look at the target position + lookOffset.")]
-        [SerializeField] private bool lookAtTarget = true;
-
-        [Tooltip("Height offset added to the target position when looking at the target.")]
+        [Tooltip("Height above the hero's feet that the camera looks at.")]
         [SerializeField] private float lookAtHeightOffset = 1.0f;
 
-        [Tooltip("Fixed isometric pitch/roll applied if Look At Target is disabled.")]
-        [SerializeField] private Vector3 fixedRotationEuler = new Vector3(50f, 0f, 0f);
+        [Header("Turning")]
+        [Tooltip("Degrees per second while [Q] or [E] is held.")]
+        [SerializeField] private float keyTurnSpeed = 110f;
 
-        [Header("Dynamic Direction Follow")]
-        [Tooltip("If true, the camera smoothly turns towards the direction the player is walking.")]
-        [SerializeField] private bool turnTowardsMovementDirection = true;
+        [Tooltip("Degrees per pixel of middle- or right-mouse drag.")]
+        [SerializeField] private float dragTurnSensitivity = 0.25f;
 
-        [Tooltip("Smooth time in seconds for camera rotation towards the player's walking direction (higher = slower, smoother turn).")]
-        [Range(0.2f, 4.0f)]
-        [SerializeField] private float rotationSmoothTime = 1.5f;
-
-        [Tooltip("Maximum camera turning speed in degrees per second.")]
-        [SerializeField] private float maxRotationSpeed = 60.0f;
-
-        [Tooltip("Minimum movement speed in units/sec to consider the player actively walking.")]
-        [SerializeField] private float minWalkSpeed = 0.15f;
-
-        [Tooltip("Only dynamically rotate camera during Exploration mode. Freezes rotation in Combat mode.")]
-        [SerializeField] private bool onlyDuringExploration = true;
-
-        [Tooltip("Optional lateral (left/right) camera offset relative to the heading angle.")]
-        [SerializeField] private float lateralOffset = 0f;
-
-        [Header("Mouse Right-Click Turning")]
-        [Tooltip("If true, allows turning/orbiting the camera around the target by holding right-click and dragging in Exploration and Combat modes.")]
+        [Tooltip("Also turn the camera with a right-mouse drag (the game's older control).")]
         [SerializeField] private bool allowRightClickTurn = true;
 
-        [Tooltip("Sensitivity of camera turning with right mouse button drag.")]
-        [SerializeField] private float rightClickTurnSensitivity = 0.25f;
+        [Header("Zoom & Tilt")]
+        [Tooltip("Camera distance from the hero when fully zoomed in.")]
+        [SerializeField] private float minDistance = 5f;
 
-        [Tooltip("Delay in seconds after releasing right-click before auto-turning towards movement direction resumes.")]
-        [SerializeField] private float autoTurnResumeDelay = 0.8f;
+        [Tooltip("Camera distance from the hero when fully zoomed out.")]
+        [SerializeField] private float maxDistance = 24f;
+
+        [Tooltip("Downward tilt in degrees when fully zoomed in (flatter, closer to the hero).")]
+        [SerializeField] private float minPitch = 26f;
+
+        [Tooltip("Downward tilt in degrees when fully zoomed out (more top-down).")]
+        [SerializeField] private float maxPitch = 62f;
+
+        [Tooltip("Zoom change per scroll wheel notch (0..1 of the whole range).")]
+        [SerializeField] private float zoomStep = 0.08f;
+
+        [Header("Panning")]
+        [Tooltip("Pan speed as a share of the camera distance per second.")]
+        [SerializeField] private float panSpeedPerDistance = 0.9f;
+
+        [Tooltip("How far (in metres) the view may be panned away from the hero.")]
+        [SerializeField] private float maxPanDistance = 30f;
+
+        [Header("Walls & Interiors")]
+        [Tooltip("Radius of the sight check between the hero and the camera.")]
+        [SerializeField] private float sightRadius = 0.25f;
+
+        [Tooltip("Closest the camera may be pulled in to the hero by terrain or a room shell.")]
+        [SerializeField] private float minPulledDistance = 1.8f;
 
         #endregion
 
         #region Private State
 
-        private Vector3 currentVelocity = Vector3.zero;
-        private float currentYaw = 0f;
-        private float targetYaw = 0f;
-        private float currentYawVelocity = 0f;
-        private Vector3 lastTargetPosition = Vector3.zero;
-        private bool isInitialized = false;
+        private const int UnitLayer = 9;
+        private const int InteractableLayer = 8;
+        private const int GridTileLayer = 6;
+        private const float CutAwayHoldTime = 0.25f;
+        private const int MaxCutAwayRenderers = 60;
+
+        private float currentYaw;
+        private float targetYaw;
+        private float yawVelocity;
+        private float currentZoom = 0.5f;
+        private float targetZoom = 0.5f;
+        private float zoomVelocity;
+        private Vector3 panOffset;
+        private bool recentring;
+        private Vector3 smoothFocus;
+        private Vector3 focusVelocity;
+        private float currentPull = float.MaxValue;
+        private bool isInitialized;
+        private bool isDragging;
+        private int lastDestinationVersion = -1;
         private PlayerExplorationMovement cachedPlayerMovement;
-        private float lastRightClickTime = -10f;
-        private bool isRightClickDragging = false;
+
+        private readonly RaycastHit[] sightHits = new RaycastHit[16];
+        private readonly Dictionary<Collider, Renderer[]> occluderCache = new Dictionary<Collider, Renderer[]>();
+        private readonly Dictionary<Renderer, CutAwayRenderer> cutRenderers = new Dictionary<Renderer, CutAwayRenderer>();
+        private readonly List<Renderer> cutRendererList = new List<Renderer>();
+        private readonly Dictionary<Collider, float> cutColliders = new Dictionary<Collider, float>();
+        private readonly List<Collider> cutColliderList = new List<Collider>();
+        private static readonly Renderer[] NoRenderers = new Renderer[0];
+
+        private struct CutAwayRenderer
+        {
+            public ShadowCastingMode OriginalMode;
+            public float LastSeen;
+        }
+
+        private static CameraFollow s_active;
 
         #endregion
 
@@ -94,43 +132,37 @@ namespace CastleOfTheD20.World
         /// <summary>Current target Transform being followed.</summary>
         public Transform Target => target;
 
-        /// <summary>Isometric offset vector relative to the target.</summary>
+        /// <summary>The zone's starting view offset (sets the starting zoom and heading).</summary>
         public Vector3 Offset
         {
             get => offset;
             set => offset = value;
         }
 
-        /// <summary>Smooth damping time in seconds for position tracking.</summary>
+        /// <summary>Smooth damping time in seconds for following the hero.</summary>
         public float SmoothTime
         {
             get => smoothTime;
             set => smoothTime = Mathf.Max(0.001f, value);
         }
 
-        /// <summary>Whether the camera dynamically rotates behind the player's walking direction.</summary>
-        public bool TurnTowardsMovementDirection
-        {
-            get => turnTowardsMovementDirection;
-            set => turnTowardsMovementDirection = value;
-        }
-
-        /// <summary>Smooth time in seconds for camera turning.</summary>
-        public float RotationSmoothTime
-        {
-            get => rotationSmoothTime;
-            set => rotationSmoothTime = Mathf.Max(0.05f, value);
-        }
-
-        /// <summary>Maximum camera turning speed in degrees per second.</summary>
-        public float MaxRotationSpeed
-        {
-            get => maxRotationSpeed;
-            set => maxRotationSpeed = Mathf.Max(1f, value);
-        }
-
         /// <summary>Current horizontal heading angle (yaw) of the camera in degrees.</summary>
         public float CurrentYaw => currentYaw;
+
+        /// <summary>Zoom between 0 (closest, flattest) and 1 (farthest, most top-down).</summary>
+        public float Zoom => currentZoom;
+
+        /// <summary>Whether the view has been panned away from the hero.</summary>
+        public bool IsPanned => panOffset.sqrMagnitude > 0.01f;
+
+        /// <summary>
+        /// True while <paramref name="col"/> is cut away because it stands between the camera and the hero.
+        /// Click handlers skip such colliders so the player can click through a hidden wall.
+        /// </summary>
+        public static bool IsCutAway(Collider col)
+        {
+            return col != null && s_active != null && s_active.cutColliders.ContainsKey(col);
+        }
 
         #endregion
 
@@ -143,7 +175,7 @@ namespace CastleOfTheD20.World
                 FindPlayerTarget();
             }
 
-            InitializeYaw();
+            InitializeView();
         }
 
         private void Start()
@@ -156,12 +188,15 @@ namespace CastleOfTheD20.World
 
         private void OnEnable()
         {
+            s_active = this;
             DungeonRoomController.OnRoomCombatStarted += HandleRoomCombatStarted;
         }
 
         private void OnDisable()
         {
             DungeonRoomController.OnRoomCombatStarted -= HandleRoomCombatStarted;
+            RestoreAllCutAway();
+            if (s_active == this) s_active = null;
         }
 
         /// <summary>
@@ -202,7 +237,7 @@ namespace CastleOfTheD20.World
 
             currentYaw = Mathf.Atan2(worldDirection.x, worldDirection.z) * Mathf.Rad2Deg;
             targetYaw = currentYaw;
-            currentYawVelocity = 0f;
+            yawVelocity = 0f;
             SnapToTarget();
         }
 
@@ -225,99 +260,380 @@ namespace CastleOfTheD20.World
 
             if (!isInitialized)
             {
-                InitializeYaw();
+                InitializeView();
             }
 
-            // 1. Process Right-Click Camera Turning (active in both Exploration and Combat)
-            bool isRightClickActive = false;
-            if (allowRightClickTurn)
+            float dt = Time.unscaledDeltaTime;
+            if (CameraInputAllowed())
             {
-                if (GameInput.GetRightMouseButtonDown())
-                {
-                    isRightClickDragging = !IsPointerOverUI();
-                }
-
-                if (GameInput.GetRightMouseButton() && isRightClickDragging)
-                {
-                    isRightClickActive = true;
-                    lastRightClickTime = Time.time;
-                    Vector2 mouseDelta = GameInput.GetMouseDelta();
-                    if (Mathf.Abs(mouseDelta.x) > 0.01f)
-                    {
-                        targetYaw = (targetYaw + mouseDelta.x * rightClickTurnSensitivity) % 360f;
-                        currentYaw = targetYaw;
-                        currentYawVelocity = 0f;
-                    }
-                }
-                else
-                {
-                    isRightClickDragging = false;
-                }
-            }
-
-            // 2. Dynamic auto-follow direction while walking (only in Exploration mode and when not right-clicking)
-            if (turnTowardsMovementDirection)
-            {
-                bool allowAutoTurn = true;
-                if (isRightClickActive || (Time.time - lastRightClickTime < autoTurnResumeDelay))
-                {
-                    allowAutoTurn = false;
-                }
-                else if (onlyDuringExploration && GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration)
-                {
-                    allowAutoTurn = false;
-                }
-
-                if (allowAutoTurn)
-                {
-                    UpdateWalkDirection();
-                }
-            }
-
-            // 3. Compute orbit position from horizontal distance, height, and current yaw
-            float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
-            if (horizontalDistance < 0.1f) horizontalDistance = 8f;
-            float height = offset.y > 0.1f ? offset.y : 8f;
-
-            Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
-            Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
-            Vector3 rotatedOffset = yawRotation * localOffset;
-            Vector3 targetPosition = target.position + rotatedOffset;
-
-            // Smoothly interpolate position using SmoothDamp to avoid frame-rate jitter
-            transform.position = Vector3.SmoothDamp(
-                transform.position,
-                targetPosition,
-                ref currentVelocity,
-                smoothTime,
-                maxSpeed,
-                Time.deltaTime
-            );
-
-            // Handle camera orientation
-            if (lookAtTarget)
-            {
-                Vector3 lookTarget = target.position + Vector3.up * lookAtHeightOffset;
-                transform.LookAt(lookTarget);
+                HandleTurnInput(dt);
+                HandleZoomInput();
+                HandlePanInput(dt);
             }
             else
             {
-                transform.rotation = Quaternion.Euler(fixedRotationEuler.x, currentYaw, fixedRotationEuler.z);
+                isDragging = false;
             }
 
-            lastTargetPosition = target.position;
+            WatchHeroOrders();
+
+            if (recentring)
+            {
+                panOffset = Vector3.Lerp(panOffset, Vector3.zero, 1f - Mathf.Exp(-8f * dt));
+                if (panOffset.sqrMagnitude < 0.0025f)
+                {
+                    panOffset = Vector3.zero;
+                    recentring = false;
+                }
+            }
+
+            currentYaw = Mathf.SmoothDampAngle(currentYaw, targetYaw, ref yawVelocity, 0.08f, Mathf.Infinity, dt);
+            currentZoom = Mathf.SmoothDamp(currentZoom, targetZoom, ref zoomVelocity, 0.12f, Mathf.Infinity, dt);
+
+            Vector3 desiredFocus = target.position + panOffset;
+            smoothFocus = Vector3.SmoothDamp(smoothFocus, desiredFocus, ref focusVelocity, smoothTime, maxSpeed, Time.deltaTime);
+
+            PlaceCamera(smoothFocus, dt, false);
+        }
+
+        #endregion
+
+        #region Input
+
+        private static bool CameraInputAllowed()
+        {
+            if (!GameInput.IsExplorationInputEnabled) return false;
+            if (Time.timeScale <= 0f) return false;
+            if (GameManager.Instance != null && GameManager.Instance.CurrentMode == GamePlayMode.Dialogue) return false;
+            return true;
+        }
+
+        private void HandleTurnInput(float dt)
+        {
+            float keyAxis = GameInput.GetCameraRotateAxis();
+            if (Mathf.Abs(keyAxis) > 0.01f)
+            {
+                targetYaw += keyAxis * keyTurnSpeed * dt;
+            }
+
+            if (GameInput.GetMiddleMouseButtonDown() || (allowRightClickTurn && GameInput.GetRightMouseButtonDown()))
+            {
+                isDragging = !IsPointerOverInteractiveUI();
+            }
+
+            bool held = GameInput.GetMiddleMouseButton() || (allowRightClickTurn && GameInput.GetRightMouseButton());
+            if (!held)
+            {
+                isDragging = false;
+            }
+            else if (isDragging)
+            {
+                Vector2 mouseDelta = GameInput.GetMouseDelta();
+                if (Mathf.Abs(mouseDelta.x) > 0.01f)
+                {
+                    targetYaw += mouseDelta.x * dragTurnSensitivity;
+                    currentYaw = targetYaw;
+                    yawVelocity = 0f;
+                }
+            }
+
+            targetYaw = Mathf.Repeat(targetYaw, 360f);
+            currentYaw = Mathf.Repeat(currentYaw, 360f);
+        }
+
+        private void HandleZoomInput()
+        {
+            float scroll = GameInput.GetMouseScrollDelta().y;
+            if (Mathf.Abs(scroll) < 0.01f) return;
+            if (IsPointerOverScrollableUI()) return;
+
+            // Scroll up (positive) zooms in. Browsers and platforms report very different step sizes,
+            // so each frame with scrolling counts as one notch.
+            targetZoom = Mathf.Clamp01(targetZoom - Mathf.Sign(scroll) * zoomStep);
+        }
+
+        private void HandlePanInput(float dt)
+        {
+            Vector2 pan = GameInput.GetCameraPanVector();
+            if (pan.sqrMagnitude > 0.01f)
+            {
+                recentring = false;
+                Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
+                Vector3 move = yawRotation * new Vector3(pan.x, 0f, pan.y);
+                if (move.sqrMagnitude > 1f) move.Normalize();
+                panOffset += move * (panSpeedPerDistance * CurrentDistance() * dt);
+                panOffset.y = 0f;
+                if (panOffset.magnitude > maxPanDistance) panOffset = panOffset.normalized * maxPanDistance;
+            }
+
+            if (GameInput.IsRecentreCameraPressed())
+            {
+                Recentre();
+            }
+        }
+
+        /// <summary>Re-centres the view on the hero when they are sent somewhere new or steered with a gamepad.</summary>
+        private void WatchHeroOrders()
+        {
+            if (cachedPlayerMovement == null) return;
+
+            int version = cachedPlayerMovement.DestinationVersion;
+            if (version != lastDestinationVersion)
+            {
+                if (lastDestinationVersion >= 0 && IsPanned) Recentre();
+                lastDestinationVersion = version;
+            }
+            if (cachedPlayerMovement.IsSteeredDirectly && IsPanned) Recentre();
+        }
+
+        /// <summary>Zooms to <paramref name="zoom01"/> (0 = closest and flattest, 1 = farthest and most top-down).</summary>
+        public void SetZoom(float zoom01, bool instant = false)
+        {
+            targetZoom = Mathf.Clamp01(zoom01);
+            if (instant)
+            {
+                currentZoom = targetZoom;
+                zoomVelocity = 0f;
+            }
+        }
+
+        /// <summary>Smoothly brings a panned view back onto the hero (the [Home] key).</summary>
+        public void Recentre()
+        {
+            recentring = true;
+        }
+
+        private bool IsPointerOverInteractiveUI()
+        {
+            EventSystem es = EventSystem.current;
+            if (es == null || !es.IsPointerOverGameObject()) return false;
+            return PointerHitsUI(es, false);
+        }
+
+        private bool IsPointerOverScrollableUI()
+        {
+            EventSystem es = EventSystem.current;
+            if (es == null || !es.IsPointerOverGameObject()) return false;
+            return PointerHitsUI(es, true);
+        }
+
+        private readonly List<RaycastResult> uiHits = new List<RaycastResult>();
+        private PointerEventData pointerData;
+        private EventSystem pointerDataSystem;
+
+        // Only runs on the frame a drag or scroll starts over UI, so the event system raycast is rare
+        private bool PointerHitsUI(EventSystem es, bool scrollOnly)
+        {
+            if (pointerData == null || pointerDataSystem != es)
+            {
+                pointerData = new PointerEventData(es);
+                pointerDataSystem = es;
+            }
+            pointerData.position = GameInput.GetMousePosition();
+            uiHits.Clear();
+            es.RaycastAll(pointerData, uiHits);
+            for (int i = 0; i < uiHits.Count; i++)
+            {
+                GameObject go = uiHits[i].gameObject;
+                if (go == null) continue;
+                if (go.GetComponentInParent<ScrollRect>() != null) return true;
+                if (!scrollOnly && go.GetComponentInParent<Selectable>() != null) return true;
+            }
+            return false;
+        }
+
+        #endregion
+
+        #region Placement & Walls
+
+        private float CurrentDistance()
+        {
+            return Mathf.Lerp(minDistance, maxDistance, currentZoom);
+        }
+
+        private void PlaceCamera(Vector3 focus, float dt, bool snap)
+        {
+            float pitch = Mathf.Lerp(minPitch, maxPitch, currentZoom);
+            float distance = CurrentDistance();
+
+            Vector3 lookPoint = focus + Vector3.up * lookAtHeightOffset;
+            Quaternion rotation = Quaternion.Euler(pitch, currentYaw, 0f);
+            Vector3 back = rotation * Vector3.back;
+
+            // Cut away what stands between the hero and the camera; pull in for what cannot be cut away
+            Vector3 heroLook = target.position + Vector3.up * Mathf.Max(lookAtHeightOffset, 1.2f);
+            float pulled = UpdateWalls(heroLook, lookPoint + back * distance, focus);
+
+            if (snap || pulled < currentPull) currentPull = pulled;
+            else currentPull = Mathf.MoveTowards(currentPull, pulled, 10f * dt);
+
+            float finalDistance = Mathf.Clamp(Mathf.Min(distance, currentPull), Mathf.Min(minPulledDistance, distance), distance);
+            transform.position = lookPoint + back * finalDistance;
+            transform.rotation = rotation;
+        }
+
+        /// <summary>Returns how far from the look point the camera may sit before terrain or a room shell blocks it.</summary>
+        private float UpdateWalls(Vector3 heroLook, Vector3 cameraPoint, Vector3 focus)
+        {
+            float now = Time.unscaledTime;
+            float allowed = float.MaxValue;
+
+            Vector3 toCamera = cameraPoint - heroLook;
+            float length = toCamera.magnitude;
+            if (length > 0.01f)
+            {
+                Vector3 dir = toCamera / length;
+                int mask = ~((1 << UnitLayer) | (1 << InteractableLayer) | (1 << GridTileLayer) | (1 << 2));
+                int count = Physics.SphereCastNonAlloc(heroLook, sightRadius, dir, sightHits, length, mask, QueryTriggerInteraction.Ignore);
+
+                for (int i = 0; i < count; i++)
+                {
+                    RaycastHit hit = sightHits[i];
+                    Collider col = hit.collider;
+                    if (col == null || hit.distance <= 0f) continue;
+                    if (col.transform.IsChildOf(target)) continue;
+                    if (col.GetComponentInParent<CombatUnit>() != null) continue;
+
+                    if (col is TerrainCollider)
+                    {
+                        allowed = Mathf.Min(allowed, PulledDistanceFor(hit, heroLook, focus));
+                        continue;
+                    }
+
+                    Renderer[] renderers = GetOccluderRenderers(col);
+                    if (renderers.Length == 0) continue; // invisible blockers do not hide anything
+
+                    bool cutAny = false;
+                    for (int r = 0; r < renderers.Length; r++)
+                    {
+                        Renderer rend = renderers[r];
+                        if (rend == null) continue;
+
+                        // A shell the hero stands inside (a whole room mesh) cannot be hidden without hiding the floor
+                        if (rend.bounds.Contains(heroLook)) continue;
+
+                        CutAway(rend, now);
+                        cutAny = true;
+                    }
+
+                    if (cutAny) cutColliders[col] = now;
+                    else allowed = Mathf.Min(allowed, PulledDistanceFor(hit, heroLook, focus));
+                }
+            }
+
+            RestoreStaleCutAway(now);
+            return allowed;
+        }
+
+        // The sight check runs from the hero, but the camera is placed from the (maybe panned) look point
+        private float PulledDistanceFor(RaycastHit hit, Vector3 heroLook, Vector3 focus)
+        {
+            Vector3 hitPoint = heroLook + (hit.point - heroLook).normalized * Mathf.Max(0f, hit.distance - 0.2f);
+            Vector3 lookPoint = focus + Vector3.up * lookAtHeightOffset;
+            return Vector3.Distance(lookPoint, hitPoint);
+        }
+
+        private Renderer[] GetOccluderRenderers(Collider col)
+        {
+            if (occluderCache.TryGetValue(col, out Renderer[] cached)) return cached;
+
+            Renderer[] found = col.GetComponentsInChildren<Renderer>();
+            if (found.Length == 0 && col.transform.parent != null)
+            {
+                Renderer parentRenderer = col.transform.parent.GetComponent<Renderer>();
+                if (parentRenderer != null) found = new[] { parentRenderer };
+            }
+
+            // Keep only solid meshes; particles, lines, text and huge groups stay as they are
+            int keep = 0;
+            for (int i = 0; i < found.Length; i++)
+            {
+                if (found[i] is MeshRenderer || found[i] is SkinnedMeshRenderer) found[keep++] = found[i];
+            }
+            Renderer[] result;
+            if (keep == 0 || keep > MaxCutAwayRenderers) result = NoRenderers;
+            else if (keep == found.Length) result = found;
+            else
+            {
+                result = new Renderer[keep];
+                System.Array.Copy(found, result, keep);
+            }
+
+            occluderCache[col] = result;
+            return result;
+        }
+
+        private void CutAway(Renderer rend, float now)
+        {
+            if (cutRenderers.TryGetValue(rend, out CutAwayRenderer info))
+            {
+                info.LastSeen = now;
+                cutRenderers[rend] = info;
+                return;
+            }
+
+            if (rend.shadowCastingMode == ShadowCastingMode.ShadowsOnly) return; // already shadow-only by design
+            cutRenderers[rend] = new CutAwayRenderer { OriginalMode = rend.shadowCastingMode, LastSeen = now };
+            cutRendererList.Add(rend);
+            rend.shadowCastingMode = ShadowCastingMode.ShadowsOnly;
+        }
+
+        private void RestoreStaleCutAway(float now)
+        {
+            for (int i = cutRendererList.Count - 1; i >= 0; i--)
+            {
+                Renderer rend = cutRendererList[i];
+                if (rend == null)
+                {
+                    cutRenderers.Remove(rend);
+                    cutRendererList.RemoveAt(i);
+                    continue;
+                }
+
+                CutAwayRenderer info = cutRenderers[rend];
+                if (now - info.LastSeen < CutAwayHoldTime) continue;
+
+                rend.shadowCastingMode = info.OriginalMode;
+                cutRenderers.Remove(rend);
+                cutRendererList.RemoveAt(i);
+            }
+
+            cutColliderList.Clear();
+            foreach (KeyValuePair<Collider, float> pair in cutColliders)
+            {
+                if (pair.Key == null || now - pair.Value >= CutAwayHoldTime) cutColliderList.Add(pair.Key);
+            }
+            for (int i = 0; i < cutColliderList.Count; i++)
+            {
+                cutColliders.Remove(cutColliderList[i]);
+            }
+        }
+
+        private void RestoreAllCutAway()
+        {
+            for (int i = 0; i < cutRendererList.Count; i++)
+            {
+                Renderer rend = cutRendererList[i];
+                if (rend != null && cutRenderers.TryGetValue(rend, out CutAwayRenderer info))
+                {
+                    rend.shadowCastingMode = info.OriginalMode;
+                }
+            }
+            cutRendererList.Clear();
+            cutRenderers.Clear();
+            cutColliders.Clear();
         }
 
         #endregion
 
         #region Direction Tracking
 
-        private void InitializeYaw()
+        private void InitializeView()
         {
             if (target == null) return;
 
             cachedPlayerMovement = target.GetComponent<PlayerExplorationMovement>();
-            lastTargetPosition = target.position;
+            lastDestinationVersion = cachedPlayerMovement != null ? cachedPlayerMovement.DestinationVersion : -1;
 
             Vector3 toPlayer = target.position - transform.position;
             toPlayer.y = 0f;
@@ -332,59 +648,11 @@ namespace CastleOfTheD20.World
             }
 
             targetYaw = currentYaw;
+
+            // Start at the zone's own view distance
+            float startDistance = offset.magnitude > 0.5f ? offset.magnitude : 14f;
+            targetZoom = currentZoom = Mathf.Clamp01(Mathf.InverseLerp(minDistance, maxDistance, startDistance));
             isInitialized = true;
-        }
-
-        /// <summary>
-        /// Detects the target's current horizontal walking direction and smoothly updates the camera yaw angle.
-        /// </summary>
-        private void UpdateWalkDirection()
-        {
-            Vector3 walkDir = Vector3.zero;
-
-            // 1. Direct query from PlayerExplorationMovement if attached
-            if (cachedPlayerMovement == null && target != null)
-            {
-                cachedPlayerMovement = target.GetComponent<PlayerExplorationMovement>();
-            }
-
-            if (cachedPlayerMovement != null && cachedPlayerMovement.IsMoving)
-            {
-                walkDir = cachedPlayerMovement.CurrentMoveDirection;
-                if (walkDir.sqrMagnitude < 0.001f)
-                {
-                    walkDir = target.forward;
-                }
-            }
-
-            // 2. Fallback to physical displacement delta between frames
-            if (walkDir.sqrMagnitude < 0.001f)
-            {
-                Vector3 displacement = target.position - lastTargetPosition;
-                displacement.y = 0f;
-                float currentSpeed = displacement.magnitude / Mathf.Max(Time.deltaTime, 0.0001f);
-
-                if (currentSpeed >= minWalkSpeed && displacement.sqrMagnitude > 0.0001f)
-                {
-                    walkDir = displacement.normalized;
-                }
-            }
-
-            // If a valid walking direction is detected, update the target camera yaw
-            if (walkDir.sqrMagnitude > 0.001f)
-            {
-                targetYaw = Mathf.Atan2(walkDir.x, walkDir.z) * Mathf.Rad2Deg;
-            }
-
-            // Smoothly interpolate currentYaw towards targetYaw (handles 360-degree angle wrapping)
-            currentYaw = Mathf.SmoothDampAngle(
-                currentYaw,
-                targetYaw,
-                ref currentYawVelocity,
-                rotationSmoothTime,
-                maxRotationSpeed,
-                Time.deltaTime
-            );
         }
 
         #endregion
@@ -395,18 +663,18 @@ namespace CastleOfTheD20.World
         /// Sets a new target to follow, with an option to immediately snap to it.
         /// </summary>
         /// <param name="newTarget">Target Transform to track.</param>
-        /// <param name="snapImmediately">If true, skips interpolation and places the camera at target + offset immediately.</param>
+        /// <param name="snapImmediately">If true, skips interpolation and places the camera at the target immediately.</param>
         public void SetTarget(Transform newTarget, bool snapImmediately = false)
         {
             target = newTarget;
             cachedPlayerMovement = newTarget != null ? newTarget.GetComponent<PlayerExplorationMovement>() : null;
-            currentVelocity = Vector3.zero;
-            currentYawVelocity = 0f;
+            lastDestinationVersion = cachedPlayerMovement != null ? cachedPlayerMovement.DestinationVersion : -1;
+            focusVelocity = Vector3.zero;
+            yawVelocity = 0f;
 
-            if (newTarget != null)
+            if (newTarget != null && !isInitialized)
             {
-                lastTargetPosition = newTarget.position;
-                InitializeYaw();
+                InitializeView();
             }
 
             if (snapImmediately && target != null)
@@ -416,37 +684,25 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>
-        /// Instantly teleports the camera to the target position plus offset without smoothing.
+        /// Instantly places the camera on the target without smoothing and clears any panning.
         /// Useful during level transitions, respawns, or teleport abilities (e.g. Blink).
         /// </summary>
         public void SnapToTarget()
         {
             if (target == null) return;
+            if (!isInitialized) InitializeView();
 
-            currentVelocity = Vector3.zero;
-            currentYawVelocity = 0f;
+            focusVelocity = Vector3.zero;
+            yawVelocity = 0f;
+            zoomVelocity = 0f;
+            currentZoom = targetZoom;
+            currentYaw = targetYaw;
+            panOffset = Vector3.zero;
+            recentring = false;
+            smoothFocus = target.position;
+            currentPull = float.MaxValue;
 
-            float horizontalDistance = new Vector2(offset.x, offset.z).magnitude;
-            if (horizontalDistance < 0.1f) horizontalDistance = 8f;
-            float height = offset.y > 0.1f ? offset.y : 8f;
-
-            Quaternion yawRotation = Quaternion.Euler(0f, currentYaw, 0f);
-            Vector3 localOffset = new Vector3(lateralOffset, height, -horizontalDistance);
-            Vector3 rotatedOffset = yawRotation * localOffset;
-            Vector3 targetPosition = target.position + rotatedOffset;
-
-            transform.position = targetPosition;
-            lastTargetPosition = target.position;
-
-            if (lookAtTarget)
-            {
-                Vector3 lookTarget = target.position + Vector3.up * lookAtHeightOffset;
-                transform.LookAt(lookTarget);
-            }
-            else
-            {
-                transform.rotation = Quaternion.Euler(fixedRotationEuler.x, currentYaw, fixedRotationEuler.z);
-            }
+            PlaceCamera(smoothFocus, 0f, true);
         }
 
         #endregion
@@ -462,8 +718,7 @@ namespace CastleOfTheD20.World
             if (playerUnit != null)
             {
                 target = playerUnit.transform;
-                cachedPlayerMovement = target.GetComponent<PlayerExplorationMovement>();
-                InitializeYaw();
+                InitializeView();
                 return;
             }
 
@@ -471,19 +726,8 @@ namespace CastleOfTheD20.World
             if (playerObj != null)
             {
                 target = playerObj.transform;
-                cachedPlayerMovement = target.GetComponent<PlayerExplorationMovement>();
-                InitializeYaw();
+                InitializeView();
             }
-        }
-
-        #endregion
-
-        #region Private Utilities
-
-        private bool IsPointerOverUI()
-        {
-            return UnityEngine.EventSystems.EventSystem.current != null &&
-                   UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject();
         }
 
         #endregion

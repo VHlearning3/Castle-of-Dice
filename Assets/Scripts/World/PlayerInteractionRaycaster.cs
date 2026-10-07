@@ -11,7 +11,8 @@ namespace CastleOfTheD20.World
     /// <summary>
     /// Player mouse interaction controller for 3D isometric exploration.
     /// Raycasts from the active camera on mouse click to detect Interactable objects (NPCs, chests, doors)
-    /// and invokes TriggerInteraction when within valid interaction radius.
+    /// and invokes TriggerInteraction when within valid interaction radius, or walks the hero there first.
+    /// A click on the ground walks the hero there (click-to-move, Baldur's Gate 3 controls, 2026-10-07).
     /// Includes intelligent UI pass-through filtering to prevent full-screen HUD panels from swallowing clicks.
     /// </summary>
     public class PlayerInteractionRaycaster : MonoBehaviour
@@ -132,10 +133,35 @@ namespace CastleOfTheD20.World
 
         #region Interaction Handling
 
+        private const float HoldMoveInterval = 0.12f;
+        private readonly RaycastHit[] clickHits = new RaycastHit[24];
+        private PlayerExplorationMovement playerMovement;
+        private bool holdMoving;
+        private float nextHoldMoveTime;
+
         private void HandleMouseInteraction()
         {
+            // Holding the left button after a ground click keeps steering the hero to the cursor (as in Baldur's Gate 3)
+            if (holdMoving)
+            {
+                if (!GameInput.GetLeftMouseButton() || !GameInput.IsExplorationInputEnabled)
+                {
+                    holdMoving = false;
+                }
+                else if (Time.unscaledTime >= nextHoldMoveTime && !GameInput.GetLeftMouseButtonDown())
+                {
+                    nextHoldMoveTime = Time.unscaledTime + HoldMoveInterval;
+                    if (TryPickClick(out _, out Vector3 holdPoint, out bool holdGround) && holdGround)
+                    {
+                        PlayerExplorationMovement mover = EnsureMovement();
+                        if (mover != null) mover.MoveTo(holdPoint, false);
+                    }
+                }
+            }
+
             // Primary mouse button (Left click) via cross-compatible GameInput
             if (!GameInput.GetLeftMouseButtonDown()) return;
+            if (!GameInput.IsExplorationInputEnabled || Time.timeScale <= 0f) return;
 
             // Check if mouse is over interactive UI elements
             if (IsPointerOverInteractiveUI())
@@ -143,60 +169,117 @@ namespace CastleOfTheD20.World
                 return;
             }
 
-            Camera cam = EnsureCamera();
-            if (cam == null) return;
-
             PlayerUnit activePlayer = EnsurePlayer();
             if (activePlayer == null) return;
 
-            Vector2 mousePos = GameInput.GetMousePosition();
-            Ray ray = cam.ScreenPointToRay(mousePos);
-
-            if (Physics.Raycast(ray, out RaycastHit hit, maxRaycastDistance, interactableLayers, QueryTriggerInteraction.Collide))
+            if (!TryPickClick(out Interactable interactable, out Vector3 point, out bool isGround))
             {
-                Interactable interactable = hit.collider.GetComponentInParent<Interactable>();
-
-                if (interactable != null)
+                if (debugLogging)
                 {
-                    if (!interactable.IsInteractable)
-                    {
-                        if (debugLogging)
-                        {
-                            Debug.Log($"[PlayerInteractionRaycaster] '{interactable.name}' is currently not interactable.");
-                        }
-                        return;
-                    }
+                    Debug.Log($"[PlayerInteractionRaycaster] Click at {GameInput.GetMousePosition()} hit nothing to walk to or use.");
+                }
+                return;
+            }
 
-                    if (interactable.CanInteract(activePlayer))
+            PlayerExplorationMovement movement = EnsureMovement();
+
+            if (interactable != null)
+            {
+                if (!Interactable.ClaimClick()) return; // OnMouseDown already handled this click
+
+                if (interactable.CanInteract(activePlayer))
+                {
+                    if (debugLogging)
                     {
-                        if (debugLogging)
-                        {
-                            Debug.Log($"[PlayerInteractionRaycaster] Interaction triggered on '{interactable.name}' ({interactable.PromptMessage}).");
-                        }
-                        interactable.TriggerInteraction(activePlayer);
+                        Debug.Log($"[PlayerInteractionRaycaster] Interaction triggered on '{interactable.name}' ({interactable.PromptMessage}).");
                     }
-                    else
+                    if (movement != null) movement.StopMoving();
+                    interactable.TriggerInteraction(activePlayer);
+                }
+                else if (movement != null && movement.WalkToInteract(interactable))
+                {
+                    if (debugLogging)
                     {
-                        float dist = interactable.DistanceTo(activePlayer.transform.position);
-                        Debug.Log($"[PlayerInteractionRaycaster] Out of range! Cannot interact with '{interactable.name}' ({interactable.PromptMessage}). Distance: {dist:F1}m > Radius: {interactable.InteractionRadius:F1}m. Walk closer!");
-                        Interactable.ShowTooFarHint();
+                        Debug.Log($"[PlayerInteractionRaycaster] Walking to '{interactable.name}' ({interactable.PromptMessage}) to use it.");
                     }
                 }
                 else
                 {
-                    if (debugLogging)
-                    {
-                        Debug.Log($"[PlayerInteractionRaycaster] Clicked '{hit.collider.name}' (Layer: {LayerMask.LayerToName(hit.collider.gameObject.layer)}), but no Interactable component was found.");
-                    }
+                    Interactable.ShowTooFarHint();
                 }
+                return;
             }
-            else
+
+            if (isGround && movement != null && movement.MoveTo(point))
             {
-                if (debugLogging)
-                {
-                    Debug.Log($"[PlayerInteractionRaycaster] Raycast from {mousePos} hit no 3D colliders within {maxRaycastDistance:F0}m.");
-                }
+                holdMoving = true;
+                nextHoldMoveTime = Time.unscaledTime + HoldMoveInterval * 2f;
             }
+        }
+
+        private PlayerExplorationMovement EnsureMovement()
+        {
+            if (playerMovement == null)
+            {
+                PlayerUnit p = EnsurePlayer();
+                if (p != null) playerMovement = p.GetComponent<PlayerExplorationMovement>();
+            }
+            return playerMovement;
+        }
+
+        /// <summary>
+        /// Finds what the cursor points at: the nearest usable <see cref="Interactable"/>, else a walkable point.
+        /// Walls the camera has cut away, trigger volumes and the hero are clicked through.
+        /// </summary>
+        private bool TryPickClick(out Interactable interactable, out Vector3 point, out bool isGround)
+        {
+            interactable = null;
+            point = Vector3.zero;
+            isGround = false;
+
+            Camera cam = EnsureCamera();
+            if (cam == null) return false;
+
+            Ray ray = cam.ScreenPointToRay(GameInput.GetMousePosition());
+            int count = Physics.RaycastNonAlloc(ray, clickHits, maxRaycastDistance, interactableLayers, QueryTriggerInteraction.Collide);
+            if (count == 0) return false;
+
+            // Insertion sort by distance (tiny N, no comparer allocation)
+            for (int i = 1; i < count; i++)
+            {
+                RaycastHit key = clickHits[i];
+                int j = i - 1;
+                while (j >= 0 && clickHits[j].distance > key.distance)
+                {
+                    clickHits[j + 1] = clickHits[j];
+                    j--;
+                }
+                clickHits[j + 1] = key;
+            }
+
+            Transform hero = player != null ? player.transform : null;
+            for (int i = 0; i < count; i++)
+            {
+                Collider col = clickHits[i].collider;
+                if (col == null) continue;
+                if (hero != null && col.transform.IsChildOf(hero)) continue;
+                if (CameraFollow.IsCutAway(col)) continue;
+
+                Interactable found = col.GetComponentInParent<Interactable>();
+                if (found != null && found.IsInteractable)
+                {
+                    interactable = found;
+                    point = clickHits[i].point;
+                    return true;
+                }
+
+                if (col.isTrigger) continue;
+
+                point = clickHits[i].point;
+                isGround = true;
+                return true;
+            }
+            return false;
         }
 
         /// <summary>

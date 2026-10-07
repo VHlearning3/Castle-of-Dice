@@ -17,7 +17,7 @@ namespace CastleOfTheD20.UI
     /// Manages:
     /// 1. Top-Left Hero Status Card: Crest emblem, name, class/level, Armor Class badge,
     ///    ruby health vitality bar with smooth animation & damage flash,
-    ///    integrated Quick Potion slot with count badge & [Q] hotkey, Gold Purse pill,
+    ///    integrated Quick Potion slot with count badge & [H] hotkey, Gold Purse pill,
     ///    and the hero stats block (to-hit, weapon, AC, move, effects) from CombatStatsHUD.
     /// 2. Top-Center Zone & Campaign Banner: Shows active atmospheric location, with the
     ///    CombatStatsHUD enemy cards below it while a battle is running.
@@ -288,7 +288,7 @@ namespace CastleOfTheD20.UI
                 }
             }
 
-            // 4. Quick Potion Hotkey [Q] (exploration and combat; never while talking or shopping)
+            // 4. Quick Potion Hotkey [H] (exploration and combat; never while talking or shopping)
             if (GameInput.IsQuickPotionHotkeyPressed())
             {
                 GameManager gm = GameManager.Instance;
@@ -709,7 +709,7 @@ namespace CastleOfTheD20.UI
                     potionCountText.color = new Color(1.0f, 0.90f, 0.55f, 1f);
                 }
 
-                // Hotkey tag [Q]
+                // Hotkey tag [H]
                 Transform qTagTr = potionBtnTr.Find("Hotkey_Tag");
                 GameObject qTagObj = qTagTr != null ? qTagTr.gameObject : new GameObject("Hotkey_Tag", typeof(RectTransform), typeof(CanvasRenderer), typeof(TextMeshProUGUI));
                 qTagObj.transform.SetParent(potionBtnTr, false);
@@ -720,7 +720,7 @@ namespace CastleOfTheD20.UI
                 qRect.anchoredPosition = new Vector2(-2f, 2f);
                 qRect.sizeDelta = new Vector2(16f, 14f);
                 TMP_Text qText = qTagObj.GetComponent<TMP_Text>();
-                qText.text = "Q";
+                qText.text = "H";
                 qText.fontSize = 9f;
                 qText.fontStyle = FontStyles.Bold;
                 qText.alignment = TextAlignmentOptions.Center;
@@ -1478,7 +1478,7 @@ namespace CastleOfTheD20.UI
 
         #region Hotbar Actions
 
-        /// <summary>[Q]: drinks a small potion (a large one when the small ones are gone) under the potion rules.</summary>
+        /// <summary>[H]: drinks a small potion (a large one when the small ones are gone) under the potion rules.</summary>
         public void OnQuickPotionClicked()
         {
             LocatePlayer();
@@ -1487,7 +1487,7 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
-        /// The potion [Q] drinks: a small one first, a greater one when no small potions are left.
+        /// The potion [H] drinks: a small one first, a greater one when no small potions are left.
         /// </summary>
         public ItemSO ResolveQuickPotion(InventoryManager inventory)
         {

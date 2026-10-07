@@ -78,6 +78,18 @@ namespace CastleOfTheD20.World
         #region Mouse Interaction
 
         private static PlayerUnit s_cachedPlayer;
+        private static int s_clickClaimedFrame = -1;
+
+        /// <summary>
+        /// One click reaches both <see cref="OnMouseDown"/> and PlayerInteractionRaycaster; whichever comes first
+        /// claims it, so the object is used (or walked to) once. Returns false when the click was already handled.
+        /// </summary>
+        public static bool ClaimClick()
+        {
+            if (s_clickClaimedFrame == Time.frameCount) return false;
+            s_clickClaimedFrame = Time.frameCount;
+            return true;
+        }
 
         protected virtual void OnMouseDown()
         {
@@ -96,12 +108,18 @@ namespace CastleOfTheD20.World
                 return;
             }
 
+            if (!ClaimClick()) return;
+
             if (CanInteract(player))
             {
                 TriggerInteraction(player);
             }
             else
             {
+                // Click-to-move: walk up to it and use it on arrival
+                PlayerExplorationMovement movement = player.GetComponent<PlayerExplorationMovement>();
+                if (movement != null && movement.WalkToInteract(this)) return;
+
                 float distance = DistanceTo(player.transform.position);
                 Debug.Log($"[Interactable] Too far away to interact with '{promptMessage}' ({distance:F1}m > {interactionRadius:F1}m). Move closer!");
                 ShowTooFarHint();

@@ -27,7 +27,7 @@ namespace CastleOfTheD20.UI
     /// Two flask slots in the bottom-left corner (small and large health potion), each with the potion icon,
     /// how many the hero carries and how much it heals. Clicking a slot drinks one. Outside combat that is
     /// free; in combat it is only allowed on the hero's turn and uses the turn's action (movement stays).
-    /// A potion is never wasted at full health. [Q] drinks a small potion first, then a large one.
+    /// A potion is never wasted at full health. [H] drinks a small potion first, then a large one.
     /// Visible while exploring and fighting, hidden during dialogue and the shop.
     /// Values are compared as integers each frame and text is only rewritten when something changed.
     /// </summary>
@@ -184,7 +184,7 @@ namespace CastleOfTheD20.UI
             return PotionUseCheck.Ready;
         }
 
-        /// <summary>[Q]: a small potion first, a large one when no small potions are left.</summary>
+        /// <summary>[H]: a small potion first, a large one when no small potions are left.</summary>
         public static PotionUseCheck TryDrinkQuick(PlayerUnit player)
         {
             InventoryManager inventory = InventoryManager.Instance;
@@ -356,7 +356,7 @@ namespace CastleOfTheD20.UI
             canvasGroup = GetComponent<CanvasGroup>();
             if (canvasGroup == null) canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-            BuildSlot(smallSlot, "Flask_Slot_Small", 0, 44f, "Q", slotFrame, badge, potionIcon);
+            BuildSlot(smallSlot, "Flask_Slot_Small", 0, 44f, "H", slotFrame, badge, potionIcon);
             BuildSlot(largeSlot, "Flask_Slot_Large", 1, 58f, null, slotFrame, badge, potionIcon);
             built = true;
             ForceRefresh();
