@@ -214,9 +214,29 @@ namespace CastleOfTheD20.Editor
 
         #region Materials
 
+        // The meadow uses the village pack's painted Grass_1 (Vili, 2026-10-07). Ground UVs run 0.1 per metre,
+        // so a tiling of 3 repeats the texture every 3.3 m.
+        public const string GrassTexturePath = "Assets/LowPolyVillageAll/Grass/Textures/Summer_textures/Grass_1.PNG";
+        public static readonly Vector2 GrassTiling = new Vector2(3f, 3f);
+
+        /// <summary>Puts the tiled Grass_1 texture on the village ground material.</summary>
+        public static void ApplyGrassTexture(Material m)
+        {
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(GrassTexturePath);
+            if (m == null || tex == null) return;
+            m.SetTexture("_BaseMap", tex);
+            m.SetTexture("_MainTex", tex);
+            m.SetTextureScale("_BaseMap", GrassTiling);
+            m.SetTextureScale("_MainTex", GrassTiling);
+            m.SetColor("_BaseColor", Color.white);
+            m.SetColor("_Color", Color.white);
+            m.SetFloat("_Smoothness", 0.05f);
+            EditorUtility.SetDirty(m);
+        }
+
         private static void CreateMaterials()
         {
-            Mat("Grass", new Color(0.45f, 0.68f, 0.26f));
+            ApplyGrassTexture(Mat("Grass", new Color(0.45f, 0.68f, 0.26f)));
             Mat("GrassDark", new Color(0.33f, 0.55f, 0.20f));
             Mat("Dirt", new Color(0.66f, 0.50f, 0.32f));
             Mat("Soil", new Color(0.36f, 0.24f, 0.15f));
