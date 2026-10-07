@@ -268,6 +268,16 @@ namespace CastleOfTheD20.UI
             GameInput.SetExplorationInputEnabled(true);
         }
 
+        /// <summary>
+        /// Closes the modal and forgets queued level-ups without applying them (a New Adventure starts over).
+        /// </summary>
+        public void DiscardPendingLevelUps()
+        {
+            queuedLevels.Clear();
+            cachedPlayerUnit = null;
+            CloseLevelUpModal();
+        }
+
         #endregion
 
         #region Option Handlers

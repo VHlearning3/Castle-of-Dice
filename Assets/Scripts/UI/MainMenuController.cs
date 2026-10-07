@@ -439,6 +439,10 @@ namespace CastleOfTheD20.UI
             // The village loaded with the old run's state (cleared cellar, opened chests) when a game was played
             bool reloadVillage = GameManager.Instance != null && GameManager.Instance.HasCampaignProgress;
 
+            // Windows of the abandoned run (a lost fight, an unpicked level-up) close with it
+            if (DefeatUIController.Instance != null) DefeatUIController.Instance.Hide();
+            if (LevelUpUIController.Instance != null) LevelUpUIController.Instance.DiscardPendingLevelUps();
+
             // A new adventure starts from level 1 without the previous run's upgrades
             if (PlayerProgressionManager.Instance != null)
             {

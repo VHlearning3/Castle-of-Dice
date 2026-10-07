@@ -146,6 +146,9 @@ namespace CastleOfTheD20.UI
             GameInput.SetExplorationInputEnabled(true);
             if (GameManager.Instance != null) GameManager.Instance.SetMode(GamePlayMode.Exploration);
 
+            // A defeat window left open (Esc pressed on it) must not follow the hero to the main menu
+            if (DefeatUIController.Instance != null) DefeatUIController.Instance.Hide();
+
             string village = World.ThroneRoomEnding.MainMenuSceneName;
             if (SceneLoader.Instance != null && Application.CanStreamedLevelBeLoaded(village))
             {

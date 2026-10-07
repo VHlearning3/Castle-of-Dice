@@ -76,6 +76,13 @@ namespace CastleOfTheD20.Combat
         private CombatUnit currentActiveUnit;
         private int turnCounter = 0;
         private bool isCombatActive = false;
+
+        // Bumped whenever a fight starts or ends, so a delayed turn of a finished fight (Try Again pressed
+        // while the last enemy turn was still waiting) can tell it is stale and never ends a turn of the next one
+        private int combatGeneration;
+
+        /// <summary>Changes every time a fight starts or ends.</summary>
+        public int CombatGeneration => combatGeneration;
         private bool awardScrapOnVictory = true;
 
         #endregion
@@ -313,6 +320,7 @@ namespace CastleOfTheD20.Combat
             }
 
             isCombatActive = true;
+            combatGeneration++;
             awardScrapOnVictory = awardVictoryScrap;
             turnCounter = 0; // becomes 1 when the first unit in the queue starts its turn
             currentUnitIndex = -1;
@@ -525,7 +533,7 @@ namespace CastleOfTheD20.Combat
                 SetTurnState(TurnState.EnemyTurn);
                 GridManager.Instance?.ClearAllHighlights();
 
-                StartCoroutine(ExecuteEnemyTurnDelayed(enemy));
+                StartCoroutine(ExecuteEnemyTurnDelayed(enemy, combatGeneration));
             }
         }
 
@@ -545,24 +553,28 @@ namespace CastleOfTheD20.Combat
             SetTurnState(TurnState.ResolveAbilities);
             GridManager.Instance?.ClearAllHighlights();
 
-            if (Application.isPlaying && isActiveAndEnabled) StartCoroutine(EndSurprisedTurnLater());
+            if (Application.isPlaying && isActiveAndEnabled) StartCoroutine(EndSurprisedTurnLater(combatGeneration));
             else EndActiveUnitTurn();
         }
 
-        private IEnumerator EndSurprisedTurnLater()
+        private IEnumerator EndSurprisedTurnLater(int generation)
         {
             yield return new WaitForSeconds(enemyTurnDelay + 0.6f);
-            if (isCombatActive) EndActiveUnitTurn();
+            if (IsCurrentFight(generation)) EndActiveUnitTurn();
         }
 
-        private IEnumerator ExecuteEnemyTurnDelayed(EnemyUnit enemy)
+        /// <summary>Whether a delayed turn started in fight <paramref name="generation"/> may still act.</summary>
+        private bool IsCurrentFight(int generation) => isCombatActive && generation == combatGeneration;
+
+        private IEnumerator ExecuteEnemyTurnDelayed(EnemyUnit enemy, int generation)
         {
             yield return new WaitForSeconds(enemyTurnDelay);
 
             // Let a hero who ended the turn mid-walk finish walking first
             while (IsAnyUnitWalking()) yield return null;
+            if (!IsCurrentFight(generation)) yield break;
 
-            if (enemy != null && enemy.IsAlive && isCombatActive)
+            if (enemy != null && enemy.IsAlive)
             {
                 enemy.ExecuteTurnAction(GridManager.Instance, AbilityExecutor.Instance);
 
@@ -574,6 +586,9 @@ namespace CastleOfTheD20.Combat
             while (RerollableRoll.IsAwaitingDecision) yield return null;
 
             yield return new WaitForSeconds(0.3f);
+
+            // The fight may have ended (and a retry begun) while this turn was waiting
+            if (!IsCurrentFight(generation)) yield break;
 
             // Conclude enemy turn
             EndActiveUnitTurn();
@@ -666,6 +681,7 @@ namespace CastleOfTheD20.Combat
         private void ConcludeCombat(bool isVictory)
         {
             isCombatActive = false;
+            combatGeneration++;
             UnsubscribeFromUnitDeaths();
             SetTurnState(isVictory ? TurnState.Victory : TurnState.Defeat);
             GridManager.Instance?.ClearAllHighlights();
