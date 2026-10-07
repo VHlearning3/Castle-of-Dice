@@ -43,8 +43,9 @@ namespace CastleOfTheD20.UI
             "<b>1. Move</b>: press <b>Move</b> and click a blue tile. You may move once per turn.\n\n" +
             "<b>2. Act</b>: click an ability card, then an enemy (red tile); hover an enemy to see your chance. " +
             "Each turn you also have a <b>bonus action</b> (cards marked Bonus, potions) and the row above the bar: Dash, Dodge, Disengage.\n\n" +
-            "<b>3. Drink a potion</b>: press <b>[Q]</b> or the potion slot on your card when you are hurt. It uses your bonus action.\n\n" +
-            "<b>4. End the turn</b>: press the hourglass button when you are done. Then the enemies act. [C] shows your character sheet.";
+            "<b>3. Drink a potion</b>: press <b>[H]</b> or the potion slot on your card when you are hurt. It uses your bonus action.\n\n" +
+            "<b>4. End the turn</b>: press the hourglass button when you are done. Then the enemies act. [C] shows your character sheet.\n\n" +
+            "<b>5. Camera</b>: [Q]/[E] or a middle-mouse drag turn it, the wheel zooms, WASD pans and [Home] centres it on you.";
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Register()

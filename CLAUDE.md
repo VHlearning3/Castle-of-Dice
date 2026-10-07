@@ -94,7 +94,8 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
    - Player Settingsissä `Both` (`activeInputHandler: 2`).
    - `EventSystem`-objektissa `InputSystemUIInputModule`.
    - Pelin syöte luetaan staattisesta `GameInput.cs`-sillasta (New Input System, Legacy-varapolku, allokaatioton pollaus). Pelitila vaihdetaan `GameManager.Instance.SetMode(GamePlayMode.Exploration / Combat)`. Erillisiä Exploration/Combat-action mapeja ei ole (assetissa vain `Player` ja `UI`).
-   - Pikanäppäimet: `Q` pika-HP-juoma, `I` laukku (`InventoryUI`, vain taistelun ja keskustelun ulkopuolella), `M` kartta, `J` tehtäväpäiväkirja, `Esc` sulkee/tauko, `F3` kohtaamisten debug-overlay (`EncounterDebugOverlay`, vain Editor ja development build).
+   - Pikanäppäimet: `H` pika-HP-juoma, `I` laukku (`InventoryUI`, vain taistelun ja keskustelun ulkopuolella), `M` kartta, `J` tehtäväpäiväkirja, `Esc` sulkee/tauko, `F3` kohtaamisten debug-overlay (`EncounterDebugOverlay`, vain Editor ja development build).
+   - **BG3-ohjaus (7.10.2026):** hiiren klikkaus kävelee (`PlayerInteractionRaycaster` → `PlayerExplorationMovement.MoveTo`, polut ajossa rakennetusta NavMeshistä `RuntimeNavMesh`), klikkaus esineeseen/NPC:hen kävelee viereen ja käyttää sen. Kamera (`CameraFollow`): Q/E ja keskihiiren veto kääntävät, rulla zoomaa ja kallistaa, WASD/nuolet panoroivat, Home keskittää; seinät kameran ja sankarin välissä piilotetaan (`CameraFollow.IsCutAway`). Peliohjain liikuttaa sankaria suoraan.
 2. **WebGL Air-Gap & Zero-GC Muistisäännöt:**
    - Älä koskaan tee `System.IO`-kovalevykutsuja tai ulkoisia HTTP-kutsuja pelisilmukassa.
    - Tallennus: JSON `PlayerPrefs`-muistiin avaimella `CastleOfDice_SaveData` (`SaveSystem.cs`). Tarinavalinnat ja edistyminen ovat `StoryFlags`-lippuja, jotka tallentuvat mukana.
@@ -103,7 +104,7 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
 3. **Layerit:** omia layereita 6–9 ei ole määritelty (`TagManager.asset`). Ajossa rakennettavat koristeet (`ZoneExitSign`, `PickupBeacon`) laitetaan layeriin 2 (Ignore Raycast), jotta ne eivät vie klikkauksia.
 4. **Persistent Managers (`DontDestroyOnLoad`):** `GameManager`, `SceneLoader`, `MusicManager`, `SFXManager`, `PlayerProgressionManager`, `InventoryManager` sekä `PlayerHUD`, `PauseMenuUI`, `QuestJournalUI`. Jokaisessa skenessä on `Managers`-objekti; tuplat poistetaan `ManagerDuplicates`-apurilla.
 5. **UI Canvas (1920x1080 Match 0.5):**
-   - `Hero_Status_Card` (vasen ylä): crest, HP, kulta, romu, pika-HP-juoma [Q], `Hero_Stats_Panel`.
+   - `Hero_Status_Card` (vasen ylä): crest, HP, kulta, romu, pika-HP-juoma [H], `Hero_Stats_Panel`.
    - `Zone_Indicator_Banner` (keskellä ylhäällä) ja sen alla taistelun `Enemy_Stats_Strip` (`CombatStatsHUD`).
    - `Quest_Tracker_Card` (oikea ylä, `QuestHUDUIController.cs`), sen alla `CombatLogPanel` (taisteluloki, näkyy hetken taistelun jälkeen).
    - `CombatActionBar` (keskellä alhaalla): 4 kykyä (+5. tasolla 4) ja End Turn -nappi tiimalasilla; nappi sykkii, kun muuta tehtävää ei ole.
