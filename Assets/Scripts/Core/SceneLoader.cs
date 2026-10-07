@@ -345,6 +345,7 @@ namespace CastleOfTheD20.Core
         private GameLocation ParseLocationFromSceneName(string sceneName)
         {
             string lower = sceneName.ToLowerInvariant();
+            if (lower.Contains("tavern")) return GameLocation.Tavern;
             if (lower.Contains("village") || lower.Contains("cellar")) return GameLocation.Village;
             if (lower.Contains("forest")) return GameLocation.Forest;
             if (lower.Contains("courtyard")) return GameLocation.Courtyard;

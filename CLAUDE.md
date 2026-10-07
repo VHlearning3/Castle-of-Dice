@@ -28,6 +28,7 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
    - `Add Review Content (Zones 2-7)` → `Review_Content` (`ReviewContentBuilder`).
    - `Class Quests/Build All` → `Class_Quests` alueissa 2.5, 4 ja 5 (`ClassQuestBuilder`).
    - `Castle Doors (Double + Single)` → ovet alueissa 3–7 (`CastleDoorSetup`); `Build Hidden Trail (Zone 2.5)` → `SecretForestPathBuilder`.
+   - `Build Tavern (Zone_Tavern only)` → koko `Zone_Tavern` (`TavernSceneBuilder`, sisätila `BlenderSources/Tavern_Interior_build.py`); `Setup Elf Waitress (prefab only)` → `NPC_Elf_Waitress`-prefab.
    - **Älä aja `Build Zone Scenes`** (`ZoneSceneBuilder`): se rakentaa alueet 2–7 tyhjästä ja pyyhkisi myöhemmät lisäykset.
 4. **Worktree + batch-tila.** Kun Vilin editori on auki pääkansiossa, työskentele omassa worktreessä `D:\Unity\` alla ja aja Unity batch-tilassa (`-batchmode -executeMethod …`). Testiajot jättävät `Assets/Scenes/Generated/` ja rivinvaihtomuutoksen `ProjectSettings/EditorBuildSettings.asset`-tiedostoon: hylkää ne ennen committia.
 5. **Ikonit:** `CoinIcon` ja `HealthPotionIcon` ovat Vilin piirtämiä, niitä ei piirretä uudelleen. Muut 256 px ikonit tehdään `Tools/Icons/gen.js` -skriptillä; editorityökalut eivät saa generoida niitä uudelleen.
@@ -71,6 +72,7 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
    - `Zone_5_CastleHall` (The Great Hall): turva-alue, `SavePoint.cs` -riimukivialttari, Pip the Peddler (aave), soturin laatikot.
    - `Zone_6_Tower` (Treasure Tower): Tornin haaste (kolme riimupilaria SUN–MOON–STAR, painelaattaloukut DEX DC 12, mimic-vartija) avaa Othelian sormuksen ja +30 Max HP Giant's Elixirin.
    - `Zone_7_ThroneRoom` (The Throne Room): 3. pomo The Gargoyle King.
+   - `Zone_Tavern` (**The Foaming Tankard**, `GameLocation.Tavern`): kylän tavernan sisätila, kaksi kerrosta (parvi + portaat), takka, baari ja haltiatarjoilija (`TavernWaitress`, kiertää pöytiä). Sisäänkäynti on Barnabyn takana olevan "Tavern"-talon ovi, jonka `TavernEntrance` rakentaa ajossa (kylän skeneen ei kosketa); paluu `Spawn_From_Tavern`-pisteeseen oven eteen.
    - Linnan alueiden 3–7 uloskäynnit ovat puisia `SwingDoor`-ovia (`Assets/PREFABS/Doors`, aukeavat 7 m päästä). Jokainen alueen vaihtava `DoorTeleporter` rakentaa ajossa "To <zone>" -kyltin (`ZoneExitSign`).
 8. **Talous:**
    - **Seppä Baldur:** romu 1 = 5 kultaa (`ShopManager.SCRAP_TO_GOLD_RATE`, muutettu 6.10.2026). Small Health Potion 15g, Greater Health Potion 25g, Poison Vial 30g, Rune of Fate 75g. Sharpened Blade (+1 DMG) ja Runic Armor (+1 AC) enintään +3, hinnat 50 / 75 / 100g.
