@@ -219,15 +219,24 @@ namespace CastleOfTheD20.Editor
         public const string GrassTexturePath = "Assets/Materials/Village/Village_Meadow_Grass.png";
         public static readonly Vector2 GrassTiling = new Vector2(3.5f, 3.5f);
 
+        // The dirt roads use the pack's packed-earth Ground_1, the closest to the reference path (2026-10-07)
+        public const string DirtTexturePath = "Assets/LowPolyVillageAll/Grass/Textures/Summer_textures/Ground_1.PNG";
+        public static readonly Vector2 DirtTiling = new Vector2(3f, 3f);
+
         /// <summary>Puts the tiled meadow texture on the village ground material.</summary>
-        public static void ApplyGrassTexture(Material m)
+        public static void ApplyGrassTexture(Material m) => ApplyTexture(m, GrassTexturePath, GrassTiling);
+
+        /// <summary>Puts the tiled packed-earth texture on the dirt road material.</summary>
+        public static void ApplyDirtTexture(Material m) => ApplyTexture(m, DirtTexturePath, DirtTiling);
+
+        private static void ApplyTexture(Material m, string texturePath, Vector2 tiling)
         {
-            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(GrassTexturePath);
+            Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
             if (m == null || tex == null) return;
             m.SetTexture("_BaseMap", tex);
             m.SetTexture("_MainTex", tex);
-            m.SetTextureScale("_BaseMap", GrassTiling);
-            m.SetTextureScale("_MainTex", GrassTiling);
+            m.SetTextureScale("_BaseMap", tiling);
+            m.SetTextureScale("_MainTex", tiling);
             m.SetColor("_BaseColor", Color.white);
             m.SetColor("_Color", Color.white);
             m.SetFloat("_Smoothness", 0.05f);
@@ -238,7 +247,7 @@ namespace CastleOfTheD20.Editor
         {
             ApplyGrassTexture(Mat("Grass", new Color(0.45f, 0.68f, 0.26f)));
             Mat("GrassDark", new Color(0.33f, 0.55f, 0.20f));
-            Mat("Dirt", new Color(0.66f, 0.50f, 0.32f));
+            ApplyDirtTexture(Mat("Dirt", new Color(0.66f, 0.50f, 0.32f)));
             Mat("Soil", new Color(0.36f, 0.24f, 0.15f));
             Mat("Wood", new Color(0.52f, 0.34f, 0.19f));
             Mat("WoodDark", new Color(0.33f, 0.21f, 0.12f));
@@ -823,13 +832,13 @@ namespace CastleOfTheD20.Editor
                 }
             }
 
-            // Dirt arrival road leaving to the south-west, out of the village
-            var sw = new List<Vector3>
-            {
-                RingPoint(Mathf.Deg2Rad * 222f, 0f), new Vector3(-20f, 0, -17f), new Vector3(-27f, 0, -24f),
-                new Vector3(-35f, 0, -31f), new Vector3(-45f, 0, -40f), new Vector3(-58f, 0, -50f), new Vector3(-75f, 0, -60f)
-            };
-            Ribbon("Road_SouthWest", roads, sw, 4.6f, 0.03f, "Dirt");
+            // Dirt arrival road from the forest glade at the spawn (south-west) into the village
+            List<Vector3> sw = SouthWestRoadPoints();
+            Mesh swMesh = SaveMesh(RibbonMesh(sw, SouthWestRoadWidth, 0.03f, true), "Village_Road_SouthWest");
+            var swRoad = new GameObject("Road_SouthWest");
+            swRoad.transform.SetParent(roads, false);
+            swRoad.AddComponent<MeshFilter>().sharedMesh = swMesh;
+            swRoad.AddComponent<MeshRenderer>().sharedMaterial = mats["Dirt"];
             KeepOutPath(sw, 4.5f);
 
             // Path north, between the market hut and the tavern, to the forest gate
@@ -855,7 +864,47 @@ namespace CastleOfTheD20.Editor
             }
         }
 
+        // The arrival road starts in the forest clearing around the hero's spawn (Vili, 2026-10-07): it used to
+        // run on out of the village to the south-west.
+        private const float SouthWestRoadWidth = 4.6f;
+
+        private static List<Vector3> SouthWestRoadPoints() => new List<Vector3>
+        {
+            RingPoint(Mathf.Deg2Rad * 222f, 0f), new Vector3(-20f, 0, -17f), new Vector3(-27f, 0, -24f), new Vector3(-32.5f, 0, -28.8f)
+        };
+
+        /// <summary>Rewrites the existing south-west road mesh asset in place (the scene keeps its reference).</summary>
+        public static void RebuildSouthWestRoadMesh()
+        {
+            Mesh fresh = RibbonMesh(SouthWestRoadPoints(), SouthWestRoadWidth, 0.03f, true);
+            Mesh asset = AssetDatabase.LoadAssetAtPath<Mesh>(MeshDir + "/Village_Road_SouthWest.asset");
+            if (asset == null) return;
+            asset.Clear();
+            asset.indexFormat = fresh.indexFormat;
+            asset.vertices = fresh.vertices;
+            asset.triangles = fresh.triangles;
+            asset.uv = fresh.uv;
+            asset.normals = fresh.normals;
+            asset.RecalculateBounds();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+            Object.DestroyImmediate(fresh);
+        }
+
         private static void Ribbon(string name, Transform parent, List<Vector3> pts, float width, float y, string matKey)
+        {
+            Mesh mesh = SaveMesh(RibbonMesh(pts, width, y, false), "Village_" + name);
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.AddComponent<MeshFilter>().sharedMesh = mesh;
+            go.AddComponent<MeshRenderer>().sharedMaterial = mats[matKey];
+        }
+
+        /// <summary>
+        /// A flat strip along the polyline. With <paramref name="roundEnd"/> the last 3 m narrow a little and the
+        /// strip ends in a half circle, so a path can start in the grass instead of stopping square.
+        /// </summary>
+        private static Mesh RibbonMesh(List<Vector3> pts, float width, float y, bool roundEnd)
         {
             // Densify the polyline so curves stay smooth
             var dense = new List<Vector3>();
@@ -866,25 +915,45 @@ namespace CastleOfTheD20.Editor
             }
             dense.Add(pts[pts.Count - 1]);
 
+            // Distance left to the end of the strip at each point (for the narrowing)
+            var toEnd = new float[dense.Count];
+            for (int i = dense.Count - 2; i >= 0; i--) toEnd[i] = toEnd[i + 1] + Vector3.Distance(dense[i], dense[i + 1]);
+
             var verts = new List<Vector3>();
             var tris = new List<int>();
-            Vector3 prevL = Vector3.zero, prevR = Vector3.zero;
+            Vector3 prevL = Vector3.zero, prevR = Vector3.zero, lastDir = Vector3.forward, lastSide = Vector3.right;
             for (int i = 0; i < dense.Count; i++)
             {
                 Vector3 dir = (i < dense.Count - 1 ? dense[i + 1] - dense[i] : dense[i] - dense[i - 1]);
                 if (i > 0 && i < dense.Count - 1) dir = dense[i + 1] - dense[i - 1];
                 dir.y = 0; dir.Normalize();
-                Vector3 side = new Vector3(-dir.z, 0, dir.x) * (width * 0.5f * (1f + (Hash(dense[i].x, dense[i].z) - 0.5f) * 0.15f));
+                float narrow = roundEnd ? Mathf.Lerp(0.72f, 1f, Mathf.Clamp01(toEnd[i] / 3f)) : 1f;
+                Vector3 side = new Vector3(-dir.z, 0, dir.x) * (width * 0.5f * narrow * (1f + (Hash(dense[i].x, dense[i].z) - 0.5f) * 0.15f));
                 Vector3 l = dense[i] + side, r = dense[i] - side;
                 l.y = GroundPoint(l.x, l.z).y + y; r.y = GroundPoint(r.x, r.z).y + y;
                 if (i > 0) { AddTri(verts, tris, prevL, l, r); AddTri(verts, tris, prevL, r, prevR); }
                 prevL = l; prevR = r;
+                lastDir = dir; lastSide = side;
             }
-            Mesh mesh = SaveMesh(FinishMesh(verts, tris), "Village_" + name);
-            var go = new GameObject(name);
-            go.transform.SetParent(parent, false);
-            go.AddComponent<MeshFilter>().sharedMesh = mesh;
-            go.AddComponent<MeshRenderer>().sharedMaterial = mats[matKey];
+            if (roundEnd)
+            {
+                Vector3 end = dense[dense.Count - 1];
+                end.y = GroundPoint(end.x, end.z).y + y;
+                float radius = lastSide.magnitude;
+                Vector3 sideDir = lastSide.normalized;
+                const int capSteps = 10;
+                Vector3 prev = prevL;
+                for (int k = 1; k <= capSteps; k++)
+                {
+                    float a = k / (float)capSteps * Mathf.PI;
+                    Vector3 p = end + (sideDir * Mathf.Cos(a) + lastDir * Mathf.Sin(a)) * radius;
+                    p.y = GroundPoint(p.x, p.z).y + y;
+                    if (k == capSteps) p = prevR;
+                    AddTri(verts, tris, end, prev, p);
+                    prev = p;
+                }
+            }
+            return FinishMesh(verts, tris);
         }
 
         #endregion
