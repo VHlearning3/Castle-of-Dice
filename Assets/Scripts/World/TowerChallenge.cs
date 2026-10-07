@@ -20,6 +20,9 @@ namespace CastleOfTheD20.World
         /// <summary>The order the pillars must show, left to right as the hero faces the vial.</summary>
         public static readonly RunePillar.Rune[] Solution = { RunePillar.Rune.Sun, RunePillar.Rune.Moon, RunePillar.Rune.Star };
 
+        /// <summary>Raised when the challenge is finished in the loaded scene (the mirror room opens).</summary>
+        public static event System.Action Completed;
+
         [SerializeField] private List<RunePillar> pillars = new List<RunePillar>();
         [Tooltip("Rewards locked until the challenge is done (the elixir pedestal and the ring).")]
         [SerializeField] private List<Interactable> sealedRewards = new List<Interactable>();
@@ -114,6 +117,7 @@ namespace CastleOfTheD20.World
             ApplySeal();
             Notify("The Tower's seal breaks. The Giant's Elixir and the Queen's ring are yours to take.");
             PlayerProgressionManager.Instance?.GrantBonusLevel("Treasure Tower challenge completed");
+            Completed?.Invoke();
         }
 
         private void ApplySeal()
