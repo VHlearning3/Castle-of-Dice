@@ -1423,6 +1423,10 @@ namespace CastleOfTheD20.UI
                     zoneTitleText.text = "Village Wine Cellar";
                     if (zoneSubtitleText != null) zoneSubtitleText.text = "Ruins Beneath Oakhaven";
                     break;
+                case GameLocation.Tavern:
+                    zoneTitleText.text = CastleOfTheD20.World.TavernEntrance.DisplayName;
+                    if (zoneSubtitleText != null) zoneSubtitleText.text = "Oakhaven Tavern • Safe Haven";
+                    break;
                 default:
                     zoneTitleText.text = "Castle of Dice";
                     if (zoneSubtitleText != null) zoneSubtitleText.text = "Adventure Campaign";

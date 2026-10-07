@@ -76,6 +76,7 @@ namespace CastleOfTheD20.World
             }
 
             string scene = door.TargetSceneName ?? string.Empty;
+            if (scene.Contains("Tavern")) return DungeonMapUIController.GetZoneDisplayName(GameLocation.Tavern);
             if (scene.Contains("Village")) return DungeonMapUIController.GetZoneDisplayName(GameLocation.Village);
             if (scene.Contains("Forest")) return DungeonMapUIController.GetZoneDisplayName(GameLocation.Forest);
             if (scene.Contains("Courtyard")) return DungeonMapUIController.GetZoneDisplayName(GameLocation.Courtyard);

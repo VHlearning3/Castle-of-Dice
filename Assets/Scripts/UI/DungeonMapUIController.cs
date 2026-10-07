@@ -297,6 +297,7 @@ namespace CastleOfTheD20.UI
             {
                 case GameLocation.Village:
                 case GameLocation.Cellar:
+                case GameLocation.Tavern:
                     return KeyVillage;
                 case GameLocation.Forest:
                     return KeyForest;
@@ -324,6 +325,7 @@ namespace CastleOfTheD20.UI
             {
                 case GameLocation.Village: return "Oakhaven Village";
                 case GameLocation.Cellar: return "Village Wine Cellar";
+                case GameLocation.Tavern: return CastleOfTheD20.World.TavernEntrance.DisplayName;
                 case GameLocation.Forest: return "Whispering Woods";
                 case GameLocation.Courtyard: return "Castle Courtyard";
                 case GameLocation.Library: return "Grand Archives";
@@ -435,7 +437,8 @@ namespace CastleOfTheD20.UI
 
                 if (isCurrent && node.LocationPinLabel != null)
                 {
-                    node.LocationPinLabel.text = curLoc == GameLocation.Cellar ? "YOU ARE HERE: CELLAR" : "YOU ARE HERE";
+                    node.LocationPinLabel.text = curLoc == GameLocation.Cellar ? "YOU ARE HERE: CELLAR"
+                        : curLoc == GameLocation.Tavern ? "YOU ARE HERE: TAVERN" : "YOU ARE HERE";
                 }
 
                 if (node.GlowImage != null)

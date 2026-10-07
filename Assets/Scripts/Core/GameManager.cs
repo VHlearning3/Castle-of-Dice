@@ -34,6 +34,9 @@ namespace CastleOfTheD20.Core
         /// <summary>Underground wine cellar beneath Oakhaven village.</summary>
         Cellar = 7,
 
+        /// <summary>The tavern inside Oakhaven, entered through the village tavern door (Zone_Tavern).</summary>
+        Tavern = 8,
+
         /// <summary>Alias for CrownHall (Wing 3 Final Boss Chamber).</summary>
         ThroneRoom = CrownHall
     }

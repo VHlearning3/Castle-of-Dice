@@ -71,6 +71,7 @@ namespace CastleOfTheD20.Data
             switch (location)
             {
                 case GameLocation.Village:
+                case GameLocation.Tavern:
                     return villageTrack;
                 case GameLocation.Forest:
                     return forestTrack;
