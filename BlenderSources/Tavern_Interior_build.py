@@ -206,8 +206,9 @@ g_spots = empty("Spots", (0, 0, 0), root)
 # ---------------------------------------------------------------- floor, rug
 m = Mesh("Floor"); m.box((0, -0.25, 0), (2 * RX + 2 * WALL_T, 0.5, 2 * RZ + 2 * WALL_T), M_FLOOR); m.finish(g_shell)
 m = Mesh("Rug")
-m.box((-2.5, 0.02, -2.0), (7.0, 0.04, 4.6), M_PROPS, "rug")
-m.box((-2.5, 0.025, -2.0), (7.4, 0.03, 5.0), M_PROPS, "rug_trim")
+# rug and trim stand clear of the floor and of each other (coplanar faces flickered, Vili 2026-10-07)
+m.box((-2.5, 0.04, -2.0), (7.0, 0.04, 4.6), M_PROPS, "rug")
+m.box((-2.5, 0.022, -2.0), (7.4, 0.024, 5.0), M_PROPS, "rug_trim", skip=("-y",))
 m.finish(g_furn)
 
 # ---------------------------------------------------------------- walls
