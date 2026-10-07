@@ -242,21 +242,12 @@ namespace CastleOfTheD20.Editor
             BuildScriptedNpc(ScriptedNpc.Kind.TrappedMerchant, "Pip_The_Peddler", SetupRiggedEnemiesEditor.PipGhostVisualPath,
                 Free(new Vector3(-27f, 0f, -12f), 0.9f), 90f, null);
 
-            // The Queen's treasury vault and its ghost guard
+            // The Queen's treasure vault in the south-east corner (Blender strongroom with an iron door) and its
+            // ghost guard, a spectral knight (HallVaultSetup)
             Transform vaultRoot = Group("Queens_Vault");
-            Vector3 doorPos = Free(new Vector3(37.6f, 0f, -24f), 1.6f, 4f);
-            GameObject door = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            door.name = "Vault_Door";
-            door.transform.SetParent(vaultRoot, false);
-            door.transform.position = doorPos + new Vector3(0f, 2f, 0f);
-            door.transform.localScale = new Vector3(0.6f, 4f, 3.2f);
-            door.GetComponent<Renderer>().sharedMaterial = Mat("Vault_Iron", new Color(0.22f, 0.22f, 0.26f), new Color(0f, 0.05f, 0.08f));
-
             GameObject chestPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/PREFABS/Chest.prefab");
             GameObject chest = new GameObject("Vault_Reward_Chest");
             chest.transform.SetParent(vaultRoot, false);
-            chest.transform.position = doorPos + new Vector3(-2.2f, 0f, 0f);
-            chest.transform.rotation = Quaternion.Euler(0f, -90f, 0f);
             if (chestPrefab != null)
             {
                 GameObject model = (GameObject)PrefabUtility.InstantiatePrefab(chestPrefab, chest.transform);
@@ -272,12 +263,12 @@ namespace CastleOfTheD20.Editor
             chest.SetActive(false);
 
             HallVault vault = vaultRoot.gameObject.AddComponent<HallVault>();
-            vault.Door = door;
             vault.RewardChest = chest;
+            HallVaultSetup.BuildVault(vaultRoot);
 
-            Vector3 ghostPos = Free(doorPos + new Vector3(-3f, 0f, 4f), 0.9f);
-            BuildScriptedNpc(ScriptedNpc.Kind.GhostGuard, "Ghost_Of_Sir_Aldric", "Assets/PREFABS/Characters/Visual_Enemy_Skeleton.prefab",
-                ghostPos, -90f, Mat("Ghost_Pale", new Color(0.55f, 0.8f, 1f), new Color(0.25f, 0.55f, 0.85f)));
+            GameObject ghost = BuildScriptedNpc(ScriptedNpc.Kind.GhostGuard, HallVaultSetup.GhostName, HallVaultSetup.GhostPrefabPath,
+                HallVaultSetup.GhostFloorPosition, HallVaultSetup.GhostYaw, null);
+            HallVaultSetup.DecorateGhost(ghost);
         }
 
         private static void BuildTower()
@@ -468,7 +459,7 @@ namespace CastleOfTheD20.Editor
             return unit;
         }
 
-        private static void BuildScriptedNpc(ScriptedNpc.Kind kind, string name, string modelPrefabPath, Vector3 floorPos, float yaw, Material tint)
+        private static GameObject BuildScriptedNpc(ScriptedNpc.Kind kind, string name, string modelPrefabPath, Vector3 floorPos, float yaw, Material tint)
         {
             const float height = 2.8f;
             GameObject npc = new GameObject(name);
@@ -521,6 +512,7 @@ namespace CastleOfTheD20.Editor
                 glow.range = kind == ScriptedNpc.Kind.GhostGuard ? 6f : 5f;
                 glow.intensity = kind == ScriptedNpc.Kind.GhostGuard ? 2.2f : 1.6f;
             }
+            return npc;
         }
 
         private static RunePillar BuildRunePillar(Transform parent, string name, Vector3 floorPos, Material stone, Material crystalMat)

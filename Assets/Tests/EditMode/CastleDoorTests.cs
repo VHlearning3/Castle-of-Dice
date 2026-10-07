@@ -78,6 +78,7 @@ namespace CastleOfTheD20.Tests
                     if (string.IsNullOrEmpty(door.TargetSceneName)) continue;
                     Transform group = door.transform.parent;
                     Assert.IsNotNull(group, $"{scene}: {door.name} sits in a gate group");
+                    if (group.Find(HallDoorsSetup.StairsModelName) != null) continue; // the Hall's Tower stairs
                     SwingDoor swing = group.GetComponentInChildren<SwingDoor>();
                     Assert.IsNotNull(swing, $"{scene}: {group.name} has a wooden door");
                     int expected = SecretForestPath.IsScene(door.TargetSceneName) ? 1 : 2;

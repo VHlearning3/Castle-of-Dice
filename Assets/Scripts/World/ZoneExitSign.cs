@@ -37,6 +37,8 @@ namespace CastleOfTheD20.World
         private Light glow;
         private float glowBase;
         private float seed;
+        private bool facesWall;
+        private Quaternion wallFacing = Quaternion.identity;
 
         /// <summary>The name written on the sign.</summary>
         public string Destination { get; private set; }
@@ -89,7 +91,8 @@ namespace CastleOfTheD20.World
         {
             Transform parent = door.parent;
             if (parent != null && parent.name.StartsWith("Door_", StringComparison.Ordinal)
-                && (parent.Find("Arch_Model") != null || parent.GetComponentInChildren<SwingDoor>(true) != null))
+                && (parent.Find("Arch_Model") != null || parent.GetComponentInChildren<SwingDoor>(true) != null
+                    || FindDeep(parent, SignAnchorName) != null))
             {
                 return parent;
             }
@@ -111,7 +114,19 @@ namespace CastleOfTheD20.World
                 gate = trigger != null ? trigger.bounds : new Bounds(door.transform.position, new Vector3(4f, 3f, 1f));
             }
             Vector3 center = trigger != null && trigger.enabled ? trigger.bounds.center : gate.center;
-            transform.position = new Vector3(center.x, gate.max.y + SignGap, center.z);
+            Transform anchor = FindDeep(root, SignAnchorName);
+            transform.position = anchor != null ? anchor.position : new Vector3(center.x, gate.max.y + SignGap, center.z);
+            // A sign hung on a tall wall faces straight out from it; turning toward the camera would sink it into the stone
+            if (anchor != null)
+            {
+                Vector3 into = root.forward;
+                into.y = 0f;
+                if (into.sqrMagnitude > 0.001f)
+                {
+                    wallFacing = Quaternion.LookRotation(into.normalized, Vector3.up);
+                    facesWall = true;
+                }
+            }
 
             BuildBoard();
             BuildBraziers(root);
@@ -208,6 +223,18 @@ namespace CastleOfTheD20.World
         /// <summary>Name prefix of the empty marks on top of a castle door model's pillars, where the braziers stand.</summary>
         public const string PillarTopPrefix = "PillarTop";
 
+        /// <summary>Optional empty in a gate model (the Hall's Tower stairs) marking where the sign hangs.</summary>
+        public const string SignAnchorName = "Sign_Anchor";
+
+        private static Transform FindDeep(Transform root, string childName)
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == childName) return t;
+            }
+            return null;
+        }
+
         /// <summary>Tops of the gate's pillars: the old DecoPillar props, or the PillarTop marks on a castle door model.</summary>
         private static List<Vector3> PillarTops(Transform root)
         {
@@ -283,7 +310,8 @@ namespace CastleOfTheD20.World
             }
 
             if (s_camera == null || !s_camera.isActiveAndEnabled) s_camera = Camera.main;
-            if (s_camera != null) board.rotation = s_camera.transform.rotation;
+            if (facesWall) board.rotation = wallFacing;
+            else if (s_camera != null) board.rotation = s_camera.transform.rotation;
         }
 
         #region Helpers
