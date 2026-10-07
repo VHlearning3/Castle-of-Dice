@@ -26,6 +26,8 @@ namespace CastleOfTheD20.UI
         private GameObject panel;
         private Slider musicSlider;
         private Slider sfxSlider;
+        private TextMeshProUGUI musicValueText;
+        private TextMeshProUGUI sfxValueText;
         private Button saveButton;
         private TextMeshProUGUI saveLabel;
         private TextMeshProUGUI statusText;
@@ -109,6 +111,7 @@ namespace CastleOfTheD20.UI
             bool inCombat = GameManager.Instance != null && GameManager.Instance.CurrentMode == GamePlayMode.Combat;
             saveButton.interactable = !inCombat;
             saveLabel.text = inCombat ? "Save (not in a fight)" : "Save Game";
+            saveLabel.color = inCombat ? DisabledTextColor : UITheme.CreamText;
             statusText.text = $"Difficulty: {DifficultySettings.GetLabel(DifficultySettings.Current)}";
             panel.SetActive(true);
             panel.transform.SetAsLastSibling();
@@ -182,6 +185,8 @@ namespace CastleOfTheD20.UI
             float sfx = PlayerPrefs.GetFloat(SfxVolumeKey, SFXManager.Instance != null ? SFXManager.Instance.SFXVolume : 1f);
             musicSlider.SetValueWithoutNotify(music);
             sfxSlider.SetValueWithoutNotify(sfx);
+            musicValueText.text = VolumeLabel(music);
+            sfxValueText.text = VolumeLabel(sfx);
             if (PlayerPrefs.HasKey(MusicVolumeKey)) SetMusicVolume(music);
             if (PlayerPrefs.HasKey(SfxVolumeKey)) SetSfxVolume(sfx);
         }
@@ -191,8 +196,9 @@ namespace CastleOfTheD20.UI
         #region UI
 
         public const string HelpText =
-            "<b>Exploring</b>: click the ground or use WASD to walk. Click people and objects to talk or use them. " +
-            "[M] map, [J] quest journal, [I] bag, [C] character sheet, [Q] drink a potion, [V] sneak (a Stealth check can surprise the enemies).\n\n" +
+            "<b>Exploring</b>: click the ground to walk. Click people and objects to talk or use them. " +
+            "<b>Camera</b>: WASD pans, Q/E or a middle-mouse drag turns it, the mouse wheel zooms and [Home] recentres on your hero. " +
+            "[M] map, [J] quest journal, [I] bag, [C] character sheet, [H] drink a potion, [V] sneak (a Stealth check can surprise the enemies).\n\n" +
             "<b>Combat</b>: each turn you have a move, an action and a bonus action, and a reaction each round. " +
             "Attacks are d20 + attribute + proficiency against AC; Fireball, War Cry and smoke make the enemies roll saving throws. " +
             "A natural 20 doubles the damage, a natural 1 always misses. At 0 HP you get one Death's Door save per fight.\n\n" +
@@ -201,6 +207,19 @@ namespace CastleOfTheD20.UI
             "Strong abilities need a few turns to recharge (the number on the icon). Crates give cover, pillars block arrows, " +
             "and the red barrel explodes.\n\n" +
             "<b>Saving</b>: pray at the rune shrine in the Castle Hall or save from this menu outside a fight.";
+
+        // Gold-framed dark panel like the level-up window and the HUD cards (Vili, 2026-10-07)
+        private const string PanelSprite = "Assets/UI/Sprites/UI_Fantasy_Panel_Dark.png";
+        private const string DividerSprite = "Assets/UI/Sprites/UI_Fantasy_Divider_Gold.png";
+        private const string ButtonSprite = "Assets/UI/Sprites/UI_Fantasy_Button_Normal.png";
+        private const string ButtonHoverSprite = "Assets/UI/Sprites/UI_Fantasy_Button_Hover.png";
+        private const string ButtonPressedSprite = "Assets/UI/Sprites/UI_Fantasy_Button_Pressed.png";
+        private const string TrackSprite = "Assets/UI/Sprites/UI_Fantasy_Bar_Track.png";
+        private const string HandleSprite = "Assets/UI/Sprites/UI_Fantasy_Pill_Badge.png";
+
+        private static readonly Color ResumeTextColor = new Color(0.6f, 0.92f, 0.6f, 1f);
+        private static readonly Color QuitTextColor = new Color(1f, 0.6f, 0.55f, 1f);
+        private static readonly Color DisabledTextColor = new Color(0.55f, 0.55f, 0.6f, 1f);
 
         private void BuildUi()
         {
@@ -220,31 +239,92 @@ namespace CastleOfTheD20.UI
             full.anchorMin = Vector2.zero;
             full.anchorMax = Vector2.one;
             full.sizeDelta = Vector2.zero;
-            panel.GetComponent<Image>().color = new Color(0f, 0f, 0f, 0.65f);
+            panel.GetComponent<Image>().color = new Color(0.02f, 0.03f, 0.06f, 0.75f);
 
             GameObject box = new GameObject("Pause_Box", typeof(RectTransform), typeof(Image));
             box.transform.SetParent(panel.transform, false);
-            ((RectTransform)box.transform).sizeDelta = new Vector2(560f, 640f);
-            box.GetComponent<Image>().color = UITheme.PanelSlate;
+            ((RectTransform)box.transform).sizeDelta = new Vector2(540f, 700f);
+            Framed(box.GetComponent<Image>(), PanelSprite, UITheme.PanelSlate);
 
-            Text(box.transform, "Title", "PAUSED", new Vector2(0f, 270f), 40f, UITheme.GoldAccent);
-            statusText = Text(box.transform, "Status", "", new Vector2(0f, 225f), 18f, UITheme.SoftText);
+            Text(box.transform, "Title", "PAUSED", new Vector2(0f, 292f), 44f, UITheme.GoldAccent);
+            Divider(box.transform, "Title_Divider", new Vector2(0f, 255f), 380f);
+            statusText = Text(box.transform, "Status", "", new Vector2(0f, 226f), 17f, UITheme.SoftText);
+            statusText.fontStyle = FontStyles.Italic;
 
-            Button resume = UIFactory.CreateTextButton(box.transform, "Resume_Btn", "Resume", new Vector2(0f, 165f), new Vector2(320f, 50f), UITheme.ActionGreen);
+            Button resume = MenuButton(box.transform, "Resume_Btn", "Resume", new Vector2(0f, 166f), ResumeTextColor);
             resume.onClick.AddListener(Resume);
-            saveButton = UIFactory.CreateTextButton(box.transform, "Save_Btn", "Save Game", new Vector2(0f, 105f), new Vector2(320f, 50f), new Color(0.25f, 0.4f, 0.6f));
+            saveButton = MenuButton(box.transform, "Save_Btn", "Save Game", new Vector2(0f, 106f), UITheme.CreamText);
             saveButton.onClick.AddListener(SaveGame);
             saveLabel = saveButton.GetComponentInChildren<TextMeshProUGUI>();
 
-            musicSlider = Slider(box.transform, "Music", new Vector2(0f, 30f), SetMusicVolume);
-            sfxSlider = Slider(box.transform, "Sound Effects", new Vector2(0f, -40f), SetSfxVolume);
+            Text(box.transform, "Audio_Header", "AUDIO", new Vector2(0f, 48f), 16f, UITheme.GoldAccent).characterSpacing = 8f;
+            Divider(box.transform, "Audio_Divider", new Vector2(0f, 30f), 300f);
+            musicSlider = Slider(box.transform, "Music", new Vector2(0f, 2f), SetMusicVolume, out musicValueText);
+            sfxSlider = Slider(box.transform, "Sound Effects", new Vector2(0f, -66f), SetSfxVolume, out sfxValueText);
 
-            Button help = UIFactory.CreateTextButton(box.transform, "Help_Btn", "How to Play", new Vector2(0f, -120f), new Vector2(320f, 50f), new Color(0.45f, 0.35f, 0.25f));
+            Divider(box.transform, "Menu_Divider", new Vector2(0f, -132f), 300f);
+            Button help = MenuButton(box.transform, "Help_Btn", "How to Play", new Vector2(0f, -170f), UITheme.CreamText);
             help.onClick.AddListener(ShowHelp);
-            Button quit = UIFactory.CreateTextButton(box.transform, "Quit_Btn", "Quit to Main Menu", new Vector2(0f, -190f), new Vector2(320f, 50f), new Color(0.45f, 0.18f, 0.18f));
+            Button quit = MenuButton(box.transform, "Quit_Btn", "Quit to Main Menu", new Vector2(0f, -230f), QuitTextColor);
             quit.onClick.AddListener(QuitToMainMenu);
 
-            Text(box.transform, "Hint", "Esc to resume", new Vector2(0f, -270f), 16f, UITheme.SoftText);
+            Text(box.transform, "Hint", "Esc to resume", new Vector2(0f, -300f), 15f, UITheme.SoftText).fontStyle = FontStyles.Italic;
+        }
+
+        /// <summary>Shows a theme sprite as a 9-sliced frame, or a plain colour if the sprite is missing.</summary>
+        private static void Framed(Image image, string spritePath, Color fallback)
+        {
+            Sprite sprite = UITheme.GetSprite(spritePath);
+            if (sprite != null)
+            {
+                image.sprite = sprite;
+                image.type = Image.Type.Sliced;
+                image.color = Color.white;
+            }
+            else
+            {
+                image.color = fallback;
+            }
+        }
+
+        private static void Divider(Transform parent, string name, Vector2 pos, float width)
+        {
+            GameObject obj = new GameObject(name, typeof(RectTransform), typeof(Image));
+            obj.transform.SetParent(parent, false);
+            RectTransform rect = (RectTransform)obj.transform;
+            rect.anchoredPosition = pos;
+            rect.sizeDelta = new Vector2(width, 10f);
+            Image img = obj.GetComponent<Image>();
+            Framed(img, DividerSprite, new Color(UITheme.GoldAccent.r, UITheme.GoldAccent.g, UITheme.GoldAccent.b, 0.6f));
+            img.raycastTarget = false;
+        }
+
+        /// <summary>A framed fantasy button: the gold-rimmed plate brightens on hover, the label carries the colour.</summary>
+        private static Button MenuButton(Transform parent, string name, string label, Vector2 pos, Color textColor)
+        {
+            Button btn = UIFactory.CreateTextButton(parent, name, label, pos, new Vector2(340f, 52f), UITheme.PanelSlate);
+            Image img = (Image)btn.targetGraphic;
+            Sprite normal = UITheme.GetSprite(ButtonSprite);
+            if (normal != null)
+            {
+                img.sprite = normal;
+                img.type = Image.Type.Sliced;
+                img.color = Color.white;
+                btn.transition = Selectable.Transition.SpriteSwap;
+                SpriteState states = new SpriteState
+                {
+                    highlightedSprite = UITheme.GetSprite(ButtonHoverSprite),
+                    pressedSprite = UITheme.GetSprite(ButtonPressedSprite),
+                    selectedSprite = normal,
+                    disabledSprite = normal
+                };
+                btn.spriteState = states;
+            }
+
+            TextMeshProUGUI tmp = btn.GetComponentInChildren<TextMeshProUGUI>();
+            tmp.color = textColor;
+            tmp.fontSize = 19f;
+            return btn;
         }
 
         private static TextMeshProUGUI Text(Transform parent, string name, string text, Vector2 pos, float size, Color color)
@@ -253,7 +333,7 @@ namespace CastleOfTheD20.UI
             obj.transform.SetParent(parent, false);
             RectTransform rect = (RectTransform)obj.transform;
             rect.anchoredPosition = pos;
-            rect.sizeDelta = new Vector2(500f, 50f);
+            rect.sizeDelta = new Vector2(460f, 40f);
             TextMeshProUGUI tmp = obj.AddComponent<TextMeshProUGUI>();
             tmp.text = text;
             tmp.fontSize = size;
@@ -264,15 +344,27 @@ namespace CastleOfTheD20.UI
             return tmp;
         }
 
-        private static Slider Slider(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction<float> onChanged)
+        /// <summary>
+        /// A volume row: the name on the left and the percentage on the right, with the slider on its own line
+        /// below (the old label sat behind the slider and only an "S" showed).
+        /// </summary>
+        private static Slider Slider(Transform parent, string label, Vector2 pos, UnityEngine.Events.UnityAction<float> onChanged, out TextMeshProUGUI valueText)
         {
-            Text(parent, label + "_Label", label, pos + new Vector2(-140f, 0f), 18f, UITheme.CreamText).alignment = TextAlignmentOptions.Right;
+            const float rowWidth = 400f;
+
+            TextMeshProUGUI name = Text(parent, label + "_Label", label, pos + new Vector2(0f, 14f), 18f, UITheme.CreamText);
+            ((RectTransform)name.transform).sizeDelta = new Vector2(rowWidth, 28f);
+            name.alignment = TextAlignmentOptions.Left;
+
+            TextMeshProUGUI value = Text(parent, label + "_Value", "100%", pos + new Vector2(0f, 14f), 17f, UITheme.GoldAccent);
+            ((RectTransform)value.transform).sizeDelta = new Vector2(rowWidth, 28f);
+            value.alignment = TextAlignmentOptions.Right;
 
             GameObject sliderObj = new GameObject(label + "_Slider", typeof(RectTransform));
             sliderObj.transform.SetParent(parent, false);
             RectTransform rect = (RectTransform)sliderObj.transform;
-            rect.anchoredPosition = pos + new Vector2(110f, 0f);
-            rect.sizeDelta = new Vector2(240f, 20f);
+            rect.anchoredPosition = pos + new Vector2(0f, -16f);
+            rect.sizeDelta = new Vector2(rowWidth, 18f);
 
             GameObject bg = new GameObject("Background", typeof(RectTransform), typeof(Image));
             bg.transform.SetParent(sliderObj.transform, false);
@@ -280,14 +372,15 @@ namespace CastleOfTheD20.UI
             bgRect.anchorMin = Vector2.zero;
             bgRect.anchorMax = Vector2.one;
             bgRect.sizeDelta = Vector2.zero;
-            bg.GetComponent<Image>().color = new Color(0.1f, 0.1f, 0.12f);
+            Framed(bg.GetComponent<Image>(), TrackSprite, new Color(0.1f, 0.1f, 0.12f));
 
             GameObject fillArea = new GameObject("Fill Area", typeof(RectTransform));
             fillArea.transform.SetParent(sliderObj.transform, false);
             RectTransform fillAreaRect = (RectTransform)fillArea.transform;
             fillAreaRect.anchorMin = Vector2.zero;
             fillAreaRect.anchorMax = Vector2.one;
-            fillAreaRect.sizeDelta = Vector2.zero;
+            fillAreaRect.offsetMin = new Vector2(5f, 5f);
+            fillAreaRect.offsetMax = new Vector2(-5f, -5f);
             GameObject fill = new GameObject("Fill", typeof(RectTransform), typeof(Image));
             fill.transform.SetParent(fillArea.transform, false);
             RectTransform fillRect = (RectTransform)fill.transform;
@@ -301,21 +394,40 @@ namespace CastleOfTheD20.UI
             RectTransform handleAreaRect = (RectTransform)handleArea.transform;
             handleAreaRect.anchorMin = Vector2.zero;
             handleAreaRect.anchorMax = Vector2.one;
-            handleAreaRect.sizeDelta = Vector2.zero;
+            handleAreaRect.offsetMin = new Vector2(10f, 0f);
+            handleAreaRect.offsetMax = new Vector2(-10f, 0f);
             GameObject handle = new GameObject("Handle", typeof(RectTransform), typeof(Image));
             handle.transform.SetParent(handleArea.transform, false);
-            ((RectTransform)handle.transform).sizeDelta = new Vector2(20f, 30f);
-            handle.GetComponent<Image>().color = UITheme.CreamText;
+            RectTransform handleRect = (RectTransform)handle.transform;
+            handleRect.anchorMin = new Vector2(0f, 0f);
+            handleRect.anchorMax = new Vector2(0f, 1f);
+            handleRect.sizeDelta = new Vector2(22f, 14f);
+            Image handleImg = handle.GetComponent<Image>();
+            Framed(handleImg, HandleSprite, UITheme.CreamText);
 
             Slider slider = sliderObj.AddComponent<Slider>();
             slider.fillRect = fillRect;
-            slider.handleRect = (RectTransform)handle.transform;
-            slider.targetGraphic = handle.GetComponent<Image>();
+            slider.handleRect = handleRect;
+            slider.targetGraphic = handleImg;
             slider.minValue = 0f;
             slider.maxValue = 1f;
+            Navigation nav = slider.navigation;
+            nav.mode = Navigation.Mode.None;
+            slider.navigation = nav;
+            ColorBlock cb = slider.colors;
+            cb.highlightedColor = new Color(1f, 0.92f, 0.7f, 1f);
+            cb.pressedColor = UITheme.GoldAccent;
+            slider.colors = cb;
+
             slider.onValueChanged.AddListener(onChanged);
+            slider.onValueChanged.AddListener(v => value.text = VolumeLabel(v));
+            value.text = VolumeLabel(slider.value);
+            valueText = value;
             return slider;
         }
+
+        /// <summary>Volume shown as a whole percentage.</summary>
+        public static string VolumeLabel(float volume) => $"{Mathf.RoundToInt(Mathf.Clamp01(volume) * 100f)}%";
 
         #endregion
     }

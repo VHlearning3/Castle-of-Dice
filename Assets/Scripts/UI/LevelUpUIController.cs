@@ -198,6 +198,11 @@ namespace CastleOfTheD20.UI
 
             EnsureUIHierarchy();
 
+            // The controller object can sit inactive in a scene (Zone 1 did): Awake and Start never ran, so the
+            // cards had no listeners and ignored clicks. Claim the instance and wire the cards here as well.
+            if (Instance == null) Instance = this;
+            WireListeners();
+
             // Suspend exploration input
             GameInput.SetExplorationInputEnabled(false);
 
