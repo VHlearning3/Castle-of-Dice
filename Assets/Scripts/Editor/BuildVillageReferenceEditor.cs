@@ -36,6 +36,19 @@ namespace CastleOfTheD20.Editor
 
         private static readonly Vector3 GatePos = new Vector3(5f, 0f, 45.5f);
 
+        // Forest gate arch: pillars under the arch span's feet, the span on the pillar tops (pack sizes:
+        // Pillar 1.55 x 4.67 m, Arch 5.84 x 2.06 m at scale 1)
+        public const float GatePillarScale = 1.1f;
+        public const float GatePillarOffset = 3.4f;
+        public const float GateArchScale = 1.35f;
+        public const float GateArchHeight = 4.67f * GatePillarScale;
+
+        // The forest door's trigger sits under the arch, so the hero walks into the arch before the fade. It is
+        // 7 m tall because ZoneExitSign hangs the "To Whispering Woods" board 1.9 m above the trigger: this
+        // puts the board above the arch instead of in the opening.
+        public static readonly Vector3 GateDoorOffset = new Vector3(0f, 3.9f, 0.5f);
+        public static readonly Vector3 GateDoorSize = new Vector3(4.4f, 7.0f, 1.4f);
+
         private static readonly Dictionary<string, Material> mats = new Dictionary<string, Material>();
         private static readonly Dictionary<string, GameObject> prefabs = new Dictionary<string, GameObject>();
         private static readonly List<Vector4> keepOut = new List<Vector4>(); // x, z, radius (tree/grass scatter avoids these)
@@ -795,6 +808,29 @@ namespace CastleOfTheD20.Editor
             return h - Mathf.Floor(h);
         }
 
+        /// <summary>
+        /// Height of the actual ground mesh (5 m cells split into two triangles, as BuildGround makes them).
+        /// GroundPoint itself is noisy between the grid points, so a road sampling it in the hills sank under
+        /// the grass or floated above it.
+        /// </summary>
+        private static float GroundSurfaceY(float x, float z)
+        {
+            const float half = 120f, step = 5f;
+            int ix = Mathf.Clamp(Mathf.FloorToInt((x + half) / step), 0, Mathf.RoundToInt(2f * half / step) - 1);
+            int iz = Mathf.Clamp(Mathf.FloorToInt((z + half) / step), 0, Mathf.RoundToInt(2f * half / step) - 1);
+            float x0 = -half + ix * step, z0 = -half + iz * step;
+            float u = Mathf.Clamp01((x - x0) / step), v = Mathf.Clamp01((z - z0) / step);
+            float a = GroundPoint(x0, z0).y, b = GroundPoint(x0 + step, z0).y;
+            float c = GroundPoint(x0, z0 + step).y, d = GroundPoint(x0 + step, z0 + step).y;
+            if (((ix + iz) & 1) == 0)
+            {
+                // triangles (a, c, d) and (a, d, b): diagonal a-d
+                return v >= u ? a + (d - c) * u + (c - a) * v : a + (b - a) * u + (d - b) * v;
+            }
+            // triangles (a, c, b) and (b, c, d): diagonal b-c
+            return u + v <= 1f ? a + (b - a) * u + (c - a) * v : d + (c - d) * (1f - u) + (b - d) * (1f - v);
+        }
+
         private static Vector3 RingPoint(float angle, float offset)
         {
             // Offset is along the ellipse normal (positive = outward)
@@ -841,13 +877,13 @@ namespace CastleOfTheD20.Editor
             swRoad.AddComponent<MeshRenderer>().sharedMaterial = mats["Dirt"];
             KeepOutPath(sw, 4.5f);
 
-            // Path north, between the market hut and the tavern, to the forest gate
-            var north = new List<Vector3>
-            {
-                RingPoint(Mathf.Deg2Rad * 80f, 0f), new Vector3(3.6f, 0, 20f), new Vector3(4.6f, 0, 28f),
-                new Vector3(5f, 0, 36f), GatePos + new Vector3(0, 0, 2f), GatePos + new Vector3(0, 0, 16f)
-            };
-            Ribbon("Path_North", roads, north, 3.4f, 0.03f, "Dirt");
+            // Path north, between the market hut and the tavern, through the gate arch and up into the forest
+            List<Vector3> north = NorthPathPoints();
+            Mesh northMesh = SaveMesh(RibbonMesh(north, NorthPathWidth, 0.03f, true), "Village_Path_North");
+            var northPath = new GameObject("Path_North");
+            northPath.transform.SetParent(roads, false);
+            northPath.AddComponent<MeshFilter>().sharedMesh = northMesh;
+            northPath.AddComponent<MeshRenderer>().sharedMaterial = mats["Dirt"];
             KeepOutPath(north, 3.5f);
 
             // Short yard paths to the forge and the hall
@@ -873,11 +909,26 @@ namespace CastleOfTheD20.Editor
             RingPoint(Mathf.Deg2Rad * 222f, 0f), new Vector3(-20f, 0, -17f), new Vector3(-27f, 0, -24f), new Vector3(-32.5f, 0, -28.8f)
         };
 
-        /// <summary>Rewrites the existing south-west road mesh asset in place (the scene keeps its reference).</summary>
-        public static void RebuildSouthWestRoadMesh()
+        private const float NorthPathWidth = 3.4f;
+
+        // Through the forest gate's arch and on up the hill into the trees (Vili, 2026-10-07)
+        private static List<Vector3> NorthPathPoints() => new List<Vector3>
         {
-            Mesh fresh = RibbonMesh(SouthWestRoadPoints(), SouthWestRoadWidth, 0.03f, true);
-            Mesh asset = AssetDatabase.LoadAssetAtPath<Mesh>(MeshDir + "/Village_Road_SouthWest.asset");
+            RingPoint(Mathf.Deg2Rad * 80f, 0f), new Vector3(3.6f, 0, 20f), new Vector3(4.6f, 0, 28f),
+            new Vector3(5f, 0, 36f), GatePos + new Vector3(0, 0, 2f), GatePos + new Vector3(0, 0, 16f),
+            new Vector3(4.2f, 0, 70f), new Vector3(1.5f, 0, 79f), new Vector3(-2.5f, 0, 88f)
+        };
+
+        /// <summary>Rewrites the existing south-west road mesh asset in place (the scene keeps its reference).</summary>
+        public static void RebuildSouthWestRoadMesh() => RebuildRoadMesh("Village_Road_SouthWest", SouthWestRoadPoints(), SouthWestRoadWidth);
+
+        /// <summary>Rewrites the existing north path mesh asset in place (the scene keeps its reference).</summary>
+        public static void RebuildNorthPathMesh() => RebuildRoadMesh("Village_Path_North", NorthPathPoints(), NorthPathWidth);
+
+        private static void RebuildRoadMesh(string assetName, List<Vector3> pts, float width)
+        {
+            Mesh fresh = RibbonMesh(pts, width, 0.03f, true);
+            Mesh asset = AssetDatabase.LoadAssetAtPath<Mesh>(MeshDir + "/" + assetName + ".asset");
             if (asset == null) return;
             asset.Clear();
             asset.indexFormat = fresh.indexFormat;
@@ -901,16 +952,20 @@ namespace CastleOfTheD20.Editor
         }
 
         /// <summary>
-        /// A flat strip along the polyline. With <paramref name="roundEnd"/> the last 3 m narrow a little and the
-        /// strip ends in a half circle, so a path can start in the grass instead of stopping square.
+        /// A strip along the polyline that hugs the ground: rows every 0.75 m with five points across, lifted a
+        /// little more in the hills so the faceted ground never pokes through. With <paramref name="roundEnd"/> the
+        /// last 3 m narrow a little and the strip ends in a half circle, so a path can end in the grass or the
+        /// forest instead of stopping square.
         /// </summary>
         private static Mesh RibbonMesh(List<Vector3> pts, float width, float y, bool roundEnd)
         {
-            // Densify the polyline so curves stay smooth
+            const float rowStep = 0.75f;
+            const int columns = 5;
+
             var dense = new List<Vector3>();
             for (int i = 0; i < pts.Count - 1; i++)
             {
-                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(pts[i], pts[i + 1]) / 1.5f));
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector3.Distance(pts[i], pts[i + 1]) / rowStep));
                 for (int s = 0; s < steps; s++) dense.Add(Vector3.Lerp(pts[i], pts[i + 1], s / (float)steps));
             }
             dense.Add(pts[pts.Count - 1]);
@@ -921,7 +976,9 @@ namespace CastleOfTheD20.Editor
 
             var verts = new List<Vector3>();
             var tris = new List<int>();
-            Vector3 prevL = Vector3.zero, prevR = Vector3.zero, lastDir = Vector3.forward, lastSide = Vector3.right;
+            var row = new Vector3[columns];
+            var prevRow = new Vector3[columns];
+            Vector3 lastDir = Vector3.forward, lastSide = Vector3.right;
             for (int i = 0; i < dense.Count; i++)
             {
                 Vector3 dir = (i < dense.Count - 1 ? dense[i + 1] - dense[i] : dense[i] - dense[i - 1]);
@@ -929,31 +986,48 @@ namespace CastleOfTheD20.Editor
                 dir.y = 0; dir.Normalize();
                 float narrow = roundEnd ? Mathf.Lerp(0.72f, 1f, Mathf.Clamp01(toEnd[i] / 3f)) : 1f;
                 Vector3 side = new Vector3(-dir.z, 0, dir.x) * (width * 0.5f * narrow * (1f + (Hash(dense[i].x, dense[i].z) - 0.5f) * 0.15f));
-                Vector3 l = dense[i] + side, r = dense[i] - side;
-                l.y = GroundPoint(l.x, l.z).y + y; r.y = GroundPoint(r.x, r.z).y + y;
-                if (i > 0) { AddTri(verts, tris, prevL, l, r); AddTri(verts, tris, prevL, r, prevR); }
-                prevL = l; prevR = r;
+                for (int c = 0; c < columns; c++)
+                {
+                    Vector3 p = dense[i] + side * Mathf.Lerp(1f, -1f, c / (float)(columns - 1));
+                    p.y = RoadSurfaceY(p.x, p.z, y);
+                    row[c] = p;
+                }
+                if (i > 0)
+                {
+                    for (int c = 0; c < columns - 1; c++)
+                    {
+                        AddTri(verts, tris, prevRow[c], row[c], row[c + 1]);
+                        AddTri(verts, tris, prevRow[c], row[c + 1], prevRow[c + 1]);
+                    }
+                }
+                System.Array.Copy(row, prevRow, columns);
                 lastDir = dir; lastSide = side;
             }
             if (roundEnd)
             {
-                Vector3 end = dense[dense.Count - 1];
-                end.y = GroundPoint(end.x, end.z).y + y;
+                Vector3 end = prevRow[columns / 2];
                 float radius = lastSide.magnitude;
                 Vector3 sideDir = lastSide.normalized;
                 const int capSteps = 10;
-                Vector3 prev = prevL;
+                Vector3 prev = prevRow[0];
                 for (int k = 1; k <= capSteps; k++)
                 {
                     float a = k / (float)capSteps * Mathf.PI;
                     Vector3 p = end + (sideDir * Mathf.Cos(a) + lastDir * Mathf.Sin(a)) * radius;
-                    p.y = GroundPoint(p.x, p.z).y + y;
-                    if (k == capSteps) p = prevR;
+                    p.y = RoadSurfaceY(p.x, p.z, y);
+                    if (k == capSteps) p = prevRow[columns - 1];
                     AddTri(verts, tris, end, prev, p);
                     prev = p;
                 }
             }
             return FinishMesh(verts, tris);
+        }
+
+        // Ground height plus the road's lift: 10 cm more out in the hills, where the ground is faceted
+        private static float RoadSurfaceY(float x, float z, float y)
+        {
+            float r = Mathf.Sqrt(x * x + z * z);
+            return GroundSurfaceY(x, z) + y + Mathf.Clamp01((r - (FlatRadius - 2f)) / 4f) * 0.1f;
         }
 
         #endregion
@@ -1158,7 +1232,12 @@ namespace CastleOfTheD20.Editor
         {
             var area = new GameObject("Area_ForestGate").transform;
             area.SetParent(root, false);
-            Place("Arch", area, GatePos, 0f, 1.2f);
+            // A tall arch the hero walks under (Vili, 2026-10-07): the pack's arch span on two stone pillars
+            GameObject pillarW = Place("Pillar", area, GatePos + new Vector3(-GatePillarOffset, 0, 0), 0f, GatePillarScale);
+            if (pillarW != null) pillarW.name = "Gate_Pillar_W";
+            GameObject pillarE = Place("Pillar", area, GatePos + new Vector3(GatePillarOffset, 0, 0), 0f, GatePillarScale);
+            if (pillarE != null) pillarE.name = "Gate_Pillar_E";
+            Place("Arch", area, GatePos + new Vector3(0f, GateArchHeight, 0f), 0f, GateArchScale);
             Place("Wall_1", area, GatePos + new Vector3(-6.0f, 0, 0), 0f);
             Place("Wall_1", area, GatePos + new Vector3(6.0f, 0, 0), 0f);
             Place("Pillar_ruined_1", area, GatePos + new Vector3(-9f, 0, 0.3f), 0f);
@@ -1166,6 +1245,18 @@ namespace CastleOfTheD20.Editor
             PlaceVillage("Village_BannerPole", area, GatePos + new Vector3(-3.6f, 0, -1.6f), 0f);
             PlaceVillage("Village_BannerPole", area, GatePos + new Vector3(3.6f, 0, -1.6f), 0f);
             KeepOut(GatePos, 10f);
+        }
+
+        /// <summary>Puts the forest door's walk-in trigger under the gate arch.</summary>
+        public static void PlaceForestDoorUnderArch(GameObject door)
+        {
+            door.transform.position = GatePos + GateDoorOffset;
+            door.transform.rotation = Quaternion.identity;
+            if (door.TryGetComponent(out BoxCollider box))
+            {
+                box.center = Vector3.zero;
+                box.size = GateDoorSize;
+            }
         }
 
         private static void BuildLamps(Transform root)
@@ -1320,11 +1411,7 @@ namespace CastleOfTheD20.Editor
             }
 
             GameObject gate = FindInScene("Door_Village_Forest");
-            if (gate != null)
-            {
-                gate.transform.position = GatePos + new Vector3(0f, 1.5f, -1.8f);
-                gate.transform.rotation = Quaternion.identity;
-            }
+            if (gate != null) PlaceForestDoorUnderArch(gate);
             GameObject fromForest = FindInScene("Spawn_From_Forest");
             if (fromForest == null) fromForest = new GameObject("Spawn_From_Forest");
             fromForest.transform.position = GatePos + new Vector3(0f, 0.5f, -6f);
