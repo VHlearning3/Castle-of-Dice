@@ -20,7 +20,8 @@ namespace CastleOfTheD20.Editor
     /// <item>Gives every wall renderer a mesh with world-space UVs, so the stone runs on at the same size and
     /// upright across all wall pieces.</item>
     /// </list>
-    /// Run after <see cref="HallDoorsSetup"/> (it rebuilds the Tower stairs, whose wall piece gets new UVs here).
+    /// Run after <see cref="HallDoorsSetup"/> and <see cref="HallVaultSetup"/> (they rebuild the Tower stairs and
+    /// the vault, whose stone gets new UVs here).
     /// </summary>
     public static class HallWallsSetup
     {
@@ -49,6 +50,7 @@ namespace CastleOfTheD20.Editor
         {
             BuildMaterial();
             HallDoorsSetup.SetupAll();
+            HallVaultSetup.SetupAll();
             SetupAll();
             EditorApplication.Exit(0);
         }
@@ -273,6 +275,13 @@ namespace CastleOfTheD20.Editor
         #endregion
 
         #region Stone texture
+
+        /// <summary>The wall stone, generated only if it does not exist yet.</summary>
+        public static Material BuildMaterialIfMissing()
+        {
+            Material m = AssetDatabase.LoadAssetAtPath<Material>(MaterialPath);
+            return m != null ? m : BuildMaterial();
+        }
 
         public static Material BuildMaterial()
         {
