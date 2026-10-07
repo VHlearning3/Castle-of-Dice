@@ -34,48 +34,51 @@ def set_world(n,R):
 def aim(n,target_dir):
     pb=B[P+n]; Mr=rot3(pb.matrix); cur=Mr.col[1].normalized()
     set_world(n,cur.rotation_difference(target_dir.normalized()).to_matrix()@Mr)
-# --- hips: weight on her left hip
-wrot("Hips",'Y',-4)          # tilt pelvis (left hip up)
-wrot("Hips",'Z',6)
-wrot("LeftUpLeg",'Y',4); wrot("RightUpLeg",'Y',4)
-wrot("RightUpLeg",'X',-6); wrot("RightLeg",'X',12)
+# Reference: her LEFT hand flat on the upper chest, right arm relaxed, chin up, looking up to her right.
+HAND="Left"; OTHER="Right"; k=-1   # k mirrors Y/Z world rotations designed for a right-hand version
+sx=1 if HAND=="Left" else -1
+# --- hips: weight on one hip
+wrot("Hips",'Y',-4*k)
+wrot("Hips",'Z',6*k)
+wrot("LeftUpLeg",'Y',4*k); wrot("RightUpLeg",'Y',4*k)
+wrot(HAND+"UpLeg",'X',-6); wrot(HAND+"Leg",'X',12)
 # --- chest out, lean back, counter the tilt
-wrot("Spine",'Y',3); wrot("Spine1",'X',-4); wrot("Spine2",'X',-5); wrot("Spine1",'Y',2)
-# --- head: chin up, look to her left and up
-wrot("Neck",'X',-9); wrot("Head",'X',-17); wrot("Neck",'Z',14); wrot("Head",'Z',20); wrot("Head",'Y',-8)
-# --- right hand flat on chest under the collarbone (2-bone IK)
-sh=B[P+"RightArm"].head.copy()
-chest=Vector((-0.045,-0.200,1.290))      # palm centre on chest
-fing=Vector((0.60,0.30,0.74)).normalized() # fingers point across chest, slightly up
+wrot("Spine",'Y',3*k); wrot("Spine1",'X',-4); wrot("Spine2",'X',-5); wrot("Spine1",'Y',2*k)
+# --- head: chin up, look up and away from the hand
+wrot("Neck",'X',-10); wrot("Head",'X',-19); wrot("Neck",'Z',14*k); wrot("Head",'Z',18*k); wrot("Head",'Y',-8*k)
+# --- hand flat on chest under the collarbone (2-bone IK)
+sh=B[P+HAND+"Arm"].head.copy()
+chest=Vector((sx*0.045,-0.200,1.290))          # palm centre on chest
+fing=Vector((-sx*0.60,0.30,0.74)).normalized()  # fingers point up and in, following the chest
 wrist=chest-fing*0.075
-a=(B[P+"RightArm"].tail-B[P+"RightArm"].head).length; b=(B[P+"RightForeArm"].tail-B[P+"RightForeArm"].head).length
+a=(B[P+HAND+"Arm"].tail-B[P+HAND+"Arm"].head).length; b=(B[P+HAND+"ForeArm"].tail-B[P+HAND+"ForeArm"].head).length
 d=(wrist-sh); L=min(d.length,a+b-1e-4)
 cosA=(a*a+L*L-b*b)/(2*a*L); A=math.acos(max(-1,min(1,cosA)))
-pole=Vector((-0.6,-0.15,-1.0)).normalized()
+pole=Vector((sx*0.6,-0.15,-1.0)).normalized()
 dn=d.normalized(); pp=(pole-dn*pole.dot(dn)).normalized()
 elbow=sh+dn*math.cos(A)*a+pp*math.sin(A)*a
 # hinge-consistent arm: elbow bends only about the upper arm's local Z (Unity humanoid elbow axis)
 Yu=(elbow-sh).normalized(); F=(wrist-elbow).normalized()
-Zu=Yu.cross(F).normalized(); Xu=Yu.cross(Zu)
-set_world("RightArm",Matrix((Xu,Yu,Zu)).transposed())
+Zu=Yu.cross(F).normalized()
+if Zu.z<0: Zu=-Zu        # keep the hinge axis near the rest Z (up) so the upper arm is not rolled over
+Xu=Yu.cross(Zu)
+set_world(HAND+"Arm",Matrix((Xu,Yu,Zu)).transposed())
 Xf=F.cross(Zu)
-set_world("RightForeArm",Matrix((Xf,F,Zu)).transposed())
-ur=rot3(B[P+"RightArm"].bone.matrix_local).inverted()@rot3(B[P+"RightArm"].matrix)
-print("upperarm vs rest", [round(math.degrees(a),1) for a in ur.to_euler('YXZ')])
+set_world(HAND+"ForeArm",Matrix((Xf,F,Zu)).transposed())
 # hand: Y=fingers, Z = -palm normal; palm faces the body (+Y) -> Z = -Y world
 Y=fing; Z=Vector((0,-1,0)); Z=(Z-Y*Z.dot(Y)).normalized(); X=Y.cross(Z)
 Rh=Matrix((X,Y,Z)).transposed()
 # share wrist twist with forearm
-fa=B[P+"RightForeArm"]; Mf=rot3(fa.matrix); ax=Mf.col[1]
+fa=B[P+HAND+"ForeArm"]; Mf=rot3(fa.matrix)
 hrel=Mf.inverted()@Rh
 tw=hrel.to_quaternion().to_swing_twist('Y')[1]
 fa.rotation_quaternion=(fa.rotation_quaternion.to_matrix()@Matrix.Rotation(tw*0.5,3,'Y')).to_quaternion(); vl.update()
-set_world("RightHand",Rh)
-# --- left arm relaxed, a touch out from the hip
-wrot("LeftArm",'Y',-4); wrot("LeftForeArm",'Z',6)
-hr=rot3(B[P+"RightForeArm"].matrix).inverted()@rot3(B[P+"RightHand"].matrix)
+set_world(HAND+"Hand",Rh)
+# --- other arm relaxed, a touch out from the hip
+wrot(OTHER+"Arm",'Y',-4*k); wrot(OTHER+"ForeArm",'Z',6*k)
+hr=rot3(B[P+HAND+"ForeArm"].matrix).inverted()@rot3(B[P+HAND+"Hand"].matrix)
 print("hand rel euler", [round(math.degrees(a),1) for a in hr.to_euler('YXZ')])
-print("wrist err",(B[P+"RightHand"].head-wrist).length)
+print("wrist err",(B[P+HAND+"Hand"].head-wrist).length)
 smug={pb.name:(pb.rotation_quaternion.copy(),pb.location.copy()) for pb in B}
 if RENDER:
     sc.render.engine='BLENDER_WORKBENCH'; sc.display.shading.light='STUDIO'; sc.display.shading.color_type='TEXTURE'
