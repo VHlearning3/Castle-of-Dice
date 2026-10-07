@@ -21,6 +21,18 @@ namespace CastleOfTheD20.UI
         private Button nextButton;
         private Button skipButton;
         private TextMeshProUGUI nextLabel;
+        private RectTransform panelRect;
+
+        private const float PanelWidth = 860f;
+        private const float MinPanelHeight = 600f;
+        private const float ScreenMargin = 60f;
+        private const float TitleTop = 60f;
+        private const float BodyTop = 100f;
+        private const float BodyBottom = 95f;
+        private const float BodySideMargin = 50f;
+        private const float ButtonBottom = 50f;
+        private const float BodyFontSize = 23f;
+        private static readonly Vector2 ReferenceResolution = new Vector2(1920f, 1080f);
 
         private string[] pageTitles;
         private string[] pageBodies;
@@ -72,7 +84,7 @@ namespace CastleOfTheD20.UI
             canvas.sortingOrder = 600;
             CanvasScaler scaler = canvasObj.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.referenceResolution = ReferenceResolution;
             scaler.matchWidthOrHeight = 0.5f;
             if (Application.isPlaying) MainMenuController.EnsureEventSystem();
 
@@ -88,18 +100,34 @@ namespace CastleOfTheD20.UI
             GameObject panelObj = new GameObject("StoryPanel", typeof(RectTransform), typeof(Image));
             panelObj.transform.SetParent(canvasObj.transform, false);
             RectTransform panelRect = (RectTransform)panelObj.transform;
-            panelRect.sizeDelta = new Vector2(860f, 600f);
+            panelRect.sizeDelta = new Vector2(PanelWidth, MinPanelHeight);
             panelObj.GetComponent<Image>().color = new Color(0.17f, 0.13f, 0.09f, 0.97f);
 
             StoryPanelUI ui = canvasObj.AddComponent<StoryPanelUI>();
-            ui.titleText = CreateText(panelObj.transform, "Title", new Vector2(0f, 240f), new Vector2(780f, 70f), 34f, FontStyles.Bold, UITheme.GoldAccent);
-            ui.bodyText = CreateText(panelObj.transform, "Body", new Vector2(0f, 10f), new Vector2(760f, 380f), 23f, FontStyles.Normal, UITheme.ParchmentText);
-            ui.bodyText.alignment = TextAlignmentOptions.TopLeft;
-            ui.pageText = CreateText(panelObj.transform, "Page", new Vector2(-300f, -250f), new Vector2(160f, 40f), 18f, FontStyles.Italic, UITheme.SoftText);
+            ui.panelRect = panelRect;
 
-            ui.skipButton = UIFactory.CreateTextButton(panelObj.transform, "Skip_Btn", "Skip", new Vector2(150f, -250f), new Vector2(150f, 48f), new Color(0.35f, 0.25f, 0.2f));
+            // Title pinned to the top edge, buttons to the bottom edge and the body fills the space between,
+            // so a long page (the help text) can grow the panel without running under the Close button
+            ui.titleText = CreateText(panelObj.transform, "Title", new Vector2(0f, -TitleTop), new Vector2(780f, 70f), 34f, FontStyles.Bold, UITheme.GoldAccent);
+            Pin((RectTransform)ui.titleText.transform, 1f);
+            ui.bodyText = CreateText(panelObj.transform, "Body", Vector2.zero, Vector2.zero, BodyFontSize, FontStyles.Normal, UITheme.ParchmentText);
+            ui.bodyText.alignment = TextAlignmentOptions.TopLeft;
+            RectTransform bodyRect = (RectTransform)ui.bodyText.transform;
+            bodyRect.anchorMin = Vector2.zero;
+            bodyRect.anchorMax = Vector2.one;
+            bodyRect.offsetMin = new Vector2(BodySideMargin, BodyBottom);
+            bodyRect.offsetMax = new Vector2(-BodySideMargin, -BodyTop);
+            ui.bodyText.fontSizeMax = BodyFontSize;
+            ui.bodyText.fontSizeMin = 16f;
+            ui.bodyText.enableAutoSizing = true;
+            ui.pageText = CreateText(panelObj.transform, "Page", new Vector2(-300f, ButtonBottom), new Vector2(160f, 40f), 18f, FontStyles.Italic, UITheme.SoftText);
+            Pin((RectTransform)ui.pageText.transform, 0f);
+
+            ui.skipButton = UIFactory.CreateTextButton(panelObj.transform, "Skip_Btn", "Skip", new Vector2(150f, ButtonBottom), new Vector2(150f, 48f), new Color(0.35f, 0.25f, 0.2f));
+            Pin((RectTransform)ui.skipButton.transform, 0f);
             ui.skipButton.onClick.AddListener(ui.Close);
-            ui.nextButton = UIFactory.CreateTextButton(panelObj.transform, "Next_Btn", "Close", new Vector2(320f, -250f), new Vector2(170f, 48f), UITheme.ActionGreen);
+            ui.nextButton = UIFactory.CreateTextButton(panelObj.transform, "Next_Btn", "Close", new Vector2(320f, ButtonBottom), new Vector2(170f, 48f), UITheme.ActionGreen);
+            Pin((RectTransform)ui.nextButton.transform, 0f);
             ui.nextButton.onClick.AddListener(ui.Next);
             ui.nextLabel = ui.nextButton.GetComponentInChildren<TextMeshProUGUI>();
 
@@ -124,11 +152,61 @@ namespace CastleOfTheD20.UI
             return tmp;
         }
 
+        /// <summary>Keeps a child at its offset from the panel's top (1) or bottom (0) edge as the panel grows.</summary>
+        private static void Pin(RectTransform rect, float edge)
+        {
+            Vector2 pos = rect.anchoredPosition;
+            rect.anchorMin = new Vector2(0.5f, edge);
+            rect.anchorMax = new Vector2(0.5f, edge);
+            rect.anchoredPosition = pos;
+        }
+
+        /// <summary>
+        /// Panel height for a body text that needs <paramref name="bodyHeight"/> units: never below the
+        /// standard 600, never taller than the canvas allows at the current screen size.
+        /// </summary>
+        public static float PanelHeightFor(float bodyHeight, float canvasHeight)
+        {
+            float wanted = bodyHeight + BodyTop + BodyBottom + 10f;
+            float max = Mathf.Max(MinPanelHeight, canvasHeight - ScreenMargin * 2f);
+            return Mathf.Clamp(wanted, MinPanelHeight, max);
+        }
+
+        /// <summary>Height of the 1920x1080, match 0.5 canvas on the current screen.</summary>
+        private static float CanvasHeight()
+        {
+            float w = Mathf.Max(1f, Screen.width);
+            float h = Mathf.Max(1f, Screen.height);
+            float logScale = Mathf.Lerp(Mathf.Log(w / ReferenceResolution.x, 2f), Mathf.Log(h / ReferenceResolution.y, 2f), 0.5f);
+            return h / Mathf.Pow(2f, logScale);
+        }
+
+        /// <summary>The panel's current height (tests).</summary>
+        public static float CurrentPanelHeight => instance != null && instance.panelRect != null ? instance.panelRect.sizeDelta.y : 0f;
+
+        /// <summary>The body text component (tests).</summary>
+        public static TextMeshProUGUI CurrentBody => instance != null ? instance.bodyText : null;
+
+        private void FitPanelToBody()
+        {
+            if (panelRect == null) return;
+            float bodyWidth = PanelWidth - BodySideMargin * 2f;
+            bodyText.enableAutoSizing = false;
+            bodyText.fontSize = BodyFontSize;
+            float needed = bodyText.GetPreferredValues(bodyText.text, bodyWidth, 0f).y;
+            panelRect.sizeDelta = new Vector2(PanelWidth, PanelHeightFor(needed, CanvasHeight()));
+
+            // Auto-size shrinks the font only if even the tallest panel the screen allows is too short
+            bodyText.enableAutoSizing = true;
+            bodyText.ForceMeshUpdate();
+        }
+
         private void ShowPage()
         {
             int count = pageBodies.Length;
             titleText.text = pageIndex < pageTitles.Length ? pageTitles[pageIndex] : pageTitles[pageTitles.Length - 1];
             bodyText.text = pageBodies[pageIndex];
+            FitPanelToBody();
             pageText.text = count > 1 ? $"{pageIndex + 1} / {count}" : string.Empty;
             bool last = pageIndex >= count - 1;
             nextLabel.text = last ? "Close" : "Next";

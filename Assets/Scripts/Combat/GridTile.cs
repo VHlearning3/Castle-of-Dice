@@ -75,14 +75,15 @@ namespace CastleOfTheD20.Combat
         [Tooltip("MeshRenderer or SpriteRenderer used to display tile highlight colors.")]
         [SerializeField] private Renderer tileRenderer;
 
-        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 0.15f);
-        [SerializeField] private Color hoveredColor = new Color(1f, 0.92f, 0.016f, 0.7f);
-        [SerializeField] private Color reachableColor = new Color(0.2f, 0.6f, 1f, 0.6f);
-        [SerializeField] private Color targetAreaColor = new Color(1f, 0.4f, 0.1f, 0.75f);
-        [SerializeField] private Color enemyTargetColor = new Color(0.9f, 0.15f, 0.15f, 0.8f);
-        [SerializeField] private Color hazardWarningColor = new Color(0.85f, 0.05f, 0.05f, 0.85f);
-        [SerializeField] private Color burningColor = new Color(1f, 0.45f, 0.05f, 0.65f);
-        [SerializeField] private Color iceColor = new Color(0.6f, 0.9f, 1f, 0.65f);
+        // Alpha is the strength of the tile's edge; the see-through overlay fills the inside far fainter
+        [SerializeField] private Color normalColor = new Color(1f, 1f, 1f, 0.45f);
+        [SerializeField] private Color hoveredColor = new Color(1f, 0.92f, 0.2f, 1f);
+        [SerializeField] private Color reachableColor = new Color(0.3f, 0.7f, 1f, 0.95f);
+        [SerializeField] private Color targetAreaColor = new Color(1f, 0.5f, 0.15f, 1f);
+        [SerializeField] private Color enemyTargetColor = new Color(1f, 0.2f, 0.2f, 1f);
+        [SerializeField] private Color hazardWarningColor = new Color(1f, 0.1f, 0.1f, 1f);
+        [SerializeField] private Color burningColor = new Color(1f, 0.5f, 0.1f, 0.95f);
+        [SerializeField] private Color iceColor = new Color(0.6f, 0.9f, 1f, 0.95f);
 
         #endregion
 
@@ -97,6 +98,10 @@ namespace CastleOfTheD20.Combat
         private int terrainRounds;
         private bool hazardWarning;
         private ExplosiveBarrel barrel;
+
+        private const string OverlayMaterialResource = "Combat/M_GridTile_Overlay";
+        private const int OverlayTextureSize = 64;
+        private static Material s_overlayMaterial;
 
         #endregion
 
@@ -217,6 +222,14 @@ namespace CastleOfTheD20.Combat
 
             propBlock = new MaterialPropertyBlock();
 
+            // Baldur's Gate 3 style: the floor shows through the tile, only its edge is drawn strongly
+            if (Application.isPlaying && tileRenderer != null)
+            {
+                tileRenderer.sharedMaterial = OverlayMaterial;
+                tileRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                tileRenderer.receiveShadows = false;
+            }
+
             // Ensure a thick BoxCollider exists for reliable physics raycasting
             BoxCollider box = GetComponent<BoxCollider>();
             if (box == null)
@@ -318,6 +331,63 @@ namespace CastleOfTheD20.Combat
         #endregion
 
         #region Private Utilities
+
+        /// <summary>
+        /// The see-through material every combat tile shares: alpha blended, with a texture whose edge
+        /// is opaque and whose inside is faint, so the tile colour reads as an outline over the floor.
+        /// </summary>
+        public static Material OverlayMaterial
+        {
+            get
+            {
+                if (s_overlayMaterial != null) return s_overlayMaterial;
+
+                Material template = Resources.Load<Material>(OverlayMaterialResource);
+                if (template == null)
+                {
+                    Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+                    if (shader == null) shader = Shader.Find("Sprites/Default");
+                    template = new Material(shader);
+                }
+
+                Texture2D tex = BuildOverlayTexture();
+                s_overlayMaterial = new Material(template) { name = "GridTile_Overlay", mainTexture = tex };
+                if (s_overlayMaterial.HasProperty("_BaseMap")) s_overlayMaterial.SetTexture("_BaseMap", tex);
+                return s_overlayMaterial;
+            }
+        }
+
+        /// <summary>Alpha of the overlay texture at a pixel: 1 on the edge, a soft glow inside it, faint in the middle.</summary>
+        public static float OverlayAlpha(int x, int y)
+        {
+            int last = OverlayTextureSize - 1;
+            int edge = Mathf.Min(Mathf.Min(x, last - x), Mathf.Min(y, last - y));
+            if (edge < 3) return 1f;
+            if (edge < 8) return Mathf.Lerp(0.5f, 0.12f, (edge - 3) / 5f);
+            return 0.12f;
+        }
+
+        private static Texture2D BuildOverlayTexture()
+        {
+            Texture2D tex = new Texture2D(OverlayTextureSize, OverlayTextureSize, TextureFormat.RGBA32, true)
+            {
+                name = "GridTile_Overlay",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Trilinear,
+                anisoLevel = 4
+            };
+            Color32[] pixels = new Color32[OverlayTextureSize * OverlayTextureSize];
+            for (int y = 0; y < OverlayTextureSize; y++)
+            {
+                for (int x = 0; x < OverlayTextureSize; x++)
+                {
+                    pixels[y * OverlayTextureSize + x] = new Color32(255, 255, 255, (byte)Mathf.RoundToInt(OverlayAlpha(x, y) * 255f));
+                }
+            }
+            tex.SetPixels32(pixels);
+            tex.Apply(true, true);
+            return tex;
+        }
 
         private void ApplyHighlightColor(TileHighlightType type)
         {

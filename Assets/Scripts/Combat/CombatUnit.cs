@@ -483,6 +483,31 @@ namespace CastleOfTheD20.Combat
             walkArrivedCallback += action;
         }
 
+        /// <summary>
+        /// Counts as walking for <paramref name="seconds"/> without moving (a teleport's appear effect), so the
+        /// turn waits before the attack; outside Play Mode <paramref name="onArrived"/> runs at once.
+        /// </summary>
+        protected void HoldAsWalking(float seconds, Action onArrived = null)
+        {
+            if (!Application.isPlaying || !isActiveAndEnabled || seconds <= 0f)
+            {
+                onArrived?.Invoke();
+                return;
+            }
+
+            walkArrivedCallback = onArrived;
+            walkRoutine = StartCoroutine(HoldRoutine(seconds));
+        }
+
+        private IEnumerator HoldRoutine(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            walkRoutine = null;
+            Action arrived = walkArrivedCallback;
+            walkArrivedCallback = null;
+            arrived?.Invoke();
+        }
+
         /// <summary>Cancels an in-progress walk and lands the unit on the tile it already occupies.</summary>
         public void StopWalking()
         {
