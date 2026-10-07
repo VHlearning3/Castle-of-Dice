@@ -190,28 +190,33 @@ namespace CastleOfTheD20.Tests.PlayMode
         #region Helpers
 
         /// <summary>
-        /// The first mesh drawn between the camera and the hero's head, found by its own box (doorways, signs and
-        /// dressing have no colliders), or null. Ground, roads and battlement rings are too big to be in the way.
+        /// The first mesh drawn between the camera and the hero (head, waist or feet), found by its own box (doorways,
+        /// signs and their text have no colliders), or null. Ground, roads and battlement rings are too big to be in the way.
         /// </summary>
         private static string FirstMeshInView(CameraFollow follow)
         {
             Transform hero = Hero().transform;
-            Vector3 head = hero.position + Vector3.up * 1.2f;
             Vector3 cam = follow.transform.position;
+            float[] heights = { 1.2f, 0.8f, 0.2f };
             foreach (MeshRenderer rend in UnityEngine.Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
             {
-                if (!rend.enabled || rend.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
+                if (!rend.enabled || !rend.gameObject.activeInHierarchy || rend.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly) continue;
                 if (rend.transform.IsChildOf(hero) || rend.GetComponentInParent<CombatUnit>() != null) continue;
                 Bounds box = rend.bounds;
                 if (Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z)) > 24f) continue;
-                if (!CameraFollow.SegmentHitsBox(head, cam, box)) continue;
 
                 Matrix4x4 toLocal = rend.transform.worldToLocalMatrix;
                 Bounds local = rend.localBounds;
-                Vector3 localHead = toLocal.MultiplyPoint3x4(head);
-                if (local.Contains(localHead)) continue; // a room shell around the hero pulls the camera in instead
-                if (!CameraFollow.SegmentHitsBox(localHead, toLocal.MultiplyPoint3x4(cam), local)) continue;
-                return $"'{PathOf(rend.transform)}' between the camera {cam} and the hero {head}";
+                Vector3 localCam = toLocal.MultiplyPoint3x4(cam);
+                foreach (float height in heights)
+                {
+                    Vector3 point = hero.position + Vector3.up * height;
+                    if (!CameraFollow.SegmentHitsBox(point, cam, box)) continue;
+                    Vector3 localPoint = toLocal.MultiplyPoint3x4(point);
+                    if (local.Contains(localPoint)) continue; // a room shell around the hero pulls the camera in instead
+                    if (!CameraFollow.SegmentHitsBox(localPoint, localCam, local)) continue;
+                    return $"'{PathOf(rend.transform)}' between the camera {cam} and the hero {point}";
+                }
             }
             return null;
         }

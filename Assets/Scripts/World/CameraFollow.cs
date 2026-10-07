@@ -98,8 +98,9 @@ namespace CastleOfTheD20.World
         private const int MaxCutAwayRenderers = 60;
         private const float DoorwayPieceMinSize = 1.2f;  // braziers, torches and trim stay as they are
         private const float DoorwayPieceMaxSize = 24f;   // ground, roads and whole battlement rings are never cut
-        private const int MaxDoorwayRenderers = 400;
+        private const int MaxDoorwayRenderers = 600;
         private const float DoorwayRescanDelay = 1f;     // exit signs and other runtime pieces are built after the load
+        private const float DoorwayClearRadius = 1.6f;   // metres around the hero kept clear of doorway pieces
 
         private float currentYaw;
         private float targetYaw;
@@ -125,6 +126,11 @@ namespace CastleOfTheD20.World
         private readonly List<Collider> cutColliderList = new List<Collider>();
         private static readonly Renderer[] NoRenderers = new Renderer[0];
         private readonly List<Renderer> doorwayRenderers = new List<Renderer>();
+        private readonly List<int> doorwayDoors = new List<int>(); // which door a piece belongs to, -1 for dressing
+        private readonly List<Collider> doorwayColliders = new List<Collider>();
+        private readonly List<int> doorwayColliderDoors = new List<int>();
+        private bool[] doorwayDoorHit = new bool[0];
+        private readonly Vector3[] doorwayViewPoints = new Vector3[6];
         private static readonly List<Collider> colliderBuffer = new List<Collider>();
         private bool doorwaysCollected;
         private int doorwayScanFrame;
@@ -213,6 +219,9 @@ namespace CastleOfTheD20.World
             SceneManager.sceneLoaded -= HandleSceneLoaded;
             RestoreAllCutAway();
             doorwayRenderers.Clear();
+            doorwayDoors.Clear();
+            doorwayColliders.Clear();
+            doorwayColliderDoors.Clear();
             if (s_active == this) s_active = null;
         }
 
@@ -552,7 +561,9 @@ namespace CastleOfTheD20.World
         /// <summary>
         /// Doorways have no solid colliders, so the sight check never meets them: a hero who had just come through
         /// a castle door stood with the camera outside it, hidden by the door frame and its "To ..." sign
-        /// (Vili, 2026-10-07). Their meshes are collected once per scene and tested by their boxes instead.
+        /// (Vili, 2026-10-07). Their meshes are collected once per scene and tested by their boxes instead, along
+        /// lines to the hero and to a ring around the hero, so the doorway leaves a clear patch around them on screen.
+        /// A door goes as a whole (frame, leaves, sign, text, chains, braziers), so no loose piece is left hanging.
         /// </summary>
         private void CutAwayDoorways(Vector3 heroLook, Vector3 cameraPoint, float now)
         {
@@ -561,27 +572,65 @@ namespace CastleOfTheD20.World
                 if (doorwayRescanAt > 0f && now >= doorwayRescanAt) doorwayRescanAt = -1f;
                 CollectDoorwayRenderers();
             }
+            if (doorwayRenderers.Count == 0) return;
 
-            for (int i = doorwayRenderers.Count - 1; i >= 0; i--)
+            for (int g = 0; g < doorwayDoorHit.Length; g++) doorwayDoorHit[g] = false;
+            int points = FillDoorwayViewPoints(heroLook, cameraPoint);
+            for (int i = 0; i < doorwayRenderers.Count; i++)
             {
                 Renderer rend = doorwayRenderers[i];
-                if (rend == null)
-                {
-                    doorwayRenderers.RemoveAt(i);
-                    continue;
-                }
-                if (!rend.enabled || !rend.gameObject.activeInHierarchy) continue;
+                if (rend == null || !(rend is MeshRenderer) || !rend.enabled || !rend.gameObject.activeInHierarchy) continue;
+                int door = doorwayDoors[i];
+                if (door >= 0 && doorwayDoorHit[door]) continue;
 
                 Bounds box = rend.bounds;
                 box.Expand(sightRadius * 2f);
-                if (!SegmentHitsBox(heroLook, cameraPoint, box)) continue;
+                bool near = false;
+                for (int p = 0; p < points && !near; p++) near = SegmentHitsBox(doorwayViewPoints[p], cameraPoint, box);
+                if (!near) continue;
 
                 // The world box of a turned or arched piece is loose: the piece's own box decides
                 Matrix4x4 toLocal = rend.transform.worldToLocalMatrix;
-                if (!SegmentHitsBox(toLocal.MultiplyPoint3x4(heroLook), toLocal.MultiplyPoint3x4(cameraPoint), rend.localBounds)) continue;
+                Bounds local = rend.localBounds;
+                Vector3 localCamera = toLocal.MultiplyPoint3x4(cameraPoint);
+                bool hides = false;
+                for (int p = 0; p < points && !hides; p++) hides = SegmentHitsBox(toLocal.MultiplyPoint3x4(doorwayViewPoints[p]), localCamera, local);
+                if (!hides) continue;
 
-                CutAway(rend, now);
+                if (door >= 0) doorwayDoorHit[door] = true;
+                else CutAway(rend, now);
             }
+
+            for (int i = 0; i < doorwayRenderers.Count; i++)
+            {
+                int door = doorwayDoors[i];
+                if (door >= 0 && doorwayDoorHit[door] && doorwayRenderers[i] != null) CutAway(doorwayRenderers[i], now);
+            }
+
+            // Clicks pass through a hidden door, as through a hidden wall
+            for (int i = 0; i < doorwayColliders.Count; i++)
+            {
+                if (doorwayDoorHit[doorwayColliderDoors[i]] && doorwayColliders[i] != null) cutColliders[doorwayColliders[i]] = now;
+            }
+        }
+
+        // The hero's head and feet and four points around the hero at waist height
+        private int FillDoorwayViewPoints(Vector3 heroLook, Vector3 cameraPoint)
+        {
+            Vector3 feet = target.position;
+            Vector3 back = cameraPoint - feet;
+            back.y = 0f;
+            back = back.sqrMagnitude > 0.0001f ? back.normalized : Vector3.back;
+            Vector3 side = new Vector3(back.z, 0f, -back.x);
+            Vector3 waist = feet + Vector3.up * 0.8f;
+
+            doorwayViewPoints[0] = heroLook;
+            doorwayViewPoints[1] = feet + Vector3.up * 0.2f;
+            doorwayViewPoints[2] = waist + side * DoorwayClearRadius;
+            doorwayViewPoints[3] = waist - side * DoorwayClearRadius;
+            doorwayViewPoints[4] = waist + back * DoorwayClearRadius;
+            doorwayViewPoints[5] = waist - back * DoorwayClearRadius;
+            return doorwayViewPoints.Length;
         }
 
         // First scan on the next frame, after the new scene's Start() calls have built the exit signs
@@ -593,38 +642,83 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>
-        /// The pieces of every door (frame, leaves, exit sign) and the dressing around it without colliders of
-        /// its own (gatehouse lintels, arches). People, chests and pickups stay visible.
+        /// Every door's own pieces (frame, leaves, wall fill, exit sign with its text, chains and braziers), grouped
+        /// by door, and the dressing near a door without a collider of its own (gatehouse lintels, arches), each on
+        /// its own. People, chests and pickups stay visible.
         /// </summary>
         private void CollectDoorwayRenderers()
         {
             doorwaysCollected = true;
             doorwayRenderers.Clear();
+            doorwayDoors.Clear();
+            doorwayColliders.Clear();
+            doorwayColliderDoors.Clear();
 
             DoorTeleporter[] doors = FindObjectsByType<DoorTeleporter>(FindObjectsSortMode.None);
+            doorwayDoorHit = new bool[doors.Length];
             if (doors.Length == 0) return;
+
+            // A castle door's trigger sits beside its model and sign under one "Door_X" gate group
+            var doorPieces = new HashSet<Renderer>();
+            for (int d = 0; d < doors.Length; d++)
+            {
+                Transform gate = ZoneExitSign.GateRoot(doors[d].transform);
+                Collider[] colliders = gate.GetComponentsInChildren<Collider>(true);
+                for (int i = 0; i < colliders.Length; i++)
+                {
+                    if (!BelongsToDoor(colliders[i], doors[d])) continue;
+                    doorwayColliders.Add(colliders[i]);
+                    doorwayColliderDoors.Add(d);
+                }
+
+                Renderer[] pieces = gate.GetComponentsInChildren<Renderer>(true);
+                for (int i = 0; i < pieces.Length && doorwayRenderers.Count < MaxDoorwayRenderers; i++)
+                {
+                    Renderer rend = pieces[i];
+                    if (!BelongsToDoor(rend, doors[d]) || !IsDoorwayCandidate(rend)) continue;
+                    if (rend is MeshRenderer && LargestSide(rend.bounds) > DoorwayPieceMaxSize) continue;
+                    if (!doorPieces.Add(rend)) continue;
+                    doorwayRenderers.Add(rend);
+                    doorwayDoors.Add(d);
+                }
+            }
 
             float radiusSqr = doorwayDecorRadius * doorwayDecorRadius;
             MeshRenderer[] renderers = FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None);
             for (int i = 0; i < renderers.Length && doorwayRenderers.Count < MaxDoorwayRenderers; i++)
             {
                 MeshRenderer rend = renderers[i];
-                if (rend.shadowCastingMode == ShadowCastingMode.ShadowsOnly && !cutRenderers.ContainsKey(rend)) continue;
-                int layer = rend.gameObject.layer;
-                if (layer == UnitLayer || layer == GridTileLayer) continue;
-                if (target != null && rend.transform.IsChildOf(target)) continue;
-
+                if (doorPieces.Contains(rend) || !IsDoorwayCandidate(rend)) continue;
+                if (rend.GetComponentInParent<Interactable>() != null) continue; // people, chests, pickups, door triggers
                 Bounds box = rend.bounds;
-                float size = Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z));
+                float size = LargestSide(box);
                 if (size < DoorwayPieceMinSize || size > DoorwayPieceMaxSize) continue;
-                if (rend.GetComponentInParent<CombatUnit>() != null) continue;
-
-                Interactable owner = rend.GetComponentInParent<Interactable>();
-                if (owner != null && !(owner is DoorTeleporter)) continue;
-                if (owner == null && (HasSolidCollider(rend.transform) || !NearAnyDoor(box, doors, radiusSqr))) continue;
+                if (HasSolidCollider(rend.transform) || !NearAnyDoor(box, doors, radiusSqr)) continue;
 
                 doorwayRenderers.Add(rend);
+                doorwayDoors.Add(-1);
             }
+        }
+
+        // Part of this door's gate group, not of a chest or pickup standing in it
+        private static bool BelongsToDoor(Component piece, DoorTeleporter door)
+        {
+            Interactable owner = piece.GetComponentInParent<Interactable>(true);
+            return owner == null || owner == door;
+        }
+
+        private bool IsDoorwayCandidate(Renderer rend)
+        {
+            if (rend.shadowCastingMode == ShadowCastingMode.ShadowsOnly && !cutRenderers.ContainsKey(rend)) return false;
+            int layer = rend.gameObject.layer;
+            if (layer == UnitLayer || layer == GridTileLayer) return false;
+            if (target != null && rend.transform.IsChildOf(target)) return false;
+            return rend.GetComponentInParent<CombatUnit>() == null;
+        }
+
+        private static float LargestSide(Bounds box)
+        {
+            return Mathf.Max(box.size.x, Mathf.Max(box.size.y, box.size.z));
         }
 
         // Pieces with a collider of their own are found by the sight check
