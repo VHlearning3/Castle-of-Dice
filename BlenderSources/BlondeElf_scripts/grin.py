@@ -39,42 +39,69 @@ if dark.sum():
 # texel density near the mouth
 s=(abs(X)<0.03)&(abs(Z-1.50)<0.01)
 print("mouth texels", s.sum(), "-> px per mm approx", math.sqrt(s.sum()/(60*20)))
+def seg_dist(x,z,a,b):
+    ax,az=a; bx,bz=b; vx,vz=bx-ax,bz-az
+    t=np.clip(((x-ax)*vx+(z-az)*vz)/(vx*vx+vz*vz),0,1)
+    return np.hypot(x-(ax+t*vx), z-(az+t*vz))
+def save(arr,path):
+    o=bpy.data.images.new("o",T,T,alpha=False); o.pixels.foreach_set(arr.ravel())
+    o.filepath_raw=path; o.file_format='PNG'; o.save(); bpy.data.images.remove(o)
 if MODE=="paint":
-    z0=float(sys.argv[sys.argv.index("--")+2]); w=0.030
-    def top(x): return z0+0.0030+0.0085*np.minimum((x/w)**2,1)       # upper lip line, corners up
-    def hgt(x): return 0.0145*np.clip(1-(x/w)**2,0,1)**0.6             # mouth opening, closes at the corners
-    def bot(x): return top(x)-hgt(x)
-    def mid(x): return top(x)-0.45*hgt(x)                                # gap between upper and lower teeth
-    inside=(abs(X)<w)&(Z<top(X))&(Z>bot(X))
-    # distance-ish to outline in metres
-    edge=np.minimum(np.minimum(top(X)-Z, Z-bot(X)), (w-abs(X))*0.5)
+    z0=float(sys.argv[sys.argv.index("--")+2])
     out=px.copy()
-    # 1) erase the old smile line around the mouth with skin colour
-    er=(abs(X)<0.040)&(Z>z0-0.016)&(Z<z0+0.009)&~inside
-    blend=np.clip((0.040-abs(X[er]))/0.006,0,1)[:,None]
-    out[IJ[er,1],IJ[er,0],:3]=col[er]*(1-blend)+skin*blend
-    # 2) teeth
-    teeth=np.array([0.97,0.96,0.93]); gap=np.array([0.42,0.16,0.16]); line=np.array([0.22,0.10,0.09])
-    c=np.tile(teeth,(inside.sum(),1))
-    xi=X[inside]; zi=Z[inside]
-    g=abs(zi-mid(xi))<0.0009
+    def put(mask,c,alpha=1.0):
+        cur=out[IJ[mask,1],IJ[mask,0],:3]
+        a=alpha if np.isscalar(alpha) else alpha[:,None]
+        out[IJ[mask,1],IJ[mask,0],:3]=cur*(1-a)+np.asarray(c)*a
+    # ---- nose (shared by both faces): shadow wedge on one side, bridge stroke, small tip
+    def tri(px_,pz_,a,b,c):
+        def side(p,q,r): return (px_-q[0])*(r[1]-q[1])-(pz_-q[1])*(r[0]-q[0])
+        d1=side(None,a,b); d2=side(None,b,c); d3=side(None,c,a)
+        neg=(d1<0)|(d2<0)|(d3<0); pos=(d1>0)|(d2>0)|(d3>0)
+        return ~(neg&pos)
+    wedge=tri(X,Z,(0.0006,1.5228),(0.0034,1.5335),(0.0062,1.5232))
+    put(wedge,skin*0.80,0.65)
+    nl=np.array([0.48,0.27,0.23])
+    br=seg_dist(X,Z,(0.0034,1.5335),(0.0006,1.5228))<0.00075
+    put(br,nl,0.95)
+    tip=seg_dist(X,Z,(-0.0013,1.5222),(0.0010,1.5219))<0.00055
+    put(tip,nl,0.6)
+    save(out,W+r"\Elf_BaseColor_Nose_2048.png")
+    # ---- grin
+    w=0.028; zt=z0+0.0055; H=0.0205
+    def top(x): return zt+0.0065*np.minimum((x/w)**2,1)
+    def hgt(x): return H*np.clip(1-(x/w)**2,0,1)**0.55
+    def bot(x): return top(x)-hgt(x)
+    def mid(x): return top(x)-0.50*hgt(x)
+    inside=(abs(X)<w)&(Z<top(X))&(Z>bot(X))
+    # erase the old smile line around the mouth with skin colour
+    er=(abs(X)<0.040)&(Z>z0-0.020)&(Z<z0+0.012)&~inside
+    blend=np.clip((0.040-abs(X[er]))/0.006,0,1)
+    put(er,skin,blend)
+    teeth=np.array([0.98,0.97,0.94]); shade=np.array([0.80,0.79,0.80]); gap=np.array([0.36,0.11,0.13]); line=np.array([0.12,0.06,0.06])
+    xi=X[inside]; zi=Z[inside]; hi=hgt(xi)
+    upper=zi>mid(xi)
+    c=np.where(upper[:,None],teeth,teeth*0.93)
+    # lip shadow on the top of the upper teeth
+    lt=(top(xi)-zi)<0.0018; c[lt&upper]=shade
+    # tooth separations, both rows
+    su=upper&(abs(((xi+0.0028)%0.0056)-0.0028)<0.00038)
+    sl=(~upper)&(abs(((xi)%0.0048)-0.0024)<0.00034)&(zi>bot(xi)+0.0012)
+    c[su|sl]=shade*0.85
+    # gap between the rows, wider and darker towards the corners
+    gth=0.0007+0.0045*(np.abs(xi)/w)**3
+    g=np.abs(zi-mid(xi))<gth
     c[g]=gap
-    # faint tooth separations
-    sep=(abs(((xi+0.0035)%0.0070)-0.0035)<0.00035)&~g
-    c[sep]=teeth*0.82
-    # shade the mouth corners darker (depth)
-    cor=np.clip((abs(xi)/w-0.80)/0.2,0,1)[:,None]
+    cor=np.clip((np.abs(xi)/w-0.82)/0.18,0,1)[:,None]
     c=c*(1-cor)+gap*cor
     out[IJ[inside,1],IJ[inside,0],:3]=c
-    # 3) outline
-    ol=(abs(X)<w+0.0010)&(Z<top(X)+0.0012)&(Z>bot(X)-0.0012)&~inside
-    out[IJ[ol,1],IJ[ol,0],:3]=line
-    # 4) little cheek lines at the corners (anime grin)
+    # outline, a bit heavier along the bottom
+    ol=(abs(X)<w+0.0011)&(Z<top(X)+0.0017)&(Z>bot(X)-0.0017)&~inside
+    put(ol,line,1.0)
+    # small creases at the mouth corners
     for sgn in (-1,1):
-        cx=sgn*(w+0.0035); cz=float(top(np.array(w)))+0.0005
-        dd=np.hypot(X-cx,(Z-cz)*1.0)
-        arc=(abs(dd-0.0035)<0.00045)&(sgn*(X-cx)>-0.001)&(Z<cz+0.002)&(Z>cz-0.004)
-        out[IJ[arc,1],IJ[arc,0],:3]=line*1.4
-    o=bpy.data.images.new("grin",T,T,alpha=False); o.pixels.foreach_set(out.ravel())
-    o.filepath_raw=W+r"\Elf_BaseColor_Grin_2048.png"; o.file_format='PNG'; o.save()
+        a=(sgn*(w+0.0006),float(top(np.array(w)))+0.0004); b=(sgn*(w+0.0032),float(top(np.array(w)))+0.0036)
+        cr=seg_dist(X,Z,a,b)<0.00045
+        put(cr,line,0.85)
+    save(out,W+r"\Elf_BaseColor_Grin_2048.png")
     print("SAVED")
