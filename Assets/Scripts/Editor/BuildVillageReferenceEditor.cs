@@ -214,12 +214,12 @@ namespace CastleOfTheD20.Editor
 
         #region Materials
 
-        // The meadow uses the village pack's painted Grass_1 (Vili, 2026-10-07). Ground UVs run 0.1 per metre,
-        // so a tiling of 3 repeats the texture every 3.3 m.
-        public const string GrassTexturePath = "Assets/LowPolyVillageAll/Grass/Textures/Summer_textures/Grass_1.PNG";
-        public static readonly Vector2 GrassTiling = new Vector2(3f, 3f);
+        // The meadow uses the village pack's painted Grass_4, lightened towards Vili's reference picture
+        // (2026-10-07). Ground UVs run 0.1 per metre, so a tiling of N repeats the texture every 10/N m.
+        public const string GrassTexturePath = "Assets/Materials/Village/Village_Meadow_Grass.png";
+        public static readonly Vector2 GrassTiling = new Vector2(3.5f, 3.5f);
 
-        /// <summary>Puts the tiled Grass_1 texture on the village ground material.</summary>
+        /// <summary>Puts the tiled meadow texture on the village ground material.</summary>
         public static void ApplyGrassTexture(Material m)
         {
             Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(GrassTexturePath);
