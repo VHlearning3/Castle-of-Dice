@@ -110,6 +110,30 @@ namespace CastleOfTheD20.Dialogue
         }
 
         /// <summary>
+        /// The boss's opening node for this hero with the class and story choices (<see cref="BuildOptions"/>)
+        /// added. They belong to the opening line only: the boss's answer to a check shows just [Continue],
+        /// not the same checks again (Vili, 2026-10-07).
+        /// </summary>
+        public static DialogueNodeSO BuildIntro(string bossId, DialogueNodeSO intro, PlayerUnit hero)
+        {
+            DialogueNodeSO prepared = PrepareIntro(bossId, intro, hero);
+            List<DialogueOption> extra = BuildOptions(bossId, hero);
+            if (prepared == null || extra.Count == 0) return prepared;
+
+            DialogueNodeSO copy = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            copy.name = intro.name + "_WithChoices";
+            copy.hideFlags = HideFlags.DontSave;
+            copy.Initialize(prepared.SpeakerName, prepared.DialogueText, prepared.SpeakerPortrait, prepared.IsExitNode);
+            copy.SetOptions(DialogueController.ComposeOptions(prepared, extra));
+            if (prepared != intro)
+            {
+                if (Application.isPlaying) Object.Destroy(prepared);
+                else Object.DestroyImmediate(prepared);
+            }
+            return copy;
+        }
+
+        /// <summary>
         /// True when the conversation that just ended resolved the boss without a fight (the Commander
         /// released, Malakor spared).
         /// </summary>

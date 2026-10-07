@@ -699,7 +699,9 @@ namespace CastleOfTheD20.UI
             }
 
             DialogueController dialogueController = DialogueController.Instance;
-            IReadOnlyList<DialogueOption> options = DialogueController.ComposeOptions(node, dialogueController != null ? dialogueController.SessionOptions : null);
+            IReadOnlyList<DialogueOption> options = dialogueController != null
+                ? dialogueController.GetVisibleOptions(node)
+                : DialogueController.ComposeOptions(node, null);
 
             if (options != null && options.Count > 0)
             {
@@ -804,10 +806,13 @@ namespace CastleOfTheD20.UI
                         btnText.color = new Color(0.94f, 0.90f, 0.82f, 1f);
                         btnText.alignment = TextAlignmentOptions.MidlineLeft;
                         btnText.textWrappingMode = TextWrappingModes.Normal;
-                        btnText.overflowMode = TextOverflowModes.Ellipsis;
+                        btnText.overflowMode = TextOverflowModes.Overflow;
                         btnText.raycastTarget = false;
                         btnText.richText = true;
                         btnText.text = formattedText;
+
+                        // Long choices wrap onto more lines and the button grows to fit them (Vili, 2026-10-07)
+                        FitOptionButtonHeight(btnObj, btnText, OptionButtonWidth());
                     }
 
                     if (btn != null)
@@ -825,6 +830,50 @@ namespace CastleOfTheD20.UI
                     continueButton.gameObject.SetActive(true);
                 }
             }
+        }
+
+        /// <summary>Height of a one-line choice button (OptionButtonPrefab's LayoutElement).</summary>
+        public const float MinOptionButtonHeight = 44f;
+
+        // Space kept above and below a wrapped choice's text inside its button
+        private const float OptionTextVerticalPadding = 12f;
+
+        private float OptionButtonWidth()
+        {
+            RectTransform container = optionsContainer as RectTransform;
+            if (container == null) return 840f;
+            float width = container.rect.width;
+            return width > 1f ? width : container.sizeDelta.x;
+        }
+
+        /// <summary>
+        /// Sizes a choice button to its text: the text wraps inside the button's width and the button's
+        /// LayoutElement height grows by whole lines (never below <see cref="MinOptionButtonHeight"/>).
+        /// Returns the height given to the button.
+        /// </summary>
+        public static float FitOptionButtonHeight(GameObject button, TMP_Text text, float buttonWidth)
+        {
+            if (button == null || text == null) return MinOptionButtonHeight;
+
+            // The label stretches over the button minus its own insets and margins
+            RectTransform textRect = text.rectTransform;
+            float verticalInset = 0f;
+            float textWidth = buttonWidth;
+            if (textRect != null && textRect.parent == button.transform)
+            {
+                textWidth = buttonWidth * (textRect.anchorMax.x - textRect.anchorMin.x) + textRect.sizeDelta.x;
+                verticalInset = Mathf.Max(0f, -textRect.sizeDelta.y);
+            }
+            float wrapWidth = Mathf.Max(50f, textWidth - text.margin.x - text.margin.z);
+
+            float textHeight = text.GetPreferredValues(text.text, wrapWidth, 0f).y;
+            float height = Mathf.Max(MinOptionButtonHeight, Mathf.Ceil(textHeight + verticalInset + OptionTextVerticalPadding));
+
+            LayoutElement layout = button.GetComponent<LayoutElement>();
+            if (layout == null) layout = button.AddComponent<LayoutElement>();
+            layout.minHeight = height;
+            layout.preferredHeight = height;
+            return height;
         }
 
         private void ClearSpawnedButtons()

@@ -50,6 +50,9 @@ namespace CastleOfTheD20.World
         /// <summary>Shown when the hero tries the Throne Room gate before both wing bosses are beaten.</summary>
         public const string SealedThroneRoomMessage = "The Throne Room gate is sealed by the curse.\nDefeat the Cursed Commander and the Shadow Witch first.";
 
+        /// <summary>Shown when the knight or the mage tries the Library's secret side door to the Hidden Trail.</summary>
+        public const string HiddenTrailLockedMessage = "The secret door is locked fast.\nOnly a rogue could slip through here.";
+
         private static float s_lastGlobalTeleportTime = -10f;
 
         #endregion
@@ -140,6 +143,32 @@ namespace CastleOfTheD20.World
             {
                 ZoneExitSign.Attach(this);
             }
+
+            // The Library's side door stays shut for heroes who may not use it
+            if (IsRogueOnlyDestination(targetSceneName) && !CanUseDoor(targetSceneName, FindAnyObjectByType<PlayerUnit>()))
+            {
+                Transform frame = transform.parent;
+                for (int i = 0; frame != null && i < frame.childCount; i++)
+                {
+                    SwingDoor swing = frame.GetChild(i).GetComponent<SwingDoor>();
+                    if (swing != null) swing.AutoOpen = false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The Hidden Trail is the Rogue's secret way (Zone 2.5): doors into it open only for her, so the knight
+        /// and the mage cannot reach the Forest Path's locked gate from the Library side (Vili, 2026-10-07).
+        /// </summary>
+        public static bool IsRogueOnlyDestination(string sceneName)
+        {
+            return SecretForestPath.IsScene(sceneName);
+        }
+
+        /// <summary>Whether this hero may go through a door to <paramref name="sceneName"/>.</summary>
+        public static bool CanUseDoor(string sceneName, PlayerUnit hero)
+        {
+            return !IsRogueOnlyDestination(sceneName) || LockpickInteraction.CanPickLocks(hero);
         }
 
         #endregion
@@ -204,6 +233,17 @@ namespace CastleOfTheD20.World
             if (Time.timeSinceLevelLoad < 0.6f)
             {
                 return;
+            }
+
+            // Only the Rogue may take the secret door onto the Hidden Trail
+            if (IsRogueOnlyDestination(targetSceneName))
+            {
+                PlayerUnit hero = playerObj.GetComponent<PlayerUnit>() ?? playerObj.GetComponentInParent<PlayerUnit>();
+                if (!CanUseDoor(targetSceneName, hero))
+                {
+                    CastleOfTheD20.UI.LockpickMinigameUI.ShowToast(HiddenTrailLockedMessage);
+                    return;
+                }
             }
 
             // Prevent rapid ping-pong transitions between linked doors
