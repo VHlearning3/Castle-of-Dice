@@ -37,6 +37,8 @@ namespace CastleOfTheD20.World
         private Light glow;
         private float glowBase;
         private float seed;
+        private bool facesWall;
+        private Quaternion wallFacing = Quaternion.identity;
 
         /// <summary>The name written on the sign.</summary>
         public string Destination { get; private set; }
@@ -114,6 +116,17 @@ namespace CastleOfTheD20.World
             Vector3 center = trigger != null && trigger.enabled ? trigger.bounds.center : gate.center;
             Transform anchor = FindDeep(root, SignAnchorName);
             transform.position = anchor != null ? anchor.position : new Vector3(center.x, gate.max.y + SignGap, center.z);
+            // A sign hung on a tall wall faces straight out from it; turning toward the camera would sink it into the stone
+            if (anchor != null)
+            {
+                Vector3 into = root.forward;
+                into.y = 0f;
+                if (into.sqrMagnitude > 0.001f)
+                {
+                    wallFacing = Quaternion.LookRotation(into.normalized, Vector3.up);
+                    facesWall = true;
+                }
+            }
 
             BuildBoard();
             BuildBraziers(root);
@@ -297,7 +310,8 @@ namespace CastleOfTheD20.World
             }
 
             if (s_camera == null || !s_camera.isActiveAndEnabled) s_camera = Camera.main;
-            if (s_camera != null) board.rotation = s_camera.transform.rotation;
+            if (facesWall) board.rotation = wallFacing;
+            else if (s_camera != null) board.rotation = s_camera.transform.rotation;
         }
 
         #region Helpers

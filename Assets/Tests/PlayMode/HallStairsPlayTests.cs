@@ -86,6 +86,19 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.Greater(sign.transform.position.y, 6f, "the sign hangs above the arch");
             Assert.Less(sign.transform.position.y, 9.5f, "and not up by the turret roof");
 
+            // The wooden doors' signs hang flat on the tall wall above them, in front of the stone
+            foreach (string target in new[] { "Zone_3_CastleCourtyard", "Zone_4_Library", "Zone_7_ThroneRoom" })
+            {
+                Transform doorGate = FindDoor(target).transform.parent;
+                ZoneExitSign doorSign = doorGate.GetComponentInChildren<ZoneExitSign>();
+                Assert.IsNotNull(doorSign, target);
+                Assert.That(doorSign.transform.position.y, Is.InRange(10.5f, 12.5f), target + " sign height");
+                Vector3 local = doorGate.InverseTransformPoint(doorSign.transform.position);
+                Assert.Less(local.z, -0.8f, target + " sign hangs in front of the wall face");
+                Transform board = doorSign.transform.Find("Board");
+                Assert.Greater(Vector3.Dot(board.forward, doorGate.forward), 0.99f, target + " sign faces out from the wall");
+            }
+
             SwingDoor throneDoor = FindDoor("Zone_7_ThroneRoom").transform.parent.GetComponentInChildren<SwingDoor>();
             Assert.IsNotNull(throneDoor, "the Throne Room door still swings");
 
@@ -96,6 +109,12 @@ namespace CastleOfTheD20.Tests.PlayMode
                 Teleport(new Vector3(0f, Hero().transform.position.y, 26f), Quaternion.Euler(0f, 0f, 0f));
                 yield return Frames(60);
                 yield return Shot(Path.Combine(shots, "hall_throne_door.png"));
+                Teleport(new Vector3(-4f, Hero().transform.position.y, -33f), Quaternion.Euler(0f, 180f, 0f));
+                yield return Frames(60);
+                yield return Shot(Path.Combine(shots, "hall_south_wall.png"));
+                Teleport(new Vector3(-30f, Hero().transform.position.y, 8f), Quaternion.Euler(0f, -90f, 0f));
+                yield return Frames(60);
+                yield return Shot(Path.Combine(shots, "hall_library_door.png"));
                 Teleport(spawn.transform.position, spawn.transform.rotation);
                 yield return Frames(10);
             }

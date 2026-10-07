@@ -81,6 +81,9 @@ namespace CastleOfTheD20.Editor
 
         private static void BuildStairsPrefab(Material wallMat)
         {
+            // The hall's even stone (HallWallsSetup) on the wall piece and the turret, once it exists
+            Material stone = AssetDatabase.LoadAssetAtPath<Material>(HallWallsSetup.MaterialPath);
+            if (stone != null) wallMat = stone;
             var mats = new Dictionary<string, Material>
             {
                 { "Door_Stone", Mat("M_Door_Stone") },
@@ -88,7 +91,7 @@ namespace CastleOfTheD20.Editor
                 { "Door_Iron", Mat("M_Door_Iron") },
                 { "Door_Passage", Mat("M_Door_Passage") },
                 { "Stair_Stone", Lit("M_Stair_Stone", new Color(0.55f, 0.52f, 0.48f), 0.1f) },
-                { "Stair_Tower", Lit("M_Stair_Tower", new Color(0.50f, 0.47f, 0.43f), 0.08f) },
+                { "Stair_Tower", stone != null ? stone : Lit("M_Stair_Tower", new Color(0.50f, 0.47f, 0.43f), 0.08f) },
                 { "Stair_Roof", Lit("M_Stair_Roof", new Color(0.17f, 0.19f, 0.25f), 0.25f) },
                 { "Hall_Wall", wallMat != null ? wallMat : Lit("M_Stair_Tower", new Color(0.50f, 0.47f, 0.43f), 0.08f) },
             };

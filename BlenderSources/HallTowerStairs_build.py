@@ -1,4 +1,5 @@
 # Builds the foot of the Tower's spiral staircase for the Castle Hall (Castle of Dice).
+# The wall piece is as tall as the hall walls (16 m, HallWallsSetup.WallHeight).
 # Run: blender -b --factory-startup --python HallTowerStairs_build.py  (or exec() it inside Blender).
 # Blender is Z-up; the hall lies toward -Y. Units are metres at game scale (no scaling in Unity).
 #
@@ -14,9 +15,9 @@ OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "Assets
 BLEND = os.path.join(os.path.dirname(os.path.abspath(__file__)), "HallTowerStairs.blend")
 
 # The hall's wall: inner face at y = -0.7, outer face at y = 1.4 (matches the gate's Door_Wall_Fill)
-WALL_Y0, WALL_Y1, WALL_H = -0.7, 1.4, 8.0
+WALL_Y0, WALL_Y1, WALL_H = -0.7, 1.4, 16.0
 OPEN_HW, OPEN_SPRING = 1.7, 3.2          # arch opening half width and springing height
-TURRET_Y, TURRET_R, TURRET_T, TURRET_H = 4.2, 4.0, 0.7, 12.5
+TURRET_Y, TURRET_R, TURRET_T, TURRET_H = 4.2, 4.0, 0.7, 20.5
 NEWEL_R = 0.45
 STEP_RISE, STEP_DEG, STEP_COUNT = 0.25, 20.0, 46
 
@@ -215,7 +216,7 @@ def build_turret(root):
             ring_segment(mb, a0, a1, r_out - 0.45, r_out + 0.2, TURRET_H + 0.3, TURRET_H + 1.1, M_TOWER)
         # Narrow arrow-slit windows (dark) on the outward side, staggered with the stairs
         if not facing_hall and i % 5 == 2:
-            for wz in (5.5, 9.5):
+            for wz in (17.6,):
                 a = mid
                 ring_segment(mb, a - 0.05, a + 0.05, r_out + 0.0, r_out + 0.02, wz, wz + 1.1, M_VOID)
     # Floor inside the turret
