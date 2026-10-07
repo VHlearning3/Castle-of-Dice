@@ -9,8 +9,9 @@ namespace CastleOfTheD20.Bosses
 {
     /// <summary>
     /// Library & Arcane Wing Boss: Shadow Witch.
-    /// A real caster (critical review B5): he fires a 4-tile shadow bolt (2d4+3) from a distance and steps away
-    /// from a hero who closes in. When hit he teleports away, but at most every other turn.
+    /// A real caster (critical review B5): he fires a 4-tile shadow bolt (2d4+3) from a distance and teleports away
+    /// from a hero who closes in; she never walks, every move is a teleport of at most 4 tiles (Vili, 2026-10-07).
+    /// When hit she teleports away too, but at most every other turn.
     /// Spawns one illusionary decoy (Mirror Image) that also fires weaker shadow bolts.
     /// Pre-combat hook: If the player passed the DC 14 Arcane Heresy check, the true Malakor is revealed immediately.
     /// Scholar Elisa (the mage) always sees through her glamour (Vili, 2026-10-06): the true Witch is shown, and every
@@ -330,24 +331,79 @@ namespace CastleOfTheD20.Bosses
 
         #region Teleportation
 
+        /// <summary>How far the Witch teleports, on her turn and when she escapes a hit (Vili, 2026-10-07).</summary>
+        public const int TeleportRange = 4;
+
+        // Seconds her turn waits for the vanish/appear effect before she casts
+        private const float TeleportSettleSeconds = 0.55f;
+
         /// <summary>
-        /// Teleports Malakor to a random unoccupied walkable tile on the grid.
+        /// The Witch never walks: every move her AI picks is a teleport to that tile, at most
+        /// <see cref="TeleportRange"/> tiles away (the nearest open tile to it when it is further). Teleporting
+        /// gives the hero no reaction attack.
+        /// </summary>
+        public override void WalkToTile(GridTile tile, Action onArrived = null)
+        {
+            GridManager grid = GridManager.Instance;
+            if (tile == null || grid == null)
+            {
+                base.WalkToTile(tile, onArrived);
+                return;
+            }
+
+            GridTile destination = ClampToTeleportRange(tile, grid);
+            if (destination == null || destination == CurrentTile)
+            {
+                onArrived?.Invoke();
+                return;
+            }
+
+            TeleportTo(destination, "teleports through the shadows");
+            HoldAsWalking(TeleportSettleSeconds, onArrived);
+        }
+
+        /// <summary>
+        /// <paramref name="wanted"/> when it is within teleport range, otherwise the free tile within range closest to it.
+        /// </summary>
+        public GridTile ClampToTeleportRange(GridTile wanted, GridManager grid)
+        {
+            if (wanted == null || grid == null) return null;
+            if (grid.GetDistance(gridPosition, wanted.GridPosition) <= TeleportRange) return wanted;
+
+            GridTile best = null;
+            int bestDistance = int.MaxValue;
+            foreach (var kvp in grid.Tiles)
+            {
+                GridTile tile = kvp.Value;
+                if (tile == null || !tile.IsWalkable || tile.IsOccupied) continue;
+                if (grid.GetDistance(gridPosition, tile.GridPosition) > TeleportRange) continue;
+
+                int toWanted = grid.GetDistance(tile.GridPosition, wanted.GridPosition);
+                if (toWanted < bestDistance)
+                {
+                    bestDistance = toWanted;
+                    best = tile;
+                }
+            }
+            return best;
+        }
+
+        /// <summary>
+        /// Teleports the Witch away from a hit to a random free tile 2 to <see cref="TeleportRange"/> tiles away.
         /// </summary>
         public void TeleportToRandomTile()
         {
             GridManager grid = GridManager.Instance;
             if (grid == null) return;
 
-            Vector2Int previousPos = gridPosition;
             List<GridTile> candidateTiles = new List<GridTile>();
-
             foreach (var kvp in grid.Tiles)
             {
                 GridTile tile = kvp.Value;
                 if (tile != null && tile.IsWalkable && !tile.IsOccupied)
                 {
-                    int dist = grid.GetDistance(previousPos, tile.GridPosition);
-                    if (dist >= 3 && dist <= 7)
+                    int dist = grid.GetDistance(gridPosition, tile.GridPosition);
+                    if (dist >= 2 && dist <= TeleportRange)
                     {
                         candidateTiles.Add(tile);
                     }
@@ -356,15 +412,22 @@ namespace CastleOfTheD20.Bosses
 
             if (candidateTiles.Count > 0)
             {
-                int randomIndex = UnityEngine.Random.Range(0, candidateTiles.Count);
-                GridTile chosenTile = candidateTiles[randomIndex];
-
-                Vector3 previousWorldPos = transform.position;
-                MoveToTile(chosenTile);
-                AbilityVfx.PlayMalakorTeleport(this, previousWorldPos);
-                Debug.Log($"[ShadowMageMalakor] Malakor slips through shadows! Teleported from {previousPos} to {chosenTile.GridPosition}.");
-                OnBossTeleported?.Invoke(this, previousPos, chosenTile.GridPosition);
+                TeleportTo(candidateTiles[UnityEngine.Random.Range(0, candidateTiles.Count)], "slips away through the shadows");
             }
+        }
+
+        private void TeleportTo(GridTile tile, string verb)
+        {
+            Vector2Int previousPos = gridPosition;
+            Vector3 previousWorldPos = transform.position;
+            MoveToTile(tile);
+            AbilityVfx.PlayMalakorTeleport(this, previousWorldPos);
+
+            int tiles = GridManager.Instance != null ? GridManager.Instance.GetDistance(previousPos, tile.GridPosition) : 0;
+            string message = $"The Shadow Witch {verb} ({tiles} {(tiles == 1 ? "tile" : "tiles")}).";
+            Debug.Log($"[ShadowMageMalakor] {message} {previousPos} -> {tile.GridPosition}");
+            UI.CombatUIController.Instance?.LogCombatMessage(message);
+            OnBossTeleported?.Invoke(this, previousPos, tile.GridPosition);
         }
 
         #endregion

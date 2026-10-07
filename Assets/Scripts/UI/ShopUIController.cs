@@ -201,6 +201,11 @@ namespace CastleOfTheD20.UI
         private bool showingSellTab;
         private float feedbackResetTime;
 
+        // True while OpenShop activates the panel. The controller sits on the ShopPanel, which starts inactive
+        // in Zone 1, so its first opening runs Awake, and Awake must not shut the panel it is opening (Baldur's
+        // shop choice did nothing the first time, Vili 2026-10-07).
+        private bool isOpening;
+
         #endregion
 
         #region Unity Lifecycle
@@ -220,7 +225,7 @@ namespace CastleOfTheD20.UI
             EnsureStockItems();
             EnsureStyledHierarchy();
 
-            if (shopPanel != null)
+            if (shopPanel != null && !isOpening)
             {
                 shopPanel.SetActive(false);
             }
@@ -1264,7 +1269,15 @@ namespace CastleOfTheD20.UI
 
             if (shopPanel != null)
             {
-                shopPanel.SetActive(true);
+                isOpening = true;
+                try
+                {
+                    shopPanel.SetActive(true);
+                }
+                finally
+                {
+                    isOpening = false;
+                }
                 shopPanel.transform.SetAsLastSibling();
             }
             else

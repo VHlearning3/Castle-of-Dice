@@ -50,6 +50,9 @@ namespace CastleOfTheD20.Dialogue
         // Choices the speaker adds to every node of this conversation (e.g. a villager's [Fight] option)
         private readonly List<DialogueOption> sessionOptions = new List<DialogueOption>();
 
+        // Choices already picked in this conversation; they are not offered again (Vili, 2026-10-07)
+        private readonly HashSet<DialogueOption> chosenOptions = new HashSet<DialogueOption>();
+
         #endregion
 
         #region Public Properties
@@ -133,6 +136,7 @@ namespace CastleOfTheD20.Dialogue
             }
 
             sessionOptions.Clear();
+            chosenOptions.Clear();
             if (extraOptions != null)
             {
                 for (int i = 0; i < extraOptions.Count; i++)
@@ -191,6 +195,7 @@ namespace CastleOfTheD20.Dialogue
             if (!isInDialogue || option == null || isResolvingCheck) return;
 
             hasRedirect = false;
+            chosenOptions.Add(option);
             OnOptionSelected?.Invoke(option);
             if (!isInDialogue) return;
             if (hasRedirect)
@@ -324,6 +329,7 @@ namespace CastleOfTheD20.Dialogue
             currentNode = null;
             activePlayer = null;
             sessionOptions.Clear();
+            chosenOptions.Clear();
 
             Debug.Log("[DialogueController] Dialogue session ended.");
 
@@ -375,6 +381,60 @@ namespace CastleOfTheD20.Dialogue
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// The choices the dialogue window shows for <paramref name="node"/> right now: its own options and the
+        /// conversation's extra ones, minus choices already picked in this conversation.
+        /// </summary>
+        public List<DialogueOption> GetVisibleOptions(DialogueNodeSO node)
+        {
+            return ComposeOptions(node, sessionOptions, chosenOptions);
+        }
+
+        /// <summary>
+        /// <see cref="ComposeOptions(DialogueNodeSO, IReadOnlyList{DialogueOption})"/> without the choices in
+        /// <paramref name="alreadyChosen"/>: a check rolled once, a question already asked or a story choice
+        /// already made is not offered again. Navigation, shops, purchases and exits stay (see
+        /// <see cref="IsRepeatableOption"/>).
+        /// </summary>
+        public static List<DialogueOption> ComposeOptions(DialogueNodeSO node, IReadOnlyList<DialogueOption> extraOptions, ICollection<DialogueOption> alreadyChosen)
+        {
+            List<DialogueOption> result = ComposeOptions(node, extraOptions);
+            if (alreadyChosen == null || alreadyChosen.Count == 0) return result;
+
+            for (int i = result.Count - 1; i >= 0; i--)
+            {
+                if (alreadyChosen.Contains(result[i]) && !IsRepeatableOption(result[i]))
+                {
+                    result.RemoveAt(i);
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Choices that can be picked any number of times in one conversation: exits, [Back] / [Continue],
+        /// opening the shop, buying from a merchant and starting a fight.
+        /// </summary>
+        public static bool IsRepeatableOption(DialogueOption option)
+        {
+            if (option == null) return false;
+            if (option.RequiresCheck) return false;
+            if (IsExitOption(option)) return true;
+
+            string text = option.OptionText ?? string.Empty;
+            string tag = option.CombatDebuffTag ?? string.Empty;
+            return text.StartsWith("[Back]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Continue]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("Continue", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Blacksmith]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Shop]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Buy]", StringComparison.OrdinalIgnoreCase)
+                || text.StartsWith("[Fight]", StringComparison.OrdinalIgnoreCase)
+                || tag.IndexOf("ACTION_OPEN_SHOP", StringComparison.OrdinalIgnoreCase) >= 0
+                || tag.IndexOf("ACTION_BUY:", StringComparison.OrdinalIgnoreCase) >= 0
+                || tag.IndexOf("ACTION_START_FIGHT", StringComparison.OrdinalIgnoreCase) >= 0;
         }
 
         /// <summary>
