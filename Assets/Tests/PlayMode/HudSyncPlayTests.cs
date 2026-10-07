@@ -48,6 +48,16 @@ namespace CastleOfTheD20.Tests.PlayMode
             if (saveBackup != null) PlayerPrefs.SetString(SaveKey, saveBackup);
             else PlayerPrefs.DeleteKey(SaveKey);
             PlayerPrefs.Save();
+
+            // The HUD lives on between tests: leave no window open over it (the zombie's level-up waits for a card)
+            if (DefeatUIController.Instance != null) DefeatUIController.Instance.Hide();
+            LevelUpUIController levelUp = LevelUpUIController.Instance;
+            if (levelUp != null)
+            {
+                FieldInfo queued = typeof(LevelUpUIController).GetField("queuedLevels", BindingFlags.Instance | BindingFlags.NonPublic);
+                (queued?.GetValue(levelUp) as Queue<int>)?.Clear();
+                levelUp.CloseLevelUpModal();
+            }
         }
 
         [UnityTest, Timeout(900000)]
@@ -118,12 +128,13 @@ namespace CastleOfTheD20.Tests.PlayMode
                 CheckAbilityBar("Ambush");
 
                 hero = Hero();
-                hero.TakeDamage(hero.CurrentHP + 50);
-                yield return Frames(5);
+                yield return FellHero(hero);
                 CheckHud("Hero fallen in the ambush");
                 Step("Defeat panel open", DefeatPanelOpen());
                 Step("HUD shows 0 HP at defeat", Label(PlayerHUD.Instance, "healthText").StartsWith("HP: 0 /"));
 
+                // A player reads the panel before clicking; by then the lost fight's last enemy turn has run out
+                yield return new WaitForSecondsRealtime(1.5f);
                 InvokePrivate(DefeatUIController.Instance, "OnRetryClicked");
                 yield return Frames(10);
                 Step("Defeat panel closed after Try Again", !DefeatPanelOpen());
@@ -227,7 +238,7 @@ namespace CastleOfTheD20.Tests.PlayMode
             {
                 stats.SetPlayer(hero);
                 stats.RefreshHero(true);
-                Expect(problems, "to hit", Label(stats, "heroHitValue"), Signed(hero.PrimaryAttributeBonus));
+                Expect(problems, "to hit", Label(stats, "heroHitValue"), Signed(HeroAttributes.GetAttackBonus(hero))); // attribute + proficiency
                 Expect(problems, "weapon", Label(stats, "heroWeaponValue"), Signed(hero.WeaponDamageBonus));
                 Expect(problems, "armor", Label(stats, "heroArmorValue"), hero.ArmorClass.ToString());
                 Expect(problems, "move", Label(stats, "heroMoveValue"), hero.MovementRange.ToString());
@@ -376,6 +387,28 @@ namespace CastleOfTheD20.Tests.PlayMode
             bool won = TurnManager.Instance != null && TurnManager.Instance.CurrentState == TurnState.Victory;
             Step(won ? $"{label}: won in {heroTurns} hero turns{(sawDamage ? ", the hero took hits on the way" : "")}"
                      : $"{label}: not won after {heroTurns} hero turns", won);
+        }
+
+        /// <summary>
+        /// Drops the hero for good. The first blow that would drop the hero gets the Death's Door save
+        /// (D&amp;D rules, 2026-10-06), which leaves the hero on 1 HP while the d20 rolls: wait for it, then strike again.
+        /// </summary>
+        private IEnumerator FellHero(PlayerUnit hero)
+        {
+            if (hero == null) yield break;
+            bool resolved = false;
+            Action<PlayerUnit, bool> onResolved = (unit, survived) => { if (unit == hero) resolved = true; };
+            PlayerUnit.OnDeathsDoorResolved += onResolved;
+            hero.TakeDamage(hero.CurrentHP + 50);
+            float until = Time.realtimeSinceStartup + 15f;
+            while (hero.IsAlive && hero.DeathsDoorUsedThisFight && !resolved && Time.realtimeSinceStartup < until)
+            {
+                if (RerollableRoll.IsAwaitingDecision) RerollableRoll.Accept();
+                yield return null;
+            }
+            PlayerUnit.OnDeathsDoorResolved -= onResolved;
+            if (hero.IsAlive) hero.TakeDamage(hero.CurrentHP + 50);
+            yield return Frames(5);
         }
 
         private IEnumerator HeroTurn(PlayerUnit hero)

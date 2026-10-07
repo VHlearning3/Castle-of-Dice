@@ -87,7 +87,7 @@ namespace CastleOfTheD20.World
         }
 
         /// <summary>The door's gate group ("Door_X" holding the trigger, arch and pillars), or the door itself.</summary>
-        private static Transform GateRoot(Transform door)
+        public static Transform GateRoot(Transform door)
         {
             Transform parent = door.parent;
             if (parent != null && parent.name.StartsWith("Door_", StringComparison.Ordinal)
