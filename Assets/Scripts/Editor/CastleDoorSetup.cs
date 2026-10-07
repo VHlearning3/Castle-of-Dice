@@ -270,6 +270,9 @@ namespace CastleOfTheD20.Editor
                     continue;
                 }
 
+                // The Castle Hall's Tower gate is the foot of a spiral staircase (HallDoorsSetup), not a door
+                if (group.Find(HallDoorsSetup.StairsModelName) != null) continue;
+
                 PlaceDoor(group, door, doublePrefab, CastleDoorScale, DoubleHalfOpening);
                 count++;
             }

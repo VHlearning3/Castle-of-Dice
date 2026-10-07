@@ -89,7 +89,8 @@ namespace CastleOfTheD20.World
         {
             Transform parent = door.parent;
             if (parent != null && parent.name.StartsWith("Door_", StringComparison.Ordinal)
-                && (parent.Find("Arch_Model") != null || parent.GetComponentInChildren<SwingDoor>(true) != null))
+                && (parent.Find("Arch_Model") != null || parent.GetComponentInChildren<SwingDoor>(true) != null
+                    || FindDeep(parent, SignAnchorName) != null))
             {
                 return parent;
             }
@@ -111,7 +112,8 @@ namespace CastleOfTheD20.World
                 gate = trigger != null ? trigger.bounds : new Bounds(door.transform.position, new Vector3(4f, 3f, 1f));
             }
             Vector3 center = trigger != null && trigger.enabled ? trigger.bounds.center : gate.center;
-            transform.position = new Vector3(center.x, gate.max.y + SignGap, center.z);
+            Transform anchor = FindDeep(root, SignAnchorName);
+            transform.position = anchor != null ? anchor.position : new Vector3(center.x, gate.max.y + SignGap, center.z);
 
             BuildBoard();
             BuildBraziers(root);
@@ -207,6 +209,18 @@ namespace CastleOfTheD20.World
 
         /// <summary>Name prefix of the empty marks on top of a castle door model's pillars, where the braziers stand.</summary>
         public const string PillarTopPrefix = "PillarTop";
+
+        /// <summary>Optional empty in a gate model (the Hall's Tower stairs) marking where the sign hangs.</summary>
+        public const string SignAnchorName = "Sign_Anchor";
+
+        private static Transform FindDeep(Transform root, string childName)
+        {
+            foreach (Transform t in root.GetComponentsInChildren<Transform>(true))
+            {
+                if (t.name == childName) return t;
+            }
+            return null;
+        }
 
         /// <summary>Tops of the gate's pillars: the old DecoPillar props, or the PillarTop marks on a castle door model.</summary>
         private static List<Vector3> PillarTops(Transform root)
