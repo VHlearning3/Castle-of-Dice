@@ -50,6 +50,7 @@ namespace CastleOfTheD20.Editor
 
             Dictionary<string, Material> mats = SetupMaterials();
             ConfigureModel(mats);
+            TavernPatronsSetup.SetupAssets();
             Scene scene = OpenTavernScene();
             BuildContents(scene);
             EditorSceneManager.MarkSceneDirty(scene);
@@ -178,6 +179,7 @@ namespace CastleOfTheD20.Editor
             PlaceLights(room.transform, scene);
             PlaceDoorAndSpawn(room.transform, scene);
             PlaceWaitress(room.transform, scene);
+            TavernPatronsSetup.Place(scene);
             SetupFramework(room.transform, scene);
         }
 

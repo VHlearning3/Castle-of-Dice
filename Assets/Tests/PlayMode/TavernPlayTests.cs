@@ -121,6 +121,21 @@ namespace CastleOfTheD20.Tests.PlayMode
             while (Flat(waitress.transform.position - elfStart) < 1f && Time.realtimeSinceStartup < until) yield return null;
             Assert.Greater(Flat(waitress.transform.position - elfStart), 1f, "she walks to the next table");
 
+            // --- four guests: two sit at tables, two stand, and they drink
+            TavernPatron[] guests = UnityEngine.Object.FindObjectsByType<TavernPatron>(FindObjectsSortMode.None);
+            Assert.AreEqual(4, guests.Length, "four tavern guests");
+            int seated = 0, drinking = 0;
+            foreach (TavernPatron g in guests)
+            {
+                Animator ga = g.GetComponentInChildren<Animator>();
+                ga.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                Assert.IsTrue(ga.GetCurrentAnimatorStateInfo(0).IsName(g.State), g.name + " plays " + g.State);
+                if (g.State.StartsWith("Sit")) seated++;
+                if (g.State.EndsWith("Drink")) drinking++;
+            }
+            Assert.AreEqual(2, seated, "two guests sit");
+            Assert.AreEqual(2, drinking, "two guests drink");
+
             if (takeShots)
             {
                 yield return Shot(Path.Combine(shots, "Tavern_02_Arrival.png"));
@@ -143,6 +158,11 @@ namespace CastleOfTheD20.Tests.PlayMode
                 Teleport(elf + new Vector3(-2.2f, 0.1f, -2.2f), Quaternion.LookRotation(new Vector3(1f, 0f, 1f)));
                 yield return Frames(30);
                 yield return Overview(Path.Combine(shots, "Tavern_10_Waitress.png"), waitress.transform.position + new Vector3(-3.2f, 3.6f, -4.2f), waitress.transform.position + Vector3.up * 1.8f);
+                foreach (TavernPatron g in guests)
+                {
+                    Vector3 front = g.transform.position + g.transform.forward * 3.0f + Vector3.up * 3.8f;
+                    yield return Overview(Path.Combine(shots, "Tavern_Guest_" + g.name + ".png"), front, g.transform.position + Vector3.up * 1.2f);
+                }
                 Teleport(arrival.transform.position, arrival.transform.rotation);
                 yield return Frames(10);
             }
