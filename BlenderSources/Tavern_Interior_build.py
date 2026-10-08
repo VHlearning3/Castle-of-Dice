@@ -194,7 +194,8 @@ M_PROPS = make_mat("M_Tavern_Props", image=pal_img)
 M_GLOW = make_mat("M_Tavern_Glow", (1.0, 0.75, 0.35), emit=(1.0, 0.62, 0.22))
 M_WINDOW = make_mat("M_Tavern_Window", (0.16, 0.20, 0.42), emit=(0.18, 0.24, 0.55))
 M_DARK = make_mat("M_Tavern_Dark", (0.02, 0.02, 0.02))
-TILE = {M_STONE.name: 3.0, M_FLOOR.name: 3.2, M_WOOD.name: 2.4}
+M_WALL = make_mat("M_Tavern_Wall", (0.48, 0.32, 0.2))   # wooden plank walls (Vili 2026-10-08); stone stays on the hearth
+TILE = {M_STONE.name: 3.0, M_FLOOR.name: 3.2, M_WOOD.name: 2.4, M_WALL.name: 2.6}
 
 root = empty("Tavern_Interior", (0, 0, 0))
 g_shell = empty("Shell", (0, 0, 0), root)
@@ -217,7 +218,7 @@ m.finish(g_furn)
 def wall(name, c, s, inward, plinth=True):
     """inward: unit (x, z) pointing from the wall into the room."""
     mm = Mesh(name)
-    mm.box(c, s, M_STONE)
+    mm.box(c, s, M_WALL)
     ix, iz = inward
     face_x = c[0] + ix * s[0] / 2; face_z = c[2] + iz * s[2] / 2
     along = s[0] if ix == 0 else s[2]

@@ -80,6 +80,7 @@ namespace CastleOfTheD20.Editor
             var mats = new Dictionary<string, Material>
             {
                 ["M_Tavern_Stone"] = Lit("M_Tavern_Stone", StoneTexture, new Color(1f, 0.78f, 0.6f), 0.08f, StoneNormal),
+                ["M_Tavern_Wall"] = Lit("M_Tavern_Wall", PlankTexture, new Color(0.78f, 0.6f, 0.46f), 0.1f),
                 ["M_Tavern_Floor"] = Lit("M_Tavern_Floor", PlankTexture, new Color(1f, 0.9f, 0.8f), 0.18f),
                 ["M_Tavern_Timber"] = Lit("M_Tavern_Timber", PlankTexture, new Color(0.56f, 0.42f, 0.34f), 0.12f),
                 ["M_Tavern_Props"] = Lit("M_Tavern_Props", PalettePath, Color.white, 0.2f),

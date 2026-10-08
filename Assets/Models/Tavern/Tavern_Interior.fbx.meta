@@ -37,6 +37,11 @@ ModelImporter:
   - first:
       type: UnityEngine:Material
       assembly: UnityEngine.CoreModule
+      name: M_Tavern_Wall
+    second: {fileID: 2100000, guid: c7e167a919ff17f4fbe4da2d0cc48b79, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
       name: M_Tavern_Window
     second: {fileID: 2100000, guid: d0214a17400814347bb8dff34d4df134, type: 2}
   materials:
