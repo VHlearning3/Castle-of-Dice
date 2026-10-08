@@ -180,6 +180,7 @@ namespace CastleOfTheD20.Editor
             PlaceDoorAndSpawn(room.transform, scene);
             PlaceWaitress(room.transform, scene);
             TavernPatronsSetup.Place(scene);
+            PlaceBlondeElf(scene);
             SetupFramework(room.transform, scene);
         }
 
@@ -339,6 +340,28 @@ namespace CastleOfTheD20.Editor
             var sc = spawn.AddComponent<BoxCollider>();
             sc.isTrigger = true;
             sc.size = new Vector3(2f, 2f, 2f);
+        }
+
+        private const string BlondeElfPrefab = "Assets/Characters/BlondeElf/BlondeElf.prefab";
+
+        /// <summary>
+        /// The blonde elf stands in the gallery's back-left corner, between the barrels and the gold chest,
+        /// looking down into the room; now and then she strikes her smug pose. Decoration only for now
+        /// (Vili, 2026-10-07: who she is is still open).
+        /// </summary>
+        private static void PlaceBlondeElf(Scene scene)
+        {
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BlondeElfPrefab);
+            if (prefab == null)
+            {
+                Debug.LogWarning("[TavernSceneBuilder] Blonde elf prefab missing: " + BlondeElfPrefab);
+                return;
+            }
+            var elf = (GameObject)PrefabUtility.InstantiatePrefab(prefab, scene);
+            elf.name = "NPC_Blonde_Elf";
+            elf.transform.SetPositionAndRotation(new Vector3(-8.9f, 5.2f, 6.6f), Quaternion.Euler(0f, 170f, 0f));
+            foreach (Transform t in elf.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = 8; // not part of the walk mesh or camera cut
+            elf.AddComponent<IdleFlourish>().Trigger = "Smug";
         }
 
         private static void PlaceWaitress(Transform room, Scene scene)

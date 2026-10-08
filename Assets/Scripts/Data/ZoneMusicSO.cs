@@ -105,8 +105,10 @@ namespace CastleOfTheD20.Data
             {
                 return cursedCommanderTrack;
             }
+            // The Mirror Twin, the Tower's secret boss, fights to the Witch's music
             if (boss.IndexOf("Malakor", StringComparison.OrdinalIgnoreCase) >= 0 ||
-                boss.IndexOf("Varjomaagi", StringComparison.OrdinalIgnoreCase) >= 0)
+                boss.IndexOf("Varjomaagi", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                boss.IndexOf("MirrorTwin", StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 return malakorTrack;
             }

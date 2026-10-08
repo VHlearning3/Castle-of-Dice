@@ -1,4 +1,4 @@
-// Castle of Dice: icons for the three worn magic items (Vili, 2026-10-06), in the faceted style of gen.js.
+// Castle of Dice: icons for the three worn magic items (Vili, 2026-10-06) and the Black Trident quest item (2026-10-08), in the faceted style of gen.js.
 // Writes one standalone HTML page per icon (icon_<Name>.html); render each with headless Edge at 256x256:
 //   msedge.exe --headless=new --default-background-color=00000000 --window-size=256,256 --screenshot=UI_Icon_<Name>.png icon_<Name>.html
 const fs = require('fs');
@@ -134,6 +134,30 @@ icons.push({ name: 'BootsOfStriding', svg: iconFrame('BootsOfStriding', BG_ITEM,
     s += `<line x1="${22}" y1="${y}" x2="${22 + len}" y2="${y}" stroke="#fff3c4" stroke-opacity="0.7" stroke-width="5" stroke-linecap="round"/>`;
   }
   s += sparkle([206, 58], 12, '#fff3c4') + sparkle([214, 150], 8, '#ffe08a');
+  return s;
+})()) });
+
+// 4. Black Trident (Vili, 2026-10-08): the Mirror Twin's obsidian trident, a quest item, with violet lightning
+icons.push({ name: 'BlackTrident', svg: iconFrame('BlackTrident', '#2a1f3d', (() => {
+  const OBSIDIAN = '#3a3148', VIOLET = '#b18cff';
+  let s = glow([128, 112], 116, '#9b6bff', 0.55, 'bt_g');
+  let t = '';
+  // shaft
+  t += gem([[121, 96], [135, 96], [137, 236], [119, 236]], OBSIDIAN, { amt: 0.45, w: 8 });
+  t += gem([[114, 228], [142, 228], [138, 244], [118, 244]], GOLD, { amt: 0.35, w: 6 });
+  // crossbar
+  t += gem([[78, 88], [178, 88], [172, 104], [84, 104]], OBSIDIAN, { amt: 0.45, w: 8 });
+  // prongs: the middle one longest, the side ones curving out
+  t += gem([[120, 90], [136, 90], [136, 40], [128, 14], [120, 40]], OBSIDIAN, { amt: 0.5, w: 8 });
+  t += gem([[80, 96], [96, 96], [94, 54], [84, 30], [74, 52]], OBSIDIAN, { amt: 0.5, w: 8 });
+  t += gem([[160, 96], [176, 96], [182, 52], [172, 30], [162, 54]], OBSIDIAN, { amt: 0.5, w: 8 });
+  // gold collar
+  t += gem([[116, 104], [140, 104], [138, 118], [118, 118]], GOLD, { amt: 0.35, w: 6 });
+  s += `<g transform="rotate(28 128 128) translate(0 6)">${t}</g>`;
+  // violet lightning around the head
+  s += `<polyline points="150,30 166,48 156,52 176,72" fill="none" stroke="${VIOLET}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s += `<polyline points="206,82 190,96 200,100 182,118" fill="none" stroke="${VIOLET}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s += sparkle([212, 44], 13, '#e9dcff') + sparkle([118, 40], 8, '#d7c2ff', 0.9);
   return s;
 })()) });
 

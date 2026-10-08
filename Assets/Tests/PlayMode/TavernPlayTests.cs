@@ -136,6 +136,21 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.AreEqual(2, seated, "two guests sit");
             Assert.AreEqual(2, drinking, "two guests drink");
 
+            // --- the blonde elf stands in the gallery's back-left corner
+            GameObject blonde = GameObject.Find("NPC_Blonde_Elf");
+            Assert.IsNotNull(blonde, "the blonde elf is in the tavern");
+            Assert.Greater(blonde.transform.position.y, 4.6f, "upstairs on the gallery");
+            Assert.Less(blonde.transform.position.x, -7f, "in the west corner");
+            Assert.Greater(blonde.transform.position.z, 5f, "against the back wall");
+            blonde.GetComponentInChildren<Animator>().cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+            // --- the rug lies on the floor without sharing a surface with it
+            Transform rug = null;
+            foreach (Transform t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsSortMode.None))
+                if (t.name == "Rug") rug = t;
+            Assert.IsNotNull(rug, "rug");
+            Assert.Greater(rug.GetComponent<Renderer>().bounds.min.y, 0.005f, "the rug floats a hair above the planks (no z-fighting)");
+
             if (takeShots)
             {
                 yield return Shot(Path.Combine(shots, "Tavern_02_Arrival.png"));
@@ -158,6 +173,8 @@ namespace CastleOfTheD20.Tests.PlayMode
                 Teleport(elf + new Vector3(-2.2f, 0.1f, -2.2f), Quaternion.LookRotation(new Vector3(1f, 0f, 1f)));
                 yield return Frames(30);
                 yield return Overview(Path.Combine(shots, "Tavern_10_Waitress.png"), waitress.transform.position + new Vector3(-3.2f, 3.6f, -4.2f), waitress.transform.position + Vector3.up * 1.8f);
+                yield return Overview(Path.Combine(shots, "Tavern_13_Blonde_Elf.png"), blonde.transform.position + blonde.transform.forward * 4.2f + Vector3.up * 2.6f, blonde.transform.position + Vector3.up * 1.6f);
+                yield return Overview(Path.Combine(shots, "Tavern_14_Rug_TopDown.png"), new Vector3(-2.5f, 13f, -6f), new Vector3(-2.5f, 0f, -2f));
                 foreach (TavernPatron g in guests)
                 {
                     Vector3 front = g.transform.position + g.transform.forward * 3.0f + Vector3.up * 3.8f;

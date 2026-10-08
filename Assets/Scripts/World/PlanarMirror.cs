@@ -45,6 +45,18 @@ namespace CastleOfTheD20.World
         /// <summary>The glass's facing direction in the world.</summary>
         public Vector3 WorldNormal => transform.TransformDirection(localNormal).normalized;
 
+        private static readonly int RippleId = Shader.PropertyToID("_Ripple");
+
+        /// <summary>How strongly the glass wavers and glows violet (0 = still), e.g. while the twin steps out.</summary>
+        public float Ripple
+        {
+            get => material != null ? material.GetFloat(RippleId) : 0f;
+            set
+            {
+                if (material != null) material.SetFloat(RippleId, Mathf.Clamp01(value));
+            }
+        }
+
         private void Awake()
         {
             glass = GetComponent<Renderer>();

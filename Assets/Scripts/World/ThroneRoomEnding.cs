@@ -110,6 +110,71 @@ namespace CastleOfTheD20.World
             StartCoroutine(PlayEnding());
         }
 
+        #region The Tower Cleansed (secret ending)
+
+        /// <summary>Heading of the secret ending's stats screen.</summary>
+        public const string TowerCleansedHeading = "YOU CLEANSED THE TOWER";
+
+        /// <summary>
+        /// The secret ending (Vili, 2026-10-08): the hero gave the Mirror Twin's Black Trident to her sister in the
+        /// tavern. The Tower is cleansed and Oakhaven is safe, but the castle stays cursed and the Gargoyle King keeps
+        /// his throne: a bittersweet win that ends the adventure without the King's fight. Builds its own overlay,
+        /// so it plays wherever the hero is (the Foaming Tankard).
+        /// </summary>
+        public static ThroneRoomEnding PlayTowerCleansedEnding(PlayerUnit hero)
+        {
+            GameObject root = new GameObject("TowerCleansed_Ending");
+            ThroneRoomEnding ending = root.AddComponent<ThroneRoomEnding>();
+            ending.hasStarted = true; // never the King's ending as well
+            ending.StartCoroutine(ending.PlayTowerCleansed(hero));
+            return ending;
+        }
+
+        private IEnumerator PlayTowerCleansed(PlayerUnit hero)
+        {
+            StoryFlags.Set(MirrorTwinQuest.SecretEndingFlag);
+            StoryFlags.Set(AdventureCompleteFlag);
+            SaveSystem.SaveGame(CastleOfTheD20.Data.PlayerDataSO.Session, hero);
+
+            GameInput.SetExplorationInputEnabled(false);
+            if (DungeonMapUIController.Instance != null && DungeonMapUIController.Instance.IsMapOpen)
+            {
+                DungeonMapUIController.Instance.CloseMap();
+                GameInput.SetExplorationInputEnabled(false);
+            }
+
+            BuildOverlay();
+
+            // The trident goes into the hearth: a violet flash, and far away the great mirror goes dark
+            PlaySfx(SFXClipType.CriticalSuccess);
+            if (flashImage != null) flashImage.color = new Color(0.62f, 0.45f, 1f, 0f);
+            yield return Fade(flashImage, 0f, 0.9f, 0.35f);
+            ShowCaption("The elf lays the Black Trident in the hearth. The violet fire gutters out,\nand far away the great mirror in the Tower goes dark.");
+            yield return Fade(flashImage, 0.9f, 0f, 1.4f);
+            yield return new WaitForSecondsRealtime(3.5f);
+            ShowCaption("The Tower is cleansed and Oakhaven is safe.\nThe castle still sleeps under its stone, and the Gargoyle King keeps his throne.");
+            yield return new WaitForSecondsRealtime(4.5f);
+            ShowCaption(string.Empty);
+
+            yield return ShowStats(hero, TowerCleansedHeading, BuildTowerCleansedStatsText(hero));
+            yield return RollCredits();
+            ReturnToMainMenu();
+        }
+
+        /// <summary>The closing numbers of the secret ending.</summary>
+        public static string BuildTowerCleansedStatsText(PlayerUnit hero)
+        {
+            string heroName = hero != null && !string.IsNullOrEmpty(hero.UnitName) ? hero.UnitName : "The hero";
+            int gold = InventoryManager.Instance != null ? InventoryManager.Instance.CurrentGold : 0;
+            return $"<b>{heroName}</b> cleansed the Tower and kept Oakhaven safe\n\n" +
+                   $"Combat turns taken:   <color=#ffd34d><b>{AdventureStats.TurnsTaken}</b></color>\n" +
+                   $"Natural 20s rolled:   <color=#ffd34d><b>{AdventureStats.NaturalTwenties}</b></color>\n" +
+                   $"Gold in the purse:   <color=#ffd34d><b>{gold}</b></color>\n" +
+                   $"Times fallen:   <color=#ffd34d><b>{AdventureStats.Deaths}</b></color>";
+        }
+
+        #endregion
+
         private IEnumerator PlayEnding()
         {
             yield return new WaitForSecondsRealtime(delayAfterVictory);
@@ -539,7 +604,7 @@ namespace CastleOfTheD20.World
             "<size=64><b><color=#ffd34d>CASTLE OF DICE</color></b></size>\n\n\n" +
             "<color=#ffd34d>Game design & development</color>\nVili\n\n" +
             "<color=#ffd34d>Heroes</color>\nSir Roland the Brave, Warrior\nScholar Elisa Star-Eye, Mage\nSylvaine the Veiled, Rogue\n\n" +
-            "<color=#ffd34d>Villains</color>\nThe Cursed Commander\nThe Shadow Witch\nThe Gargoyle King\n\n" +
+            "<color=#ffd34d>Villains</color>\nThe Cursed Commander\nThe Shadow Witch\nThe Gargoyle King\nThe Mirror Twin\n\n" +
             "<color=#ffd34d>Music</color>\nScottish Harp (Pixabay)\n\n" +
             "<color=#ffd34d>Made with</color>\nUnity 6\n\n\n\n" +
             "<size=48><b>Thank you for playing!</b></size>";
