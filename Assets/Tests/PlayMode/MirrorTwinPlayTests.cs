@@ -157,7 +157,7 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return Frames(10);
             Assert.IsTrue(TurnManager.Instance != null && TurnManager.Instance.IsCombatActive, "the fight starts");
             Assert.Contains(twin, (System.Collections.ICollection)TurnManager.Instance.ActiveUnits, "against the twin");
-            Assert.AreEqual(58, twin.MaxHP);
+            Assert.AreEqual(70, twin.MaxHP);
             if (takeShots)
             {
                 yield return new WaitForSeconds(1f);
@@ -178,16 +178,15 @@ namespace CastleOfTheD20.Tests.PlayMode
             while (tm.IsCombatActive && tm.CurrentActiveUnit == twin && Time.realtimeSinceStartup < until) yield return null;
             Assert.AreNotEqual(twin, tm.CurrentActiveUnit, "her turn ends");
 
-            // Beat her: the quest shows, completed, and pays
-            int gold = InventoryManager.Instance.CurrentGold;
+            // Beat her: she leaves her Black Trident, and the quest shows: take it back to the tavern
             twin.TakeDamage(999);
             until = Time.realtimeSinceStartup + 10f;
             while (TurnManager.Instance.IsCombatActive && Time.realtimeSinceStartup < until) yield return null;
             yield return Frames(10);
             Assert.IsFalse(TurnManager.Instance.IsCombatActive, "the fight is won");
             Assert.IsTrue(MirrorTwinQuest.IsDefeated, "her defeat is remembered");
-            Assert.AreEqual(QuestState.Completed, quests.GetQuestState(MirrorTwinQuest.QuestId), "the quest appears, completed");
-            Assert.GreaterOrEqual(InventoryManager.Instance.CurrentGold - gold, MirrorTwinQuest.RewardGold, "the reward is paid");
+            Assert.IsTrue(MirrorTwinQuest.HasTrident, "she leaves the Black Trident");
+            Assert.AreEqual(QuestState.InProgress, quests.GetQuestState(MirrorTwinQuest.QuestId), "the quest appears: return the trident");
 
             // Back again: the mirror stays quiet
             SceneLoader.Instance.LoadScene("Zone_6_Tower", "Spawn_From_Hall");
@@ -198,6 +197,33 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return new WaitForSeconds(1.5f);
             Assert.IsFalse(encounter.IsPlaying, "no second entrance");
             Assert.IsFalse(encounter.Twin.gameObject.activeSelf);
+
+            // Back to the tavern with the trident: the elf takes it, and the secret ending plays
+            SceneLoader.Instance.LoadScene(TavernEntrance.SceneName, TavernEntrance.SpawnInTavern);
+            yield return Frames(2);
+            yield return WaitForLoad();
+            StoryPanelUI.CloseIfOpen();
+            warning = GameObject.Find(TavernElfWarning.ElfObjectName).GetComponent<TavernElfWarning>();
+            warning.Interact(Hero());
+            yield return Frames(3);
+            dialogue = DialogueController.Instance; // the tavern has its own
+            Assert.IsTrue(dialogue.IsInDialogue);
+            Assert.AreEqual(TavernElfWarning.TridentGreeting, dialogue.CurrentNode.DialogueText);
+            dialogue.SelectOption(dialogue.CurrentNode.Options[0]); // give her the trident
+            yield return Frames(3);
+            Assert.IsFalse(MirrorTwinQuest.HasTrident, "the trident is hers now");
+            Assert.IsTrue(MirrorTwinQuest.IsTridentReturned);
+            Assert.AreEqual(QuestState.Completed, quests.GetQuestState(MirrorTwinQuest.QuestId), "the quest is done");
+            while (dialogue.IsInDialogue && dialogue.CurrentNode != null && dialogue.CurrentNode.Options.Count > 0)
+            {
+                dialogue.SelectOption(dialogue.CurrentNode.Options[0]);
+                yield return Frames(3);
+            }
+            if (dialogue.IsInDialogue) dialogue.EndDialogue();
+            yield return Frames(5);
+            Assert.IsNotNull(GameObject.Find("TowerCleansed_Ending"), "the secret ending plays");
+            Assert.IsTrue(StoryFlags.Has(MirrorTwinQuest.SecretEndingFlag));
+            Assert.IsTrue(StoryFlags.Has(ThroneRoomEnding.AdventureCompleteFlag), "the adventure is won without the King");
         }
 
         private static PlayerUnit Hero() => UnityEngine.Object.FindAnyObjectByType<PlayerUnit>();

@@ -193,8 +193,8 @@ namespace CastleOfTheD20.World
         private void HandleRoomCleared(DungeonRoomController cleared)
         {
             if (cleared == null || cleared != room || MirrorTwinQuest.IsDefeated) return;
-            MirrorTwinQuest.Complete();
-            UI.LockpickMinigameUI.ShowToast("The twin shatters like glass. Secret quest complete: " + MirrorTwinQuest.Title + "!");
+            MirrorTwinQuest.RecordVictory();
+            UI.LockpickMinigameUI.ShowToast("The twin shatters like glass and leaves her Black Trident behind. Secret quest: " + MirrorTwinQuest.Title + "!");
         }
 
         private DialogueNodeSO BuildTaunt()

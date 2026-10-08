@@ -11,8 +11,9 @@ namespace CastleOfTheD20.World
     /// <summary>
     /// The blonde elf in the tavern's gallery (Vili, 2026-10-08) gives the only hint of the secret boss quest:
     /// "Beware my evil twin on top of the magic tower, traveler." Talking to her starts nothing in the quest
-    /// tracker; it only sets <see cref="MirrorTwinQuest.WarnedFlag"/>. The tavern scene belongs to the tavern's
-    /// builder, so she is made talkable here when the tavern loads.
+    /// tracker; it only sets <see cref="MirrorTwinQuest.WarnedFlag"/>. Once the twin is beaten, the hero can give
+    /// her the twin's Black Trident, which plays the secret ending "You cleansed the tower". The tavern scene
+    /// belongs to the tavern's builder, so she is made talkable here when the tavern loads.
     /// </summary>
     public class TavernElfWarning : Interactable
     {
@@ -74,19 +75,113 @@ namespace CastleOfTheD20.World
         public override void Interact(PlayerUnit player)
         {
             StoryFlags.Set(MirrorTwinQuest.WarnedFlag);
-            for (int i = 0; i < nodes.Count; i++)
+            ClearNodes();
+
+            // With her sister's trident in the bag, the hero can hand it over: the secret ending (Vili, 2026-10-08)
+            if (MirrorTwinQuest.IsDefeated && MirrorTwinQuest.HasTrident)
             {
-                if (nodes[i] != null) Destroy(nodes[i]);
+                StartTridentHandIn(player);
+                return;
             }
-            nodes.Clear();
-            DialogueNodeSO node = ScriptableObject.CreateInstance<DialogueNodeSO>();
-            node.Initialize(SpeakerName, MirrorTwinQuest.WarningLine, null, false);
+
+            DialogueNodeSO node = NewNode(MirrorTwinQuest.WarningLine);
             node.SetOptions(new List<DialogueOption>
             {
                 new DialogueOption("[Leave] ...I'll keep that in mind.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
             });
-            nodes.Add(node);
             DialogueController.Instance?.StartDialogue(node, player);
+        }
+
+        #region The Black Trident (secret ending)
+
+        private DialogueNodeSO handedOverNode;
+        private bool tridentHandedOver;
+        private PlayerUnit endingHero;
+
+        /// <summary>The elf's first words when the hero comes back with the trident.</summary>
+        public const string TridentGreeting =
+            "That trident... it is hers. Then you went up the tower, and my sister is gone. Will you give it to me, traveler?";
+
+        /// <summary>
+        /// The hand-in: give the trident (the secret ending plays when the talk ends) or keep it for now and go on
+        /// to the Gargoyle King.
+        /// </summary>
+        public DialogueNodeSO BuildTridentDialogue()
+        {
+            DialogueNodeSO last = NewNode(
+                "Then Oakhaven is safe, even if the castle sleeps on under its stone. Sit, traveler. Tonight the Foaming Tankard drinks to you.");
+            last.SetOptions(new List<DialogueOption> { new DialogueOption("[End] I'll take that drink.", null) });
+
+            handedOverNode = NewNode(
+                "She closes her hand around the black shaft, and the violet sparks die. \"The mirror kept her bound to the tower, and the tower kept its hunger. " +
+                "No one will climb down from it to hunt this village again. The Gargoyle King still sits his throne... but he will never reach us here.\"");
+            handedOverNode.SetOptions(new List<DialogueOption> { new DialogueOption("And the castle?", last) });
+
+            DialogueNodeSO offer = NewNode(TridentGreeting);
+            offer.SetOptions(new List<DialogueOption>
+            {
+                new DialogueOption("[Give her the Black Trident] It's over. Take it.", handedOverNode),
+                new DialogueOption("[Not yet] I still need it.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]")
+            });
+            return offer;
+        }
+
+        private void StartTridentHandIn(PlayerUnit player)
+        {
+            DialogueController dialogue = DialogueController.Instance;
+            if (dialogue == null) return;
+
+            endingHero = player;
+            tridentHandedOver = false;
+            DialogueController.OnDialogueUpdated -= HandleDialogueUpdated;
+            DialogueController.OnDialogueEnded -= HandleDialogueEnded;
+            DialogueController.OnDialogueUpdated += HandleDialogueUpdated;
+            DialogueController.OnDialogueEnded += HandleDialogueEnded;
+            dialogue.StartDialogue(BuildTridentDialogue(), player);
+        }
+
+        private void HandleDialogueUpdated(DialogueNodeSO node)
+        {
+            if (node == null || node != handedOverNode || tridentHandedOver) return;
+            tridentHandedOver = true;
+            MirrorTwinQuest.ReturnTrident();
+        }
+
+        private void HandleDialogueEnded()
+        {
+            DialogueController.OnDialogueUpdated -= HandleDialogueUpdated;
+            DialogueController.OnDialogueEnded -= HandleDialogueEnded;
+            if (!tridentHandedOver) return;
+            ThroneRoomEnding.PlayTowerCleansedEnding(endingHero != null ? endingHero : FindAnyObjectByType<PlayerUnit>());
+        }
+
+        private void OnDestroy()
+        {
+            DialogueController.OnDialogueUpdated -= HandleDialogueUpdated;
+            DialogueController.OnDialogueEnded -= HandleDialogueEnded;
+            ClearNodes();
+        }
+
+        #endregion
+
+        private DialogueNodeSO NewNode(string text)
+        {
+            DialogueNodeSO node = ScriptableObject.CreateInstance<DialogueNodeSO>();
+            node.hideFlags = HideFlags.DontSave;
+            node.Initialize(SpeakerName, text, null, false);
+            nodes.Add(node);
+            return node;
+        }
+
+        private void ClearNodes()
+        {
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                if (nodes[i] == null) continue;
+                if (Application.isPlaying) Destroy(nodes[i]);
+                else DestroyImmediate(nodes[i]);
+            }
+            nodes.Clear();
         }
     }
 }

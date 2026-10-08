@@ -81,7 +81,7 @@ namespace CastleOfTheD20.Tests
                 MirrorTwinBoss twin = go.AddComponent<MirrorTwinBoss>();
                 twin.InitializeUnit();
                 Assert.AreEqual(MirrorTwinBoss.DisplayName, twin.UnitName);
-                Assert.AreEqual(58, twin.MaxHP);
+                Assert.AreEqual(70, twin.MaxHP);
                 Assert.AreEqual(15, twin.ArmorClass);
                 Assert.AreEqual("1d10+3", twin.DamageFormula, "the trident thrust");
                 Assert.IsFalse(twin.CanSurrender, "she never yields");
@@ -91,7 +91,7 @@ namespace CastleOfTheD20.Tests
                     Assert.That(d, Is.InRange(4, 13));
                 }
                 Assert.IsFalse(twin.IsEnraged);
-                twin.TakeDamage(29);
+                twin.TakeDamage(twin.MaxHP / 2);
                 Assert.IsTrue(twin.IsEnraged, "below half health her trident blazes");
                 Assert.AreEqual(0, twin.LightningCooldown, "lightning ready at once");
             }
@@ -134,9 +134,52 @@ namespace CastleOfTheD20.Tests
             QuestSO quest = MirrorTwinQuest.Create();
             Assert.AreEqual(MirrorTwinQuest.QuestId, quest.QuestID);
             Assert.AreEqual(QuestState.NotStarted, quest.DefaultState, "nothing in the tracker until it is won");
-            Assert.AreEqual(MirrorTwinQuest.RewardGold, quest.RewardGold);
+            Assert.AreEqual(0, quest.RewardGold, "the Black Trident is the reward, not gold");
+            Assert.AreEqual(MirrorTwinQuest.ReturnObjective, quest.ObjectiveSummary);
             Assert.AreEqual("Beware my evil twin on top of the magic tower, traveler.", MirrorTwinQuest.WarningLine);
             Object.DestroyImmediate(quest);
+        }
+
+        [Test]
+        public void BlackTrident_IsAQuestItemWithAnIcon()
+        {
+            Data.ItemSO trident = Resources.Load<Data.ItemSO>("Items/Item_BlackTrident");
+            Assert.IsNotNull(trident, "the twin's trident is in Resources/Items");
+            Assert.AreEqual(MirrorTwinQuest.TridentItemId, trident.ItemID);
+            Assert.AreEqual("Black Trident", trident.ItemName);
+            Assert.AreEqual(ItemType.QuestItem, trident.ItemType);
+            Assert.AreEqual(0, trident.SellPriceGold, "it cannot be sold to Baldur");
+            Assert.IsNotNull(trident.ItemIcon, "it has its own icon");
+        }
+
+        [Test]
+        public void Tavern_ElfTakesTheTrident_ForTheSecretEnding()
+        {
+            var go = new GameObject("Elf");
+            try
+            {
+                TavernElfWarning elf = go.AddComponent<TavernElfWarning>();
+                Dialogue.DialogueNodeSO offer = elf.BuildTridentDialogue();
+                Assert.AreEqual(TavernElfWarning.SpeakerName, offer.SpeakerName);
+                Assert.AreEqual(2, offer.Options.Count, "give the trident, or keep it for now");
+                StringAssert.Contains("Give her the Black Trident", offer.Options[0].OptionText);
+                Assert.IsNotNull(offer.Options[0].NextNodeSuccess, "giving it goes on to her answer");
+                StringAssert.Contains("Not yet", offer.Options[1].OptionText);
+                Assert.IsNull(offer.Options[1].NextNodeSuccess, "keeping it just closes the talk");
+                StringAssert.Contains("Gargoyle King still sits his throne", offer.Options[0].NextNodeSuccess.DialogueText, "the castle stays cursed");
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void SecretEnding_IsTheTowerCleansed()
+        {
+            Assert.AreEqual("YOU CLEANSED THE TOWER", ThroneRoomEnding.TowerCleansedHeading);
+            StringAssert.Contains("cleansed the Tower", ThroneRoomEnding.BuildTowerCleansedStatsText(null));
+            StringAssert.Contains("The Mirror Twin", ThroneRoomEnding.CreditsText);
         }
 
         [Test]

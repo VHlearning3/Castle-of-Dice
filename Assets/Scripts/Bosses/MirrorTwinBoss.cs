@@ -37,7 +37,7 @@ namespace CastleOfTheD20.Bosses
         public override void InitializeUnit()
         {
             unitName = DisplayName;
-            maxHP = 58;
+            maxHP = 70; // Vili 2026-10-08: the secret route's final boss, was 58
             currentHP = maxHP;
             armorClass = 15;
             attackDamage = 9;
