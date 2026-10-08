@@ -262,46 +262,8 @@ namespace CastleOfTheD20.Core
             }
 
             // 2. Position player at the designated spawn point or StartSpawnPoint
-            Transform targetSpawn = FindTargetSpawnTransform(activeTargetSpawnName);
+            PlaceHeroAtSpawn(activeTargetSpawnName);
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
-            PlayerExplorationMovement movement = FindAnyObjectByType<PlayerExplorationMovement>();
-
-            if (targetSpawn != null && player != null)
-            {
-                Vector3 spawnPos = targetSpawn.position;
-                Quaternion spawnRot = targetSpawn.rotation;
-
-                StartSpawnPoint ssp = targetSpawn.GetComponent<StartSpawnPoint>();
-                if (ssp != null)
-                {
-                    spawnPos = ssp.GetPlayerSpawnPosition(player.GetComponent<CharacterController>());
-                }
-
-                if (movement != null)
-                {
-                    movement.TeleportTo(spawnPos, spawnRot);
-                }
-                else
-                {
-                    CharacterController cc = player.GetComponent<CharacterController>();
-                    bool ccWasEnabled = cc != null && cc.enabled;
-                    if (cc != null) cc.enabled = false;
-
-                    try
-                    {
-                        player.transform.position = spawnPos;
-                        player.transform.rotation = spawnRot;
-                        Physics.SyncTransforms();
-                    }
-                    finally
-                    {
-                        if (cc != null && ccWasEnabled) cc.enabled = true;
-                    }
-                }
-
-                player.ClearTile();
-                Debug.Log($"[SceneLoader] Player positioned at spawn '{targetSpawn.name}' ({spawnPos}).");
-            }
 
             // Continue: the hero goes back to the spot where the game was saved
             SaveSystem.ApplyPendingPosition(sceneName);
@@ -318,6 +280,53 @@ namespace CastleOfTheD20.Core
             {
                 cam.SnapToTarget();
             }
+        }
+
+        /// <summary>
+        /// Puts the hero on the named spawn point of the active scene (falls back to the StartSpawnPoint or the
+        /// Respawn tag). Returns false when there is no hero or no spawn.
+        /// </summary>
+        public bool PlaceHeroAtSpawn(string spawnName)
+        {
+            Transform targetSpawn = FindTargetSpawnTransform(spawnName);
+            PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
+            PlayerExplorationMovement movement = FindAnyObjectByType<PlayerExplorationMovement>();
+            if (targetSpawn == null || player == null) return false;
+
+            Vector3 spawnPos = targetSpawn.position;
+            Quaternion spawnRot = targetSpawn.rotation;
+
+            StartSpawnPoint ssp = targetSpawn.GetComponent<StartSpawnPoint>();
+            if (ssp != null)
+            {
+                spawnPos = ssp.GetPlayerSpawnPosition(player.GetComponent<CharacterController>());
+            }
+
+            if (movement != null)
+            {
+                movement.TeleportTo(spawnPos, spawnRot);
+            }
+            else
+            {
+                CharacterController cc = player.GetComponent<CharacterController>();
+                bool ccWasEnabled = cc != null && cc.enabled;
+                if (cc != null) cc.enabled = false;
+
+                try
+                {
+                    player.transform.position = spawnPos;
+                    player.transform.rotation = spawnRot;
+                    Physics.SyncTransforms();
+                }
+                finally
+                {
+                    if (cc != null && ccWasEnabled) cc.enabled = true;
+                }
+            }
+
+            player.ClearTile();
+            Debug.Log($"[SceneLoader] Player positioned at spawn '{targetSpawn.name}' ({spawnPos}).");
+            return true;
         }
 
         private Transform FindTargetSpawnTransform(string spawnName)

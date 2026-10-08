@@ -71,7 +71,19 @@ namespace CastleOfTheD20.Core
     /// </summary>
     public static class SaveSystem
     {
-        private const string SaveKey = "CastleOfDice_SaveData";
+        private const string DefaultSaveKey = "CastleOfDice_SaveData";
+
+#if UNITY_EDITOR
+        /// <summary>
+        /// Editor Test Start: while set, every save and load uses this PlayerPrefs key instead of the
+        /// player's real slot. Editor only; builds always use the real key.
+        /// </summary>
+        public static string EditorSaveKeyOverride;
+
+        private static string SaveKey => string.IsNullOrEmpty(EditorSaveKeyOverride) ? DefaultSaveKey : EditorSaveKeyOverride;
+#else
+        private const string SaveKey = DefaultSaveKey;
+#endif
 
         // Where to put the hero once the saved zone has loaded (Continue)
         private static bool hasPendingPosition;

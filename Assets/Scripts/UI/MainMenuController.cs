@@ -231,6 +231,15 @@ namespace CastleOfTheD20.UI
         /// </summary>
         public void ContinueGame()
         {
+            ContinueGameAt(string.Empty);
+        }
+
+        /// <summary>
+        /// Continue, arriving at a named spawn point of the saved zone instead of the saved spot (Editor Test
+        /// Start). An empty name behaves exactly like <see cref="ContinueGame"/>.
+        /// </summary>
+        public void ContinueGameAt(string targetSpawnName)
+        {
             CharacterClassSO savedClass = null;
             PlayerSaveData save = SaveSystem.PeekSave();
             if (save == null)
@@ -285,11 +294,16 @@ namespace CastleOfTheD20.UI
             if (save != null && !string.IsNullOrEmpty(save.sceneName) && save.sceneName != currentScene &&
                 SceneLoader.Instance != null && Application.CanStreamedLevelBeLoaded(save.sceneName))
             {
-                SceneLoader.Instance.LoadScene(save.sceneName);
+                SceneLoader.Instance.LoadScene(save.sceneName, targetSpawnName);
             }
             else
             {
-                SaveSystem.ApplyPendingPosition(currentScene);
+                if (!SaveSystem.ApplyPendingPosition(currentScene) && !string.IsNullOrEmpty(targetSpawnName) && SceneLoader.Instance != null)
+                {
+                    SceneLoader.Instance.PlaceHeroAtSpawn(targetSpawnName);
+                    World.CameraFollow cam = FindAnyObjectByType<World.CameraFollow>();
+                    if (cam != null) cam.SnapToTarget();
+                }
             }
         }
 
