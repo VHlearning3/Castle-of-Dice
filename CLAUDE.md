@@ -43,9 +43,9 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
    - Vihollisen Nat 20 tuplaa vain vahinkonopat, ei kiinteää bonusta (`EnemyUnit.RollCriticalDamage`, 6.10.2026); sankarin Nat 20 tuplaa koko vahingon.
    - Nopanheiton pysäytys (`DiceUIController` + `RuneOfRerollController`): jos pelaajalla on **Rune of Fate** (`item_reroll_rune`), epäonnistunut heitto pysähtyy valintaan `[Jatka]` / `Use Rune of Fate (n)`. Ilman riimua heitto etenee automaattisesti 1.0 sekunnin jälkeen.
 2. **Sankarit (sooloseikkailu).** Näyttönimet ovat kiinteät; sisäiset ID:t ja assetit (`Character_Mage_Elira`, `Character_Rogue_Corvo`, `ShadowMageMalakor`, tallennusliput) pidetään tarkoituksella ennallaan. Vanhat nimet (Elira, Corvo, Malakor, Gareth, Aldred, Petrified King) eivät saa näkyä pelaajalle.
-   - 🛡️ **Sir Roland the Brave** (Soturi): 30 HP, 14 AC, Liike 4. *Sword Slash* (1d8+STR, puolet vahingosta viereiseen), *Shield Block* (+4 AC & vastaisku 1d6), *War Cry* (viereiset viholliset työntö 1–2 ruutua + 1d4+STR), *Iron Will* (30 % max HP:sta + puhdistus). Taso 4: *Retaliation*.
+   - 🛡️ **Sir Roland the Brave** (Soturi): 30 HP, 14 AC, Liike 4. *Sword Slash* (2d6+STR, iso miekka, puolet vahingosta viereiseen), *Shield Block* (+4 AC & vastaisku 1d6), *War Cry* (viereiset viholliset työntö 1–2 ruutua + 1d4+STR), *Iron Will* (30 % max HP:sta + puhdistus). Taso 4: *Retaliation*.
    - 🔮 **Scholar Elisa Star-Eye** (Velho, nainen): 20 HP, 12 AC, Liike 3. *Frostbite* (kantama 6, 1d6+INT, puolittaa liikkeen), *Fireball* (kantama 4, 2d6+INT 3x3), *Mana Shield* (absorboi seuraavan osuman kokonaan), *Blink* (teleportti enintään 7 ruutua). Taso 4: *Arcane Chains*. Elisa näkee aina Shadow Witchin harhojen läpi.
-   - 🗡️ **Sylvaine the Veiled** (Varas, naishaltia): 25 HP, 13 AC, Liike 5. *Poison Dagger*, *Backstab* (2d6+AGI, tuplana sokeaa vastaan tai Shadow Stepin jälkeen), *Smoke Bomb* (3x3 sokaisu), *Shadow Step* (3 ruudun teleportti + Advantage). Taso 4: *Poison Cloud*. *Tiirikointi* on vain varkaan passiivinen tutkimustaito (`LockpickInteraction.cs`, standardi DC 13); Forest Pathin salaportti on vain varkaalle.
+   - 🗡️ **Sylvaine the Veiled** (Varas, naishaltia): 25 HP, 13 AC, Liike 5. *Poison Dagger*, *Backstab* (2d6+AGI, +2d6 Sneak Attack sokeaa vastaan tai Shadow Stepin jälkeen), *Smoke Bomb* (3x3 sokaisu), *Shadow Step* (3 ruudun teleportti + Advantage). Taso 4: *Poison Cloud*. *Tiirikointi* on vain varkaan passiivinen tutkimustaito (`LockpickInteraction.cs`, standardi DC 13); Forest Pathin salaportti on vain varkaalle.
 3. **Tasot (`PlayerProgressionManager`, `PlayerUnit.MaxLevel = 5`):** taso 1 + neljä virstanpylvästä, kukin +1 taso kerran missä tahansa järjestyksessä:
    1. ensimmäinen voitettu taistelu;
    2. 3 voitettua taistelua TAI Cursed Commander / Shadow Witch hoidettu;
@@ -62,22 +62,24 @@ Päivitetty 6.10.2026 vastaamaan paikallista masteria (b065192).
 6. **Pomot (näyttönimet kaikkialla; kirjeissä "the old commander", "the Witch", "the King"):**
    - **Cursed Commander** (Zone 3): 54 HP, 16 AC. Baldurin vihje ruostuneista säärisuojista (`CommanderArmorWeakened`) = −2 AC koko taistelun ajan kaikille sankareille; lippu ei kulu, pätee myös uusintayrityksessä.
    - **Shadow Witch** (Zone 4, nainen): 44 HP, 13 AC. Varjosalama 4 ruutua (2d4+3), yksi peilikuva, teleporttaa enintään joka toinen vuoro.
-   - **The Gargoyle King** (Zone 7): 66 HP, 15 AC. Vaihe 2 (50 % HP) *Stone Form* +2 AC ja kivettävä katse (DC 13 CON). Othelian sormus rikkoo kivihaarniskan 2 vuoroksi.
+   - **The Gargoyle King** (Zone 7): 66 HP, 15 AC. Vaihe 2 (50 % HP) *Stone Form* +2 AC ja kivettävä katse (DC 13 CON). Othelian sormus rikkoo kivihaarniskan 2 vuoroksi. Lyönti 2d8+2, maanjäristys 3d6 (8.10.2026).
+   - **Mirror Twin** (salainen pomo, Tornin peilihuone): 70 HP. Tavernan blondi haltia varoittaa; Twin pudottaa Black Tridentin (ei kultaa). Kun trident annetaan haltialle, alkaa salainen loppu "You cleansed the tower" (`MirrorTwinQuest`, `ThroneRoomEnding`); seikkailu lasketaan voitetuksi ilman Kingiä.
 7. **Maailmankartta (Build Settings -järjestys, bannerin nimi suluissa):**
    - `Zone_1_VillageAndCellar` (Oakhaven Village / Village Wine Cellar): kylä, paja, taverna, kellari.
-   - `Zone_2_ForestPath` (Whispering Woods): laajennettu x -40..80, z -95..55, mökki ja lampi (`Forest_Expansion`). Taistelut: zombi, sudet, väijytys (luurankojousimies + kultisti). Lukittu portti länsiseinällä (vain varas).
+   - `Zone_2_ForestPath` (Whispering Woods): laajennettu x -40..80, z -95..55, mökki ja lampi (`Forest_Expansion`). Taistelut: zombi vartiotornin luona, partioivat sudet (`WolfPackPatrol`), väijytys ison kiven takaa (luurankojousimies + kultisti). Erakko tukilla (`ForestHermit`, puhekupla), rajoina puut ja kukkulat. Lukittu portti länsiseinällä (vain varas).
    - `Zone_2.5_SecretForestPath` (**Hidden Trail**): salapolku Forestin portilta Libraryn sivuovelle (`Door_Library_SecretSide`); varkaan arkku.
    - `Zone_3_CastleCourtyard` (Castle Courtyard): 1. pomo Cursed Commander.
    - `Zone_4_Library` (Grand Archives): 2. pomo Shadow Witch, velhon kirjahyllytehtävä.
    - `Zone_5_CastleHall` (The Great Hall): turva-alue, `SavePoint.cs` -riimukivialttari, Pip the Peddler (aave), soturin laatikot.
-   - `Zone_6_Tower` (Treasure Tower): Tornin haaste (kolme riimupilaria SUN–MOON–STAR, painelaattaloukut DEX DC 12, mimic-vartija) avaa Othelian sormuksen ja +30 Max HP Giant's Elixirin.
+   - `Zone_6_Tower` (Treasure Tower): Tornin haaste (kolme riimupilaria SUN–MOON–STAR, painelaattaloukut DEX DC 12, mimic-vartija) avaa Othelian sormuksen ja +15 Max HP Giant's Elixirin (`GiantElixirInteraction.ElixirMaxHPBonus`).
    - `Zone_7_ThroneRoom` (The Throne Room): 3. pomo The Gargoyle King.
    - `Zone_Tavern` (**The Foaming Tankard**, `GameLocation.Tavern`): kylän tavernan sisätila, kaksi kerrosta (parvi + portaat), takka, baari ja haltiatarjoilija (`TavernWaitress`, kiertää pöytiä). Sisäänkäynti on Barnabyn takana olevan "Tavern"-talon ovi, jonka `TavernEntrance` rakentaa ajossa (kylän skeneen ei kosketa); paluu `Spawn_From_Tavern`-pisteeseen oven eteen.
    - Linnan alueiden 3–7 uloskäynnit ovat puisia `SwingDoor`-ovia (`Assets/PREFABS/Doors`, aukeavat 7 m päästä). Jokainen alueen vaihtava `DoorTeleporter` rakentaa ajossa "To <zone>" -kyltin (`ZoneExitSign`).
 8. **Talous:**
-   - **Seppä Baldur:** romu 1 = 5 kultaa (`ShopManager.SCRAP_TO_GOLD_RATE`, muutettu 6.10.2026). Small Health Potion 15g, Greater Health Potion 25g, Poison Vial 30g, Rune of Fate 75g. Sharpened Blade (+1 DMG) ja Runic Armor (+1 AC) enintään +3, hinnat 50 / 75 / 100g.
+   - **Seppä Baldur:** romu 1 = 5 kultaa (`ShopManager.SCRAP_TO_GOLD_RATE`, muutettu 6.10.2026). Small Health Potion 25g, Greater Health Potion 45g, Poison Vial 30g, Rune of Fate 75g. Sharpened Blade (+1 DMG) ja Runic Armor (+1 AC) enintään +3, hinnat 50 / 75 / 100g.
    - Baldurin pykälät lasketaan `BaldurUpgrade:`-tarinalipuista, joten tehtävistä saatu +DMG ei kuluta niitä.
-   - **Pip the Peddler** (Castle Hall, `ScriptedNpc.MerchantStock`): Scroll of Warding 60g, Scroll of Embers 50g, Rune of Fate 60g, Greater Health Potion 20g.
+   - **Pip the Peddler** (Castle Hall, `ScriptedNpc.MerchantStock`): Scroll of Warding 60g, Scroll of Embers 50g, Rune of Fate 60g, Greater Health Potion 40g.
+   - Uusi seikkailu alkaa 50 kullalla (`InventoryManager.StartingGold`, koodi ohittaa skenen arvon).
    - Uudet itemit menevät `Assets/Resources/Items`-kansioon (`InventoryManager` hakee sieltä varalla).
 9. **Musiikki (`MusicManager`):** kylällä oma teema, muut alueet `Castle_adventure_song`, pomoilla omat taistelukappaleet (Kingillä kaksi vaihetta). Alueen oma tutkimuskappale: `Assets/Resources/Music/Explore_<Forest|Courtyard|Library|CastleHall|Tower|CrownHall>.mp3` tai MusicManagerin per-zone-slotit Zone 1:ssä (tällä hetkellä tyhjiä).
 10. **D&D-säännöt (6.10.2026):**
