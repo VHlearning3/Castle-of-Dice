@@ -42,8 +42,8 @@ namespace CastleOfTheD20.Economy
         #region Constants
 
         public const int SCRAP_TO_GOLD_RATE = 5;
-        public const int HEALTH_POTION_PRICE = 15;
-        public const int GREATER_POTION_PRICE = 25;
+        public const int HEALTH_POTION_PRICE = 25; // Vili 2026-10-08, was 15
+        public const int GREATER_POTION_PRICE = 45; // Vili 2026-10-08, was 25
         public const int POISON_VIAL_PRICE = 30;
         public const int REROLL_RUNE_PRICE = 75;
 

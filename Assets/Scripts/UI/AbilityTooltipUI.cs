@@ -315,7 +315,7 @@ namespace CastleOfTheD20.UI
                 string bonusStr = bonus > 0 ? $" (incl. +{bonus} Blacksmith)" : "";
                 string formula = ability.GetDamageFormula(attributeBonus, bonus);
                 if (id.Contains("retaliation")) return $"{formula} Damage to each melee attacker{bonusStr}";
-                if (id.Contains("backstab")) return $"{formula} Damage{bonusStr}, x2 vs. Blind or after Shadow Step";
+                if (id.Contains("backstab")) return $"{formula} Damage{bonusStr}, +2d6 vs. Blind or after Shadow Step";
                 return $"{formula} Damage{bonusStr}";
             }
 

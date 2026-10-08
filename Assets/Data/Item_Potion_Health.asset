@@ -17,7 +17,7 @@ MonoBehaviour:
   description: Restores 15 hit points when consumed during exploration or combat.
   itemIcon: {fileID: 21300000, guid: c30dc9e1ac22d704b815ed7f40fa03e5, type: 3}
   itemType: 0
-  buyPriceGold: 15
-  sellPriceGold: 7
+  buyPriceGold: 25
+  sellPriceGold: 12
   statBonusValue: 15
   isConsumable: 1

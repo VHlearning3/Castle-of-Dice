@@ -9,7 +9,7 @@ namespace CastleOfTheD20.World
 {
     /// <summary>
     /// Interactive Legendary Giant's Elixir situated in the Hidden Treasure Tower (Zone 6).
-    /// Upon interaction, grants the hero a permanent +30 Max HP increase and fully heals the hero.
+    /// Upon interaction, grants the hero a permanent +15 Max HP increase (Vili 2026-10-08, was +30) and fully heals the hero.
     /// Updates PlayerDataSO and SaveSystem so the enhancement persists across all scenes and sessions.
     /// </summary>
     [SelectionBase]
@@ -19,7 +19,7 @@ namespace CastleOfTheD20.World
 
         [Header("Elixir Properties")]
         [Tooltip("Permanent maximum health granted upon consuming this elixir.")]
-        [SerializeField] private int maxHPBonus = 30;
+        [SerializeField] private int maxHPBonus = ElixirMaxHPBonus;
 
         [Tooltip("Whether this elixir has already been consumed.")]
         [SerializeField] private bool isConsumed = false;
@@ -34,6 +34,12 @@ namespace CastleOfTheD20.World
         #endregion
 
         #region Public Properties
+
+        /// <summary>Max HP the elixir grants. The Tower scene still stores 30, so Awake applies this.</summary>
+        public const int ElixirMaxHPBonus = 15;
+
+        /// <summary>The prompt over a full vial.</summary>
+        public const string DrinkPrompt = "Drink Giant's Elixir (+15 Max HP Permanently)";
 
         public int MaxHPBonus => maxHPBonus;
         public bool IsConsumed => isConsumed;
@@ -51,13 +57,15 @@ namespace CastleOfTheD20.World
 
         private void Reset()
         {
-            promptMessage = "Drink Giant's Elixir (+30 Max HP Permanently)";
+            promptMessage = DrinkPrompt;
             interactionRadius = 2.5f;
         }
 
         protected override void Awake()
         {
             base.Awake();
+            maxHPBonus = ElixirMaxHPBonus;
+            if (!isConsumed) promptMessage = DrinkPrompt;
 
             // Zone scenes reload on every visit: once drunk, the elixir stays gone
             if (!isConsumed && GameManager.Instance != null && GameManager.Instance.IsRewardClaimed(GameManager.RewardKey(this)))

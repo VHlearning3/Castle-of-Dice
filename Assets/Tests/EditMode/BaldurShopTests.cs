@@ -196,14 +196,14 @@ namespace CastleOfTheD20.Tests
         [Test]
         public void PotionPrices_MatchSpec()
         {
-            Assert.AreEqual(15, ShopManager.HEALTH_POTION_PRICE);
-            Assert.AreEqual(25, ShopManager.GREATER_POTION_PRICE);
+            Assert.AreEqual(25, ShopManager.HEALTH_POTION_PRICE);
+            Assert.AreEqual(45, ShopManager.GREATER_POTION_PRICE);
         }
 
         [Test]
         public void BuyingPotions_AddsThemToInventory_AtTheirPrice()
         {
-            inventory.AddGold(40);
+            inventory.AddGold(ShopManager.HEALTH_POTION_PRICE + ShopManager.GREATER_POTION_PRICE);
 
             Assert.IsTrue(shop.BuyItem(smallPotion, hero));
             Assert.IsTrue(shop.BuyItem(greaterPotion, hero));

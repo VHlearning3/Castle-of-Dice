@@ -763,7 +763,7 @@ namespace CastleOfTheD20.UI
             CreateNode(nodesRoot, KeyHall, "THE GREAT HALL",
                 "Central hub with the Runestone save altar.", hall);
             CreateNode(nodesRoot, KeyTower, "TREASURE TOWER",
-                "Othelia's ring and the +30 Max HP elixir.", tower);
+                "Othelia's ring and the +15 Max HP elixir.", tower);
             CreateNode(nodesRoot, KeyCrownHall, "THE THRONE ROOM",
                 "Wing 3. The Gargoyle King awaits.", throne);
         }
