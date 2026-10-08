@@ -125,9 +125,20 @@ namespace CastleOfTheD20.Tests.PlayMode
             if (twinAnim != null) twinAnim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
             yield return new WaitForSeconds(0.5f);
             Assert.IsTrue(twin.gameObject.activeSelf, "she steps out of the glass");
+            SkirtSway sway = twin.GetComponentInChildren<SkirtSway>();
+            Assert.IsNotNull(sway, "her skirt has its sway");
+            Assert.IsTrue(sway.IsReady, "the skirt bones are found");
+            float maxSwing = 0f;
+            for (int c = 0; c < 5; c++) maxSwing = Mathf.Max(maxSwing, sway.ChainAngle(c));
+            Assert.Greater(maxSwing, 1f, "the skirt trails as she walks out");
             if (takeShots) yield return Shot(Path.Combine(shots, "twin_emerges.png"));
             yield return new WaitForSeconds(1.4f);
-            if (takeShots) yield return Shot(Path.Combine(shots, "twin_steps_down.png"));
+            if (takeShots)
+            {
+                yield return Shot(Path.Combine(shots, "twin_steps_down.png"));
+                Vector3 sideEye = twin.transform.position + twin.transform.right * 4.2f + twin.transform.forward * 1.2f + Vector3.up * 0.4f;
+                yield return Shot(Path.Combine(shots, "twin_skirt_side.png"), sideEye, twin.transform.position - Vector3.up * 0.4f);
+            }
             yield return new WaitForSeconds(1.0f);
             if (takeShots)
             {

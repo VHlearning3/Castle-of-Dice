@@ -293,6 +293,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1500406630396933782}
+  - component: {fileID: 9022946406789620766}
   m_Layer: 0
   m_Name: MirrorTwin
   m_TagString: Untagged
@@ -317,6 +318,28 @@ Transform:
   - {fileID: 3623405674026702981}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9022946406789620766
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7396898559446219779}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19a3f179242cebb4ca9d262dc2a0e68d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: CastleOfTheD20.Runtime::CastleOfTheD20.World.SkirtSway
+  animator: {fileID: 8513575647289921890}
+  bonePrefix: Skirt_
+  chainCount: 5
+  dragPerSpeed: 7
+  dragPerTurn: 0.05
+  legPush: 55
+  maxAngle: 38
+  stiffness: 55
+  damping: 9
+  lowerFollow: 0.6
 --- !u!1 &7591118450058363352
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,5 +867,10 @@ Transform:
 --- !u!4 &6921921609621813265 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -4088347760074763038, guid: ace64f2df37c03b4da9c6deae0d6fc89, type: 3}
+  m_PrefabInstance: {fileID: 2831882736235539699}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &8513575647289921890 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: ace64f2df37c03b4da9c6deae0d6fc89, type: 3}
   m_PrefabInstance: {fileID: 2831882736235539699}
   m_PrefabAsset: {fileID: 0}

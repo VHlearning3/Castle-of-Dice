@@ -46,6 +46,11 @@ namespace CastleOfTheD20.Tests
             var names = model.GetComponentsInChildren<Renderer>(true).Select(r => r.name).ToArray();
             CollectionAssert.IsSubsetOf(new[] { "Twin_Body", "Twin_Skirt", "Twin_Belt", "Twin_Trident" }, names);
             Assert.IsNotNull(model.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "Trident_Head"), "the trident's head mark");
+            Assert.AreEqual(10, model.GetComponentsInChildren<Transform>(true).Count(t => t.name.StartsWith("Skirt_")), "five chains of skirt bones");
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(MirrorTwinSetup.PrefabPath);
+            Assert.IsNotNull(prefab.GetComponent<SkirtSway>(), "the skirt sways");
+            Renderer skirt = prefab.GetComponentsInChildren<Renderer>(true).First(r => r.name == "Twin_Skirt");
+            Assert.IsNotNull(skirt.sharedMaterial.mainTexture, "the skirt wears its cloth texture");
         }
 
         [Test]

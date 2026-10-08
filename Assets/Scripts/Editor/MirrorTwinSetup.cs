@@ -25,6 +25,7 @@ namespace CastleOfTheD20.Editor
         public const string AnimsPath = Folder + "/MirrorTwin_Anims.fbx";
         public const string TexturePath = Folder + "/MirrorTwin_BaseColor.png";
         public const string GrinTexturePath = Folder + "/MirrorTwin_BaseColor_Grin.png";
+        public const string SkirtTexturePath = Folder + "/MirrorTwin_Skirt.png";
         public const string MaterialFolder = Folder + "/Materials";
         public const string ControllerPath = "Assets/Characters/Animators/MirrorTwin_Animator.controller";
         public const string PrefabPath = Folder + "/MirrorTwin.prefab";
@@ -67,9 +68,10 @@ namespace CastleOfTheD20.Editor
             var m = new Dictionary<string, Material>();
             ConfigureTexture(TexturePath);
             ConfigureTexture(GrinTexturePath);
+            ConfigureTexture(SkirtTexturePath);
             m["M_MirrorTwin"] = Lit("M_MirrorTwin", Color.white, 0.28f, 0f, AssetDatabase.LoadAssetAtPath<Texture2D>(TexturePath));
             m["Grin"] = Lit("M_MirrorTwin_Grin", Color.white, 0.28f, 0f, AssetDatabase.LoadAssetAtPath<Texture2D>(GrinTexturePath));
-            m["Twin_Cloth"] = Lit("M_Twin_Cloth", new Color(0.09f, 0.11f, 0.22f), 0.32f, 0f);
+            m["Twin_Cloth"] = Lit("M_Twin_Cloth", Color.white, 0.3f, 0f, AssetDatabase.LoadAssetAtPath<Texture2D>(SkirtTexturePath));
             m["Twin_Gold"] = Lit("M_Twin_Gold", new Color(0.86f, 0.64f, 0.26f), 0.6f, 0.85f);
             m["Twin_Belt"] = Lit("M_Twin_Belt", new Color(0.05f, 0.05f, 0.065f), 0.45f, 0.2f);
             m["Trident_Shaft"] = Lit("M_Trident_Shaft", new Color(0.06f, 0.045f, 0.08f), 0.5f, 0.6f);
@@ -308,6 +310,8 @@ namespace CastleOfTheD20.Editor
             anim.runtimeAnimatorController = controller;
             anim.applyRootMotion = false;
             anim.cullingMode = AnimatorCullingMode.CullUpdateTransforms;
+            // The long skirt swings on its own bones after the Animator (SkirtSway)
+            root.AddComponent<SkirtSway>().Animator = anim;
 
             foreach (Renderer r in inst.GetComponentsInChildren<Renderer>(true))
             {

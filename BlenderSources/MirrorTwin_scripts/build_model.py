@@ -72,39 +72,115 @@ def skin_to(ob, weights_fn):
             g.add([v.index], w, 'REPLACE')
 
 
-# --- skirt: two long panels, open in front, pleats deepening toward the hem
-M_CLOTH = mat("Twin_Cloth", (0.10, 0.12, 0.24), 0.75)
-M_GOLD = mat("Twin_Gold", (0.80, 0.60, 0.24), 0.35, 1.0)
+# --- body envelope: how far the body (not the hair) reaches from the hip axis, per angle and height
 CY = -0.03
-Z_TOP, Z_HEM = 0.985, 0.11
+import numpy as np
+_src = bpy.data.images.load(os.path.join(W, "BlondeElf_BaseColor.png"))
+_N = _src.size[0]
+_px = np.array(_src.pixels[:], np.float32).reshape(_N, _N, 4)
+_me = body.data
+_uv = np.zeros((len(_me.vertices), 2))
+for _l in _me.loops:
+    _uv[_l.vertex_index] = _me.uv_layers.active.data[_l.index].uv
+_c = _px[(_uv[:, 1] * _N).astype(int) % _N, (_uv[:, 0] * _N).astype(int) % _N, :3]
+_r, _g, _b = _c[:, 0], _c[:, 1], _c[:, 2]
+_sat = (_c.max(1) - _c.min(1)) / (_c.max(1) + 1e-5)
+_hair = (_r > 0.5) & (_g > 0.4) & (_b < 0.42) & ((_r - _b) > 0.28) & (_sat > 0.35)
+_skin = (_r > _g) & (_g > _b) & (_r > 0.62) & ((_r - _b) > 0.12) & ~_hair
+_co = np.array([v.co[:] for v in _me.vertices])
+_ang = np.degrees(np.arctan2(_co[:, 0], -(_co[:, 1] - CY))) % 360.0
+_rad = np.hypot(_co[:, 0], _co[:, 1] - CY)
+ENV_Z = np.arange(1.00, 0.54, -0.02)
+ENV_A = np.arange(0, 360, 5)
+_R = np.zeros((len(ENV_Z), len(ENV_A)))
+for zi, z in enumerate(ENV_Z):
+    sl = (~_hair) & (np.abs(_co[:, 2] - z) < 0.02) & (_rad < 0.4)
+    for ai, a in enumerate(ENV_A):
+        d = np.abs(((_ang - a) + 180) % 360 - 180)
+        m = sl & (d < 9)
+        _R[zi, ai] = _rad[m].max() if m.any() else 0.0
+# draping: the cloth falls from the widest point above, so the envelope never shrinks going down
+for zi in range(1, len(ENV_Z)):
+    _R[zi] = np.maximum(_R[zi], _R[zi - 1])
+for ai in range(len(ENV_A)):   # fill holes from neighbours
+    if _R[0, ai] == 0:
+        _R[:, ai] = np.maximum(_R[:, (ai - 1) % len(ENV_A)], _R[:, (ai + 1) % len(ENV_A)])
 
 
-def skirt_radius(v, a):
-    base = 0.207 + 0.05 * min(1.0, v / 0.18) + 0.085 * max(0.0, v - 0.18) / 0.82
-    pleat = 0.011 * math.sin(a * 9.0) * min(1.0, v * 1.6)
-    return base + pleat
+def envelope(a_deg, z):
+    z = min(max(z, ENV_Z[-1]), ENV_Z[0])
+    zi = (ENV_Z[0] - z) / 0.02
+    z0 = int(min(zi, len(ENV_Z) - 2)); tz = zi - z0
+    ai = (a_deg % 360.0) / 5.0
+    a0 = int(ai) % len(ENV_A); a1 = (a0 + 1) % len(ENV_A); ta = ai - int(ai)
+    top = _R[z0, a0] * (1 - ta) + _R[z0, a1] * ta
+    bot = _R[z0 + 1, a0] * (1 - ta) + _R[z0 + 1, a1] * ta
+    return top * (1 - tz) + bot * tz
+
+
+# --- fitted gloves: the bell sleeves are drawn in to the forearm, and the cuffs end at the wrist
+for side in (1, -1):
+    a0 = Vector((side * 0.41, -0.058, 1.35)); a1 = Vector((side * 0.635, -0.06, 1.355))
+    ax = (a1 - a0).normalized()
+    for i, v in enumerate(_me.vertices):
+        c = v.co
+        sx = c.x * side
+        if sx < 0.42 or sx > 0.80 or _skin[i]:
+            continue
+        t = (c - a0).dot(ax)
+        foot = a0 + ax * t
+        off = c - foot
+        d = off.length
+        if sx > 0.625:          # the cuff hanging over the hand folds back to the wrist
+            nx = 0.625 + (sx - 0.625) * 0.18
+            foot = a0 + ax * ((nx - 0.41) / max(abs(ax.x), 1e-4))
+        fit = 0.046 - 0.010 * min(1.0, max(0.0, (sx - 0.42) / 0.2))
+        if d > fit:
+            d = fit + (d - fit) * 0.12
+        if d > 1e-5:
+            v.co = foot + off.normalized() * d
+
+
+# --- skirt: one piece open in front, hugging the hips and falling in soft folds, longer at the back
+SK_A0, SK_A1 = 38.0, 322.0           # front-left edge round the back to front-right edge
+SK_TOP, SK_COLS, SK_ROWS = 0.975, 64, 24
+M_CLOTH = mat("Twin_Cloth", (0.10, 0.12, 0.24), 0.75)
+
+
+def fold(u, v):
+    """Radial fold offset: soft gathers at the belt opening into deep folds at the hem."""
+    a = u * math.radians(SK_A1 - SK_A0)
+    amp = 0.002 + 0.026 * v ** 1.25
+    return amp * (0.62 * math.sin(a * 6.5 + 0.7) + 0.38 * math.sin(a * 11.0 + 2.1 + 1.6 * v))
+
+
+def skirt_point(u, v):
+    a = SK_A0 + (SK_A1 - SK_A0) * u
+    back = max(0.0, 1.0 - abs(a - 180.0) / 140.0)            # 1 at the back, 0 at the front edges
+    hem = 0.135 - 0.075 * back
+    z = SK_TOP + (hem - SK_TOP) * v
+    z += 0.014 * v * v * math.sin(u * math.radians(SK_A1 - SK_A0) * 6.5 + 0.7 + 1.57)
+    drop = (SK_TOP - z) / (SK_TOP - 0.1)
+    r = envelope(a, max(z, 0.62)) + 0.016 + 0.095 * drop ** 1.45 + 0.05 * back * drop + fold(u, v)
+    ar = math.radians(a)
+    return Vector((r * math.sin(ar), CY - r * math.cos(ar), z)), a
+
+
+SKIRT_CHAINS = [0.05, 0.27, 0.5, 0.73, 0.95]   # where the skirt's bones hang (u)
 
 
 def build_skirt():
     bm = bmesh.new()
-    cols, rows = 20, 16
-    for side in (1, -1):
-        g = []
-        for j in range(rows + 1):
-            v = j / rows
-            z = Z_TOP + (Z_HEM - Z_TOP) * v
-            row = []
-            for i in range(cols + 1):
-                a = math.radians(48 + (163 - 48) * i / cols)
-                if i == 0:
-                    a -= math.radians(6) * v      # the front edge swings forward as it falls
-                r = skirt_radius(v, a)
-                row.append(bm.verts.new((side * r * math.sin(a), CY - r * math.cos(a), z)))
-            g.append(row)
-        for j in range(rows):
-            for i in range(cols):
-                f = bm.faces.new([g[j][i], g[j][i + 1], g[j + 1][i + 1], g[j + 1][i]])
-                f.material_index = 1 if (j == rows - 1 or i == 0) else 0
+    uvl = bm.loops.layers.uv.new("UVMap")
+    grid = []
+    for j in range(SK_ROWS + 1):
+        v = j / SK_ROWS
+        grid.append([bm.verts.new(skirt_point(i / SK_COLS, v)[0]) for i in range(SK_COLS + 1)])
+    for j in range(SK_ROWS):
+        for i in range(SK_COLS):
+            f = bm.faces.new([grid[j][i], grid[j + 1][i], grid[j + 1][i + 1], grid[j][i + 1]])
+            for l, (ii, jj) in zip(f.loops, ((i, j), (i, j + 1), (i + 1, j + 1), (i + 1, j))):
+                l[uvl].uv = (ii / SK_COLS, 1.0 - jj / SK_ROWS)
     bm.normal_update()
     for f in bm.faces:   # outward
         c = f.calc_center_median()
@@ -114,11 +190,10 @@ def build_skirt():
     bm.to_mesh(me)
     bm.free()
     me.materials.append(M_CLOTH)
-    me.materials.append(M_GOLD)
     ob = bpy.data.objects.new("Twin_Skirt", me)
     bpy.context.scene.collection.objects.link(ob)
     sol = ob.modifiers.new("Solid", 'SOLIDIFY')
-    sol.thickness = 0.007
+    sol.thickness = 0.008
     sol.offset = -1.0
     sol.use_rim = True
     bpy.context.view_layer.objects.active = ob
@@ -128,37 +203,125 @@ def build_skirt():
     bpy.ops.object.modifier_apply(modifier="Solid")
     for p in me.polygons:
         p.use_smooth = True
-    me.uv_layers.new(name="UVMap")
-
-    def weights(c):
-        v = (Z_TOP - c.z) / (Z_TOP - Z_HEM)
-        side = "Left" if c.x > 0 else "Right"
-        front = max(0.0, min(1.0, (-(c.y - CY)) / 0.22 + 0.5))
-        t = max(0.0, min(1.0, (v - 0.12) / 0.55))
-        t = t * t * (3 - 2 * t)
-        wl = t * (0.35 + 0.35 * front)
-        return {"Hips": 1 - wl, side + "UpLeg": wl}
-    skin_to(ob, weights)
     return ob
 
 
+def add_skirt_bones():
+    """Two bones per chain (hip to knee, knee to hem), children of the hips; Unity sways them (SkirtSway)."""
+    bpy.context.view_layer.objects.active = arm
+    for o in bpy.context.view_layer.objects:
+        o.select_set(False)
+    arm.select_set(True)
+    bpy.ops.object.mode_set(mode='EDIT')
+    hips = arm.data.edit_bones[P + "Hips"]
+    for k, u in enumerate(SKIRT_CHAINS):
+        p0, a = skirt_point(u, 0.04)
+        p1, _ = skirt_point(u, 0.5)
+        p2, _ = skirt_point(u, 1.0)
+        out = Vector((math.sin(math.radians(a)), -math.cos(math.radians(a)), 0))
+        up = arm.data.edit_bones.new("Skirt_%d_Up" % k)
+        up.head, up.tail, up.parent = p0 - out * 0.01, p1 - out * 0.01, hips
+        low = arm.data.edit_bones.new("Skirt_%d_Low" % k)
+        low.head, low.tail, low.parent = p1 - out * 0.01, p2 - out * 0.01, up
+        low.use_connect = True
+        for b in (up, low):
+            b.align_roll(out)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+
+def skin_skirt(ob):
+    ob.parent = arm
+    mod = ob.modifiers.new("Armature", 'ARMATURE')
+    mod.object = arm
+    groups = {}
+
+    def g(name):
+        if name not in groups:
+            groups[name] = ob.vertex_groups.new(name=name)
+        return groups[name]
+    for vtx in ob.data.vertices:
+        c = vtx.co
+        a = math.degrees(math.atan2(c.x, -(c.y - CY))) % 360.0
+        u = min(1.0, max(0.0, (a - SK_A0) / (SK_A1 - SK_A0)))
+        v = min(1.0, max(0.0, (SK_TOP - c.z) / (SK_TOP - 0.08)))
+        # between which two chains
+        k = 0
+        while k < len(SKIRT_CHAINS) - 2 and u > SKIRT_CHAINS[k + 1]:
+            k += 1
+        tu = min(1.0, max(0.0, (u - SKIRT_CHAINS[k]) / (SKIRT_CHAINS[k + 1] - SKIRT_CHAINS[k])))
+        wh = 1.0 - min(1.0, max(0.0, (v - 0.04) / 0.16))          # the top hangs from the hips
+        tl = min(1.0, max(0.0, (v - 0.42) / 0.2))                   # upper vs lower bone
+        w = {P + "Hips": wh}
+        for kk, wc in ((k, 1 - tu), (k + 1, tu)):
+            w["Skirt_%d_Up" % kk] = w.get("Skirt_%d_Up" % kk, 0) + (1 - wh) * wc * (1 - tl)
+            w["Skirt_%d_Low" % kk] = w.get("Skirt_%d_Low" % kk, 0) + (1 - wh) * wc * tl
+        top = sorted(w.items(), key=lambda kv: -kv[1])[:4]
+        s = sum(x for _, x in top) or 1.0
+        for name, x in top:
+            if x / s > 0.001:
+                g(name).add([vtx.index], x / s, 'REPLACE')
+
+
+def paint_skirt_texture(path, size=(1024, 512)):
+    """Navy cloth, darker in the folds' valleys, a gold-bordered hem with a diamond band, gold front edges."""
+    Wt, Ht = size
+    u = (np.arange(Wt) + 0.5) / Wt
+    v = 1.0 - (np.arange(Ht) + 0.5) / Ht            # v = 0 at the belt, 1 at the hem (image rows go up)
+    U, V = np.meshgrid(u, v)
+    span = math.radians(SK_A1 - SK_A0)
+    A = U * span
+    f = (0.62 * np.sin(A * 6.5 + 0.7) + 0.38 * np.sin(A * 11.0 + 2.1 + 1.6 * V))
+    shade = 0.78 + 0.22 * (f * 0.5 + 0.5) * np.clip(V * 1.4, 0.25, 1.0) + 0.06 * (1 - np.clip(V * 1.4, 0, 1))
+    weave = 1.0 + 0.025 * np.sin(U * Wt * 1.3) * np.sin(V * Ht * 1.7)
+    navy = np.array((0.105, 0.125, 0.25))
+    col = navy[None, None, :] * (shade * weave)[..., None]
+    gold = np.array((0.82, 0.62, 0.26))
+    gold_dk = np.array((0.52, 0.37, 0.12))
+    hem_m = 0.06                                    # 6 % of the length ~ 5 cm
+    edge_u = 0.022                                  # front edges ~ 4 cm
+    in_hem = V > 1 - hem_m
+    hem_line = (V > 1 - hem_m - 0.03) & (V < 1 - hem_m - 0.018)
+    band = (V > 1 - hem_m - 0.012) & (V <= 1 - hem_m)
+    # diamonds in the band above the hem
+    du = (U * 70.0) % 1.0
+    dv = (V - (1 - hem_m - 0.03)) / 0.03
+    diamond = (np.abs(du - 0.5) * 2 + np.abs(dv - 0.5) * 2 < 0.9) & (V > 1 - hem_m - 0.03) & (V < 1 - hem_m)
+    edge = (U < edge_u) | (U > 1 - edge_u)
+    edge_line = ((U > edge_u + 0.004) & (U < edge_u + 0.008)) | ((U < 1 - edge_u - 0.004) & (U > 1 - edge_u - 0.008))
+    def put(mask, c, k=1.0):
+        col[mask] = (c * k)[None, :] * (0.85 + 0.15 * shade[mask])[:, None]
+    put(diamond, gold, 0.85)
+    put(hem_line | (edge_line & (V > 0.02)), gold)
+    put(in_hem | edge | band, gold)
+    put(((V > 1 - hem_m * 0.45) & (V < 1 - hem_m * 0.3)) | (((U > edge_u * 0.4) & (U < edge_u * 0.55)) | ((U < 1 - edge_u * 0.4) & (U > 1 - edge_u * 0.55))), gold_dk)
+    img = bpy.data.images.new("Twin_Skirt", Wt, Ht, alpha=False)
+    rgba = np.ones((Ht, Wt, 4), np.float32)
+    rgba[..., :3] = np.clip(col, 0, 1)              # row 0 is the image bottom, v = 0 the belt end of the UVs
+    img.pixels.foreach_set(rgba.ravel())
+    img.filepath_raw = path
+    img.file_format = 'PNG'
+    img.save()
+    return img
+
+
 def build_belt():
-    """A dark hip belt over the skirt's top edge, gold-edged, with a gold plate on each hip."""
+    """A dark hip belt hugging the hips over the skirt's top edge, gold-edged, with a gold plate on each hip."""
     mb = MeshBuilder()
-    n = 28
-    def rr(a, z):
-        return 0.214 + 0.004 * (0.99 - z) / 0.05
+    n = 48
+    def rr(a_rad):
+        return envelope(math.degrees(a_rad), 0.975) + 0.011
     for i in range(n):
         a0, a1 = 2 * math.pi * i / n, 2 * math.pi * (i + 1) / n
         for z0, z1, m, out in ((0.952, 0.958, M_GOLD, 0.006), (0.958, 0.986, M_BELT, 0.004), (0.986, 0.992, M_GOLD, 0.006)):
-            ri0, ri1 = rr(a0, z0) - 0.006, rr(a1, z0) - 0.006
-            ro0, ro1 = rr(a0, z0) + out, rr(a1, z0) + out
+            ri0, ri1 = rr(a0) - 0.006, rr(a1) - 0.006
+            ro0, ro1 = rr(a0) + out, rr(a1) + out
             p = lambda a, r, z: (r * math.sin(a), CY - r * math.cos(a), z)
             mb.solid([p(a0, ri0, z0), p(a0, ro0, z0), p(a1, ro1, z0), p(a1, ri1, z0)],
                      [p(a0, ri0, z1), p(a0, ro0, z1), p(a1, ro1, z1), p(a1, ri1, z1)], m, ref=(0, CY, (z0 + z1) / 2))
     for k in (1, -1):    # hip plates, pointed like the reference's
         a = k * math.radians(52)
-        c = Vector((0.222 * math.sin(a), CY - 0.222 * math.cos(a), 0.972))
+        r = rr(a) + 0.008
+        c = Vector((r * math.sin(a), CY - r * math.cos(a), 0.972))
         tang = Vector((math.cos(a), math.sin(a), 0))
         nrm = Vector((math.sin(a), -math.cos(a), 0))
         pts = [c + tang * 0.03 + Vector((0, 0, 0.022)), c - tang * 0.03 + Vector((0, 0, 0.022)), c - tang * 0.022 - Vector((0, 0, 0.02)), c - Vector((0, 0, 0.036)), c + tang * 0.022 - Vector((0, 0, 0.02))]
@@ -168,8 +331,8 @@ def build_belt():
     return ob
 
 
+M_GOLD = mat("Twin_Gold", (0.80, 0.60, 0.24), 0.35, 1.0)
 M_BELT = mat("Twin_Belt", (0.05, 0.05, 0.065), 0.5)
-
 
 # --- trident: built along T (butt 0 .. tip), prongs spread along S, flat in K; skinned to the right hand
 M_SHAFT = mat("Trident_Shaft", (0.05, 0.04, 0.07), 0.35, 0.6)
@@ -261,6 +424,13 @@ def build_trident():
 
 
 skirt = build_skirt()
+add_skirt_bones()
+skin_skirt(skirt)
+skirt_img = paint_skirt_texture(os.path.join(W, "Twin_Skirt.png"))
+_nt = M_CLOTH.node_tree
+_tex = _nt.nodes.new("ShaderNodeTexImage")
+_tex.image = skirt_img
+_nt.links.new(_tex.outputs[0], _nt.nodes.get("Principled BSDF").inputs["Base Color"])
 belt = build_belt()
 trident = build_trident()
 bpy.context.scene.render.fps = 30

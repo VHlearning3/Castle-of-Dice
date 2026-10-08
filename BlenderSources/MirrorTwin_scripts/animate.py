@@ -27,8 +27,8 @@ def chain(*rots):
     return m
 
 
-PARENT = {b.name[len(P):]: (b.parent.name[len(P):] if b.parent else None) for b in bones}
-REST_DIR = {b.name[len(P):]: (b.tail_local - b.head_local).normalized() for b in bones}
+PARENT = {b.name[len(P):]: (b.parent.name[len(P):] if b.parent else None) for b in bones if b.name.startswith(P)}
+REST_DIR = {b.name[len(P):]: (b.tail_local - b.head_local).normalized() for b in bones if b.name.startswith(P)}
 
 
 def _depth(n):
@@ -237,6 +237,8 @@ def new_action(name):
 def key(frame, pose, hips_world=Vector()):
     pose = resolve(pose)
     for pb in pbones:
+        if not pb.name.startswith(P):
+            continue          # the skirt bones are swung in Unity (SkirtSway)
         short = pb.name[len(P):]
         L = pose.get(short, I3)
         pb.rotation_mode = 'QUATERNION'
