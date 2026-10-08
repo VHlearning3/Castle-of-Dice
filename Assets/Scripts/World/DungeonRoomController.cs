@@ -61,6 +61,9 @@ namespace CastleOfTheD20.World
         [Tooltip("Enemies stationed in this room, each containing an EnemyUnit script. Inactive by default.")]
         public List<GameObject> roomEnemies = new List<GameObject>();
 
+        [Tooltip("If true, the hostiles stand in the world before the fight, so the hero sees them coming (the Forest Path zombie). Otherwise they appear when it starts.")]
+        public bool showEnemiesBeforeFight = false;
+
         [Header("Encounter Rewards & Secrets")]
         [Tooltip("Reward chest or hidden passageway revealed upon defeating all enemies. Inactive by default.")]
         public GameObject secretPassageOrChest;
@@ -162,14 +165,15 @@ namespace CastleOfTheD20.World
             // 1. Ensure exit barriers are unlocked (disabled) initially
             SetBarriersLocked(false);
 
-            // 2. Ensure room enemies are inactive by default
+            // 2. Ensure room enemies are inactive by default (or waiting in plain sight, until the room is cleared)
             if (roomEnemies != null)
             {
+                bool show = showEnemiesBeforeFight && !WasClearedBefore();
                 foreach (var enemy in roomEnemies)
                 {
                     if (enemy != null)
                     {
-                        enemy.SetActive(false);
+                        enemy.SetActive(show);
                     }
                 }
             }
@@ -826,7 +830,7 @@ namespace CastleOfTheD20.World
 
         /// <summary>
         /// Puts a room whose fight the hero lost back to how it was before they walked in: doors open,
-        /// hostiles revived at full strength and hidden on their starting spots, the grid cleared and
+        /// hostiles revived at full strength on their starting spots (hidden, unless they wait in plain sight), the grid cleared and
         /// the trigger (and the boss's intro dialogue) ready to start the fight again.
         /// Does nothing for a room that was never entered or is already cleared.
         /// </summary>
@@ -864,7 +868,7 @@ namespace CastleOfTheD20.World
                     {
                         enemyObj.transform.SetPositionAndRotation(enemyStartPoses[i].position, enemyStartPoses[i].rotation);
                     }
-                    enemyObj.SetActive(false);
+                    enemyObj.SetActive(showEnemiesBeforeFight);
                 }
             }
 

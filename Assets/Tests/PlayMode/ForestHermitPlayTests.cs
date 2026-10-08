@@ -173,6 +173,7 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return EnterForestPath();
             // Z: the zombie west of the road in the south, a watchtower beside it
             Vector3 zombie = Find("Forest_Zombie").position;
+            Assert.IsTrue(Find("Forest_Zombie").gameObject.activeInHierarchy, "The zombie can be seen before its fight.");
             Assert.That(zombie.x, Is.InRange(-11f, -3f), $"The zombie waits west of the road ({zombie}).");
             Assert.That(zombie.z, Is.InRange(-74f, -60f), $"The zombie is in the south part of the woods ({zombie}).");
             Transform tower = Find("Zombie_Watchtower");
@@ -193,6 +194,36 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.That(patrol.Center.z, Is.InRange(-70f, -45f));
             Assert.GreaterOrEqual(patrol.Radius, 10f, "A wide circle.");
             yield return Shots("fight_spots", (new Vector3(-8f, 13f, -84f), new Vector3(-9f, 1f, -68f)), (tower.position + new Vector3(9f, 5f, -10f), tower.position + new Vector3(0f, 4f, 0f)));
+        }
+
+        [UnityTest, Timeout(300000)]
+        public IEnumerator Ambush_StartsFromBehindTheBigRock()
+        {
+            yield return EnterForestPath("ForestAmbush");
+            Bounds rock = Bounds(Find("Ambush_Rock").gameObject);
+            Assert.Greater(rock.size.y, 3f, "A big boulder stands by the road.");
+            Transform archer = Find("Forest_Skeleton_Archer"), cultist = Find("Forest_Curse_Cultist");
+            Assert.IsFalse(archer.gameObject.activeInHierarchy || cultist.gameObject.activeInHierarchy, "The ambushers are a surprise: unseen before the fight.");
+
+            // The hero walks up the road into the ambush
+            cc.enabled = false;
+            hero.transform.position = new Vector3(0f, 0.5f, 0f);
+            cc.enabled = true;
+            DungeonRoomController room = Find("Forest_Ambush_Trigger").GetComponent<DungeonRoomController>();
+            float until = Time.realtimeSinceStartup + 10f;
+            while (room.CurrentState == RoomState.Unexplored && Time.realtimeSinceStartup < until)
+            {
+                StoryPanelUI.CloseIfOpen();
+                cc.Move(Vector3.forward * 5f * Mathf.Min(Time.unscaledDeltaTime, 0.05f) + Vector3.down * 0.02f);
+                yield return null;
+            }
+            Assert.AreEqual(RoomState.CombatActive, room.CurrentState, $"Walking the road into the crossroads springs the ambush (hero at {hero.transform.position}).");
+            for (int i = 0; i < 10; i++) yield return null;
+            Assert.IsTrue(archer.gameObject.activeInHierarchy && cultist.gameObject.activeInHierarchy, "Both ambushers come out.");
+            Assert.Greater(archer.position.x, rock.center.x, "The archer starts behind the rock (seen from the road).");
+            Assert.Greater(cultist.position.x, rock.center.x, "The cultist starts behind the rock (seen from the road).");
+            Vector3 at = rock.center;
+            yield return Shots("ambush_fight", (at + new Vector3(-2f, 13f, -12f), at), (at + new Vector3(10f, 6f, -7f), at + new Vector3(1.5f, 1f, 0f)));
         }
 
         [UnityTest, Timeout(300000)]

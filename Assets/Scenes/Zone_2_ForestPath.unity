@@ -17177,7 +17177,7 @@ Transform:
   m_GameObject: {fileID: 87491794}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.5, z: 24}
+  m_LocalPosition: {x: 5, y: 2.5, z: 28}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -17202,6 +17202,7 @@ MonoBehaviour:
   roomEnemies:
   - {fileID: 231779250}
   - {fileID: 89098718}
+  showEnemiesBeforeFight: 0
   secretPassageOrChest: {fileID: 0}
   bossDialogueNpc: {fileID: 0}
   stageDialogueNpcAtBoss: 1
@@ -17237,7 +17238,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 22, y: 6, z: 12}
+  m_Size: {x: 22, y: 6, z: 14}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &87707562
 GameObject:
@@ -17440,8 +17441,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 89098718}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 1, z: -0, w: -0.00000004371139}
-  m_LocalPosition: {x: 3.5, y: 1.3, z: 30}
+  m_LocalRotation: {x: -0, y: 0.64278764, z: -0, w: -0.76604444}
+  m_LocalPosition: {x: 12, y: 1.3, z: 28.2}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -33513,7 +33514,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalPosition.y
@@ -33521,11 +33522,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 29
+      value: 30.5
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalRotation.w
-      value: -0.00000004371139
+      value: -0.6755902
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalRotation.x
@@ -33533,7 +33534,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 1
+      value: 0.7372773
       objectReference: {fileID: 0}
     - target: {fileID: 6535366458046105350, guid: fd4838a0268bd70429574a30fe0f6a28, type: 3}
       propertyPath: m_LocalRotation.z
@@ -77048,6 +77049,7 @@ Transform:
   - {fileID: 231779251}
   - {fileID: 89098722}
   - {fileID: 87491795}
+  - {fileID: 1050005590}
   m_Father: {fileID: 882281952}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &551002572
@@ -130745,6 +130747,7 @@ MonoBehaviour:
   roomEnemies:
   - {fileID: 1450763672}
   - {fileID: 860163951}
+  showEnemiesBeforeFight: 0
   secretPassageOrChest: {fileID: 0}
   bossDialogueNpc: {fileID: 0}
   stageDialogueNpcAtBoss: 1
@@ -135286,6 +135289,80 @@ Transform:
   - {fileID: 960184043}
   m_Father: {fileID: 1117496777}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1050005589
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 550992246}
+    m_Modifications:
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.57158095
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.51961905
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.67550474
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 8.248753
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.14942983
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 29.730452
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0.9848078
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.1736482
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3102029686961114112, guid: bedeead652d106a4db038578d32f254b, type: 3}
+      propertyPath: m_Name
+      value: Ambush_Rock
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: bedeead652d106a4db038578d32f254b, type: 3}
+--- !u!4 &1050005590 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2325914852695529146, guid: bedeead652d106a4db038578d32f254b, type: 3}
+  m_PrefabInstance: {fileID: 1050005589}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1050490234
 GameObject:
   m_ObjectHideFlags: 0
@@ -217005,6 +217082,7 @@ MonoBehaviour:
   exitBarriers: []
   roomEnemies:
   - {fileID: 1062511868}
+  showEnemiesBeforeFight: 1
   secretPassageOrChest: {fileID: 0}
   bossDialogueNpc: {fileID: 0}
   stageDialogueNpcAtBoss: 1
