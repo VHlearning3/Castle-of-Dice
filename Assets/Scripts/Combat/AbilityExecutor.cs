@@ -11,7 +11,7 @@ namespace CastleOfTheD20.Combat
     /// Handles Warrior abilities (Sword Slash, Shield Block, War Cry, Iron Will),
     /// Mage spells (Fireball 3x3 AOE, Frostbite, Mana Shield, Blink),
     /// and Rogue skills (Backstab, Smoke Bomb, Poison Dagger, Shadow Step).
-    /// Damage follows the spec's dice formulas (e.g. Sword Slash 1d8 + STR) via AbilitySO.RollDamage.
+    /// Damage follows the spec's dice formulas (e.g. Sword Slash 2d6 + STR) via AbilitySO.RollDamage.
     /// Integrates directly with DiceSystem.RollD20 for hit checks vs Armor Class (AC). A hero's hit roll
     /// goes through <see cref="RerollableRoll"/>, so damage and effects come from the final roll even when
     /// the Rune of Reroll changes it.
@@ -34,6 +34,10 @@ namespace CastleOfTheD20.Combat
 
         /// <summary>Shadow Step range used when the ability asset does not set one (spec: 3 tiles).</summary>
         public const int ShadowStepRange = 3;
+
+        /// <summary>Sneak Attack dice Backstab adds out of a Shadow Step or against a blinded target (2d6, Vili 2026-10-08).</summary>
+        public const int SneakAttackDiceCount = 2;
+        public const int SneakAttackDiceSides = 6;
 
         #endregion
 
@@ -492,8 +496,8 @@ namespace CastleOfTheD20.Combat
             }
             int bonus = GetCasterAttributeBonus(caster);
 
-            // Backstab (spec): attack roll with Advantage for 2d6 + AGI damage, doubled when the target is
-            // blinded or the rogue struck out of a Shadow Step. A natural 20 doubles it again.
+            // Backstab: 2d6 + AGI damage, and a Sneak Attack of +2d6 when the target is blinded or the rogue struck
+            // out of a Shadow Step (Vili 2026-10-08: was doubled). A natural 20 doubles the whole hit.
             bool fromShadowStep = caster.StatusEffects != null && caster.StatusEffects.HasEffect(StatusEffectType.AdvantageNextAttack);
             bool targetBlinded = target.StatusEffects != null && target.StatusEffects.HasEffect(StatusEffectType.Blind);
 
@@ -510,7 +514,7 @@ namespace CastleOfTheD20.Combat
 
                 if (fromShadowStep || targetBlinded)
                 {
-                    damage *= 2;
+                    damage += DiceSystem.RollDamage(SneakAttackDiceCount, SneakAttackDiceSides);
                 }
 
                 if (hitCheck.isCriticalSuccess)

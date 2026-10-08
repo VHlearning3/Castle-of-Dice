@@ -125,7 +125,7 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void GiantElixir_GrantsPermanent30MaxHPAndHealsToFull()
+        public void GiantElixir_GrantsPermanent15MaxHPAndHealsToFull()
         {
             GameObject elixirObj = new GameObject("TestElixir");
             elixirObj.transform.SetParent(testContainer.transform);
@@ -144,14 +144,14 @@ namespace CastleOfTheD20.Tests
             elixir.Interact(player);
 
             Assert.IsTrue(elixir.IsConsumed, "Giant's Elixir should be marked consumed after drinking.");
-            Assert.AreEqual(originalMaxHP + 30, player.MaxHP, "Giant's Elixir must grant +30 permanent Max HP.");
+            Assert.AreEqual(originalMaxHP + GiantElixirInteraction.ElixirMaxHPBonus, player.MaxHP, "Giant's Elixir must grant +15 permanent Max HP.");
             Assert.AreEqual(player.MaxHP, player.CurrentHP, "Giant's Elixir must restore health to full.");
 
             // Attempting to drink again should not grant double bonus
             elixir.Interact(player);
-            Assert.AreEqual(originalMaxHP + 30, player.MaxHP, "Drinking consumed elixir again should not grant additional bonus.");
+            Assert.AreEqual(originalMaxHP + GiantElixirInteraction.ElixirMaxHPBonus, player.MaxHP, "Drinking consumed elixir again should not grant additional bonus.");
 
-            Debug.Log("<color=#00e676>[PASS]</color> GiantElixirInteraction grants permanent +30 Max HP and full heal.");
+            Debug.Log("<color=#00e676>[PASS]</color> GiantElixirInteraction grants permanent +15 Max HP and full heal.");
         }
 
 

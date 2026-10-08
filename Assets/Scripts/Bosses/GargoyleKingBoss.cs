@@ -25,8 +25,8 @@ namespace CastleOfTheD20.Bosses
         /// <summary>CON save against the petrifying gaze.</summary>
         public const int GazeSaveDC = 13;
 
-        /// <summary>Earthquake damage dice (2d6).</summary>
-        public const int QuakeDiceCount = 2;
+        /// <summary>Earthquake damage dice (3d6, Vili 2026-10-08: was 2d6).</summary>
+        public const int QuakeDiceCount = 3;
         public const int QuakeDiceSides = 6;
 
         #endregion
@@ -41,7 +41,7 @@ namespace CastleOfTheD20.Bosses
         [Tooltip("Number of random tile hazards spawned during ground stomp (unused since the earthquake is telegraphed).")]
         [SerializeField] private int rockfallHazardCount = 3;
 
-        [Tooltip("Flat damage added to the earthquake's 2d6.")]
+        [Tooltip("Flat damage added to the earthquake's 3d6.")]
         [SerializeField] private int rockfallDamage = 0;
 
         [Header("Dialogue Intimidation Hook")]
@@ -150,10 +150,10 @@ namespace CastleOfTheD20.Bosses
             maxHP = 66;
             currentHP = maxHP;
             armorClass = 15;
-            attackDamage = 9;
+            attackDamage = 11;
             attackBonus = 5;
             movementRange = 2;
-            ConfigureDamageDice(2, 6, 2); // average 9, as the old flat hit
+            ConfigureDamageDice(2, 8, 2); // average 11 (Vili 2026-10-08, was 2d6+2)
 
             // A retry after the hero falls faces the first-phase King again, not the Stone Form
             bool wasInStoneForm = isStoneFormActive;
@@ -355,7 +355,7 @@ namespace CastleOfTheD20.Bosses
         #region Seismic Ground Stomp
 
         /// <summary>
-        /// The telegraphed earthquake. If an area is marked, it shakes now: 2d6 to everyone standing in it
+        /// The telegraphed earthquake. If an area is marked, it shakes now: 3d6 to everyone standing in it
         /// except the King himself. If not, the King marks a 3x3 area around the hero that will shake on his
         /// next turn, giving the hero one turn to get out.
         /// </summary>

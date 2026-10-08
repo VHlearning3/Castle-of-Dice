@@ -104,7 +104,7 @@ namespace CastleOfTheD20.Tests
         }
 
         [Test]
-        public void Backstab_DoublesOnlyAgainstBlindedTargets()
+        public void Backstab_AddsSneakAttackOnlyAgainstBlindedTargets()
         {
             AbilitySO backstab = CreateAbility("rogue_backstab", AbilityTargetType.SingleTarget, 1, 5, dice: 0, sides: 0, addAttribute: false);
             PlayerUnit rogue = CreatePlayer(new Vector2Int(5, 5));
@@ -113,7 +113,7 @@ namespace CastleOfTheD20.Tests
             int blindDamage = BackstabDamageAgainst(rogue, backstab, new Vector2Int(6, 6), blinded: true);
 
             if (plainDamage >= 0) Assert.AreEqual(5, plainDamage, "Backstab without blind or Shadow Step deals its normal damage.");
-            if (blindDamage >= 0) Assert.AreEqual(10, blindDamage, "Backstab doubles against a blinded target.");
+            if (blindDamage >= 0) Assert.That(blindDamage, Is.InRange(5 + 2, 5 + 12), "Backstab adds a 2d6 Sneak Attack against a blinded target.");
         }
 
         [Test]
@@ -409,8 +409,8 @@ namespace CastleOfTheD20.Tests
             GiantElixirInteraction elixir = Track(new GameObject("GiantElixir")).AddComponent<GiantElixirInteraction>();
             elixir.Interact(hero);
 
-            Assert.AreEqual(baseMaxHP + 30, hero.MaxHP);
-            Assert.AreEqual(30, sessionData.MaxHPBonus, "The elixir's +30 must be recorded once, not twice.");
+            Assert.AreEqual(baseMaxHP + GiantElixirInteraction.ElixirMaxHPBonus, hero.MaxHP);
+            Assert.AreEqual(GiantElixirInteraction.ElixirMaxHPBonus, sessionData.MaxHPBonus, "The elixir's bonus must be recorded once, not twice.");
 
             // The Tower scene loads again: a fresh copy of the same elixir
             Object.DestroyImmediate(elixir.gameObject);

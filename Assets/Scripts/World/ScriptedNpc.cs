@@ -60,7 +60,7 @@ namespace CastleOfTheD20.World
             (CombatScrolls.WardingScrollId, "Scroll of Warding", 60),
             (CombatScrolls.EmbersScrollId, "Scroll of Embers", 50),
             (Economy.ShopManager.REROLL_RUNE_ID, "Rune of Fate", 60),
-            (Economy.ShopManager.GREATER_POTION_ID, "Greater Health Potion", 20),
+            (Economy.ShopManager.GREATER_POTION_ID, "Greater Health Potion", 40),
         };
 
         public static DialogueNodeSO BuildMerchant()

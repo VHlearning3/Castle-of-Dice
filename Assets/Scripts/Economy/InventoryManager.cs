@@ -41,8 +41,8 @@ namespace CastleOfTheD20.Economy
         #region Serialized Fields
 
         [Header("Starting Economy")]
-        [Tooltip("Initial gold balance in the player's pouch.")]
-        [SerializeField] private int currentGold = 100;
+        [Tooltip("Gold in the player's pouch. A new adventure starts with StartingGold, whatever the scene stored.")]
+        [SerializeField] private int currentGold = StartingGold;
 
         [Tooltip("Initial quantity of raw scrap metal/ore collected from castle ruins.")]
         [SerializeField] private int scrapMetalCount = 5;
@@ -187,6 +187,9 @@ namespace CastleOfTheD20.Economy
 
         #endregion
 
+        /// <summary>Gold a new adventure starts with (Vili 2026-10-08: 50, was 100). Scenes still store 100, so Awake applies it.</summary>
+        public const int StartingGold = 50;
+
         // Serialized starting purse, captured in Awake for New Adventure resets
         private int startingGold;
         private int startingScrap;
@@ -203,6 +206,7 @@ namespace CastleOfTheD20.Economy
             }
 
             instance = this;
+            currentGold = StartingGold;
             startingGold = currentGold;
             startingScrap = scrapMetalCount;
             startingRerollScrolls = rerollScrollCount;
