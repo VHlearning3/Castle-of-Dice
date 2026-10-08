@@ -181,7 +181,10 @@ namespace CastleOfTheD20.Economy
                 RegisterQuest(ClassQuests.Create(ClassQuests.All[i]));
             }
 
-            if (registeredQuests.Count == 1 + ClassQuests.All.Length)
+            // The secret quest: hidden until the twin in the Tower's mirror is beaten
+            RegisterQuest(MirrorTwinQuest.Create());
+
+            if (registeredQuests.Count == 2 + ClassQuests.All.Length)
             {
                 // Player builds can only see quests serialized into questDatabase; flag the misconfiguration
                 // instead of silently papering over it with an editor-only AssetDatabase scan.
