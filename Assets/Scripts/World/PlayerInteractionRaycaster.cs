@@ -264,6 +264,7 @@ namespace CastleOfTheD20.World
                 if (col == null) continue;
                 if (hero != null && col.transform.IsChildOf(hero)) continue;
                 if (CameraFollow.IsCutAway(col)) continue;
+                if (col.GetComponent<ClickThrough>() != null) continue;
 
                 Interactable found = col.GetComponentInParent<Interactable>();
                 if (found != null && found.IsInteractable)
