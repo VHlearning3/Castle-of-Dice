@@ -1,0 +1,14 @@
+{
+  "hero": "Rogue",
+  "clip": "Idle",
+  "head": [0.077794, 3.086327, 0.311713],
+  "forward": [0, 0, 1],
+  "headForward": [-0.42761, 0.012924, 0.903871],
+  "materials": [
+    {"name": "m0_M_LowPolyItems", "texture": "D:/Unity/castle-heroportraits/Assets/Models/Items/LowPolyItems_Palette.png", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.25},
+    {"name": "m1_M_LowPolyItems", "texture": "D:/Unity/castle-heroportraits/Assets/Models/Items/LowPolyItems_Palette.png", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.25},
+    {"name": "m2_M_Hero_Rogue_Corvo", "texture": "D:/Unity/castle-heroportraits/Assets/Characters/Rogue+3d+model/tripo_convert_e816ce67-bf17-4244-a3c4-00e5e2b78833.fbm/tripo_rgb_bd678014-8a25-43cf-8b96-3e96ec492a96.jpg", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.2}
+  ],
+  "min": [1.173931, -0.013939, -0.656434],
+  "max": [-0.801443, 3.579451, 1.008618]
+}
