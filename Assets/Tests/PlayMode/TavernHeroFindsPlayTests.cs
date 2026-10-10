@@ -81,6 +81,15 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.That(frame.GetComponent<MeshRenderer>().sharedMaterials[0].name, Does.StartWith("M_TavernDoor_Frame"));
             Assert.AreEqual(frame.sharedMesh.vertexCount, frame.sharedMesh.uv.Length, "the timber arch has UVs, so the planks tile");
 
+            // The "To Oakhaven Village" board hangs above the arch, not behind its keystone
+            ZoneExitSign sign = door.GetComponentInChildren<ZoneExitSign>();
+            Assert.IsNotNull(sign, "the door has its sign");
+            Renderer board = null;
+            foreach (Renderer r in sign.GetComponentsInChildren<Renderer>())
+                if (r.name == "Trim") board = r;
+            Assert.IsNotNull(board, "sign board");
+            Assert.Greater(board.bounds.min.y, frame.GetComponent<Renderer>().bounds.max.y, "the sign board is clear above the arch");
+
             GameObject fire = GameObject.Find(TavernDressing.HearthFireName);
             Assert.IsNotNull(fire, "a fire burns in the hearth");
             ParticleSystem[] systems = fire.GetComponentsInChildren<ParticleSystem>();
@@ -110,6 +119,7 @@ namespace CastleOfTheD20.Tests.PlayMode
                 if (follow != null) follow.enabled = false;
                 yield return Overview(Path.Combine(shots, tag + "_01_Overview.png"), new Vector3(9f, 17f, -2f), new Vector3(-7f, 0f, -2f));
                 yield return Overview(Path.Combine(shots, tag + "_02_Door.png"), new Vector3(-3.5f, 4.5f, -1.5f), new Vector3(-6f, 2.6f, -9f));
+                yield return Overview(Path.Combine(shots, tag + "_02b_DoorSign.png"), new Vector3(-1.5f, 10f, -1f), new Vector3(-6f, 5f, -9f));
                 yield return Overview(Path.Combine(shots, tag + "_03_Fireplace.png"), new Vector3(-6.2f, 3.2f, -1.0f), new Vector3(-11.5f, 1.6f, -1f));
                 Vector3 at = mine.transform.position;
                 Vector3 eye = hero == CharacterClassType.Warrior ? at + new Vector3(1.5f, 2.6f, -4f)
