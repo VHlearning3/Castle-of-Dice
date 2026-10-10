@@ -90,6 +90,14 @@ namespace CastleOfTheD20.Dialogue
             string tag = option.CombatDebuffTag ?? string.Empty;
             string text = option.OptionText ?? string.Empty;
 
+            // Pip the Peddler's shop (Castle Hall): the same window as Baldur's, with Pip's stock
+            if (ContainsAction(tag, text, "ACTION_OPEN_PIP_SHOP"))
+            {
+                DialogueController.Instance?.EndDialogue();
+                ShopUIController.Instance?.OpenShop(ShopVendor.Pip, ContainsAction(tag, text, "ACTION_OPEN_PIP_SHOP:SELL"));
+                return;
+            }
+
             // 1. Check for Shop / Blacksmith Opening
             if (ContainsAction(tag, text, TAG_OPEN_SHOP) 
                 || ContainsAction(tag, text, "ACTION_OPEN_SHOP") 

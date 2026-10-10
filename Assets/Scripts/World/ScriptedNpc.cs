@@ -54,7 +54,11 @@ namespace CastleOfTheD20.World
         /// <summary>Story flag set once the ghost's vault is open.</summary>
         public const string VaultOpenedFlag = "HallVaultOpened";
 
-        /// <summary>What Pip sells: item id, shown name, price.</summary>
+        /// <summary>Dialogue action that opens Pip's shop window; with ":SELL" it opens on the Sell tab.</summary>
+        public const string OpenPipShopAction = "[ACTION_OPEN_PIP_SHOP]";
+        public const string OpenPipShopSellAction = "[ACTION_OPEN_PIP_SHOP:SELL]";
+
+        /// <summary>What Pip sells in his shop window: item id, shown name, his price.</summary>
         public static readonly (string id, string name, int price)[] MerchantStock =
         {
             (CombatScrolls.WardingScrollId, "Scroll of Warding", 60),
@@ -68,25 +72,20 @@ namespace CastleOfTheD20.World
             DialogueNodeSO start = Node(MerchantName,
                 "A customer! Do you know how long I have been stuck in this hall? Since the stone came, that is how long. " +
                 "The guards will not let me out and the dead do not buy anything. Scrolls, potions, runes: everything must go.");
-            DialogueNodeSO bought = Node(MerchantName, "A pleasure! Read the scroll in the thick of a fight, when you need it most. Anything else?");
-            DialogueNodeSO poor = Node(MerchantName, "Ah. Gold first, friend. Even trapped peddlers have principles.");
             DialogueNodeSO about = Node(MerchantName,
                 "Scroll of Warding: read it in a fight and a mana shield stops the next two blows.\n" +
                 "Scroll of Embers: read it in a fight and fire rains on every enemy.\n" +
                 "Reading one takes your action, and it burns up as you read. The rune lets you roll again when fate fails you.");
 
-            List<DialogueOption> options = new List<DialogueOption>();
-            for (int i = 0; i < MerchantStock.Length; i++)
+            // Buying and selling happen in the same shop window as Baldur's (Vili, 2026-10-10)
+            List<DialogueOption> options = new List<DialogueOption>
             {
-                var item = MerchantStock[i];
-                options.Add(new DialogueOption($"[Buy] {item.name} - {item.price} gold", bought, false, 10, "", poor,
-                    $"[ACTION_BUY:{item.id}:{item.price}]"));
-            }
+                new DialogueOption("[Buy] Show me your scrolls and potions.", null, false, 10, "", null, OpenPipShopAction),
+                new DialogueOption("[Sell] Will you take scrap and loot?", null, false, 10, "", null, OpenPipShopSellAction)
+            };
             options.Add(new DialogueOption("[Ask] What do the scrolls do?", about));
             options.Add(new DialogueOption("[Leave] Good luck getting out, Pip.", null, false, 10, "", null, "[ACTION_CLOSE_DIALOGUE]"));
             start.SetOptions(options);
-            bought.SetOptions(options);
-            poor.SetOptions(options);
             about.SetOptions(options);
             return start;
         }

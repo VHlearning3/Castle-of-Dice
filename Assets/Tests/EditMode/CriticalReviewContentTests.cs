@@ -204,26 +204,49 @@ namespace CastleOfTheD20.Tests
         #region C4: Castle Hall
 
         [Test]
-        public void Pip_SellsScrolls_AndTurnsAwayAnEmptyPurse()
+        public void Pip_OffersHisShopWindow_ToBuyAndToSell()
         {
-            DialogueController dialogue = Track(new GameObject("C_Dialogue")).AddComponent<DialogueController>();
-            SetStatic(typeof(DialogueController), "instance", dialogue);
-            DialogueActionTrigger actions = Track(new GameObject("C_Actions")).AddComponent<DialogueActionTrigger>();
-
             DialogueNodeSO start = HubDialogues.BuildMerchant();
-            dialogue.StartDialogue(start, null);
-            DialogueOption warding = start.Options[0];
-            StringAssert.Contains("Warding", warding.OptionText);
+            Assert.AreEqual(4, start.Options.Count, "[Buy], [Sell], [Ask] and [Leave].");
+            StringAssert.StartsWith("[Buy]", start.Options[0].OptionText);
+            Assert.AreEqual(HubDialogues.OpenPipShopAction, start.Options[0].CombatDebuffTag, "[Buy] opens Pip's shop window.");
+            StringAssert.StartsWith("[Sell]", start.Options[1].OptionText);
+            StringAssert.Contains("scrap", start.Options[1].OptionText);
+            Assert.AreEqual(HubDialogues.OpenPipShopSellAction, start.Options[1].CombatDebuffTag, "[Sell] opens it on the Sell tab.");
+            StringAssert.StartsWith("[Ask]", start.Options[2].OptionText);
+            Assert.IsNotNull(start.Options[2].NextNodeSuccess, "Pip still explains his scrolls.");
+            StringAssert.StartsWith("[Leave]", start.Options[3].OptionText);
+            Assert.AreEqual(4, start.Options[2].NextNodeSuccess.Options.Count, "After his answer the same choices come back.");
+        }
 
-            Select(dialogue, actions, warding);
-            Assert.AreEqual(warding.NextNodeFailure, dialogue.CurrentNode, "No gold: Pip's 'gold first' line.");
-            Assert.AreEqual(0, inventory.GetItemCount(inventory.FindItemByID(CombatScrolls.WardingScrollId)));
+        [Test]
+        public void ShopManager_SellsAtPipsPrice_AndTurnsAwayAnEmptyPurse()
+        {
+            ShopManager shop = Track(new GameObject("C_Shop")).AddComponent<ShopManager>();
+            ItemSO warding = inventory.FindItemByID(CombatScrolls.WardingScrollId);
+            Assert.IsNotNull(warding);
+
+            Assert.AreEqual(ShopPurchaseResult.NotEnoughGold, shop.TryBuyItem(warding, null, 60));
+            Assert.AreEqual(0, inventory.GetItemCount(warding));
 
             inventory.AddGold(100);
-            Select(dialogue, actions, dialogue.CurrentNode.Options[0]);
-            Assert.AreEqual(1, inventory.GetItemCount(inventory.FindItemByID(CombatScrolls.WardingScrollId)));
+            Assert.AreEqual(ShopPurchaseResult.Success, shop.TryBuyItem(warding, null, 60));
+            Assert.AreEqual(1, inventory.GetItemCount(warding));
             Assert.AreEqual(40, inventory.CurrentGold);
-            dialogue.EndDialogue();
+
+            ItemSO embers = inventory.FindItemByID(CombatScrolls.EmbersScrollId);
+            Assert.AreEqual(ShopPurchaseResult.Success, shop.TryBuyItem(embers, null, 30), "An override replaces the item's own price.");
+            Assert.AreEqual(10, inventory.CurrentGold);
+        }
+
+        [Test]
+        public void ScrapSold_ToPip_PaysBaldursRate()
+        {
+            ShopManager shop = Track(new GameObject("C_Shop")).AddComponent<ShopManager>();
+            inventory.AddScrapMetal(4);
+            Assert.AreEqual(4 * ShopManager.SCRAP_TO_GOLD_RATE, shop.ConvertScrapToGold(-1), "Pip and Baldur both pay 5 gold per scrap.");
+            Assert.AreEqual(0, inventory.ScrapMetalCount);
+            Assert.AreEqual(20, inventory.CurrentGold);
         }
 
         [Test]
