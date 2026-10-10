@@ -20,7 +20,9 @@ MODELS = [
     dict(name="Skeleton", folder="Enemy_Normal_skeleton_3d_model",
          fbx="tripo_convert_5bd365a6-e8a7-40ea-9d29-0f8a1ba6d8b8.fbx", ratio=0.45, sword="rusty"),
     dict(name="Commander", folder="1_BOSS_skeletal_warrior_3d_model",
-         fbx="tripo_convert_10a8093e-f398-40af-83c7-e7fd03dc711c.fbx", ratio=0.45, sword="dark"),
+         fbx="tripo_convert_10a8093e-f398-40af-83c7-e7fd03dc711c.fbx", ratio=0.40, sword="dark",
+         # Vili 2026-10-10: the Commander keeps his original face
+         keep=("Head", "Neck", "Neck_Twist_A", "Left_Eye", "Right_Eye")),
 ]
 # take -> (Mixamo file, frame range or None, keep root travel)
 TAKES = {
@@ -48,6 +50,7 @@ for s, t in (("Left", "Left"), ("Right", "Right")):
         for i, seg in ((1, "Proximal"), (2, "Intermediate"), (3, "Distal")):
             MAP[f"{s}Hand{mf}{i}"] = f"{t}_{tf}{seg}"
 MAP = {"mixamorig:" + k: v for k, v in MAP.items()}
+TORSO = {"Hips", "Spine", "Chest", "UpperChest", "Neck", "Head"}
 
 # ------------------------------------------------------------------ palette (4x4 cells of 4 px)
 PAL = {
@@ -129,7 +132,9 @@ def retarget(tgt, src, act, name, keep_travel=False, fps_scale=24.0 / 30.0):
         s, t = sb[inv[n]], tb[n]
         ds = (Ms.to_3x3() @ (s.tail_local - s.head_local)).normalized()
         dt = (Mt.to_3x3() @ (t.tail_local - t.head_local)).normalized()
-        S[n] = ds.rotation_difference(dt).to_matrix()
+        # the torso and head copy the source rotation as is: the Tripo Head bone points out of the face,
+        # so swinging it onto the Mixamo direction tipped the head back and stretched the jaw open
+        S[n] = Matrix.Identity(3) if n in TORSO else ds.rotation_difference(dt).to_matrix()
     sh = (Ms @ sb["mixamorig:Hips"].matrix_local).to_translation()
     th = (Mt @ tb["Hips"].matrix_local).to_translation()
     ratio = th.z / max(1e-6, sh.z)
@@ -298,9 +303,19 @@ def render_take(arm, act, tag, n=6):
 
 
 # ------------------------------------------------------------------ main
-def decimate(mesh, ratio):
+def decimate(mesh, ratio, keep=()):
     tris0 = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
     mod = mesh.modifiers.new("Decimate", 'DECIMATE'); mod.decimate_type = 'COLLAPSE'; mod.ratio = ratio
+    kept = 0
+    if keep:
+        # vertices weighted to these bones (the face) keep their full detail: only the rest may collapse
+        ids = {mesh.vertex_groups[n].index for n in keep if n in mesh.vertex_groups}
+        area = mesh.vertex_groups.new(name="Decimate_Area")
+        for v in mesh.data.vertices:
+            w = sum(g.weight for g in v.groups if g.group in ids)
+            if w < 0.05: area.add([v.index], 1.0, 'REPLACE')
+            else: kept += 1
+        mod.vertex_group = area.name; mod.vertex_group_factor = 1000.0
     mod.use_collapse_triangulate = True
     bpy.context.view_layer.objects.active = mesh
     bpy.ops.object.select_all(action='DESELECT'); mesh.select_set(True)
@@ -308,8 +323,9 @@ def decimate(mesh, ratio):
         if md.type == 'DECIMATE': bpy.ops.object.modifier_apply(modifier=md.name)
     bpy.ops.object.vertex_group_limit_total(group_select_mode='ALL', limit=4)
     bpy.ops.object.vertex_group_normalize_all(group_select_mode='ALL', lock_active=False)
+    if "Decimate_Area" in mesh.vertex_groups: mesh.vertex_groups.remove(mesh.vertex_groups["Decimate_Area"])
     tris1 = sum(len(p.vertices) - 2 for p in mesh.data.polygons)
-    print(f"DECIMATE {mesh.name}: {tris0} -> {tris1} tris, {len(mesh.data.vertices)} verts")
+    print(f"DECIMATE {mesh.name}: {tris0} -> {tris1} tris, {len(mesh.data.vertices)} verts, {kept} face verts kept")
     return tris0, tris1
 
 
@@ -322,7 +338,7 @@ def build_model(m, pal_img):
     sc = bpy.context.scene; sc.render.fps = 24
     pal_img = palette_image()
     arm, mesh = load_target(m)
-    stats = decimate(mesh, m["ratio"])
+    stats = decimate(mesh, m["ratio"], m.get("keep", ()))
     takes = dict(CANDIDATES if PREVIEW else {}, **TAKES)
     acts = {}
     for take, (fname, rng, travel) in takes.items():

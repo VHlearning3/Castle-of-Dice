@@ -66,6 +66,8 @@ namespace CastleOfTheD20.Tests.PlayMode
             var close = (mid + new Vector3(-1.5f, 1.2f, -6.8f), mid);
             var game = (mid + new Vector3(0f, 9f, -9f), mid + Vector3.down * 0.8f);
             yield return Wait(1.0f);
+            Vector3 head = Bone(ca.transform, "Head").position;
+            yield return Shot("0_commander_face", (head + cmd.forward * 2.2f + Vector3.up * 0.2f, head));
             yield return Shot("1_idle", close); yield return Shot("1_idle_game", game);
             foreach (Animator a in new[] { ca, sa }) a.SetTrigger("Attack");
             yield return Wait(0.35f); yield return Shot("2_attack_windup", close);
