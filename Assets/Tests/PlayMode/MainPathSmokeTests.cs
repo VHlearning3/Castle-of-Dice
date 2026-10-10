@@ -132,12 +132,16 @@ namespace CastleOfTheD20.Tests.PlayMode
                     for (int turns = 0; turns <= i; turns++) challenge.Pillars[i].Interact(Hero());
                 }
                 Step("Rune pillars solved (SUN, MOON, STAR)", challenge.RunesSolved);
+                Step("Tower challenge complete, rewards unsealed", challenge.IsComplete);
+                yield return Frames(10);
+                CloseLevelUp();
+
+                // The mimic is a separate, optional fight
                 MimicChest mimic = UnityEngine.Object.FindAnyObjectByType<MimicChest>();
                 if (mimic != null && Hero() != null) mimic.Interact(Hero());
                 yield return AutoBattle("Tower mimic");
                 yield return Frames(10);
                 CloseLevelUp();
-                Step("Tower challenge complete, rewards unsealed", challenge.IsComplete);
             }
 
             // 8. Throne Room: the Gargoyle King

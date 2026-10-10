@@ -288,7 +288,7 @@ namespace CastleOfTheD20.Tests
         #region C5: the Tower
 
         [Test]
-        public void TowerChallenge_NeedsRunesAndGuardian_ThenUnseals()
+        public void TowerChallenge_RunesAloneUnseal_MimicIsOptional()
         {
             GameObject rootObj = Track(new GameObject("Challenge"));
             TowerChallenge challenge = rootObj.AddComponent<TowerChallenge>();
@@ -309,11 +309,8 @@ namespace CastleOfTheD20.Tests
                 for (int turns = 0; turns <= i; turns++) challenge.Pillars[i].Interact(null);
             }
             Assert.IsTrue(challenge.RunesSolved);
-            Assert.IsFalse(challenge.IsComplete, "The guardian still stands.");
-
-            StoryFlags.Set(TowerChallenge.GuardianDefeatedFlag);
-            challenge.TryComplete();
-            Assert.IsTrue(challenge.IsComplete);
+            Assert.IsFalse(challenge.GuardianDefeated, "The mimic was never fought.");
+            Assert.IsTrue(challenge.IsComplete, "The runes alone finish the challenge.");
             Assert.IsTrue(elixir.IsInteractable, "Unsealed.");
         }
 

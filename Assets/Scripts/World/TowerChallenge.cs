@@ -7,9 +7,10 @@ namespace CastleOfTheD20.World
 {
     /// <summary>
     /// The Treasure Tower's challenge (critical review C5). The Giant's Elixir and Othelia's ring sit sealed on
-    /// their pedestal until the hero has set the three rune pillars to SUN, MOON, STAR and beaten the treasure
-    /// guardian (the mimic). Pressure plates on the floor spring traps (DEX DC 12). Finishing the challenge
-    /// gives a level (B8). Progress is kept in story flags, so it survives saves and zone changes.
+    /// their pedestal until the hero has set the three rune pillars to SUN, MOON, STAR. Pressure plates on the
+    /// floor spring traps (DEX DC 12). Finishing the challenge gives a level (B8). The mimic by the door is a
+    /// separate, optional fight (Vili 2026-10-10): beating it is remembered but unseals nothing.
+    /// Progress is kept in story flags, so it survives saves and zone changes.
     /// </summary>
     public class TowerChallenge : MonoBehaviour
     {
@@ -28,7 +29,7 @@ namespace CastleOfTheD20.World
         [SerializeField] private List<Interactable> sealedRewards = new List<Interactable>();
         [Tooltip("Shimmering seal over the pedestal, removed when the challenge is done.")]
         [SerializeField] private GameObject sealVisual;
-        [Tooltip("The guardian's encounter room.")]
+        [Tooltip("The mimic's encounter room (an optional fight, only remembered).")]
         [SerializeField] private DungeonRoomController guardianRoom;
 
         public List<RunePillar> Pillars => pillars;
@@ -49,7 +50,7 @@ namespace CastleOfTheD20.World
         /// <summary>Whether the rune pillars are solved.</summary>
         public bool RunesSolved => StoryFlags.Has(RunesSolvedFlag);
 
-        /// <summary>Whether the treasure guardian has been beaten.</summary>
+        /// <summary>Whether the mimic (the optional treasure guardian) has been beaten.</summary>
         public bool GuardianDefeated => StoryFlags.Has(GuardianDefeatedFlag);
 
         /// <summary>Whether the whole challenge is done and the rewards unsealed.</summary>
@@ -79,6 +80,9 @@ namespace CastleOfTheD20.World
                 }
             }
             ApplySeal();
+
+            // Saves from before the mimic was made optional: the runes alone now finish the challenge
+            if (RunesSolved && !IsComplete) TryComplete();
         }
 
         /// <summary>Called by a pillar after it turns.</summary>
@@ -95,9 +99,6 @@ namespace CastleOfTheD20.World
             {
                 if (pillars[i] != null) pillars[i].Lock();
             }
-            Notify(GuardianDefeated
-                ? "The runes blaze in order: SUN, MOON, STAR. The seal on the pedestal cracks."
-                : "The runes blaze in order: SUN, MOON, STAR. Something in the corner chest stirs...");
             TryComplete();
         }
 
@@ -105,17 +106,16 @@ namespace CastleOfTheD20.World
         {
             if (room == null || room != guardianRoom) return;
             StoryFlags.Set(GuardianDefeatedFlag);
-            TryComplete();
         }
 
-        /// <summary>Unseals the rewards and grants the level once both parts are done.</summary>
+        /// <summary>Unseals the rewards and grants the level once the runes are solved.</summary>
         public void TryComplete()
         {
-            if (IsComplete || !RunesSolved || !GuardianDefeated) return;
+            if (IsComplete || !RunesSolved) return;
 
             StoryFlags.Set(CompletedFlag);
             ApplySeal();
-            Notify("The Tower's seal breaks. The Giant's Elixir and the Queen's ring are yours to take.");
+            Notify("The runes blaze in order: SUN, MOON, STAR. The seal breaks: the Giant's Elixir and the Queen's ring are yours to take.");
             PlayerProgressionManager.Instance?.GrantBonusLevel("Treasure Tower challenge completed");
             Completed?.Invoke();
         }

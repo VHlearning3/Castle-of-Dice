@@ -74,6 +74,8 @@ namespace CastleOfTheD20.World
         private void Update()
         {
             if (playing || MirrorTwinQuest.IsDefeated || room == null || room.CurrentState != RoomState.Unexplored) return;
+            // The sealed room is loaded early but invisible: nothing wakes until the wall is down
+            if (!TowerMirrorRoom.IsOpen) return;
             if (GameManager.Instance != null && GameManager.Instance.CurrentMode != GamePlayMode.Exploration) return;
             if (mirror == null) return;
 
