@@ -135,6 +135,21 @@ namespace CastleOfTheD20.World
             }
         }
 
+        /// <summary>
+        /// Sets up a chest made in code (the tavern's Rogue chest). Call it while the object is still inactive, so
+        /// Awake sees the final name and lid when it restores an already-picked chest.
+        /// </summary>
+        public void ConfigureChest(int dc, int gold, Transform lid, Vector3 openRotation, bool trap)
+        {
+            lockpickDC = Mathf.Clamp(dc, 1, 30);
+            rewardGold = Mathf.Max(0, gold);
+            chestLid = lid;
+            openLidRotation = openRotation;
+            hasTrap = trap;
+            promptMessage = "Pick Lock";
+            interactionRadius = 2.5f;
+        }
+
         #endregion
 
         #region Interaction

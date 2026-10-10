@@ -276,19 +276,34 @@ window("Window_South_2", (5.0, 8.4, -RZ + 0.02), 'z', W["SE"])
 # ---------------------------------------------------------------- fireplace (west wall)
 m = Mesh("Fireplace")
 fz = -1.0
-m.box((-RX + 0.7, 1.6, fz), (1.4, 3.2, 4.4), M_STONE, skip=("+x",))      # hearth block, front faces +x
-m.box((-RX + 0.55, 6.5, fz), (1.1, 6.6, 3.0), M_STONE)                    # chimney breast
-m.box((-RX + 1.5, 3.25, fz), (0.6, 0.3, 4.8), M_WOOD)                     # mantel
-m.box((-RX + 1.45, 0.1, fz), (0.3, 0.2, 4.6), M_PROPS, "stone")           # hearth step
+# Stone hearth with a real firebox (Vili 2026-10-10: the old block had no front face, so the plank wall showed through).
+# The flames are a particle effect made at runtime (TavernDressing).
+HF = -RX + 1.4                     # hearth front face
+OW, OH, OD = 2.4, 2.2, 1.0         # opening width / height / depth
+JW = (4.4 - OW) / 2                # jamb width
+for s in (-1, 1):                                                           # jambs
+    m.box((-RX + 0.7, 1.6, fz + s * (OW / 2 + JW / 2)), (1.4, 3.2, JW), M_STONE)
+m.box((-RX + 0.7, (OH + 3.2) / 2, fz), (1.4, 3.2 - OH, OW), M_STONE)        # lintel over the opening
+m.box((-RX + (1.4 - OD) / 2, OH / 2, fz), (1.4 - OD, OH, OW), M_STONE)      # back of the firebox
+m.box((HF - OD / 2 + 0.35, 0.09, fz), (OD + 0.7, 0.18, 5.0), M_STONE)       # raised hearth stone, in and in front of the box
+m.box((HF + 0.1, 3.35, fz), (0.7, 0.3, 5.0), M_STONE)                       # stone mantel shelf
+for s in (-1, 1):                                                           # corbels under the mantel ends
+    m.box((HF + 0.05, 3.0, fz + s * 1.95), (0.4, 0.4, 0.5), M_STONE)
+m.box((-RX + 0.55, 6.5, fz), (1.1, 6.6, 3.0), M_STONE)                      # chimney breast
 o_fireplace = m.finish(g_shell)
+# Soot lining inside the firebox (no collider), just proud of the stone so the faces never fight
 m = Mesh("Fireplace_Opening")
-m.box((-RX + 1.42, 1.2, fz), (0.04, 2.0, 2.4), M_DARK)
+m.box((HF - OD + 0.02, OH / 2, fz), (0.04, OH, OW - 0.04), M_PROPS, "soot")                 # back
+for s in (-1, 1):
+    m.box((HF - OD / 2, OH / 2, fz + s * (OW / 2 - 0.02)), (OD, OH, 0.04), M_PROPS, "soot")  # sides
+m.box((HF - OD / 2, OH - 0.02, fz), (OD, 0.04, OW), M_PROPS, "soot")                        # roof
 m.finish(o_fireplace)
+# Logs on a bed of embers inside the firebox
 m = Mesh("Fire")
-for i in range(3):
-    m.cyl((-RX + 1.0, 0.25, fz - 0.6 + i * 0.6), 0.12, 1.4, M_PROPS, "wood_dark", seg=6, axis='z')
-for (x, z, h) in [(-RX + 1.0, fz, 1.2), (-RX + 1.05, fz - 0.45, 0.8), (-RX + 1.0, fz + 0.5, 0.9)]:
-    m.cyl((x, 0.4, z), 0.32, h, M_GLOW, seg=6, r_top=0.02)
+m.box((HF - OD / 2, 0.2, fz), (OD - 0.2, 0.05, OW - 0.5), M_GLOW)
+for i, dz in enumerate((-0.45, 0.0, 0.45)):
+    m.cyl((HF - OD + 0.05, 0.36 + (0.1 if i == 1 else 0.0), fz + dz), 0.13, OD - 0.15, M_PROPS, "wood_dark", seg=6, axis='x')
+m.cyl((HF - OD / 2 + 0.1, 0.52, fz - 0.6), 0.11, 1.2, M_PROPS, "wood", seg=6, axis='z')
 m.finish(o_fireplace)
 empty("Light_Fire", (-RX + 2.2, 1.6, fz), g_lights)
 # a cauldron hook and pot by the fire, firewood stack
