@@ -85,6 +85,9 @@ namespace CastleOfTheD20.Editor
             public string VisualPrefabPath => $"{VisualFolder}/Visual_{Key}.prefab";
         }
 
+        // 2026-10-10: Visual_Enemy_Skeleton, Visual_Enemy_SkeletonArcher and Visual_Boss_CursedCommander were edited
+        // in place: decimated mesh, Right_Hand sword and the sword takes from <Name>_Sword.fbx
+        // (BlenderSources/Skeleton_Swords_build.py). Re-running this setup would rebuild them without those.
         private static readonly ModelSpec[] Specs =
         {
             new ModelSpec
