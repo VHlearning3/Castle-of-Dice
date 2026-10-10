@@ -41,7 +41,7 @@ namespace CastleOfTheD20.Tests.PlayMode
         [TearDown]
         public void RestoreSave()
         {
-            DevTools.EncounterDebugOverlay.Visible = Application.isEditor;
+            DevTools.EncounterDebugOverlay.Visible = false;
             Time.timeScale = 1f;
             for (int i = 0; i < SavedKeys.Length; i++)
             {

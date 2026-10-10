@@ -13,14 +13,14 @@ namespace CastleOfTheD20.DevTools
     /// Debug overlay that shows every combat activation area (DungeonRoomController trigger boxes) and every
     /// enemy, including the ones still hidden until their trigger fires, drawn through walls with name labels.
     /// A line joins each enemy to the trigger that wakes it. Toggle with [F3]. Built only into the Editor and
-    /// development builds: on by default in the Editor, off in development builds, absent from release WebGL.
+    /// development builds and off by default (it leaked onto the map and the HUD), absent from release WebGL.
     /// </summary>
     public class EncounterDebugOverlay : MonoBehaviour
     {
         public static EncounterDebugOverlay Instance { get; private set; }
 
         /// <summary>Whether the overlay is drawn.</summary>
-        public static bool Visible { get; set; } = Application.isEditor;
+        public static bool Visible { get; set; }
 
         private const float RefreshInterval = 1f;
         private const float MarkerRadius = 0.6f;

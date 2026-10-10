@@ -37,7 +37,7 @@ namespace CastleOfTheD20.UI
 
         private static readonly Vector2 FrameSize = new Vector2(1560f, 980f);
         private static readonly Vector2 CardSize = new Vector2(380f, 128f);
-        private static readonly Vector2 PinOffset = new Vector2(0f, 22f);
+        private static readonly Vector2 PinOffset = new Vector2(0f, 26f);
 
         private static readonly Color GoldText = new Color(0.98f, 0.85f, 0.45f, 1f);
         private static readonly Color HereGold = new Color(1f, 0.80f, 0.25f, 1f);
@@ -353,14 +353,16 @@ namespace CastleOfTheD20.UI
             bool isLibraryCleared = gm != null && (gm.IsMalakorDefeated || gm.IsWingCleared(GameLocation.Library));
             bool isCrownHallCleared = gm != null && (gm.IsGargoyleKingDefeated || gm.IsWingCleared(GameLocation.CrownHall));
             bool isThroneGateOpen = gm == null || gm.CanEnterLocation(GameLocation.CrownHall) || curKey == KeyCrownHall;
+            bool isTowerCleared = StoryFlags.Has(CastleOfTheD20.World.TowerChallenge.CompletedFlag);
 
-            // The Great Hall, Tower and Throne Room are only reached through the hall.
-            bool isInnerCastleOpen = isCourtyardCleared || isLibraryCleared
-                || curKey == KeyHall || curKey == KeyTower || curKey == KeyCrownHall;
+            // The Hidden Trail scene has no location of its own: show it on the Whispering Woods card.
+            bool onHiddenTrail = CastleOfTheD20.World.SecretForestPath.IsActive;
+            if (onHiddenTrail) curKey = KeyForest;
+            string hereName = onHiddenTrail ? CastleOfTheD20.World.SecretForestPath.DisplayName : GetZoneDisplayName(curLoc);
 
             if (subtitleText != null)
             {
-                subtitleText.text = $"You are in:  <color=#ffd34d><b>{GetZoneDisplayName(curLoc)}</b></color>";
+                subtitleText.text = $"You are in:  <color=#ffd34d><b>{hereName}</b></color>";
             }
 
             currentNode = null;
@@ -393,26 +395,25 @@ namespace CastleOfTheD20.UI
                         break;
 
                     case KeyLibrary:
-                        statusText = isLibraryCleared ? "CLEARED" : "BOSS: SHADOW MAGE MALAKOR";
+                        statusText = isLibraryCleared ? "CLEARED" : "BOSS: SHADOW WITCH";
                         statusColor = isLibraryCleared ? "#6ee78f" : "#ff7a7a";
                         break;
 
+                    // The Great Hall and the Tower have no gate (DoorTeleporter only seals the Throne Room)
                     case KeyHall:
-                        isUnlocked = isInnerCastleOpen;
-                        statusText = isUnlocked ? "SAFE HAVEN - SAVE ALTAR" : "LOCKED - DEFEAT A WING BOSS";
-                        statusColor = isUnlocked ? "#7cb8ff" : "#8b8f99";
+                        statusText = "SAFE HAVEN - SAVE SHRINE";
+                        statusColor = "#7cb8ff";
                         break;
 
                     case KeyTower:
-                        isUnlocked = isInnerCastleOpen;
-                        statusText = isUnlocked ? "TREASURE" : "LOCKED";
-                        statusColor = isUnlocked ? "#ffc44d" : "#8b8f99";
+                        statusText = isTowerCleared ? "CHALLENGE COMPLETE" : "TOWER CHALLENGE";
+                        statusColor = isTowerCleared ? "#6ee78f" : "#ffc44d";
                         break;
 
                     case KeyCrownHall:
-                        // Same rule as the Great Hall's gate: sealed until both wing bosses fall
-                        isUnlocked = isInnerCastleOpen && isThroneGateOpen;
-                        statusText = isCrownHallCleared ? "VANQUISHED" : (isUnlocked ? "FINAL BOSS: GARGOYLE KING" : "LOCKED - DEFEAT BOTH WING BOSSES");
+                        // Same rule as the Great Hall's throne doors: sealed until both wing bosses fall
+                        isUnlocked = isThroneGateOpen;
+                        statusText = isCrownHallCleared ? "VANQUISHED" : (isUnlocked ? "FINAL BOSS: GARGOYLE KING" : "LOCKED - DEFEAT BOTH BOSSES");
                         statusColor = isCrownHallCleared ? "#6ee78f" : (isUnlocked ? "#ff5c5c" : "#8b8f99");
                         break;
 
@@ -437,8 +438,10 @@ namespace CastleOfTheD20.UI
 
                 if (isCurrent && node.LocationPinLabel != null)
                 {
-                    node.LocationPinLabel.text = curLoc == GameLocation.Cellar ? "YOU ARE HERE: CELLAR"
+                    node.LocationPinLabel.text = onHiddenTrail ? "YOU ARE HERE: HIDDEN TRAIL"
+                        : curLoc == GameLocation.Cellar ? "YOU ARE HERE: WINE CELLAR"
                         : curLoc == GameLocation.Tavern ? "YOU ARE HERE: TAVERN" : "YOU ARE HERE";
+                    FitPinToLabel(node);
                 }
 
                 if (node.GlowImage != null)
@@ -486,6 +489,15 @@ namespace CastleOfTheD20.UI
                     if (path.Segments[s] != null) path.Segments[s].color = c;
                 }
             }
+        }
+
+        /// <summary>Widens the "YOU ARE HERE" tag to its text so "YOU ARE HERE: TAVERN" stays on one line.</summary>
+        private static void FitPinToLabel(ZoneNodeUI node)
+        {
+            if (node.LocationPin == null || node.LocationPinLabel == null) return;
+            float textWidth = node.LocationPinLabel.GetPreferredValues(node.LocationPinLabel.text, 1000f, 34f).x;
+            RectTransform pinRt = (RectTransform)node.LocationPin.transform;
+            pinRt.sizeDelta = new Vector2(Mathf.Clamp(textWidth + 36f, 200f, CardSize.x), pinRt.sizeDelta.y);
         }
 
         private bool IsNodeUnlocked(string key)
@@ -749,23 +761,23 @@ namespace CastleOfTheD20.UI
             ApplyPanelLook(secImg, pillBadgeSprite, new Color(0.04f, 0.12f, 0.2f, 0.95f), 0f);
             secImg.color = new Color(0.1f, 0.35f, 0.55f, 1f);
             secImg.raycastTarget = false;
-            TMP_Text secText = CreateText(secretObj.transform, "Label", "SECRET ROUTE", 16f, new Color(0.75f, 0.93f, 1f), FontStyles.Bold, TextAlignmentOptions.Center);
+            TMP_Text secText = CreateText(secretObj.transform, "Label", "HIDDEN TRAIL", 16f, new Color(0.75f, 0.93f, 1f), FontStyles.Bold, TextAlignmentOptions.Center);
             Stretch(secText.rectTransform);
 
             CreateNode(nodesRoot, KeyVillage, "OAKHAVEN VILLAGE",
-                "Baldur's forge, the tavern and the wine cellar.", village);
+                "Baldur's forge, The Foaming Tankard and the wine cellar.", village);
             CreateNode(nodesRoot, KeyForest, "WHISPERING WOODS",
-                "Forest path to the castle. Hidden gate for Rogues.", forest);
+                "The road to the castle. A locked gate only a Rogue can open.", forest);
             CreateNode(nodesRoot, KeyCourtyard, "CASTLE COURTYARD",
-                "Wing 1. The Cursed Commander guards the gate.", courtyard);
+                "Wing 1. The Cursed Commander guards the way into the castle.", courtyard);
             CreateNode(nodesRoot, KeyLibrary, "GRAND ARCHIVES",
-                "Wing 2. Library of the Shadow Witch.", library);
+                "Wing 2. The Shadow Witch haunts the library.", library);
             CreateNode(nodesRoot, KeyHall, "THE GREAT HALL",
-                "Central hub with the Runestone save altar.", hall);
+                "Runestone Shrine to rest and save, and Pip the Peddler.", hall);
             CreateNode(nodesRoot, KeyTower, "TREASURE TOWER",
-                "Othelia's ring and the +15 Max HP elixir.", tower);
+                "Rune pillar challenge: Othelia's ring and a +15 Max HP elixir.", tower);
             CreateNode(nodesRoot, KeyCrownHall, "THE THRONE ROOM",
-                "Wing 3. The Gargoyle King awaits.", throne);
+                "Wing 3. The Gargoyle King waits behind sealed doors.", throne);
         }
 
         private void CreatePath(Transform parent, string fromKey, Vector2 from, string toKey, Vector2 to, bool dashed)
@@ -851,6 +863,10 @@ namespace CastleOfTheD20.UI
 
             TMP_Text status = CreateText(nodeObj.transform, "StatusBadge", "UNEXPLORED", 19f, Color.white, FontStyles.Bold, TextAlignmentOptions.Left);
             SetBand(status.rectTransform, 0.38f, 0.64f);
+            status.textWrappingMode = TextWrappingModes.NoWrap;
+            status.enableAutoSizing = true;
+            status.fontSizeMin = 14f;
+            status.fontSizeMax = 19f;
 
             TMP_Text dText = CreateText(nodeObj.transform, "Description", desc, 17f, new Color(0.86f, 0.87f, 0.9f), FontStyles.Normal, TextAlignmentOptions.Left);
             SetBand(dText.rectTransform, 0.06f, 0.38f);
@@ -874,6 +890,7 @@ namespace CastleOfTheD20.UI
 
             TMP_Text pinText = CreateText(pinObj.transform, "Label", "YOU ARE HERE", 20f, new Color(0.14f, 0.08f, 0.01f), FontStyles.Bold, TextAlignmentOptions.Center);
             Stretch(pinText.rectTransform);
+            pinText.textWrappingMode = TextWrappingModes.NoWrap;
             pinObj.SetActive(false);
 
             zoneNodes.Add(new ZoneNodeUI
@@ -906,7 +923,7 @@ namespace CastleOfTheD20.UI
             CreateLegendItem(legObj.transform, -525f, HereGold, "You are here");
             CreateLegendItem(legObj.transform, -175f, new Color(0.43f, 0.9f, 0.56f), "Cleared");
             CreateLegendItem(legObj.transform, 175f, new Color(1f, 0.45f, 0.45f), "Boss fight");
-            CreateLegendItem(legObj.transform, 525f, PathSecret, "Secret route (Rogue)");
+            CreateLegendItem(legObj.transform, 525f, PathSecret, "Hidden Trail (Rogue)");
         }
 
         private void CreateLegendItem(Transform parent, float x, Color color, string label)

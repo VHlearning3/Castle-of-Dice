@@ -39,9 +39,20 @@ namespace CastleOfTheD20.World
         /// <summary>Fired when player rests at and saves at a save shrine.</summary>
         public static event Action<SavePoint, PlayerUnit> OnGameSavedAtShrine;
 
+        /// <summary>Display name of the shrine, shown on its floating label.</summary>
+        public string ShrineName => shrineName;
+
+        /// <summary>The floating name and "Game Saved" text over the shrine (built at runtime).</summary>
+        public SavePointLabel Label { get; private set; }
+
         #endregion
 
         #region Unity Lifecycle
+
+        private void Start()
+        {
+            Label = SavePointLabel.Attach(this);
+        }
 
         private void Reset()
         {
@@ -113,6 +124,9 @@ namespace CastleOfTheD20.World
             {
                 SFXManager.Instance.PlaySFX(SFXClipType.SpellCast, transform.position);
             }
+
+            if (Label == null) Label = SavePointLabel.Attach(this);
+            if (Label != null) Label.ShowSaved();
 
             OnGameSavedAtShrine?.Invoke(this, player);
             Debug.Log($"<color=#00e676><b>[SavePoint] {successMessage}</b></color>");
