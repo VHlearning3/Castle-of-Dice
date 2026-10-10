@@ -22,7 +22,8 @@ SAMPLES = 96
 
 HEROES = {
     # backdrop centre / edge, rim colour, camera yaw (deg, + = hero's left), frame height (share of body), lift
-    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.32, yaw=-50, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25)),
+    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.32, yaw=-50, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25),
+                    paint=dict(match="M_PlayerKnight", color=(0.30, 0.31, 0.33), metallic=0.55, roughness=0.38, detail=0.0)),
     "Mage":    dict(bg=(0.20, 0.13, 0.46), edge=(0.025, 0.02, 0.06), rim=(0.55, 0.6, 1.0), key=1.0, yaw=26, frame=0.74, lift=0.08, motes=(0.75, 0.8, 1.0)),
     "Rogue":   dict(bg=(0.06, 0.30, 0.22), edge=(0.015, 0.035, 0.03), rim=(0.45, 1.0, 0.7), key=1.0, yaw=30, frame=0.72, lift=0.0, motes=(0.6, 1.0, 0.75)),
 }
@@ -64,6 +65,32 @@ def build_scene(root, hero):
         bsdf.inputs["Metallic"].default_value = info["metallic"]
         bsdf.inputs["Roughness"].default_value = max(0.25, 1.0 - info["smoothness"])
         col = info["color"]
+        paint = cfg.get("paint")
+        if paint and paint["match"] in mat.name:
+            # Portrait only: the armour is painted one steel grey over its blotchy texture; a little of the
+            # texture's light/dark ("detail") is kept so the plates don't look like plastic
+            detail = float(os.environ.get("HERO_PAINT_DETAIL", paint["detail"]))
+            steel = (*paint["color"], 1)
+            bsdf.inputs["Metallic"].default_value = paint["metallic"]
+            bsdf.inputs["Roughness"].default_value = paint["roughness"]
+            tex = nt.nodes.new("ShaderNodeTexImage")
+            tex.image = bpy.data.images.load(info["texture"], check_existing=True)
+            bw = nt.nodes.new("ShaderNodeRGBToBW")
+            nt.links.new(tex.outputs["Color"], bw.inputs["Color"])
+            shade = nt.nodes.new("ShaderNodeMapRange")       # texture brightness -> 1 +- detail around steel
+            shade.inputs["From Min"].default_value = 0.0
+            shade.inputs["From Max"].default_value = 0.5
+            shade.inputs["To Min"].default_value = 1.0 - detail
+            shade.inputs["To Max"].default_value = 1.0 + detail * 0.3
+            nt.links.new(bw.outputs["Val"], shade.inputs["Value"])
+            mix = nt.nodes.new("ShaderNodeMix")
+            mix.data_type = 'RGBA'
+            mix.blend_type = 'MULTIPLY'
+            mix.inputs["Factor"].default_value = 1.0
+            mix.inputs[6].default_value = steel
+            nt.links.new(shade.outputs["Result"], mix.inputs[7])
+            nt.links.new(mix.outputs[2], bsdf.inputs["Base Color"])
+            continue
         if info["texture"] and os.path.exists(info["texture"]):
             tex = nt.nodes.new("ShaderNodeTexImage")
             tex.image = bpy.data.images.load(info["texture"], check_existing=True)
