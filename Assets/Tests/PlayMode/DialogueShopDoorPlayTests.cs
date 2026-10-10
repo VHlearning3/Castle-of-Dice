@@ -159,6 +159,102 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.AreEqual(GamePlayMode.Shop, GameManager.Instance.CurrentMode);
         }
 
+        // Vili, 2026-10-10: Pip's shop was a list of dialogue buttons; now it is Baldur's shop window with Pip's
+        // own stock and prices, and he buys scrap and loot too
+        [UnityTest, Timeout(300000)]
+        public IEnumerator Pip_ShopChoices_OpenTheShopWindow_WithHisStock_AndBuyScrap()
+        {
+            yield return StartAdventure("Character_Mage_Elira");
+            SceneLoader.Instance.LoadScene("Zone_5_CastleHall");
+            yield return Frames(2);
+            yield return WaitForLoad();
+            StoryPanelUI.CloseIfOpen();
+            yield return WaitSeconds(1f);
+
+            ScriptedNpc pip = null;
+            foreach (ScriptedNpc npc in UnityEngine.Object.FindObjectsByType<ScriptedNpc>(FindObjectsSortMode.None))
+            {
+                if (npc.NpcKind == ScriptedNpc.Kind.TrappedMerchant) pip = npc;
+            }
+            Assert.IsNotNull(pip, "Pip haunts the Great Hall.");
+            PlayerUnit hero = UnityEngine.Object.FindAnyObjectByType<PlayerUnit>();
+            Economy.InventoryManager inventory = Economy.InventoryManager.Instance;
+            inventory.AddGold(200 - inventory.CurrentGold);
+            inventory.AddScrapMetal(6);
+            int startScrap = inventory.ScrapMetalCount;
+
+            pip.Interact(hero);
+            yield return Frames(20);
+            yield return WaitSeconds(1.5f);
+            Assert.IsTrue(DialogueController.Instance.IsInDialogue, "Pip talks first.");
+            yield return Shot("Pip_Greeting.png");
+            List<Button> options = ActiveOptionButtons();
+            Assert.IsNotNull(Find(options, "[Ask]"), "Pip still explains his scrolls.");
+            Assert.IsNotNull(Find(options, "[Leave]"));
+            Assert.IsNull(Find(options, "gold"), "No more price buttons in the conversation.");
+
+            Find(options, "[Buy]").onClick.Invoke();
+            yield return Frames(20);
+            ShopUIController shop = ShopUIController.Instance;
+            Assert.IsFalse(DialogueController.Instance.IsInDialogue, "The conversation closes.");
+            Assert.IsTrue(shop.IsShopOpen, "Pip's [Buy] opens the shop window.");
+            Assert.AreEqual(ShopVendor.Pip, shop.CurrentVendor);
+            Assert.IsFalse(shop.IsSellTabActive);
+            Assert.IsTrue(ShopTextShowing("PIP'S SCROLLS"), "The window is Pip's.");
+            Assert.IsTrue(ShopTextShowing("Scroll of Warding"));
+            Assert.IsTrue(ShopTextShowing("Buy  60g"), "Pip's own prices.");
+            Assert.IsFalse(ShopTextShowing("Sharpen Blade"), "Baldur's upgrades stay in Oakhaven.");
+            Assert.IsTrue(AllShopTextFits(), "Every line fits its box.");
+            yield return Shot("Pip_Shop_Buy.png");
+
+            Button buyWarding = ShopRowButton("Row_Buy_" + CombatScrolls.WardingScrollId);
+            Assert.IsNotNull(buyWarding);
+            buyWarding.onClick.Invoke();
+            yield return Frames(5);
+            Assert.AreEqual(140, inventory.CurrentGold, "The Scroll of Warding costs 60 gold at Pip's.");
+            Assert.AreEqual(1, CombatScrolls.Count(CombatScrolls.WardingScrollId));
+            yield return Shot("Pip_Shop_Bought.png");
+
+            shop.ShowSellTab();
+            yield return Frames(5);
+            Assert.IsTrue(ShopTextShowing("Pip pays 5 gold per piece"), "Pip buys scrap at Baldur's rate.");
+            Assert.IsTrue(AllShopTextFits(), "Every line fits its box.");
+            yield return Shot("Pip_Shop_Sell.png");
+            ShopRowButton("Row_Scrap").onClick.Invoke();
+            yield return Frames(5);
+            Assert.AreEqual(0, inventory.ScrapMetalCount);
+            Assert.AreEqual(140 + startScrap * 5, inventory.CurrentGold);
+            yield return Shot("Pip_Shop_SoldScrap.png");
+
+            shop.CloseShop();
+            yield return Frames(5);
+            pip.Interact(hero);
+            yield return Frames(20);
+            Find(ActiveOptionButtons(), "[Sell]").onClick.Invoke();
+            yield return Frames(10);
+            Assert.IsTrue(shop.IsShopOpen && shop.IsSellTabActive, "Pip's [Sell] opens the window on the Sell tab.");
+            shop.CloseShop();
+            Assert.AreEqual(GamePlayMode.Exploration, GameManager.Instance.CurrentMode);
+        }
+
+        [UnityTest, Timeout(300000)]
+        public IEnumerator Baldur_StillHasHisOwnShop_AfterPip()
+        {
+            yield return StartAdventure("Character_Warrior_SirRoland");
+            ShopUIController shop = ShopUIController.Instance;
+            shop.OpenShop(ShopVendor.Pip);
+            yield return Frames(5);
+            shop.CloseShop();
+            shop.OpenShop();
+            yield return Frames(5);
+            Assert.AreEqual(ShopVendor.Baldur, shop.CurrentVendor);
+            Assert.IsTrue(ShopTextShowing("BALDUR'S FORGE"));
+            Assert.IsTrue(ShopTextShowing("Sharpen Blade"));
+            Assert.IsTrue(ShopTextShowing("Buy  75g"), "Baldur's Rune of Fate keeps his price.");
+            Assert.IsFalse(ShopTextShowing("Scroll of Warding"), "Pip's scrolls are not on Baldur's shelf.");
+            yield return Shot("Baldur_Shop_AfterPip.png");
+        }
+
         [UnityTest, Timeout(300000)]
         public IEnumerator LibrarySideDoor_IsLockedForTheKnight()
         {
@@ -233,6 +329,41 @@ namespace CastleOfTheD20.Tests.PlayMode
                 if (t.isActiveAndEnabled && t.text != null && t.text.Contains(fragment)) return true;
             }
             return false;
+        }
+
+        private static bool ShopTextShowing(string fragment)
+        {
+            ShopUIController shop = ShopUIController.Instance;
+            foreach (TMP_Text t in shop.GetComponentsInChildren<TMP_Text>(false))
+            {
+                if (t.text != null && t.text.Contains(fragment)) return true;
+            }
+            return false;
+        }
+
+        private static bool AllShopTextFits()
+        {
+            Canvas.ForceUpdateCanvases();
+            bool fits = true;
+            foreach (TMP_Text t in ShopUIController.Instance.GetComponentsInChildren<TMP_Text>(false))
+            {
+                t.ForceMeshUpdate();
+                if (t.isTextOverflowing || t.isTextTruncated)
+                {
+                    Debug.LogWarning($"[PipShopTest] Text does not fit: '{t.name}': {t.text}");
+                    fits = false;
+                }
+            }
+            return fits;
+        }
+
+        private static Button ShopRowButton(string rowName)
+        {
+            foreach (Transform t in ShopUIController.Instance.GetComponentsInChildren<Transform>(false))
+            {
+                if (t.name == rowName) return t.GetComponentInChildren<Button>();
+            }
+            return null;
         }
 
         private static List<Button> ActiveOptionButtons()

@@ -261,6 +261,15 @@ namespace CastleOfTheD20.Economy
         /// </summary>
         public ShopPurchaseResult TryBuyItem(ItemSO item, PlayerUnit targetPlayer = null)
         {
+            return TryBuyItem(item, targetPlayer, -1);
+        }
+
+        /// <summary>
+        /// Buys at a vendor's own price: Pip the Peddler sells some of Baldur's goods cheaper. A negative
+        /// <paramref name="priceOverride"/> uses the item's normal price; upgrades always use their tier price.
+        /// </summary>
+        public ShopPurchaseResult TryBuyItem(ItemSO item, PlayerUnit targetPlayer, int priceOverride)
+        {
             if (item == null) return ShopPurchaseResult.InvalidItem;
 
             InventoryManager inventory = InventoryManager.Instance;
@@ -277,6 +286,7 @@ namespace CastleOfTheD20.Economy
             }
 
             int price = GetBuyPrice(item, targetPlayer);
+            if (priceOverride >= 0 && !IsUpgrade(item)) price = priceOverride;
             if (price < 0)
             {
                 Debug.Log($"[ShopManager] {item.ItemName} is already at the maximum level.");

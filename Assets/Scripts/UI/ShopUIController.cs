@@ -159,7 +159,8 @@ namespace CastleOfTheD20.UI
         private const float FeedbackSeconds = 2.5f;
 
         private const string ScrapRowKey = "scrap";
-        private const string IdleLine = "<i>\"Steel for coin, coin for steel. What'll it be?\"</i>  - Baldur";
+        private const string BaldurIdleLine = "<i>\"Steel for coin, coin for steel. What'll it be?\"</i>  - Baldur";
+        private const string PipIdleLine = "<i>\"Everything must go! Scrap too, I'm not fussy.\"</i>  - Pip";
 
         private static readonly Color RowTint = new Color(0.06f, 0.08f, 0.12f, 0.85f);
         private static readonly Color RowTintMaxed = new Color(0.10f, 0.09f, 0.05f, 0.85f);
@@ -200,6 +201,11 @@ namespace CastleOfTheD20.UI
         private Transform shelfTransform;
         private bool showingSellTab;
         private float feedbackResetTime;
+
+        // Who is behind the counter. Pip the Peddler (Castle Hall) uses this same window with his own stock and
+        // prices, and buys scrap and loot like Baldur (Vili, 2026-10-10).
+        private ShopVendor vendor = ShopVendor.Baldur;
+        private readonly Dictionary<string, int> priceOverrides = new Dictionary<string, int>(4);
 
         // True while OpenShop activates the panel. The controller sits on the ShopPanel, which starts inactive
         // in Zone 1, so its first opening runs Awake, and Awake must not shut the panel it is opening (Baldur's
@@ -521,7 +527,7 @@ namespace CastleOfTheD20.UI
             TMP_Text tText = titleObj.GetComponent<TMP_Text>();
             if (tText != null)
             {
-                tText.text = "BALDUR'S FORGE & WARES";
+                tText.text = vendor == ShopVendor.Pip ? "PIP'S SCROLLS & SUNDRIES" : "BALDUR'S FORGE & WARES";
                 tText.fontSize = 22f;
                 tText.fontStyle = FontStyles.Bold;
                 tText.color = UITheme.GoldAccent;
@@ -548,7 +554,9 @@ namespace CastleOfTheD20.UI
             TMP_Text subText = subObj.GetComponent<TMP_Text>();
             if (subText != null)
             {
-                subText.text = "Blacksmith of Oakhaven Village - Arms, Armor & Field Supplies";
+                subText.text = vendor == ShopVendor.Pip
+                    ? "A peddler trapped in the Great Hall - Scrolls, Runes & Potions"
+                    : "Blacksmith of Oakhaven Village - Arms, Armor & Field Supplies";
                 subText.fontSize = 12f;
                 subText.color = new Color(0.62f, 0.67f, 0.74f, 1f);
                 subText.alignment = TextAlignmentOptions.Center;
@@ -1261,7 +1269,39 @@ namespace CastleOfTheD20.UI
         /// <summary>
         /// Opens Blacksmith Baldur's store interface, pauses exploration mode, and refreshes stock.
         /// </summary>
-        public void OpenShop()
+        public void OpenShop() => OpenShop(ShopVendor.Baldur, false);
+
+        /// <summary>
+        /// Opens the shop window for <paramref name="who"/>: Baldur's forge, or Pip's stall in the Castle Hall.
+        /// </summary>
+        /// <param name="sellTab">Start on the Sell tab (Pip's "will you take scrap?" choice).</param>
+        public void OpenShop(ShopVendor who, bool sellTab = false)
+        {
+            vendor = who;
+            priceOverrides.Clear();
+            if (vendor == ShopVendor.Pip)
+            {
+                for (int i = 0; i < World.HubDialogues.MerchantStock.Length; i++)
+                {
+                    var stock = World.HubDialogues.MerchantStock[i];
+                    priceOverrides[stock.id] = stock.price;
+                }
+            }
+
+            OpenShopWindow();
+            if (sellTab)
+            {
+                showingSellTab = true;
+                RefreshEconomyDisplay();
+            }
+        }
+
+        /// <summary>Who is behind the counter right now.</summary>
+        public ShopVendor CurrentVendor => vendor;
+
+        private string VendorName => vendor == ShopVendor.Pip ? "Pip" : "Baldur";
+
+        private void OpenShopWindow()
         {
             AutoLocateComponents();
             EnsureStyledHierarchy();
@@ -1291,7 +1331,7 @@ namespace CastleOfTheD20.UI
             RefreshEconomyDisplay();
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-            Debug.Log("[ShopUIController] Blacksmith Baldur's shop opened.");
+            Debug.Log($"[ShopUIController] {VendorName}'s shop opened.");
         }
 
         /// <summary>
@@ -1305,7 +1345,7 @@ namespace CastleOfTheD20.UI
             }
 
             GameManager.Instance?.SetMode(GamePlayMode.Exploration);
-            Debug.Log("[ShopUIController] Blacksmith Baldur's shop closed. Exploration resumed.");
+            Debug.Log($"[ShopUIController] {VendorName}'s shop closed. Exploration resumed.");
         }
 
         #endregion
@@ -1432,11 +1472,17 @@ namespace CastleOfTheD20.UI
         /// </summary>
         private void BuildBuyRows()
         {
+            // Rows of the other vendor's stock stay on the shelf, hidden
+            for (int i = 0; i < buyRows.Count; i++)
+            {
+                if (buyRows[i].Root != null) buyRows[i].Root.SetActive(false);
+            }
             buyRows.Clear();
 
-            for (int i = 0; i < ShopManager.BuyStockOrder.Length; i++)
+            int stockCount = vendor == ShopVendor.Pip ? World.HubDialogues.MerchantStock.Length : ShopManager.BuyStockOrder.Length;
+            for (int i = 0; i < stockCount; i++)
             {
-                string itemId = ShopManager.BuyStockOrder[i];
+                string itemId = vendor == ShopVendor.Pip ? World.HubDialogues.MerchantStock[i].id : ShopManager.BuyStockOrder[i];
                 ShopRow row;
                 switch (itemId)
                 {
@@ -1482,7 +1528,7 @@ namespace CastleOfTheD20.UI
             scrapRow.IsSellRow = true;
             sellScrapButtonLabel = scrapRow.ButtonLabel;
             if (scrapRow.Icon != null && scrapOreSprite != null) scrapRow.Icon.sprite = scrapOreSprite;
-            scrapRow.Root.transform.SetSiblingIndex(ShopManager.BuyStockOrder.Length);
+            scrapRow.Root.transform.SetSiblingIndex(buyRows.Count);
             WireRowButton(scrapRow);
         }
 
@@ -1678,7 +1724,7 @@ namespace CastleOfTheD20.UI
         {
             feedbackResetTime = 0f;
             if (feedbackText == null) return;
-            feedbackText.text = IdleLine;
+            feedbackText.text = vendor == ShopVendor.Pip ? PipIdleLine : BaldurIdleLine;
             feedbackText.color = MutedText;
         }
 
@@ -1721,7 +1767,7 @@ namespace CastleOfTheD20.UI
         /// <summary>Whether the Sell tab is showing.</summary>
         public bool IsSellTabActive => showingSellTab;
 
-        /// <summary>Whether Baldur's shop window is on screen.</summary>
+        /// <summary>Whether the shop window (Baldur's or Pip's) is on screen.</summary>
         public bool IsShopOpen => shopPanel != null && shopPanel.activeInHierarchy;
 
         #endregion
@@ -1795,7 +1841,11 @@ namespace CastleOfTheD20.UI
                     return $"Coats your blade when a fight starts: first hit deals +{item.StatBonusValue} damage.";
                 case ShopManager.REROLL_RUNE_ID:
                     return "Reroll one failed d20 roll of your choice.";
+                case CombatScrolls.EmbersScrollId:
+                    return "Read it in a fight (your action): 2d4 fire on every enemy, DEX save for half.";
             }
+
+            if (!ShopManager.IsUpgrade(item)) return item.Description;
 
             bool isWeapon = item.ItemType == ItemType.WeaponUpgrade;
             string stat = isWeapon ? "DMG" : "AC";
@@ -1806,6 +1856,13 @@ namespace CastleOfTheD20.UI
             return bonus == 0
                 ? $"Permanent +1 {stat}."
                 : $"Now <color=#F6D578>+{bonus} {stat}</color>. Next level: +{bonus + 1} {stat}.";
+        }
+
+        /// <summary>The current vendor's price: Pip's own price for his stock, otherwise the shop price.</summary>
+        private int PriceFor(ItemSO item, PlayerUnit player)
+        {
+            if (item != null && !ShopManager.IsUpgrade(item) && priceOverrides.TryGetValue(item.ItemID, out int price)) return price;
+            return ShopManager.GetBuyPrice(item, player);
         }
 
         private static string GetBuyTitle(ItemSO item, int owned)
@@ -1837,7 +1894,9 @@ namespace CastleOfTheD20.UI
 
             if (gold > 0)
             {
-                ShowFeedback($"Baldur melts down {scrapBefore} scrap: <b>+{gold} gold</b>.", true);
+                ShowFeedback(vendor == ShopVendor.Pip
+                    ? $"Pip takes {scrapBefore} scrap off your hands: <b>+{gold} gold</b>."
+                    : $"Baldur melts down {scrapBefore} scrap: <b>+{gold} gold</b>.", true);
                 PlayShopSound(SFXClipType.SwordHit, 0.8f);
             }
             else
@@ -1867,8 +1926,8 @@ namespace CastleOfTheD20.UI
             if (sm == null || item == null) return;
 
             PlayerUnit player = FindAnyObjectByType<PlayerUnit>();
-            int price = ShopManager.GetBuyPrice(item, player);
-            ShopPurchaseResult result = sm.TryBuyItem(item, player);
+            int price = PriceFor(item, player);
+            ShopPurchaseResult result = sm.TryBuyItem(item, player, price);
 
             switch (result)
             {
@@ -1902,7 +1961,7 @@ namespace CastleOfTheD20.UI
         }
 
         /// <summary>
-        /// Sells one of the item back to Baldur.
+        /// Sells one of the item to whoever is behind the counter.
         /// </summary>
         public void SellStockItem(ItemSO item)
         {
@@ -1979,7 +2038,7 @@ namespace CastleOfTheD20.UI
                 ItemSO item = row.Item;
                 bool isUpgrade = ShopManager.IsUpgrade(item);
                 int level = isUpgrade ? ShopManager.GetUpgradeLevel(item, player) : 0;
-                int price = ShopManager.GetBuyPrice(item, player);
+                int price = PriceFor(item, player);
                 bool maxed = price < 0;
                 bool affordable = !maxed && currentGold >= price;
                 int owned = !isUpgrade && inventory != null ? inventory.GetItemCount(item) : 0;
@@ -2024,8 +2083,8 @@ namespace CastleOfTheD20.UI
                 if (scrapRow.Desc != null)
                 {
                     scrapRow.Desc.text = kept > 0
-                        ? $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. {kept} kept for his scrap request."
-                        : $"Baldur pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. Fights drop 2-10 scrap.";
+                        ? $"{VendorName} pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. {kept} kept for {(vendor == ShopVendor.Pip ? "your scrap quest" : "his scrap request")}."
+                        : $"{VendorName} pays {ShopManager.SCRAP_TO_GOLD_RATE} gold per piece. Fights drop 2-10 scrap.";
                 }
                 if (scrapRow.ButtonLabel != null)
                 {
@@ -2062,7 +2121,7 @@ namespace CastleOfTheD20.UI
                 int owned = inventory.GetItemCount(item);
                 ApplyIcon(row);
                 if (row.Title != null) row.Title.text = $"{item.ItemName}  <color=#A6B3C7><size=80%>(you have {owned})</size></color>";
-                if (row.Desc != null) row.Desc.text = $"Baldur buys it for {item.SellPriceGold} gold each.";
+                if (row.Desc != null) row.Desc.text = $"{VendorName} buys it for {item.SellPriceGold} gold each.";
                 if (row.Background != null) row.Background.color = RowTint;
                 if (row.ButtonLabel != null)
                 {
@@ -2148,5 +2207,12 @@ namespace CastleOfTheD20.UI
         }
 
         #endregion
+    }
+
+    /// <summary>Who runs the shop window: Baldur in Oakhaven, or Pip the Peddler in the Castle Hall.</summary>
+    public enum ShopVendor
+    {
+        Baldur,
+        Pip
     }
 }
