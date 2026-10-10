@@ -315,6 +315,7 @@ namespace CastleOfTheD20.UI
                 classSelectionPanel.SetActive(true);
                 classSelectionPanel.transform.SetAsLastSibling();
                 EnsureDifficultyRow();
+                EnsureHeroPortraits();
             }
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
@@ -353,6 +354,52 @@ namespace CastleOfTheD20.UI
             if (SFXManager.Instance != null) SFXManager.Instance.PlaySFX(SFXClipType.ButtonClick);
             Application.OpenURL(SCOTTISH_HARP_ATTRIBUTION_URL);
         }
+
+        #region Hero portraits
+
+        /// <summary>Portrait of each hero above their card (Assets/Resources/HeroPortraits, rendered in Blender).</summary>
+        public const string HeroPortraitFolder = "HeroPortraits/";
+        private static readonly Vector2 PortraitSize = new Vector2(250f, 270f);
+
+        /// <summary>
+        /// Puts each hero's portrait above their card, moves the title above the portraits and makes the
+        /// screen opaque so the main menu's title no longer shows through (built once, at runtime).
+        /// </summary>
+        private void EnsureHeroPortraits()
+        {
+            if (classSelectionPanel == null) return;
+            Transform panel = classSelectionPanel.transform;
+
+            Image bg = classSelectionPanel.GetComponent<Image>();
+            if (bg != null) { Color c = bg.color; c.a = 1f; bg.color = c; }
+
+            Transform title = panel.Find("CS_Title");
+            if (title != null) ((RectTransform)title).anchoredPosition = new Vector2(0f, 482f);
+
+            AddPortrait(panel.Find("Warrior_Card"), "Warrior");
+            AddPortrait(panel.Find("Mage_Card"), "Mage");
+            AddPortrait(panel.Find("Rogue_Card"), "Rogue");
+        }
+
+        private static void AddPortrait(Transform card, string hero)
+        {
+            if (card == null || card.Find("Hero_Portrait") != null) return;
+            Sprite sprite = Resources.Load<Sprite>(HeroPortraitFolder + hero);
+            if (sprite == null) return;
+
+            GameObject obj = new GameObject("Hero_Portrait", typeof(RectTransform));
+            obj.transform.SetParent(card, false);
+            RectTransform rect = (RectTransform)obj.transform;
+            float cardTop = ((RectTransform)card).sizeDelta.y * 0.5f;
+            rect.anchoredPosition = new Vector2(0f, cardTop + 8f + PortraitSize.y * 0.5f);
+            rect.sizeDelta = PortraitSize;
+            Image img = obj.AddComponent<Image>();
+            img.sprite = sprite;
+            img.preserveAspect = true;
+            img.raycastTarget = true;   // a click on the portrait picks the hero, like the card under it
+        }
+
+        #endregion
 
         #region Difficulty (critical review B9)
 
@@ -817,7 +864,7 @@ namespace CastleOfTheD20.UI
             GameObject titleObj = new GameObject("CS_Title");
             titleObj.transform.SetParent(csPanel.transform, false);
             RectTransform titleRect = titleObj.AddComponent<RectTransform>();
-            titleRect.anchoredPosition = new Vector2(0f, 190f);
+            titleRect.anchoredPosition = new Vector2(0f, 482f);   // above the hero portraits
             titleRect.sizeDelta = new Vector2(600f, 60f);
             TextMeshProUGUI titleTMP = titleObj.AddComponent<TextMeshProUGUI>();
             titleTMP.text = "CHOOSE YOUR HERO";

@@ -1,0 +1,20 @@
+{
+  "hero": "Warrior",
+  "clip": "Idle",
+  "head": [-0.112604, 2.359388, 0.107128],
+  "forward": [0, 0, 1],
+  "headForward": [-0.293098, 0.209735, -0.932794],
+  "materials": [
+    {"name": "m0_M_Knight_EyeSocket", "texture": "", "color": [0.018, 0.016, 0.02], "metallic": 0, "smoothness": 0.35},
+    {"name": "m1_M_Knight_ShieldBlue", "texture": "", "color": [0.17, 0.25, 0.52], "metallic": 0, "smoothness": 0.3},
+    {"name": "m2_M_Knight_Steel", "texture": "", "color": [0.8, 0.82, 0.86], "metallic": 0.6, "smoothness": 0.55},
+    {"name": "m3_M_Knight_Gold", "texture": "", "color": [0.86, 0.64, 0.24], "metallic": 0.6, "smoothness": 0.5},
+    {"name": "m4_M_Knight_Leather", "texture": "", "color": [0.36, 0.22, 0.13], "metallic": 0, "smoothness": 0.2},
+    {"name": "m5_M_Knight_Steel", "texture": "", "color": [0.8, 0.82, 0.86], "metallic": 0.6, "smoothness": 0.55},
+    {"name": "m6_M_Knight_Gold", "texture": "", "color": [0.86, 0.64, 0.24], "metallic": 0.6, "smoothness": 0.5},
+    {"name": "m7_M_Knight_Leather", "texture": "", "color": [0.36, 0.22, 0.13], "metallic": 0, "smoothness": 0.2},
+    {"name": "m8_M_PlayerKnight", "texture": "D:/Unity/castle-heroportraits/Assets/Characters/PlayerKnight_Steel.jpg", "color": [1, 1, 1], "metallic": 0.15, "smoothness": 0.25}
+  ],
+  "min": [0.703424, -0.033486, -1.002346],
+  "max": [-1.553442, 2.713949, 1.032358]
+}

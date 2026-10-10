@@ -1,0 +1,14 @@
+{
+  "hero": "Mage",
+  "clip": "Idle",
+  "head": [0.023046, 2.608544, 0.208388],
+  "forward": [0, 0, 1],
+  "headForward": [-0.992961, 0.10766, -0.049374],
+  "materials": [
+    {"name": "m0_M_LowPolyItems", "texture": "D:/Unity/castle-heroportraits/Assets/Models/Items/LowPolyItems_Palette.png", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.25},
+    {"name": "m1_M_LowPolyItems_Glow", "texture": "D:/Unity/castle-heroportraits/Assets/Models/Items/LowPolyItems_Palette.png", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.25},
+    {"name": "m2_M_Hero_Mage_Elira", "texture": "D:/Unity/castle-heroportraits/Assets/Characters/Player_mage_new/tripo_rgb_70139358-154f-4f40-b28c-91fc93740886.png", "color": [1, 1, 1], "metallic": 0, "smoothness": 0.2}
+  ],
+  "min": [1.135978, 0.003401, -0.486877],
+  "max": [-1.175571, 3.523929, 0.602854]
+}
