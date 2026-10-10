@@ -46,6 +46,7 @@ namespace CastleOfTheD20.World
         public static void Apply()
         {
             MakeDoorFrameWooden();
+            RaiseDoorSign();
             LightHearth();
         }
 
@@ -76,6 +77,28 @@ namespace CastleOfTheD20.World
             for (int i = 0; i < mats.Length; i++) mats[i] = i == 0 ? plank : trim;
             renderer.sharedMaterials = mats;
             return true;
+        }
+
+        /// <summary>Gap between the top of the arch and the bottom of the sign board.</summary>
+        public const float SignClearance = 0.25f;
+        private const float SignHalfHeight = 0.9f; // ZoneExitSign board: 1.55 high with its trim, a little above the anchor
+
+        /// <summary>
+        /// Hangs the door sign clear above the arch (Vili, 2026-10-10: the arch's keystone hid the words). Runs on scene
+        /// load, before the door builds its sign from Sign_Anchor. Returns the anchor's height, or NaN without a door.
+        /// </summary>
+        public static float RaiseDoorSign()
+        {
+            GameObject group = GameObject.Find(DoorGroupName);
+            if (group == null) return float.NaN;
+            Transform anchor = FindDeep(group.transform, ZoneExitSign.SignAnchorName);
+            Transform frame = FindDeep(group.transform, DoorFrameName);
+            Renderer frameRenderer = frame != null ? frame.GetComponent<Renderer>() : null;
+            if (anchor == null || frameRenderer == null) return float.NaN;
+            float lowest = frameRenderer.bounds.max.y + SignClearance + SignHalfHeight;
+            Vector3 p = anchor.position;
+            if (p.y < lowest) anchor.position = new Vector3(p.x, lowest, p.z);
+            return anchor.position.y;
         }
 
         /// <summary>Makes the fire in the hearth (once). Returns its root, or null when the tavern has no firebox.</summary>
