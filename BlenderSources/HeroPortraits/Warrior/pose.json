@@ -1,9 +1,9 @@
 {
   "hero": "Warrior",
   "clip": "Idle",
-  "head": [-0.147096, 2.383346, 0.131591],
+  "head": [-0.112604, 2.359388, 0.107128],
   "forward": [0, 0, 1],
-  "headForward": [-0.946501, 0.141673, -0.28994],
+  "headForward": [-0.293098, 0.209735, -0.932794],
   "materials": [
     {"name": "m0_M_Knight_EyeSocket", "texture": "", "color": [0.018, 0.016, 0.02], "metallic": 0, "smoothness": 0.35},
     {"name": "m1_M_Knight_ShieldBlue", "texture": "", "color": [0.17, 0.25, 0.52], "metallic": 0, "smoothness": 0.3},
@@ -15,6 +15,6 @@
     {"name": "m7_M_Knight_Leather", "texture": "", "color": [0.36, 0.22, 0.13], "metallic": 0, "smoothness": 0.2},
     {"name": "m8_M_PlayerKnight", "texture": "D:/Unity/castle-heroportraits/Assets/Characters/tripo_rgb_9f4fbd7c-4c41-4556-8b04-e296ba1d0d00.jpg", "color": [1, 1, 1], "metallic": 0.15, "smoothness": 0.25}
   ],
-  "min": [0.493557, -0.007894, -0.752014],
-  "max": [-1.234315, 2.740668, 1.315844]
+  "min": [0.703424, -0.033486, -1.002346],
+  "max": [-1.553442, 2.713949, 1.032358]
 }

@@ -22,8 +22,8 @@ SAMPLES = 96
 
 HEROES = {
     # backdrop centre / edge, rim colour, camera yaw (deg, + = hero's left), frame height (share of body), lift
-    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.45, yaw=22, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25)),
-    "Mage":    dict(bg=(0.20, 0.13, 0.46), edge=(0.025, 0.02, 0.06), rim=(0.55, 0.6, 1.0), key=1.0, yaw=26, frame=0.74, lift=0.05, motes=(0.75, 0.8, 1.0)),
+    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.42, yaw=-50, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25)),
+    "Mage":    dict(bg=(0.20, 0.13, 0.46), edge=(0.025, 0.02, 0.06), rim=(0.55, 0.6, 1.0), key=1.0, yaw=26, frame=0.68, lift=0.06, motes=(0.75, 0.8, 1.0)),
     "Rogue":   dict(bg=(0.06, 0.30, 0.22), edge=(0.015, 0.035, 0.03), rim=(0.45, 1.0, 0.7), key=1.0, yaw=30, frame=0.72, lift=0.0, motes=(0.6, 1.0, 0.75)),
 }
 
@@ -34,13 +34,21 @@ def unity_to_blender(v):
 
 
 def build_scene(root, hero):
-    cfg = HEROES[hero]
-    src = os.path.join(root, "BlenderSources", "HeroPortraits", hero)
+    cfg = HEROES[hero.rstrip("0123456789")]   # "Warrior2" = a candidate pose of the Warrior
+    if os.environ.get("HERO_YAW"):
+        cfg = dict(cfg, yaw=float(os.environ["HERO_YAW"]))
+    src = os.path.join(os.environ.get("HERO_SRC_DIR") or os.path.join(root, "BlenderSources", "HeroPortraits"), hero)
     meta = json.load(open(os.path.join(src, "pose.json")))
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.wm.obj_import(filepath=os.path.join(src, "pose.obj"), forward_axis='NEGATIVE_Z', up_axis='Y')
     objs = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    for o in objs:
+        # Low-poly faces with smooth game normals self-shadow in dark triangles (the "shadow terminator");
+        # these offsets push the shadow rays past the facets
+        o.shadow_terminator_geometry_offset = 0.9
+        o.shadow_terminator_shading_offset = 0.2
+        o.shadow_terminator_normal_offset = 0.1
 
     mats = {m["name"]: m for m in meta["materials"]}
     for mat in bpy.data.materials:
@@ -122,7 +130,7 @@ def build_scene(root, hero):
 
     side = Vector((-dir_.y, dir_.x, 0)).normalized()
     s = body  # light distances scale with the hero
-    area("Key", (1.0, 0.86, 0.68), 110 * cfg["key"] * s * s, head + dir_ * 0.9 * s + side * 0.7 * s + Vector((0, 0, 0.55 * s)), 0.6 * s)
+    area("Key", (1.0, 0.86, 0.68), 110 * cfg["key"] * s * s, head + dir_ * 0.9 * s + side * 0.7 * s + Vector((0, 0, 0.55 * s)), 1.0 * s)
     area("Fill", (0.7, 0.75, 0.9), 22 * cfg["key"] * s * s, head + dir_ * 0.9 * s - side * 0.9 * s + Vector((0, 0, 0.1 * s)), 0.9 * s)
     area("RimL", cfg["rim"], 160 * s * s, head - dir_ * 0.7 * s + side * 0.6 * s + Vector((0, 0, 0.35 * s)), 0.3 * s)
     area("RimR", cfg["rim"], 110 * s * s, head - dir_ * 0.7 * s - side * 0.65 * s + Vector((0, 0, 0.2 * s)), 0.3 * s)
@@ -192,9 +200,9 @@ def main():
     argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
     root = argv[0] if argv else os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     heroes = argv[1:] or list(HEROES)
-    out_dir = os.path.join(root, "Assets", "Resources", "HeroPortraits")
+    out_dir = os.environ.get("HERO_OUT_DIR") or os.path.join(root, "Assets", "Resources", "HeroPortraits")
     os.makedirs(out_dir, exist_ok=True)
-    tmp = os.path.join(root, "BlenderSources", "HeroPortraits")
+    tmp = os.environ.get("HERO_SRC_DIR") or os.path.join(root, "BlenderSources", "HeroPortraits")
     for i, hero in enumerate(heroes):
         cfg = build_scene(root, hero)
         raw = os.path.join(tmp, hero, "raw.png")
@@ -202,7 +210,7 @@ def main():
         bpy.context.scene.render.image_settings.file_format = 'PNG'
         bpy.context.scene.render.image_settings.color_mode = 'RGBA'
         bpy.ops.render.render(write_still=True)
-        composite(raw, os.path.join(out_dir, hero + ".png"), cfg, seed=7 + i)
+        composite(raw, os.path.join(out_dir, hero + ".png"), cfg, seed=7 + list(HEROES).index(hero.rstrip("0123456789")))
         print("[HeroPortraits]", hero, "->", os.path.join(out_dir, hero + ".png"))
 
 

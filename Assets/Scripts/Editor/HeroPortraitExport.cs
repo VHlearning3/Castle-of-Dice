@@ -7,6 +7,8 @@ using CastleOfTheD20.Core;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 
 namespace CastleOfTheD20.Editor
 {
@@ -32,8 +34,8 @@ namespace CastleOfTheD20.Editor
 
         private static readonly Pose[] Poses =
         {
-            new Pose { hero = CharacterClassType.Warrior, clip = "idle", at = 0.25f },
-            new Pose { hero = CharacterClassType.Mage, clip = "idle", at = 0.25f },
+            new Pose { hero = CharacterClassType.Warrior, clip = "idle", at = 0.5f },
+            new Pose { hero = CharacterClassType.Mage, clip = "idle", at = 0.5f },
             new Pose { hero = CharacterClassType.Rogue, clip = "Idle", at = 0.25f },
         };
 
@@ -125,7 +127,17 @@ namespace CastleOfTheD20.Editor
                 }
             }
             Debug.Log($"[HeroPortraits] {pose.hero} clips: {string.Join(", ", names)}");
-            if (clip != null)
+
+            // The knight's model has its bones optimised away, so AnimationMode can't pose it: evaluate the
+            // clip through a playable graph on its Animator instead (the graph lives until the meshes are baked)
+            PlayableGraph graph = default;
+            if (clip != null && !animator.hasTransformHierarchy)
+            {
+                AnimationClipPlayable playable = AnimationPlayableUtilities.PlayClip(animator, clip, out graph);
+                playable.SetTime(clip.length * pose.at);
+                graph.Evaluate();
+            }
+            else if (clip != null)
             {
                 AnimationMode.StartAnimationMode();
                 AnimationMode.BeginSampling();
@@ -227,6 +239,7 @@ namespace CastleOfTheD20.Editor
             json.Append("\n  ],\n  \"min\": ").Append(Vec(Obj(min))).Append(",\n  \"max\": ").Append(Vec(Obj(max))).Append("\n}\n");
 
             if (AnimationMode.InAnimationMode()) AnimationMode.StopAnimationMode();
+            if (graph.IsValid()) graph.Destroy();
             File.WriteAllText(Path.Combine(dir, "pose.obj"), obj.ToString());
             File.WriteAllText(Path.Combine(dir, "pose.json"), json.ToString());
             Debug.Log($"[HeroPortraits] {pose.hero}: {(clip != null ? clip.name : "rest")} @ {pose.at:F2}, {vBase - 1} verts");
