@@ -649,9 +649,10 @@ namespace CastleOfTheD20.UI
             {
                 speakerPortraitImage.enabled = true;
                 speakerPortraitImage.preserveAspect = true;
-                if (node.SpeakerPortrait != null)
+                Sprite face = node.SpeakerPortrait != null ? node.SpeakerPortrait : DialoguePortraits.For(node.SpeakerName);
+                if (face != null)
                 {
-                    speakerPortraitImage.sprite = node.SpeakerPortrait;
+                    speakerPortraitImage.sprite = face;
                     speakerPortraitImage.color = Color.white;
                 }
                 else if (defaultPortraitPlaceholder != null)
