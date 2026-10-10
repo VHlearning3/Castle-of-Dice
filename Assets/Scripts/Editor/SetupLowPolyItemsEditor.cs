@@ -294,6 +294,7 @@ namespace CastleOfTheD20.Editor
             AddMounts(mounts, CharacterClassType.Rogue, RogueFbx, DaggersFbx,
                 ("RogueDagger_R", RightHand, "Weapon_RogueDagger_R"), ("RogueDagger_L", LeftHand, "Weapon_RogueDagger_L"));
             AimDaggersInIdle(mounts);
+            TiltStaffInIdle(mounts);
 
             HeroWeaponMountsSO asset = AssetDatabase.LoadAssetAtPath<HeroWeaponMountsSO>(MountsPath);
             if (asset == null)
@@ -409,6 +410,93 @@ namespace CastleOfTheD20.Editor
             {
                 PrefabUtility.UnloadPrefabContents(hero);
             }
+        }
+
+        /// <summary>
+        /// Outward lean of Elisa's staff in her idle, in degrees from straight up towards her right. The Blender fit
+        /// ran the staff's head through her right shoulder and hair (Vili, 2026-10-10); this leans it clear.
+        /// </summary>
+        public const float StaffOutwardLean = 16f;
+
+        /// <summary>Re-leans the staff on the saved mounts asset without rebuilding the weapons.</summary>
+        [MenuItem("CastleOfDice/Heroes/Lean Mage Staff Clear Of Shoulder")]
+        public static void LeanStaffOnSavedMounts()
+        {
+            HeroWeaponMountsSO asset = AssetDatabase.LoadAssetAtPath<HeroWeaponMountsSO>(MountsPath);
+            if (asset == null) { Debug.LogError("[SetupLowPolyItemsEditor] No HeroWeaponMounts asset."); return; }
+            List<HeroWeaponMountsSO.Mount> mounts = new List<HeroWeaponMountsSO.Mount>(asset.mounts);
+            TiltStaffInIdle(mounts);
+            asset.mounts = mounts.ToArray();
+            EditorUtility.SetDirty(asset);
+            AssetDatabase.SaveAssets();
+        }
+
+        /// <summary>
+        /// Turns the staff about its grip so that, in Elisa's idle, it leans <see cref="StaffOutwardLean"/> degrees
+        /// out to her right; its forward lean is kept. Absolute, so running it again changes nothing.
+        /// </summary>
+        private static void TiltStaffInIdle(List<HeroWeaponMountsSO.Mount> mounts)
+        {
+            HeroWeaponMountsSO.Mount staff = null;
+            foreach (HeroWeaponMountsSO.Mount m in mounts)
+                if (m.heroClass == CharacterClassType.Mage && m.weaponPrefab != null) staff = m;
+            if (staff == null) return;
+
+            GameObject hero = PrefabUtility.LoadPrefabContents(PlayerHeroPrefab);
+            try
+            {
+                HeroClassModels models = hero.GetComponent<HeroClassModels>();
+                if (models == null) return;
+                models.Apply(CharacterClassType.Mage);
+                Animator animator = null;
+                foreach (Animator a in hero.GetComponentsInChildren<Animator>(false))
+                    if (a.runtimeAnimatorController != null) animator = a;
+                AnimationClip idle = null;
+                if (animator != null)
+                    foreach (AnimationClip c in animator.runtimeAnimatorController.animationClips)
+                        if (c.name == "Idle") idle = c;
+                if (idle == null) { Debug.LogWarning("[SetupLowPolyItemsEditor] Elisa's Idle clip not found; staff keeps its fit."); return; }
+                idle.SampleAnimation(animator.gameObject, idle.length * 0.5f);
+
+                Transform bone = HeroWeaponMountsSO.FindDeep(animator.transform, staff.boneName);
+                if (bone == null) return;
+                Quaternion world = bone.rotation * staff.localRotation;
+                Vector3 axis = world * StaffLengthAxis(staff.weaponPrefab);
+
+                Transform facing = hero.transform;
+                float ahead = Vector3.Dot(axis, facing.forward);
+                Vector3 side = axis - facing.forward * ahead;
+                float before = Mathf.Atan2(Vector3.Dot(side, facing.right), Vector3.Dot(side, facing.up)) * Mathf.Rad2Deg;
+                float lean = StaffOutwardLean * Mathf.Deg2Rad;
+                Vector3 target = facing.forward * ahead + side.magnitude * (facing.up * Mathf.Cos(lean) + facing.right * Mathf.Sin(lean));
+                staff.localRotation = Quaternion.Inverse(bone.rotation) * (Quaternion.FromToRotation(axis, target.normalized) * world);
+                Debug.Log($"[SetupLowPolyItemsEditor] Staff lean in idle {before:F1} -> {StaffOutwardLean:F1} degrees (forward lean {Mathf.Asin(Mathf.Clamp(ahead, -1f, 1f)) * Mathf.Rad2Deg:F1})");
+            }
+            finally
+            {
+                PrefabUtility.UnloadPrefabContents(hero);
+            }
+        }
+
+        /// <summary>Unit vector in the weapon prefab's own space from the grip towards the staff's head.</summary>
+        private static Vector3 StaffLengthAxis(GameObject weapon)
+        {
+            MeshFilter mf = weapon.GetComponentInChildren<MeshFilter>();
+            if (mf == null || mf.sharedMesh == null) return Vector3.up;
+            Matrix4x4 toRoot = weapon.transform.worldToLocalMatrix * mf.transform.localToWorldMatrix;
+            Bounds b = mf.sharedMesh.bounds;
+            Vector3 min = Vector3.positiveInfinity, max = Vector3.negativeInfinity;
+            for (int i = 0; i < 8; i++)
+            {
+                Vector3 c = toRoot.MultiplyPoint3x4(b.center + Vector3.Scale(b.extents, new Vector3((i & 1) * 2 - 1, (i & 2) - 1, ((i & 4) >> 1) - 1)));
+                min = Vector3.Min(min, c);
+                max = Vector3.Max(max, c);
+            }
+            Vector3 size = max - min, centre = (max + min) * 0.5f;
+            int k = size.x >= size.y && size.x >= size.z ? 0 : size.y >= size.z ? 1 : 2;
+            Vector3 dir = Vector3.zero;
+            dir[k] = centre[k] >= 0f ? 1f : -1f;   // the longer part of the staff sits above the grip
+            return dir;
         }
 
         /// <summary>World bind-pose matrix of every skinned bone of <paramref name="hero"/> (placed at the origin).</summary>

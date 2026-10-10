@@ -22,8 +22,8 @@ SAMPLES = 96
 
 HEROES = {
     # backdrop centre / edge, rim colour, camera yaw (deg, + = hero's left), frame height (share of body), lift
-    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.42, yaw=-50, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25)),
-    "Mage":    dict(bg=(0.20, 0.13, 0.46), edge=(0.025, 0.02, 0.06), rim=(0.55, 0.6, 1.0), key=1.0, yaw=26, frame=0.68, lift=0.06, motes=(0.75, 0.8, 1.0)),
+    "Warrior": dict(bg=(0.42, 0.11, 0.07), edge=(0.035, 0.02, 0.02), rim=(1.0, 0.45, 0.25), key=0.32, yaw=-50, frame=0.72, lift=0.0, motes=(1.0, 0.6, 0.25)),
+    "Mage":    dict(bg=(0.20, 0.13, 0.46), edge=(0.025, 0.02, 0.06), rim=(0.55, 0.6, 1.0), key=1.0, yaw=26, frame=0.74, lift=0.08, motes=(0.75, 0.8, 1.0)),
     "Rogue":   dict(bg=(0.06, 0.30, 0.22), edge=(0.015, 0.035, 0.03), rim=(0.45, 1.0, 0.7), key=1.0, yaw=30, frame=0.72, lift=0.0, motes=(0.6, 1.0, 0.75)),
 }
 

@@ -18,7 +18,8 @@ namespace CastleOfTheD20.Editor
     /// BlenderSources/HeroPortraits/. BlenderSources/HeroPortraits_build.py then lights and renders the
     /// Choose Your Hero portraits from them. Works in a new empty scene that is never saved.
     /// Batch: -executeMethod CastleOfTheD20.Editor.HeroPortraitExport.ExportAll
-    /// Env HERO_POSES="Warrior=cheer@0.3;Mage=Victory@0.5" overrides the pose (clip name fragment @ share of its length).
+    /// Env HERO_POSES="Warrior=cheer@0.3;Mage=Victory@0.5" overrides the pose (clip name fragment @ share of its length);
+    /// "Mage=Walk@0.2|Run@0.5" writes Mage1, Mage2... for checking poses.
     /// </summary>
     public static class HeroPortraitExport
     {
@@ -53,15 +54,21 @@ namespace CastleOfTheD20.Editor
             Dictionary<string, string> overrides = ParseOverrides(System.Environment.GetEnvironmentVariable("HERO_POSES"));
             foreach (Pose pose in Poses)
             {
-                Pose p = pose;
-                if (overrides.TryGetValue(p.hero.ToString(), out string o))
+                if (!overrides.TryGetValue(pose.hero.ToString(), out string o))
                 {
-                    string[] parts = o.Split('@');
+                    TryExport(pose, pose.hero.ToString());
+                    continue;
+                }
+                // Several poses ("a@0.2|b@0.5") go to <Hero>1, <Hero>2... for checking, not for the portrait
+                string[] list = o.Split('|');
+                for (int i = 0; i < list.Length; i++)
+                {
+                    Pose p = pose;
+                    string[] parts = list[i].Split('@');
                     p.clip = parts[0];
                     if (parts.Length > 1) p.at = float.Parse(parts[1], CultureInfo.InvariantCulture);
+                    TryExport(p, list.Length > 1 ? pose.hero.ToString() + (i + 1) : pose.hero.ToString());
                 }
-                try { Export(p); }
-                catch (System.Exception e) { Debug.LogError($"[HeroPortraits] {p.hero}: {e}"); }
             }
             Debug.Log("[HeroPortraits] export done");
         }
@@ -100,7 +107,13 @@ namespace CastleOfTheD20.Editor
             return d;
         }
 
-        private static void Export(Pose pose)
+        private static void TryExport(Pose pose, string folder)
+        {
+            try { Export(pose, folder); }
+            catch (System.Exception e) { Debug.LogError($"[HeroPortraits] {pose.hero}: {e}"); }
+        }
+
+        private static void Export(Pose pose, string folder)
         {
             EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(HeroPrefabPath);
@@ -152,7 +165,7 @@ namespace CastleOfTheD20.Editor
             Vector3 headPos = head != null ? head.position : Vector3.up * 1.6f;
             Vector3 headFwd = head != null ? head.forward : Vector3.forward;
 
-            string dir = Path.Combine(OutputFolder, pose.hero.ToString());
+            string dir = Path.Combine(OutputFolder, folder);
             Directory.CreateDirectory(dir);
             StringBuilder obj = new StringBuilder();
             StringBuilder json = new StringBuilder();

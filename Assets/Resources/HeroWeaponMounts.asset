@@ -17,7 +17,7 @@ MonoBehaviour:
     weaponPrefab: {fileID: 8128824161302026255, guid: 0de5d746c0b8ebc44bdccdfde7a64834, type: 3}
     boneName: mixamorig:RightHand
     localPosition: {x: -0.000008952849, y: 5.5000043, z: 1.5000161}
-    localRotation: {x: 0.98379135, y: 0.017227007, z: -0.15671442, w: -0.08543122}
+    localRotation: {x: 0.97163343, y: 0.13249382, z: -0.14556764, w: -0.13109139}
     localScale: {x: 79.99999, y: 80, z: 80.00004}
   - heroClass: 2
     weaponPrefab: {fileID: 5491934708342095176, guid: 448bcf91940453944bc2cb665e1c68a7, type: 3}
