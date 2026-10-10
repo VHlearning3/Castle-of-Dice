@@ -9,7 +9,7 @@ namespace CastleOfTheD20.World
     /// Every hero has one thing of their own to find in The Foaming Tankard (Vili, 2026-10-10), placed at runtime so
     /// the hand-edited Zone_Tavern scene stays untouched:
     /// - a locked chest by the north wall under the gallery that only the rogue can pick (30 gold);
-    /// - a Scroll of Embers beside the bookshelf that only the mage notices;
+    /// - a Scroll of Embers among the books on the bookshelf that only the mage notices;
     /// - a Greater Health Potion on the bar counter that only the knight notices.
     /// Each is taken once per adventure. An empty named like <see cref="RogueChestAnchor"/> in the scene moves its find.
     /// </summary>
@@ -31,7 +31,7 @@ namespace CastleOfTheD20.World
         // Default spots in the tavern (Unity coordinates of Tavern_Interior)
         public static readonly Vector3 RogueChestSpot = new Vector3(0.6f, 0f, 8.0f);   // north wall, between the crates and the gallery post
         public const float RogueChestYaw = 0f;                                         // keyhole towards the room (the model faces -z)
-        public static readonly Vector3 MageScrollSpot = new Vector3(11.05f, 0f, 6.35f); // floor at the north end of the bookshelf
+        public static readonly Vector3 MageScrollSpot = new Vector3(11.55f, 1.44f, 5.6f); // middle shelf of the bookshelf, beside the books at its north end
         public static readonly Vector3 WarriorPotionSpot = new Vector3(-7.05f, 1.72f, 1.65f); // bar counter, between the bottle and the mug
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -106,24 +106,23 @@ namespace CastleOfTheD20.World
             if (StoryFlags.Has(HeroFindPickup.FoundFlag(MageScrollId)) || GameObject.Find("HeroFind_" + MageScrollId) != null) return null;
             Vector3 spot;
             Quaternion rot;
-            if (!Anchor(MageScrollAnchor, out spot, out rot)) { spot = MageScrollSpot; rot = Quaternion.Euler(0f, 20f, 0f); }
+            if (!Anchor(MageScrollAnchor, out spot, out rot)) { spot = MageScrollSpot; rot = Quaternion.Euler(0f, -90f, 0f); }
 
             GameObject root = Root(MageScrollId, spot, rot);
             Material parchment = Mat("TavernFind_Parchment", new Color(0.93f, 0.85f, 0.66f));
             Material ribbon = Mat("TavernFind_EmberRibbon", new Color(0.85f, 0.22f, 0.08f), new Color(1f, 0.35f, 0.08f) * 1.6f);
             Material seal = Mat("TavernFind_Seal", new Color(0.62f, 0.08f, 0.06f));
-            // A rolled scroll lying on the floorboards, tied with a glowing ember-red ribbon
-            Quaternion lying = Quaternion.Euler(0f, 0f, 90f);
-            Part(root.transform, PrimitiveType.Cylinder, "Scroll_Roll", new Vector3(0f, 0.16f, 0f), new Vector3(0.3f, 0.42f, 0.3f), lying, parchment);
-            Part(root.transform, PrimitiveType.Cylinder, "Scroll_Ribbon", new Vector3(0f, 0.16f, 0f), new Vector3(0.32f, 0.05f, 0.32f), lying, ribbon);
-            Part(root.transform, PrimitiveType.Sphere, "Scroll_Seal", new Vector3(0f, 0.16f, 0.16f), new Vector3(0.12f, 0.12f, 0.06f), Quaternion.identity, seal);
-            AddGlow(root.transform, new Vector3(0f, 0.6f, 0f), new Color(1f, 0.45f, 0.15f), 1.6f, 2.5f);
-            Collider(root, new Vector3(0f, 0.3f, 0f), new Vector3(1.1f, 0.6f, 0.7f));
+            // A rolled scroll standing among the books, tied with a glowing ember-red ribbon; its seal faces the room
+            Part(root.transform, PrimitiveType.Cylinder, "Scroll_Roll", new Vector3(0f, 0.32f, 0f), new Vector3(0.18f, 0.32f, 0.18f), Quaternion.identity, parchment);
+            Part(root.transform, PrimitiveType.Cylinder, "Scroll_Ribbon", new Vector3(0f, 0.32f, 0f), new Vector3(0.2f, 0.04f, 0.2f), Quaternion.identity, ribbon);
+            Part(root.transform, PrimitiveType.Sphere, "Scroll_Seal", new Vector3(0f, 0.32f, 0.1f), new Vector3(0.09f, 0.09f, 0.05f), Quaternion.identity, seal);
+            AddGlow(root.transform, new Vector3(0f, 0.5f, 0.6f), new Color(1f, 0.45f, 0.15f), 1.6f, 2.5f);
+            Collider(root, new Vector3(0f, 0.35f, 0.15f), new Vector3(0.45f, 0.75f, 0.5f));
 
             HeroFindPickup pickup = root.AddComponent<HeroFindPickup>();
             pickup.Configure(MageScrollId, ScrollItemId, CharacterClassType.Mage, "Take: Scroll of Embers",
                 "A Scroll Among the Almanacs",
-                "Wedged behind the bookshelf, between a farmer's almanac and a cookbook, lies a scroll that is warm to the touch. " +
+                "Tucked between a farmer's almanac and a cookbook on the shelf stands a scroll that is warm to the touch. " +
                 "Its seal is written in a fire-mage's shorthand. To anyone else it would look like a recipe for soup.");
             return pickup;
         }
