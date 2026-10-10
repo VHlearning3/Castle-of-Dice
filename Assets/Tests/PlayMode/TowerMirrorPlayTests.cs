@@ -79,7 +79,10 @@ namespace CastleOfTheD20.Tests.PlayMode
             TowerMirrorRoom opener = UnityEngine.Object.FindAnyObjectByType<TowerMirrorRoom>();
             Assert.IsNotNull(opener);
             Assert.IsFalse(StoryFlags.Has(TowerChallenge.CompletedFlag), "a new adventure starts with the challenge unsolved");
-            Assert.IsFalse(opener.Room.activeSelf, "sealed before the challenge");
+            Assert.IsTrue(opener.Room.activeSelf, "the sealed room is loaded with the zone");
+            Assert.IsFalse(opener.IsRevealed, "but invisible before the challenge");
+            foreach (Renderer r in opener.Room.GetComponentsInChildren<Renderer>()) Assert.IsFalse(r.enabled, r.name + " is hidden");
+            foreach (Light l in opener.Room.GetComponentsInChildren<Light>()) Assert.IsFalse(l.enabled, l.name + " is off");
             Assert.IsTrue(opener.BlockingWall.gameObject.activeInHierarchy, "the north wall stands");
             Assert.IsTrue(opener.GoldHoard[0].activeInHierarchy, "the gold lies against it");
 
@@ -102,13 +105,23 @@ namespace CastleOfTheD20.Tests.PlayMode
                 yield return Shot(Path.Combine(shots, "tower_sealed_north.png"));
             }
 
-            // Finish the challenge: the runes and the guardian
+            // Finish the challenge: the runes alone (the mimic is optional)
             TowerChallenge challenge = UnityEngine.Object.FindAnyObjectByType<TowerChallenge>();
+            // The hero has been clicking around the Tower: paths exist before the wall goes
+            Assert.IsTrue(RuntimeNavMesh.EnsureCovers(new Vector3(0f, 0f, -4f), new Vector3(0f, 0f, 2f), Hero().transform));
             StoryFlags.Set(TowerChallenge.RunesSolvedFlag);
-            StoryFlags.Set(TowerChallenge.GuardianDefeatedFlag);
+            float worst = 0f;
+            float before = Time.realtimeSinceStartup;
             challenge.TryComplete();
-            yield return Frames(2);
-            Assert.IsTrue(opener.Room.activeSelf, "the room appears as the wall goes");
+            for (int i = 0; i < 5; i++)
+            {
+                yield return null;
+                float now = Time.realtimeSinceStartup;
+                worst = Mathf.Max(worst, now - before);
+                before = now;
+            }
+            Debug.Log($"[TowerMirrorPlayTests] Slowest frame while the mirror room opened: {worst * 1000f:F1} ms");
+            Assert.IsTrue(opener.IsRevealed, "the room appears as the wall goes");
             if (takeShots)
             {
                 yield return new WaitForSeconds(1.4f);
@@ -120,7 +133,9 @@ namespace CastleOfTheD20.Tests.PlayMode
 
             // Click-to-move finds a way through the opening to the mirror
             Vector3 from = new Vector3(0f, 0f, -4f), to = new Vector3(0f, 0f, 30f);
+            float clickStart = Time.realtimeSinceStartup;
             Assert.IsTrue(RuntimeNavMesh.EnsureCovers(from, to, Hero().transform));
+            Debug.Log($"[TowerMirrorPlayTests] First click-to-move after the opening: {(Time.realtimeSinceStartup - clickStart) * 1000f:F1} ms");
             var corners = new Vector3[32];
             int n = RuntimeNavMesh.FindPath(from, to, corners);
             Assert.Greater(n, 0, "a path into the mirror room");
@@ -148,7 +163,7 @@ namespace CastleOfTheD20.Tests.PlayMode
             yield return Frames(2);
             yield return WaitForLoad();
             opener = UnityEngine.Object.FindAnyObjectByType<TowerMirrorRoom>();
-            Assert.IsTrue(opener.Room.activeSelf, "the room stays open");
+            Assert.IsTrue(opener.IsRevealed, "the room stays open");
             Assert.IsFalse(opener.BlockingWall.gameObject.activeInHierarchy, "the wall stays down");
             Assert.IsFalse(GameObject.Find("Gold_Piles") != null, "the gold stays gone");
 
@@ -167,6 +182,74 @@ namespace CastleOfTheD20.Tests.PlayMode
             Assert.AreEqual("Zone_5_CastleHall", SceneManager.GetActiveScene().name, "the stairs lead down to the hall");
             GameObject spawn = GameObject.Find("Spawn_From_Tower");
             Assert.Less(Flat(Hero().transform.position - spawn.transform.position), 2.5f, "at the foot of the stairs");
+        }
+
+        [UnityTest, Timeout(300000)]
+        public IEnumerator Mimic_IsOptional_AndFightsWhereItsChestStands()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            string shots = Environment.GetEnvironmentVariable("TOWER_SHOTS_DIR");
+            bool takeShots = !string.IsNullOrEmpty(shots);
+            if (takeShots) Directory.CreateDirectory(shots);
+
+            SceneManager.LoadScene("Zone_1_VillageAndCellar");
+            yield return Frames(10);
+            MainMenuController menu = MainMenuController.Instance ?? UnityEngine.Object.FindAnyObjectByType<MainMenuController>(FindObjectsInactive.Include);
+            Assert.IsNotNull(menu, "main menu");
+#if UNITY_EDITOR
+            CharacterClassSO cls = UnityEditor.AssetDatabase.LoadAssetAtPath<CharacterClassSO>("Assets/Data/Character_Warrior_SirRoland.asset");
+#else
+            CharacterClassSO cls = null;
+#endif
+            menu.SelectCharacterClass(cls);
+            yield return WaitForLoad();
+            StoryPanelUI.CloseIfOpen();
+            SceneLoader.Instance.LoadScene("Zone_6_Tower", "Spawn_From_Hall");
+            yield return Frames(2);
+            yield return WaitForLoad();
+            StoryPanelUI.CloseIfOpen();
+
+            MimicChest mimic = UnityEngine.Object.FindAnyObjectByType<MimicChest>();
+            Assert.IsNotNull(mimic, "the mimic's chest");
+            DungeonRoomController lair = mimic.GuardianRoom;
+            Assert.Less(Flat(lair.transform.position - mimic.transform.position), 0.01f, "the fight (and its walk-in trigger) follows the chest");
+
+            // The runes alone open the vault; the mimic is never touched
+            TowerChallenge challenge = UnityEngine.Object.FindAnyObjectByType<TowerChallenge>();
+            for (int i = 0; i < challenge.Pillars.Count; i++)
+            {
+                for (int turns = 0; turns <= i; turns++) challenge.Pillars[i].Interact(Hero());
+            }
+            Assert.IsTrue(challenge.IsComplete, "SUN, MOON, STAR finish the challenge");
+            Assert.IsFalse(challenge.GuardianDefeated);
+            foreach (Interactable reward in challenge.SealedRewards) Assert.IsTrue(reward.IsInteractable, reward.name + " is unsealed");
+            Assert.IsFalse(lair.IsCleared);
+            Assert.AreNotEqual(GamePlayMode.Combat, GameManager.Instance.CurrentMode, "no fight was forced");
+            yield return Frames(10);
+            CloseLevelUp();
+
+            if (takeShots)
+            {
+                Teleport(mimic.transform.position + new Vector3(-3.5f, 0f, 2.5f), Quaternion.LookRotation(new Vector3(3.5f, 0f, -2.5f)));
+                yield return Frames(60);
+                yield return Shot(Path.Combine(shots, "tower_mimic_chest.png"));
+            }
+
+            // Opening the chest still wakes the mimic, on its own spot
+            mimic.Interact(Hero());
+            yield return Frames(30);
+            Assert.AreEqual(GamePlayMode.Combat, GameManager.Instance.CurrentMode, "the chest bites");
+            if (takeShots)
+            {
+                yield return Frames(60);
+                yield return Shot(Path.Combine(shots, "tower_mimic_fight.png"));
+            }
+        }
+
+        private static void CloseLevelUp()
+        {
+            LevelUpUIController levelUp = LevelUpUIController.Instance;
+            for (int i = 0; i < 5 && levelUp != null && levelUp.IsModalOpen; i++) levelUp.CloseLevelUpModal();
         }
 
         private static PlayerUnit Hero() => UnityEngine.Object.FindAnyObjectByType<PlayerUnit>();

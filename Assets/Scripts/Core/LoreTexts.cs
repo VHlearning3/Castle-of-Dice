@@ -86,7 +86,7 @@ namespace CastleOfTheD20.Core
                 "Margin note: His Majesty could refuse his queen nothing while she wore it. That is why the Witch wanted it, and why he will not let anyone near it."),
             ["tower_warning"] = new Note("Warning Scratched in Stone",
                 "The vault answers only to SUN, MOON and STAR, in that order, left to right as you face the vial.\n\n" +
-                "Mind the floor stones. The keeper does not like thieves, and the chest in the corner is not a chest."),
+                "Mind the floor stones. The keeper does not like thieves, and the chest by the door is not a chest."),
 
             // Zone 7: Throne Room
             ["throne_queen"] = new Note("From the Queen",

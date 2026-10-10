@@ -29,6 +29,7 @@ namespace CastleOfTheD20.World
         private static readonly List<NavMeshBuildSource> sources = new List<NavMeshBuildSource>();
         private static readonly List<NavMeshBuildMarkup> markups = new List<NavMeshBuildMarkup>();
         private static NavMeshPath path;
+        private static AsyncOperation refreshing;
 
         /// <summary>
         /// Makes sure the NavMesh covers both points, building it if needed. Returns false when nothing walkable
@@ -40,28 +41,16 @@ namespace CastleOfTheD20.World
             if (sceneHandle != builtSceneHandle) Clear();
 
             if (data != null && Time.unscaledTime - builtTime < RebuildAfterSeconds && Covers(a) && Covers(b)) return true;
+            // A background refresh is still working on the NavMesh: keep walking on the current one meanwhile
+            if (data != null && refreshing != null && !refreshing.isDone) return true;
 
             Vector3 center = (a + b) * 0.5f;
             float span = Mathf.Max(Mathf.Abs(a.x - b.x), Mathf.Abs(a.z - b.z)) + EdgeMargin * 4f;
             float size = Mathf.Clamp(span, MinBuildSize, MaxBuildSize);
             Bounds bounds = new Bounds(center, new Vector3(size, BuildHeight, size));
 
-            int mask = ~((1 << 2) | (1 << 8) | (1 << 9));
-            sources.Clear();
-            markups.Clear();
-            NavMeshBuilder.CollectSources(bounds, mask, NavMeshCollectGeometry.PhysicsColliders, 0, markups, sources);
-            FilterSources(hero);
-            if (sources.Count == 0) return false;
-
-            NavMeshBuildSettings settings = NavMesh.GetSettingsByID(0);
-            settings.agentRadius = 0.45f;
-            settings.agentHeight = 1.9f;
-            settings.agentClimb = 0.35f;
-            settings.agentSlope = 45f;
-            settings.overrideVoxelSize = true;
-            settings.voxelSize = 0.2f;
-            settings.overrideTileSize = true;
-            settings.tileSize = 128;
+            if (!CollectFor(bounds, hero)) return false;
+            NavMeshBuildSettings settings = BuildSettings();
 
             if (data == null)
             {
@@ -98,14 +87,56 @@ namespace CastleOfTheD20.World
             return path.GetCornersNonAlloc(corners);
         }
 
+        /// <summary>
+        /// Updates the current NavMesh in the background after walls move (the Tower's sinking wall). Only the
+        /// changed tiles are redone, over a few frames, and the old paths stay usable until it is ready, so there
+        /// is no one-frame full rebuild on the next click.
+        /// </summary>
+        public static void RefreshAsync(Transform hero)
+        {
+            if (data == null || builtSceneHandle != SceneManager.GetActiveScene().handle)
+            {
+                Clear();
+                return;
+            }
+            if (!CollectFor(builtBounds, hero)) return;
+            refreshing = NavMeshBuilder.UpdateNavMeshDataAsync(data, BuildSettings(), new List<NavMeshBuildSource>(sources), builtBounds);
+            builtTime = Time.unscaledTime;
+        }
+
         /// <summary>Forgets the NavMesh (scene change).</summary>
         public static void Clear()
         {
             if (instance.valid) instance.Remove();
             instance = default;
             data = null;
+            refreshing = null;
             builtTime = -1000f;
             builtSceneHandle = -1;
+        }
+
+        private static bool CollectFor(Bounds bounds, Transform hero)
+        {
+            int mask = ~((1 << 2) | (1 << 8) | (1 << 9));
+            sources.Clear();
+            markups.Clear();
+            NavMeshBuilder.CollectSources(bounds, mask, NavMeshCollectGeometry.PhysicsColliders, 0, markups, sources);
+            FilterSources(hero);
+            return sources.Count > 0;
+        }
+
+        private static NavMeshBuildSettings BuildSettings()
+        {
+            NavMeshBuildSettings settings = NavMesh.GetSettingsByID(0);
+            settings.agentRadius = 0.45f;
+            settings.agentHeight = 1.9f;
+            settings.agentClimb = 0.35f;
+            settings.agentSlope = 45f;
+            settings.overrideVoxelSize = true;
+            settings.voxelSize = 0.2f;
+            settings.overrideTileSize = true;
+            settings.tileSize = 128;
+            return settings;
         }
 
         private static bool Covers(Vector3 p)

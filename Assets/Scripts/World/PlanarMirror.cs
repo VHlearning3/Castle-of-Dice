@@ -83,7 +83,7 @@ namespace CastleOfTheD20.World
         private void LateUpdate()
         {
             if (viewer == null || !viewer.isActiveAndEnabled) viewer = Camera.main;
-            bool show = viewer != null && InView()
+            bool show = viewer != null && glass.enabled && InView()
                 && (viewer.transform.position - transform.position).sqrMagnitude < maxDistance * maxDistance
                 && Vector3.Dot(viewer.transform.position - transform.position, WorldNormal) > 0f;
             if (!show)
@@ -121,6 +121,18 @@ namespace CastleOfTheD20.World
             var plane = new Vector4(cn.x, cn.y, cn.z, -Vector3.Dot(cp, cn));
             mirrorCamera.projectionMatrix = mirrorCamera.CalculateObliqueMatrix(plane);
             mirrorCamera.enabled = true;
+        }
+
+        /// <summary>
+        /// Creates the reflection camera and texture ahead of time (the Tower preloads its sealed mirror room),
+        /// so the first look at the glass costs nothing extra.
+        /// </summary>
+        public void Prewarm()
+        {
+            if (viewer == null || !viewer.isActiveAndEnabled) viewer = Camera.main;
+            if (viewer == null) return;
+            EnsureCamera();
+            EnsureTexture();
         }
 
         private bool InView()
